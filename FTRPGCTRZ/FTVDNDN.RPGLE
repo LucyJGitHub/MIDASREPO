@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037223           Date 20Jul17               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037223           Date 20Jul17               *
       *                 MD021276           Date 31Jul13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR750736           Date 22Oct12               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
       *             in validation.                                    *
@@ -374,6 +376,9 @@
      D ##CSID          S              1
      D SwiftOK         S              1
  
+     D WSId19          S              1A                                                      CSW218
+     D CSW218          S              1A                                                      CSW218
+     D PRtCd           S              7A                                                      CSW218
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1041,6 +1046,8 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C     VDESEND       BEGSR
  
       * If nothing else must be an address
+                                                                                              CSW218
+     C                   IF        CSW218 = 'N'                                               CSW218
      C                   Eval      WCSID8 = *Blanks                                          260987A
      C     1             SUBST     #SDST1:8      WCSID8            1                         260987A
      C**********         If        @DSTT = *Blanks                                           260987A
@@ -1049,6 +1056,20 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                             @DSTT = 'S'                                               260987A
      C                   Eval      @DSTT = 'A'
      C                   End
+                                                                                              CSW218
+     C                   ELSE                                                                 CSW218
+      ** SWIFT2018 is ON                                                                      CSW218
+      ** Check BIC address Extra Info field position 19                                       CSW218
+      ** If equal to 'N', set BIC address as not connected                                    CSW218
+                                                                                              CSW218
+     C                   EVAL      WSId19 = *BLANKS                                           CSW218
+     C                   EVAL      WSId19 = %SUBST(BDXINF:19:1)                               CSW218
+                                                                                              CSW218
+     C                   IF        @DSTT = *BLANKS OR                                         CSW218
+     C                             WSId19 = 'N' AND @DSTT = 'S'                               CSW218
+     C                   EVAL      @DSTT = 'A'                                                CSW218
+     C                   ENDIF                                                                CSW218
+     C                   ENDIF                                                                CSW218
  
       * Extra validation of address fields
      C                   If        @DSTT = 'A'
@@ -1348,6 +1369,17 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Parm      '*FIRST'      @OPTN
      C     SDRETL        Parm      SDRETL        DSFDY
      C                   End
+      *                                                                                       CSW218
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRtCd                                        CSW218
+      *                                                                                       CSW218
+     C     PRtCd         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
  
       * Key list for account validation
      C     AKEY          KLIST

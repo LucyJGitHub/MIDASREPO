@@ -20,10 +20,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 246533             Date 22Mar07               *
+      *                 246533             Date 22Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 238594             Date 09Mar06               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  246533 - If PAPER message do not expand destination as it may*
       *           not be a normal BIC and TRAM can't match it up.     *
@@ -70,7 +72,8 @@
       /EJECT
       /COPY MSCPYSRC,SRERRD
       *
-     D TAB1            S              5A   ctdata perrcd(1) dim(2)
+     D***TAB1            S              5A   ctdata perrcd(1) dim(2)                          CSW218
+     D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
       ** Table containing valid Block 3 Codes
       *
      D                 DS
@@ -777,3 +780,4 @@
 **CTDATA TAB1
 :103:
 :119:
+:121:                                                                                         CSW218

@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CFT051             Date 02Jun15              */
+/*       Last Amend No. CSW218             Date 19Mar18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CFT051             Date 02Jun15              */
 /*                      CFT050  *CREATE    Date 03Jun13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSW218 - SWIFT Changes 2018                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CFT051 - SWIFTRef Directories 2014                          */
 /*       CFT050 - SWIFTRef Directories upload                        */
@@ -40,6 +42,7 @@
              DCL        VAR(&POS) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CFT051*/
              DCL        VAR(&CFT051) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFT051*/
+             DCL        VAR(&CSW218) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSW218*/
  
 /* Copyright statement                                               */
              COPYRIGHT TEXT('(c) Finastra International Limited +
@@ -50,7 +53,8 @@
                            EXEC(GOTO ENDCLPGM)
  
 /**********  CHGVAR     VAR(&FLCTR) VALUE(36)                        */                   /*CFT051*/
-             CHGVAR     VAR(&FLCTR) VALUE(45)                                             /*CFT051*/
+/**********  CHGVAR     VAR(&FLCTR) VALUE(45)                        */            /*CFT051 CSW218*/
+             CHGVAR     VAR(&FLCTR) VALUE(48)                                             /*CSW218*/
              CHGVAR     VAR(&POS) VALUE(1)
              CHGVAR     VAR(&MSG1) VALUE(' ')
              CHGVAR     VAR(&MSG2) VALUE(' ')
@@ -60,6 +64,15 @@
              CALL       PGM(AOSARDR0) PARM(&PRTCD '*VERIFY' 'CFT051')                     /*CFT051*/
              IF         COND(&PRTCD *EQ ' ') THEN(CHGVAR +
                           VAR(&CFT051) VALUE('Y'))                                        /*CFT051*/
+                                                                                          /*CSW218*/
+/* Check if SWIFT 2018 is installed */                                                    /*CSW218*/
+                                                                                          /*CSW218*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CSW218*/
+             CHGVAR     VAR(&CSW218) VALUE('N')                                           /*CSW218*/
+             CALL       PGM(SWIF2018) PARM(&PRTCD)                                        /*CSW218*/
+             IF         COND(&PRTCD *EQ 'CSW2018') THEN(DO)                               /*CSW218*/
+                CHGVAR  VAR(&CSW218) VALUE('Y')                                           /*CSW218*/
+             ENDDO                                                                        /*CSW218*/
  
  LOOP:
  
@@ -316,6 +329,24 @@
                 CHGVAR     VAR(&CHKSTEP) VALUE('3')                                       /*CFT051*/
              ENDDO                                                                        /*CFT051*/
                                                                                           /*CFT051*/
+             WHEN       COND(&FLNBR = 46 *AND &CSW218 = 'Y') +
+                          THEN(DO)                                                        /*CSW218*/
+                CHGVAR     VAR(&CHKFILE) VALUE('MEDWFIPD')                                /*CSW218*/
+                CHGVAR     VAR(&CHKSTEP) VALUE('7')                                       /*CSW218*/
+             ENDDO                                                                        /*CSW218*/
+                                                                                          /*CSW218*/
+             WHEN       COND(&FLNBR = 47 *AND &CSW218 = 'Y') +
+                          THEN(DO)                                                        /*CSW218*/
+                CHGVAR     VAR(&CHKFILE) VALUE('METIFIPD')                                /*CSW218*/
+                CHGVAR     VAR(&CHKSTEP) VALUE('7')                                       /*CSW218*/
+             ENDDO                                                                        /*CSW218*/
+                                                                                          /*CSW218*/
+             WHEN       COND(&FLNBR = 48 *AND &CSW218 = 'Y') +
+                          THEN(DO)                                                        /*CSW218*/
+                CHGVAR     VAR(&CHKFILE) VALUE('MEBICDPD')                                /*CSW218*/
+                CHGVAR     VAR(&CHKSTEP) VALUE('7')                                       /*CSW218*/
+             ENDDO                                                                        /*CSW218*/
+                                                                                          /*CSW218*/
              ENDSELECT
  
              IF         COND(&STEP *NE &CHKSTEP) THEN(DO)

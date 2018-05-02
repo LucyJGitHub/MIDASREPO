@@ -1,0 +1,248 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME BIC Database 2018 Loader')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management                                  */
+/*                                                                   */
+/*       MEC001465 - BIC Database 2018 Loader                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CSW218  *CREATE    Date 19Mar18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW218 - SWIFT Changes 2018                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&REFDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ERRTYP)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&YYYYMMDD) TYPE(*CHAR) LEN(8)
+
+             DCLF       FILE(ME001465DF)
+
+/* Copyright statement                                               */
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2018')
+
+/* Global Monitor Message                                            */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNOR)
+             CHGJOB     SWS(00000000)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+/* Clear program message queue and initialise return code            */
+             RMVMSG     PGMQ(*SAME) CLEAR(*ALL)
+
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&S0MRDT)
+             RTVJOBA    JOB(&S0JOB)  USER(&S0USR)
+             CHGVAR     VAR(&S1USR)  VALUE(&S0USR)
+             CHGVAR     VAR(&S1JOB)  VALUE(&S0JOB)
+             CHGVAR     VAR(&S2MRDT) VALUE(&S0MRDT)
+             CHGVAR     VAR(&S2USR)  VALUE(&S0USR)
+             CHGVAR     VAR(&S2JOB)  VALUE(&S0JOB)
+
+/** STEP 1 - Verify that BIC Database 2018 tables are present **/
+
+             SNDRCVF    RCDFMT(ME001465F0)
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))
+
+ LOOP:
+             CALL       PGM(MEC001426) PARM('7' &S0MSG1 &S0MSG2 &S0MSG3 &S0MSG4 '' +
+                          '' '')
+             IF         COND((&S0MSG1 *NE    ' ')  +
+                          *OR  (&S0MSG2 *NE    ' ') +
+                          *OR  (&S0MSG3 *NE    ' ') +
+                          *OR  (&S0MSG4 *NE    ' ')) THEN(DO)
+
+             CHGVAR     VAR(&IN60)  VALUE('1')
+             CHGVAR     VAR(&IN61)  VALUE('1')
+             CHGVAR     VAR(&IN62)  VALUE('1')
+             CHGVAR     VAR(&IN63)  VALUE('1')
+             CHGVAR     VAR(&S0MSG5A)  VALUE('Please ensure with Midas +
+                                           Support a correct delivery.')
+
+             SNDRCVF    RCDFMT(ME001465F0)
+             IF         COND(&IN03 *EQ '0') THEN(GOTO CMDLBL(LOOP))
+             ELSE
+             GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&IN60)  VALUE('0')
+             CHGVAR     VAR(&IN61)  VALUE('0')
+             CHGVAR     VAR(&IN62)  VALUE('0')
+             CHGVAR     VAR(&S0MSG1)   VALUE(' ')
+             CHGVAR     VAR(&S0MSG2)   VALUE(' ')
+             CHGVAR     VAR(&S0MSG5A)  VALUE(' ')
+
+             CHGVAR     VAR(&IN64)  VALUE('1')
+             CHGVAR     VAR(&S0MSG6A)  VALUE('Check of the necessary objects +
+                                           to run the loader is started.')
+
+             SNDF       RCDFMT(ME001465F0)
+             DLYJOB     DLY(5)
+
+/** STEP 2 - Retrieve data in interim files and detect release date **/
+
+             CALL       PGM(MEC001466) PARM(&ERRTYP &REFDATE)
+
+             IF         COND(&ERRTYP *NE '0') THEN(DO)
+
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '1') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('FI_' *CAT &REFDATE *CAT ' found but +
+                          with invalid date format.')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '2') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('FI_' *CAT &REFDATE *CAT ' found is +
+                          empty.')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+
+        /* Error message */
+             IF         COND(&ERRTYP *EQ '3') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&IN68)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('FI_' *CAT &REFDATE *CAT ' is not +
+                          found.')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+
+        /* Error - Abnormal Termination */
+             IF         COND(&ERRTYP *EQ '4') THEN(DO)
+             CHGVAR     VAR(&IN67)  VALUE('1')
+             CHGVAR     VAR(&S2MSG8)  VALUE('Abnormal Termination')
+             GOTO CMDLBL(ABNOR)
+             ENDDO
+
+             ENDDO
+
+  /** STEP 3 - End-user is choosing the kind of Upload **/
+
+ LOOP2:
+             CHGVAR     VAR(&S1DATE) VALUE(&REFDATE)
+             CHGVAR     VAR(&S1DTYP) VALUE('D')
+
+             SNDRCVF    RCDFMT(ME001465F0)
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))
+ LOOP2A:
+             SNDRCVF    RCDFMT(ME001465F1)
+             CHGVAR     VAR(&IN51)   VALUE('0')
+             CHGVAR     VAR(&IN55)   VALUE('0')
+             CHGVAR     VAR(&IN56)   VALUE('0')
+             CHGVAR     VAR(&IN65)   VALUE('0')
+             CHGVAR     VAR(&S1MSG5)   VALUE(' ')
+             CHGVAR     VAR(&S1MSG6)   VALUE(' ')
+             CHGVAR     VAR(&S1MSG7)   VALUE(' ')
+
+             IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(ENDCLPGM))
+             ENDDO
+
+             IF         COND((&S1DTYP *NE 'D ')  +
+                          *AND (&S1DTYP *NE 'F')) THEN(DO)
+             CHGVAR     VAR(&IN51)  VALUE('1')
+             CHGVAR     VAR(&S1MSG5) VALUE('Type of upload required +
+                          value must be either ''D'' (Delta) or')
+             CHGVAR     VAR(&S1MSG6)   VALUE('''F'' (Full).')
+             GOTO LOOP2A
+             ENDDO
+
+ /** STEP4 - Uploading the BIC Database **/
+
+             CHGVAR     VAR(&IN55)   VALUE('1')
+             CHGVAR     VAR(&IN65)   VALUE('1')
+
+ /** Converting ASCII to EBCDIC **/
+             CHGVAR     VAR(&S1MSG7)   VALUE('Converting files into interim files..')
+
+             CALL       ME001462 PARM('5')
+
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(5)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       ABNOR
+             ENDDO
+
+             IF         COND(&S1DTYP *EQ 'D ') THEN(DO)
+             CHGVAR     VAR(&S1MSG7)   VALUE('Uploading changes using Delta version file..')
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&S1MSG7)   VALUE('Uploading changes using Full version file..')
+             ENDDO
+
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(5)
+
+ /** If full upload is requested */
+             IF         COND(&S1DTYP *EQ 'F ') THEN(DO)
+
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/MEBICDPD rebuilt in full Upload..')
+             CLRPFM     MEBICDPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(1)
+
+             ENDDO
+
+ /** Override File(s) According type of Upload **/
+             IF         COND(&S1DTYP *EQ 'D ') THEN(DO)
+             OVRDBF     FILE(METIFIPD) TOFILE(METIFIL0)
+             ENDDO
+
+             CHGVAR     VAR(&YYYYMMDD) VALUE('20' *CAT &REFDATE)
+
+ /** Call SWIFTRef BANK DIRECTORY Plus DB Updater **/
+             CALL       ME001463 PARM('5' &YYYYMMDD)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             DLTOVR     FILE(*ALL)
+             GOTO       ABNOR
+             ENDDO
+             DLTOVR     FILE(*ALL)
+
+ /** Terminate pgm by the clear of all the working files: MEDWXXPD, METXXXPD **/
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/MEDWFIPD rebuilt in upload..')
+             CLRPFM     MEDWFIPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(1)
+
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/METIFIPD rebuilt in upload..')
+             CLRPFM     METIFIPD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(1)
+
+             CHGVAR     VAR(&S1MSG7)   VALUE('Clearing PF/METXT5PD rebuilt in upload..')
+             CLRPFM     METXT5PD
+             MONMSG     MSGID(CPF0000)
+             SNDF       RCDFMT(ME001465F1)
+             DLYJOB     DLY(1)
+
+             GOTO       ENDCLPGM
+
+ ABNOR:
+             CHGJOB     SWS(000XXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC001465 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDRCVF    RCDFMT(ME001465F2)
+
+ ENDCLPGM:
+
+             ENDPGM

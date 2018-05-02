@@ -17,13 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036453           Date 12Nov15               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036453           Date 12Nov15               *
       *                 MD022738           Date 08Oct13               *
       *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036453 - Last 5 characters of B3CPS1 CPS 1 from MEBIB3PD   *
       *             are dropped when moved to BDLOC1 Location 1.      *
@@ -129,6 +131,8 @@
       *
      D KREFKY          S              8A   INZ
      D KIBNKY          S              2A   INZ
+                                                                                              CSW218
+     D CSW218          S              1A                                                      CSW218
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -244,7 +248,11 @@
      C                   MOVEL(P)  B3STYP        D_BDSUBT
      C                   MOVEL(P)  B3SER1        D_BDADDS
      C                   MOVE      B3SER2        D_BDADDS
+     C                   IF        CSW218 = 'Y'                                               CSW218
+     C                   EVAL      %SUBST(D_BDXINF:19:1) = %SUBST(B3NWCY:1:1)                 CSW218
+     C                   ELSE                                                                 CSW218
      C                   MOVEL(P)  *BLANKS       D_BDXINF
+     C                   ENDIF                                                                CSW218
      C                   MOVEL(P)  B3ADD1        D_BDAPH1
      C                   MOVEL(P)  B3ADD2        D_BDAPH2
      C                   MOVEL(P)  B3ADD3        D_BDAPH3
@@ -649,6 +657,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                       CSW218
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRTCD                                        CSW218
+      *                                                                                       CSW218
+     C     PRTCD         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
       *
       ***  Key list definition
       *

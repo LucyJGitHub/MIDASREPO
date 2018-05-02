@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 240269             Date 19Aug14               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 240269             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  240269 - SWIFT skip a blank character when it falls on the   *
       *           50th position. Applied fix 221026 or 240192.        *
@@ -92,7 +94,8 @@
       ** Array containing Copyright statement
       *
      D*TAB1************S              5A   ctdata perrcd(1) dim(1)                     CDL008 CFT014
-     D TAB1            S              5A   ctdata perrcd(1) dim(2)                            CFT014
+     D*TAB1************S              5A   ctdata perrcd(1) dim(2)                     CFT014 CSW218
+     D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
       ** Table containing valid Block 3 Codes                                                 CDL008
       *                                                                                       CDL008
      D dssdy         E DS                  extname(DSSDY)
@@ -696,3 +699,4 @@
 ** TAB1                                                                                       CDL008
 :103:                                                                                         CDL008
 :119:                                                                                         CFT014
+:121:                                                                                         CSW218

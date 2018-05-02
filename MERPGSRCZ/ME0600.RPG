@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW213             Date 03Jun13               *
       *                 MD020899           Date 26Jun13               *
       *                 263130             Date 14Dec09               *
       *                 264001             Date 23Feb10               *
@@ -91,6 +92,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  MD020899 - There are spaces between field 50F lines          *
@@ -276,6 +278,8 @@
      FSDCWHTL1IF  E           K        DISK                                                   CSD015
       ** Compliance Watch Hit List by Function Type                                           CSD015
       *                                                                                       CSD015
+     FMEBICDL2IF  E           K        DISK                                                   CSW218
+      ** BIC Directory table                                                                  CSW218
      F*                                                                   S01408
      F/COPY WNCPYSRC,ME0600FFPG                                           S01408
      F*                                                                   S01408
@@ -1191,6 +1195,20 @@
      C                     ELSE                                           CSW096
      C                     MOVE 'N'       CSW096                          CSW096
      C                     ENDIF                                          CSW096
+      *                                                                                       CSW218
+      ** Check if Swift 2018 changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM           PRTCD                                               CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C           KBICD     KLIST                                                              CSW218
+     C                     KFLD           WBICC                                               CSW218
+     C                     KFLD           WBICB                                               CSW218
       *
       **  Clear subfile
      C                     SETOF                     2021
@@ -1279,6 +1297,8 @@
      C                     MOVELZNAME     DNAME  20
      C                     MOVELZTELX     DTELX  10
      C                     MOVELZSTTX     DSTTX  12
+      *                                                                                       CSW218
+     C           CSW218    IFEQ 'N'                                                           CSW218
       *
       ** A 'BIC' code is not a valid SWIFT address - check BIC in DS
      C           BIC       IFNE 'BIC'
@@ -1289,6 +1309,33 @@
      C                     ELSE
      C                     MOVEL*BLANKS   DSWFT
      C                     END
+      *                                                                                       CSW218
+     C                     ELSE                                                               CSW218
+      ** Check SWIFT address if connected to SWIFTNet FIN when CSW218 is ON                   CSW218
+      *                                                                                       CSW218
+     C                     MOVEL*BLANKS   WSID19                                              CSW218
+     C           ZSWFT     IFNE *BLANKS                                                       CSW218
+     C                     MOVELZSWFT     WBICC   8                                           CSW218
+     C           3         SUBSTZSWFT:9   WBICB   3                                           CSW218
+     C           WBICB     IFEQ *BLANKS                                                       CSW218
+     C                     MOVEL'XXX'     WBICB                                               CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C           KBICD     CHAINMEBICDL2             89                                       CSW218
+     C           *IN89     IFEQ '0'                                                           CSW218
+     C           1         SUBSTBDXINF:19 WSID19  1                                           CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+      ** BIC address indicates not connected if the                                           CSW218
+      ** Extra Information field position 19 is set to 'N'                                    CSW218
+      *                                                                                       CSW218
+     C           WSID19    IFEQ 'N'                                                           CSW218
+     C                     MOVE *BLANKS   DSWFT                                               CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVELZSWFT     DSWFT                                               CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
       *                                                                   078455
       ** for an external system......                                     078455
      C                     ELSE                                           078455

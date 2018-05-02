@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT051  *CREATE    Date 04Jun15               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT051  *CREATE    Date 04Jun15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                           *
       *                                                               *
@@ -188,6 +190,8 @@
      D SVAL9           S            200
      D SVALK0          S             20
      D SVAL10          S            200
+                                                                                              CSW218
+     D CSW218          S              1A                                                      CSW218
       *
       /EJECT
       ** Main Program
@@ -604,7 +608,11 @@
      C                   MOVEL(P)  B3STYP        D_BDSUBT
      C                   MOVEL(P)  B3SER1        D_BDADDS
      C                   MOVE      B3SER2        D_BDADDS
+     C                   IF        CSW218 = 'Y'                                               CSW218
+     C                   EVAL      %SUBST(D_BDXINF:19:1) = %SUBST(B3NWCY:1:1)                 CSW218
+     C                   ELSE                                                                 CSW218
      C                   MOVEL(P)  *BLANKS       D_BDXINF
+     C                   ENDIF                                                                CSW218
      C                   MOVEL(P)  B3ADD1        D_BDAPH1
      C                   MOVEL(P)  B3ADD2        D_BDAPH2
      C                   MOVEL(P)  B3ADD3        D_BDAPH3
@@ -904,6 +912,17 @@
      C                   EVAL      BICD  =  SVAL1
      C                   EVAL      BICP  =  SVAL2
      C                   EVAL      BICB  =  SVAL3
+      *                                                                                       CSW218
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRTCD                                        CSW218
+      *                                                                                       CSW218
+     C     PRTCD         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
       *
       ***  Key list definition
       *

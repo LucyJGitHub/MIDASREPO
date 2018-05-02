@@ -26,12 +26,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
       *                 CFT014             Date 25May00               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CFT014 - MT103 Message Generation for FT                     *
@@ -67,7 +69,8 @@
       ** Array containing Copyright statement
       *
      D*TAB1************S              5A   ctdata perrcd(1) dim(1)                     CDL008 CFT014
-     D TAB1            S              5A   ctdata perrcd(1) dim(2)                            CFT014
+     D*TAB1************S              5A   ctdata perrcd(1) dim(2)                     CFT014 CSW218
+     D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
       ** Table containing valid Block 3 Codes                                                 CDL008
       *                                                                                       CDL008
      D                 DS
@@ -547,3 +550,4 @@
 **CTDATA TAB1                                                                                 CDL008
 :103:                                                                                         CDL008
 :119:                                                                                         CFT014
+:121:                                                                                         CSW218

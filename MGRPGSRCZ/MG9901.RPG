@@ -19,11 +19,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245770A            Date 14Mar07               *
+      *                 245770A            Date 14Mar07               *
       *                 245770             Date 15Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  245770A- Amendment to 245770. Program was still using MT321  *
       *           as a basis for comparision.                         *
@@ -117,6 +119,8 @@
       /EJECT
       * Initialise Program F-Spec
      F/COPY WNCPYSRC,MG9901DFPG
+      *                                                                                       CSW218
+     FMEBICDL2IF  E           K        DISK                                                   CSW218
       /EJECT
      E                    CPY@    1   1 80
       ** Array containing Copyright statement
@@ -364,6 +368,21 @@
       *                                                                   CSW036
      C*********************MOVELBBCSID    O@SWDS                          CSW036
      C                     MOVELW0CSID    O@SWDS                          CSW036
+      *                                                                                       CSW218
+      ** Check if SWIFT address is connected to SWIFTNet FIN if CSW218 is ON                  CSW218
+     C                     MOVEL*BLANKS   WSID19                                              CSW218
+     C           CSW218    IFEQ 'Y'                                                           CSW218
+     C           BBCSID    ANDNE*BLANKS                                                       CSW218
+     C                     MOVELBBCSID    WBICC   8                                           CSW218
+     C           3         SUBSTBBCSID:9  WBICB   3                                           CSW218
+     C           WBICB     IFEQ *BLANKS                                                       CSW218
+     C                     MOVEL'XXX'     WBICB                                               CSW218
+     C                     ENDIF                                                              CSW218
+     C           KBICD     CHAINMEBICDL2             90                                       CSW218
+     C           *IN90     IFEQ '0'                                                           CSW218
+     C           1         SUBSTBDXINF:19 WSID19  1                                           CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
       *
       * Copy point for Detail Processing 3
      C/COPY WNCPYSRC,MG9901DET3
@@ -373,8 +392,13 @@
       **    indicates not-connected
       **  o after Nov 96 posn. 8 of BIC address set to '1' indicates
       **    not-connected.
+      **  - after SWIFT2018 changes, BIC address indicates not connected if the               CSW218
+      **    Extra Information field position 19 is set to 'N'                                 CSW218
+      *                                                                                       CSW218
      C                     MOVEL'N'       W@CONN  1
      C           O@SWDS    IFNE *BLANKS
+     C           CSW218    IFEQ 'N'                                                           CSW218
+      *                                                                                       CSW218
      C           W@SW96    IFNE 'CSW096 '
      C           W@BIC     IFNE 'BIC'
      C                     MOVEL'Y'       W@CONN
@@ -384,6 +408,14 @@
      C                     MOVEL'Y'       W@CONN
      C                     ENDIF
      C                     ENDIF
+      *                                                                                       CSW218
+     C                     ELSE                                                               CSW218
+      ** SWIFT2018 is ON                                                                      CSW218
+     C           WSID19    IFNE 'N'                                                           CSW218
+     C                     MOVEL'Y'       W@CONN                                              CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
      C                     ENDIF
      C/COPY WNCPYSRC,MG9901C006
       *
@@ -1152,6 +1184,19 @@
      C           *LIKE     DEFN BBDNW1    W@DNWN
      C           *LIKE     DEFN I@MTPY    W@MTPY
       *
+      ** Check if Swift 2018 changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM           PRTCD   7                                           CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C           KBICD     KLIST                                                              CSW218
+     C                     KFLD           WBICC                                               CSW218
+     C                     KFLD           WBICB                                               CSW218
       * Copy point for Initialisation
      C/COPY WNCPYSRC,MG9901INIT
      C           EXINIT    TAG

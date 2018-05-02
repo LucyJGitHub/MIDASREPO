@@ -1,0 +1,168 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MG Get UUID Data Queue')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Generattion Module                          */
+/*                                                                   */
+/*       MGC001802 - Midas MG Get UUID from Data Queue               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CSW218 *CREATE     Date 19Mar18              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSW218 - SWIFT Changes 2018                                 */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&UUID)
+
+             DCL        VAR(&DTAQ)    TYPE(*CHAR) LEN(10)  VALUE('MGUUIDQ')
+             DCL        VAR(&SYSID)   TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)  VALUE('  DPLIB')
+             DCL        VAR(&DTAQD)   TYPE(*CHAR) LEN(80)
+             DCL        VAR(&DQLEN)   TYPE(*DEC)  LEN(5 0) VALUE(100)
+             DCL        VAR(&DQDTA)   TYPE(*CHAR) LEN(100) VALUE(' ')
+             DCL        VAR(&DQWAIT)  TYPE(*DEC)  LEN(5 0) VALUE(30)
+             DCL        VAR(&PNBRMSG) TYPE(*DEC)  LEN(9)
+             DCL        VAR(&LOCK)    TYPE(*CHAR) LEN(1)   VALUE('N')
+
+/** Variables for retrieving system values */
+
+             DCL        VAR(&RTNCDE)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9)  TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK10) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10)  TYPE(*CHAR) LEN(200)
+
+             DCL        VAR(&UUID)    TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PAYCNO)  TYPE(*DEC)  LEN(6)
+             DCL        VAR(&LIMIT)   TYPE(*DEC)  LEN(6)
+             DCL        VAR(&GENMSG)  TYPE(*DEC)  LEN(6)
+
+/** Variables for retrieving job queue details  */
+
+             DCL        VAR(&RCVAR)   TYPE(*CHAR) LEN(200)
+             DCL        VAR(&LENR)    TYPE(*CHAR) LEN(4) VALUE(X'0110')
+             DCL        VAR(&FMTI)    TYPE(*CHAR) LEN(8) VALUE('JOBQ0100')
+             DCL        VAR(&QJOBQ)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&NUMJOBD) TYPE(*DEC)  LEN(10 0) VALUE(0)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2018')
+
+             CHGJOB     SWS(XXXXXX00)
+
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(DBERR))
+
+/** Get system value for the number of Payment and Cover */
+/** Messages expected per day */
+
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE  +
+                          'MaximumUUIDGen' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)
+             IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
+                          CMDLBL(DBERR))
+
+/** Set value with 10 percent limit */
+
+             ELSE       CMD(DO)
+                CHGVAR VAR(&PAYCNO) VALUE(&SVAL1)
+                CHGVAR VAR(&LIMIT) VALUE(&PAYCNO * 0.1)
+             ENDDO
+
+/** Setup system prefix variable from SDSTAT data area */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DTAQLIB 1 2)) VALUE(&SYSID)
+
+             CHGVAR     VAR(&LOCK) VALUE('N')
+             ALCOBJ OBJ((&DTAQLIB/&DTAQ *DTAQ *EXCLRD)) WAIT(3)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('MGC001802 - Cannot allocate +
+                             MGUUIDQ data queue. Retrieve UUID +
+                             directly from the generator.') TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+                CHGVAR     VAR(&PNBRMSG) VALUE(0)
+                CHGVAR     VAR(&LOCK) VALUE('Y')
+                GOTO       CMDLBL(JAVA_RET)
+             ENDDO
+
+             RTVDTAQD   DTAQ(&DTAQLIB/&DTAQ) DTAQD(&DTAQD)
+
+             CHGVAR     VAR(&PNBRMSG) VALUE(%BIN(&DTAQD 73 4))
+
+ /** Call Java program if data queue is empty to retrieve UUID */
+
+ JAVA_RET:   IF         COND(&PNBRMSG *EQ 0) THEN(DO)
+                CHGVAR    VAR(&UUID) VALUE(*BLANKS)
+                CHGVAR    VAR(&GENMSG) VALUE(0)
+                CALL      PGM(MGC001800)  PARM('GET' &GENMSG &UUID)
+                IF        COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(DBERR))
+             ENDDO
+
+ /** Retrieve Data Queue for UUID  */
+
+             IF         COND(&PNBRMSG *NE 0) THEN(DO)
+
+                CALL       PGM(QRCVDTAQ) PARM(&DTAQ &DTAQLIB  +
+                              &DQLEN &DQDTA &DQWAIT)
+                CHGVAR     VAR(&UUID) VALUE(&DQDTA)
+             ENDDO
+
+/** Populate data queue if less than the limit or empty */
+
+             IF         COND((&PNBRMSG *LT &LIMIT *OR &PNBRMSG *EQ 0) +
+                          *AND (&LOCK *EQ 'N')) THEN(DO)
+
+/** Check if there is existing job in the job queue  */
+
+                CHGVAR     VAR(&QJOBQ) VALUE('UIDJOBQ   *LIBL     ')
+                CALL       PGM(QSPRJOBQ) PARM(&RCVAR &LENR &FMTI +
+                             &QJOBQ x'0000000000000000')
+                CHGVAR     VAR(&NUMJOBD) VALUE(%BIN(&RCVAR 49 4))
+
+/** Submit job only if the job queue is empty */
+
+                IF         COND(&NUMJOBD *EQ 0 ) THEN(DO)
+                  DLCOBJ OBJ((&DTAQLIB/&DTAQ *DTAQ *EXCLRD))
+                  SBMJOB     JOB(UUID_GEN) JOBD(MBATCH) JOBQ(UIDJOBQ) +
+                             USER(*JOBD)  RTGDTA(*JOBD) RQSDTA('CALL +
+                             MGC001801') INLLIBL(*JOBD) MSGQ(*NONE)
+                ENDDO
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ DBERR:      CHGJOB     SWS(XXXXXX11)
+             DLCOBJ OBJ((&DTAQLIB/&DTAQ *DTAQ *EXCLRD))
+             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA('Program +
+                          MGC001802 ended abnormally.') MSGTYPE(*ESCAPE)
+             RETURN
+
+ END:        DLCOBJ OBJ((&DTAQLIB/&DTAQ *DTAQ *EXCLRD))
+             ENDPGM

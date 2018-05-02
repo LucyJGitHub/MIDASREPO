@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD043618           Date 07Dec17              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD050514           Date 18Apr18              */
+/*       Prev Amend No. MD043618           Date 07Dec17              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050514 - ME_FT_IMM job in MSGW                            */
 /*       MD043618 - Job ME_FT_IMM when started manually it is        */
 /*                  submitted  with user’s profile and not system    */
 /*                  owner profile -Formalization of onsite fix.      */
@@ -50,6 +52,7 @@
 /* */
              DCL        VAR(&ERRCDE) TYPE(*DEC) LEN(1 0)
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)                                  /*MD050514*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -98,6 +101,12 @@
 /************CALL       PGM(ZMUSER) PARM(&ERRCDE)                                         /*CAP084*/
 /**********  CALL       PGM(ZMUSER) PARM(&ERRCDE &ZMUSER)                        /*CAP084 MD043618*/
 /**********  IF         COND(&ERRCDE *EQ 1) THEN(GOTO CMDLBL(ABNORMAL))                 /*MD043618*/
+                                                                                        /*MD050514*/
+/** Create data area and update with the job user profile */                            /*MD050514*/
+                                                                                        /*MD050514*/
+             CRTDTAARA DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17)                         /*MD050514*/
+             RTVJOBA    USER(&USER)                                                     /*MD050514*/
+             CHGDTAARA  DTAARA(QTEMP/ZMUSER (1 10)) VALUE(&USER)                        /*MD050514*/
 /* */
 /* Set up other data ares   */
 /* */

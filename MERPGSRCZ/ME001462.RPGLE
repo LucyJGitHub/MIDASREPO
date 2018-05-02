@@ -17,13 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT051             Date 02Jun15               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT051             Date 02Jun15               *
       *                 MD023533           Date 18Nov13               *
       *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                           *
       *  MD023533 - GOC0100 seq 00199 failed in COB (Recompile)       *
@@ -112,6 +114,14 @@
      FMETSEPPD  UF A E             DISK    USROPN
       ** SEPA Plus Directory - Wrk
       *
+      ***  PLoader = '5' : BIC Database 2018 Upload                                           CSW218
+      *                                                                                       CSW218
+     FMEDWFIPD  IF   F 1248        DISK    USROPN                                             CSW218
+      ** BIC Database 2018 - DwnLd                                                            CSW218
+      *                                                                                       CSW218
+     FMETIFIPD  UF A E             DISK    USROPN                                             CSW218
+      ** BIC Database 2018 - Wrk                                                              CSW218
+      *                                                                                       CSW218
       /EJECT
       *****************************************************************
       *                                                               *
@@ -228,6 +238,11 @@
       *
      IMEDWSPPD  SP
      I                                  1 1248  DWSP
+      *                                                                                       CSW218
+      ** PLoader = 5 : Input File Format                                                      CSW218
+      *                                                                                       CSW218
+     IMEDWFIPD  SP                                                                            CSW218
+     I                                  1 1248  DWFI                                          CSW218
       /EJECT
       *****************************************************************
       *                                                               *
@@ -384,6 +399,8 @@
      C                   EXSR      Loader3
      C     PLoader       WHENEQ    '4'
      C                   EXSR      Loader4
+     C     PLoader       WHENEQ    '5'                                                        CSW218
+     C                   EXSR      Loader5                                                    CSW218
      C                   ENDSL
       *
      C                   ENDSR
@@ -497,7 +514,25 @@
      C                   EXSR      SRDWSP
       *
      C                   ENDSR
+      
       *
+      /EJECT                                                                                  CSW218
+      *****************************************************************                       CSW218
+      *                                                               *                       CSW218
+      *  Loader5 -  BIC Database 2018 Mapping                         *                       CSW218
+      *  Called by: SRDETL                                            *                       CSW218
+      *  Calls    : SRCONV, SRMOVE                                    *                       CSW218
+      *                                                               *                       CSW218
+      *****************************************************************                       CSW218
+      *                                                                                       CSW218
+     C     Loader5       BEGSR                                                                CSW218
+      *                                                                                       CSW218
+      ***  treat file by file : Mandatory MEDWFIPD                                            CSW218
+      *                                                                                       CSW218
+     C                   EXSR      SRDWFI                                                     CSW218
+      *                                                                                       CSW218
+     C                   ENDSR                                                                CSW218
+      *                                                                                       CSW218
       /EJECT
       *****************************************************************
       *                                                               *
@@ -1230,6 +1265,69 @@
      C                   ENDDO
       *
      C                   ENDSR
+      *                                                                                       CSW218
+      /EJECT                                                                                  CSW218
+      *****************************************************************                       CSW218
+      *                                                               *                       CSW218
+      *  SRDWFI - BIC Database 2018 Mapping                           *                       CSW218
+      *  Called by: Loader5                                           *                       CSW218
+      *  Calls    : SRCONV, SRMOVE                                    *                       CSW218
+      *                                                               *                       CSW218
+      *****************************************************************                       CSW218
+      *                                                                                       CSW218
+     C     SRDWFI        BEGSR                                                                CSW218
+      *                                                                                       CSW218
+      ** Treat file by file : Mandatory MEDWFIPD                                              CSW218
+      *                                                                                       CSW218
+     C                   OPEN      MEDWFIPD                             99                    CSW218
+     C     *IN99         IFEQ      '1'                                                        CSW218
+     C     *LOCK         IN        LDA                                                        CSW218
+     C                   EVAL      DBASE = 26                                                 CSW218
+     C                   EVAL      DBFILE = 'MEDWFIPD'                                        CSW218
+     C                   EVAL      DBKEY = 'OPEN    '                                         CSW218
+     C                   OUT       LDA                                                        CSW218
+     C                   EXSR      *PSSR                                                      CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+     C                   OPEN      METIFIPD                             99                    CSW218
+     C     *IN99         IFEQ      '1'                                                        CSW218
+     C     *LOCK         IN        LDA                                                        CSW218
+     C                   EVAL      DBASE = 27                                                 CSW218
+     C                   EVAL      DBFILE = 'METIFIPD'                                        CSW218
+     C                   EVAL      DBKEY = 'OPEN    '                                         CSW218
+     C                   OUT       LDA                                                        CSW218
+     C                   EXSR      *PSSR                                                      CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+     C                   READ      MEDWFIPD                               71                  CSW218
+      *                                                                                       CSW218
+     C     *IN71         IFEQ      '1'                                                        CSW218
+     C     *LOCK         IN        LDA                                                        CSW218
+     C                   EVAL      DBASE = 28                                                 CSW218
+     C                   EVAL      DBFILE = 'MEDWFIPD'                                        CSW218
+     C                   EVAL      DBKEY = 'EMPTY   '                                         CSW218
+     C                   OUT       LDA                                                        CSW218
+     C                   EXSR      *PSSR                                                      CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+      ** Convert in EBCDIC and write in METIFIPD each formatted records                       CSW218
+      *                                                                                       CSW218
+     C                   EVAL      MOVE_IN = 'FI'                                             CSW218
+      *                                                                                       CSW218
+     C                   EVAL      LEFT = *BLANKS                                             CSW218
+     C     *IN71         DOWEQ     '0'                                                        CSW218
+     C                   EVAL      W1DATA = *BLANKS                                           CSW218
+     C                   EVAL      W1DATA = DWFI                                              CSW218
+     C                   EVAL      W1CONV = *BLANKS                                           CSW218
+     C                   EXSR      SRCONV                                                     CSW218
+     C                   EXSR      SRMOVE                                                     CSW218
+      *                                                                                       CSW218
+      ** Read next until EOF                                                                  CSW218
+      *                                                                                       CSW218
+     C                   READ      MEDWFIPD                               71                  CSW218
+     C                   ENDDO                                                                CSW218
+      *                                                                                       CSW218
+     C                   ENDSR                                                                CSW218
       *
       /EJECT
       *****************************************************************
@@ -1401,6 +1499,9 @@
      C     MOVE_IN       WHENEQ    'EL'                                                       CFT051
      C                   EXSR      WriteEL                                                    CFT051
       *                                                                                       CFT051
+     C     MOVE_IN       WHENEQ    'FI'                                                       CSW218
+     C                   EXSR      WriteFI                                                    CSW218
+      *                                                                                       CSW218
      C                   ENDSL
       *
      C                   ENDIF
@@ -1859,6 +1960,62 @@
       *                                                                                       CFT051
      C                   ENDSR                                                                CFT051
       *****************************************************************                       CFT051
+      /EJECT                                                                                  CSW218
+      *****************************************************************                       CSW218
+      *                                                               *                       CSW218
+      *  WriteFI -  Write BIC Database 2018 Record                    *                       CSW218
+      *  Called by: SRMOVE                                            *                       CSW218
+      *  Calls    : None                                              *                       CSW218
+      *                                                               *                       CSW218
+      *****************************************************************                       CSW218
+      *                                                                                       CSW218
+     C     WriteFI       BEGSR                                                                CSW218
+      *                                                                                       CSW218
+     C                   EVAL      BDTAG  = DATA(1)                                           CSW218
+     C                   EVAL      BDMODF = DATA(2)                                           CSW218
+     C                   EVAL      BDBICC = DATA(3)                                           CSW218
+     C                   EVAL      BDBICB = DATA(4)                                           CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(5)                                           CSW218
+     C                   EVAL      BDINS1 = %SUBST(TMP105:1:35)                               CSW218
+     C                   EVAL      BDINS2 = %SUBST(TMP105:36:35)                              CSW218
+     C                   EVAL      BDINS3 = %SUBST(TMP105:71:35)                              CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(6)                                           CSW218
+     C                   EVAL      BDBRC1 = %SUBST(TMP105:1:35)                               CSW218
+     C                   EVAL      BDBRC2 = %SUBST(TMP105:36:35)                              CSW218
+     C                   EVAL      BDCITY = DATA(7)                                           CSW218
+     C                   EVAL      BDSUBT = DATA(8)                                           CSW218
+     C                   EVAL      BDADDS = DATA(9)                                           CSW218
+     C                   EVAL      BDXINF = DATA(10)                                          CSW218
+     C                   EVAL      BDAPH1 = DATA(11)                                          CSW218
+     C                   EVAL      BDAPH2 = DATA(12)                                          CSW218
+     C                   EVAL      BDAPH3 = DATA(13)                                          CSW218
+     C                   EVAL      BDAPH4 = DATA(14)                                          CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(15)                                          CSW218
+     C                   EVAL      BDLOC1 = %SUBST(TMP105:1:25)                               CSW218
+     C                   EVAL      BDLOC2 = %SUBST(TMP105:26:35)                              CSW218
+     C                   EVAL      BDLOC3 = %SUBST(TMP105:61:35)                              CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(16)                                          CSW218
+     C                   EVAL      BDCTY1 = %SUBST(TMP105:1:35)                               CSW218
+     C                   EVAL      BDCTY2 = %SUBST(TMP105:36:35)                              CSW218
+     C                   EVAL      BDPOBN = DATA(17)                                          CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(18)                                          CSW218
+     C                   EVAL      BDPOB1 = %SUBST(TMP105:1:35)                               CSW218
+     C                   EVAL      BDPOB2 = %SUBST(TMP105:36:35)                              CSW218
+     C                   EVAL      BDPOB3 = %SUBST(TMP105:71:35)                              CSW218
+     C                   EVAL      TMP105 = *BLANKS                                           CSW218
+     C                   EVAL      TMP105 = DATA(19)                                          CSW218
+     C                   EVAL      BDPBC1 = %SUBST(TMP105:1:35)                               CSW218
+     C                   EVAL      BDPBC2 = %SUBST(TMP105:36:35)                              CSW218
+      *                                                                                       CSW218
+     C                   WRITE     @BICDPD                                                    CSW218
+      *                                                                                       CSW218
+     C                   ENDSR                                                                CSW218
+      *****************************************************************                       CSW218
       *
       /EJECT
       *****************************************************************

@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD050619           Date 24Apr18               *
+      *  Prev Amend No. MD050574           Date 20Apr18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 MD036155           Date 23Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD029067           Date 27Oct14               *
@@ -166,6 +168,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050619 - No payment reference generated when routing via   *
+      *             Through Payment                                   *
+      *  MD050574 - Invalid Input User name for generated Outgoing    *
+      *             Payment transaction from Incoming message         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
@@ -1264,6 +1270,7 @@
      D svOPORB3        S                   LIKE(OTOPORB3)                                     CFT039
      D svOPORB4        S                   LIKE(OTOPORB4)                                     CFT039
      D svOPORB5        S                   LIKE(OTOPORB5)                                     CFT039
+     D InputUser       S             10A                                                    MD050574
  
       *****************************************************************
       /EJECT
@@ -2412,6 +2419,7 @@
                                                                                               257361
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
+     C                   PARM      *BLANKS       InputUser                                  MD050574
                                                                                               257361
      C/COPY WNCPYSRC,FTOPA1SC13
  
@@ -3038,6 +3046,7 @@
      C                   PARM                    NwPtFilFmt                     CFT014
      C                   PARM                    NwPtFilFmX                     CFT014
      C                   PARM                    Val@Fields                     CFT014
+     C                   PARM      *BLANKS       InputUser                                  MD050574
                                                                                 CFT014
       ** If errors returned                                                     CFT014
                                                                                 CFT014
@@ -3455,6 +3464,7 @@
       *                                                                         CFT009
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
+     C                   PARM      *BLANKS       InputUser                                  MD050574
  
       *
       * If errors returned
@@ -9579,6 +9589,13 @@
      C*****SACTION       IFEQ      'I'                                                        204152
      C**********         EXSR      SETPAYREF                                                  204152
      C**********         END                                                                  204152
+                                                                                            MD050619
+      ** Set up Payment Reference if Window processing is not done                          MD050619
+                                                                                            MD050619
+     C                   IF        SPREF = *BLANKS AND                                      MD050619
+     C                             GENPREF = 'Y' AND SACTION = 'I'                          MD050619
+     C                   EXSR      SETPAYREF                                                MD050619
+     C                   ENDIF                                                              MD050619
       *                                                                                     AR402776
       ** Return the previous value of SPREF for updating                                    AR402776
       *                                                                                     AR402776

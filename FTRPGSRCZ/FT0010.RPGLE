@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045094           Date 10May17               *
+      *  Last Amend No. MD050134           Date 21Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
       *                 258369             Date 06Jun13               *
       *                 AR787421           Date 27Sep12               *
@@ -81,7 +82,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046248 - Finastra Rebranding                               *
       *  MD045094 - Credit and Debit amount are incorrect             *
       *  MD030406 - Cross Currency Outgoing Payment, pay amount not   *
       *             automatically calculated & show 0 in confirmation *
@@ -616,8 +616,10 @@
      C                   MOVE      *ON           *IN02
      C                   MOVE      *ON           *IN03
      C                   MOVEL     'FTM2572'     FTMSID
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
       *
      C                   ENDDO
@@ -1304,8 +1306,10 @@
      C                   MOVE      *ON           *IN03
      C                   MOVE      *ON           *IN04
      C                   ENDIF
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1402,8 +1406,10 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1489,8 +1495,10 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1532,8 +1540,10 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -1615,8 +1625,10 @@
      C     AMNT(F)       ORLT      LOWER
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
+     C                   SETON                                        55                    MD050134
      C                   MOVEL     'FTM2582'     FTMSID
      C                   EXSR      SNDMSG
+     C                   SETOFF                                       55                    MD050134
      C                   EXSR      RETURN
      C                   ENDIF
      C                   ENDIF
@@ -1725,8 +1737,10 @@
      C                   MOVE      *ON           *IN(2)
      C                   MOVE      *ON           *IN(3)
      C                   MOVEL     'FTM2582'     FTMSID
+     C                   SETON                                        55                    MD050134
      C                   EXSR      SNDMSG
      C                   EXSR      RETURN
+     C                   SETOFF                                       55                    MD050134
      C                   ENDIF
      C                   ENDSL
       *
@@ -2002,8 +2016,10 @@
      C     P#PMSQ        OREQ      W2PMSQ                                       CAP031
      C     P#PMSQ        OREQ      W3PMSQ                                       CAP136
      C     P#PMSQ        OREQ      W4PMSQ                                       CFT014
+     C     *IN55         IFEQ      *OFF                                                     MD050134
      C                   MOVE      *BLANKS       P#PMSQ                         CAP031
      C                   MOVEL     FTMSID        P#PMSQ                         CAP031
+     C                   ENDIF                                                              MD050134
      C                   ENDIF                                                  CAP031
       *                                                                         187222
       * If P#PMSQ is equal to 'PassBack' blank out                              187222

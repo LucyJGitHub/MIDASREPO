@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CDL051             Date 02May18               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046115           Date 24Jul17               *
       *                 MD036475           Date 04Dec15               *
       *                 MD024884A          Date 04Jul17               *
@@ -132,6 +133,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CDL051 - Incomplete Deals to Repair                          *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046115 - The error messages for CDL094 were not properly   *
@@ -2016,6 +2018,27 @@
      C                   MOVE      'N'           DDRstmOK
      C                   END
      C/COPY WNCPYSRC,ZASETINV18                                                               CUT009
+      *                                                                                       CDL051
+     C     CDL051        IFEQ      'Y'                                                        CDL051
+      *                                                                                       CDL051
+      **  If FX or MM deal then settlement instructions must be entered                       CDL051
+     C     ##CALP        IFEQ      'FXDL'                                                     CDL051
+     C     ##CALP        OREQ      'LDNI'                                                     CDL051
+     C     ##CALP        OREQ      'NASP'                                                     CDL051
+     C     ##CALP        OREQ      'NASS'                                                     CDL051
+     C     ##CALP        OREQ      'DEAM'                                                     CDL051
+      *                                                                                       CDL051
+      *                                                                                       CDL051
+     C     DDRSTM        IFEQ      '00'                                                       CDL051
+     C     DDRSTM        OREQ      *Blanks                                                    CDL051
+     C                   EVAL      WIdx = WIdx + 1                                            CDL051
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDRSTM'                              CDL051
+     C                   EVAL      WMsgIDArr(WIdx)    = 'ESM1028'                             CDL051
+     C                   ENDIF                                                                CDL051
+      *                                                                                       CDL051
+     C                   ENDIF                                                                CDL051
+      *                                                                                       CDL051
+     C                   ENDIF                                                                CDL051
       *                                                                         CDL008
      C     CDL008        IFEQ      'Y'                                          CDL008
      C     ##CALP        ANDEQ     'FXDL'                                       CDL008
@@ -3934,6 +3957,26 @@
      C                   MOVE      'N'           DDPstmOK
      C                   END
      C/COPY WNCPYSRC,ZASETINV20                                                               CUT009
+      *                                                                                       CDL051
+     C     CDL051        IFEQ      'Y'                                                        CDL051
+      *                                                                                       CDL051
+      **  If FX or MM deal then settlement instructions must be entered                       CDL051
+     C     ##CALP        IFEQ      'FXDL'                                                     CDL051
+     C     ##CALP        OREQ      'LDNI'                                                     CDL051
+     C     ##CALP        OREQ      'NASP'                                                     CDL051
+     C     ##CALP        OREQ      'NASS'                                                     CDL051
+     C     ##CALP        OREQ      'DEAM'                                                     CDL051
+      *                                                                                       CDL051
+     C     DDPSTM        IFEQ      '00'                                                       CDL051
+     C     DDPSTM        OREQ      *Blanks                                                    CDL051
+     C                   EVAL      WIdx = WIdx + 1                                            CDL051
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDPSTM'                              CDL051
+     C                   EVAL      WMsgIDArr(WIdx)    = 'ESM1027'                             CDL051
+     C                   ENDIF                                                                CDL051
+      *                                                                                       CDL051
+     C                   ENDIF                                                                CDL051
+      *                                                                                       CDL051
+     C                   ENDIF                                                                CDL051
       *                                                                         CDL008
      C     CDL008        IFEQ      'Y'                                          CDL008
      C     ##CALP        ANDEQ     'FXDL'                                       CDL008
@@ -9557,6 +9600,20 @@
      C                   MOVEL     'N'           CLE168                                       CLE168
      C                   ENDIF                                                                CLE168
       *                                                                                       CLE168
+      ** Access SAR details file for CDL051                                                   CDL051
+      *                                                                                       CDL051
+     C                   CALLB     'AOSARDR0'                                                 CDL051
+     C                   PARM      *BLANKS       @RTCD                                        CDL051
+     C                   PARM      '*VERIFY'     @OPTN                                        CDL051
+     C                   PARM      'CDL051'      @SARD                                        CDL051
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CDL051
+                                                                                              CDL051
+     C                   IF        @RTCD = *BLANK                                             CDL051
+     C                   MOVEL     'Y'           CDL051            1                          CDL051
+     C                   ELSE                                                                 CDL051
+     C                   MOVEL     'N'           CDL051                                       CDL051
+     C                   ENDIF                                                                CDL051
+      *                                                                                       CDL051
       *                                                                         CSW200
      C                   ENDSR
      C*****************************************************************

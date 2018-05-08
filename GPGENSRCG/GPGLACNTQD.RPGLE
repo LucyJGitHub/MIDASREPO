@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD050190           Date 04Apr18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 MD022923B          Date 30Sep13               *
       *                 AR1095876          Date 30Sep13               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050190 - Low performance of GOCACTS components.            *
+      *           - Conditioned processing of ABC file GPACNTTD.      *            
       *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -101,7 +104,9 @@ O    D G_GPACNTTD    E DS                  EXTNAME(GPACNTTD) PREFIX(G1)         
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
+     C                   IF        CAP205 = 'Y'                                             MD050190
      C                   EXSR      SRPutOvr                                                MD020656A
+     C                   ENDIF                                                              MD050190
 O
 O     * Global File Updates
 O
@@ -112,14 +117,18 @@ O    C                   MOVEL     I#AIMG        Z_GLACNTQD
 O    C                   ENDIF
 O
 O    C     K_GZGLACNTL1  CHAIN     GLACNTD0                           99
+     C                   IF        CAP205 = 'Y'                                             MD050190
      C                   CLEAR                   G_GPACNTTD                                 MD020656
      C     K_GZGLACNTL1  CHAIN     GPACNTD0                           81                    MD020656
+     C                   ENDIF                                                              MD050190
 O
 O     * 'Before'
 O
 O    C     I#BFAF        IFEQ      'B'
 O    C  N99              DELETE    GLACNTD0
+     C                   IF        CAP205 = 'Y'                                             MD050190
      C  N81              DELETE    GPACNTD0                                                 MD020656
+     C                   ENDIF                                                              MD050190
 O    C                   ELSE
 O
 O     * 'After'
@@ -144,6 +153,7 @@ O    C                   ELSE
 O    C                   WRITE     W_GLACNTD0
 O    C                   ENDIF
      C                   ENDIF                                                                CGP017
+     C                   IF        CAP205 = 'Y'                                             MD050190
       * Map and update Update Enquiry file                                                  MD020656
      C                   EVAL      Z_GPACNTTD = G_GPACNTTD                                  MD020656
      C                   EXSR      SRMapEnqF                                                MD020656
@@ -163,9 +173,12 @@ O    C                   ENDIF
      C                                      + Alp_ACOD + Alp_ACSQ                           MD020656
      C                   WRITE     W_GPACNTD0                                               MD020656
      C                   ENDIF                                                              MD020656
+     C                   ENDIF                                                              MD050190
 O    C                   ENDIF
       *                                                                                    MD020656A
+     C                   IF        CAP205 = 'Y'                                             MD050190
      C                   EXSR      SRDelOvr                                                MD020656A
+     C                   ENDIF                                                              MD050190
  
      C                   RETURN
  
@@ -174,6 +187,18 @@ O    C                   ENDIF
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
+      *                                                                                     MD050190
+      ** Check if CAP205 is switched on.                                                    MD050190
+      *                                                                                     MD050190
+     C                   MOVE      'N'           CAP205            1                        MD050190
+     C                   CALLB     'AOSARDR0'                                               MD050190
+     C                   PARM      *BLANKS       @RTCD             7                        MD050190
+     C                   PARM      '*VERIFY'     @OPTN             7                        MD050190
+     C                   PARM      'CAP205'      @SARD             6                        MD050190
+      *                                                                                     MD050190
+     C     @RTCD         IFEQ      *BLANKS                                                  MD050190
+     C                   MOVE      'Y'           CAP205                                     MD050190
+     C                   ENDIF                                                              MD050190
 O
 O     * Open for commit?
 O
@@ -181,7 +206,9 @@ O    C                   CALL      'GPCOPN4COM'
 O    C                   PARM                    D_COM             1
 O    C                   OPEN      GZGLACNTL1
 O    C                   OPEN      GZGLACNTQD
+     C                   IF        CAP205 = 'Y'                                             MD050190
 O    C                   OPEN      GPACNTTD                                                 MD020656
+     C                   ENDIF                                                              MD050190
 O    C**********         OPEN      GPACNTL1                                       MD020656 MD020656A
 O
 O     * Key lists

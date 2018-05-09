@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CLE169             Date 07Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD023117           Date 13Jan15               *
       *                 MD026331           Date 13Jan15               *
       *                 MD026337           Date 13Jan15               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE169 - Contingent Accounting Changes for Overdraft. Also   *
+      *           applied fixes MD044705, MD045370, and MD045032.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD023117 - Double postings of S1 event on a rollover deal.   *
@@ -166,6 +169,10 @@
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)                                     MD023117
      F                                     RENAME(DEALSDCF:DEALSDCFL1)                      MD023117
      F                                     PREFIX(DC_)                                      MD023117
+     FACCNTJ2   IF   E           K DISK    INFSR(*PSSR)                                       CLE169
+     F                                     RENAME(ACCNTJD0:ACCNTJD2)                          CLE169
+     FGLJEHHL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE169
+     FGLJENHL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE169
 
       *****************************************************************
       /EJECT
@@ -312,6 +319,7 @@
 
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
      D LERSTS        E DS                  EXTNAME(LERSTS) DTAARA                            BUG8222
+     D JNSTAT        E DS                  EXTNAME(JNSTAT) DTAARA                             CLE169
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
@@ -401,6 +409,7 @@
      D PSARD           S              6
      D PACOD           S             10
      D CLE023          S              1
+     D CLE169          S              1                                                       CLE169
 
       ** Key Field Variables
 
@@ -437,6 +446,9 @@
      D KFFACT          S                   LIKE(FHFTYP)
      D KFFCNO          S                   LIKE(FHFSEQ)
      D KDLNO           S              6
+     D KBEDT           S              5  0                                                    CLE169
+     D KBTNB           S              3                                                       CLE169
+     D BTCHK           S              1  0                                                    CLE169
      D KNDLNO          S                   LIKE(DC_DLNO)                                    MD023117
      D WKFUID          S                   LIKE(DC_FUID)                                    MD023117
      D                                     INZ('N')                                         MD023117
@@ -473,6 +485,9 @@
      D WTEOC           S             15  0
      D WACCRUE         S              5  0
      D WNMVMT          S              1                                                      BUG3035
+     D WPRUN           S              5  0                                                    CLE169
+     D WPROC           S              1                                                       CLE169
+     D WBTCH           S              3                                                       CLE169
 
      D GIVEN           S              1
      D WUPDAT          S              1
@@ -612,6 +627,20 @@
      I              ACOD                        ACACOD
      I              ACSQ                        ACACSQ
      I              ACNO                        ACACNO
+     I              FCCU                        ACFCCU                                        CLE169
+     I              FACT                        ACFACT                                        CLE169
+     I              FCNO                        ACFCNO                                        CLE169
+      *                                                                                       CLE169
+     IACCNTJD2                                                                                CLE169
+     I              BRCA                        A2BRCA                                        CLE169
+     I              CNUM                        A2CNUM                                        CLE169
+     I              CCY                         A2CCY                                         CLE169
+     I              ACOD                        A2ACOD                                        CLE169
+     I              ACSQ                        A2ACSQ                                        CLE169
+     I              ACNO                        A2ACNO                                        CLE169
+     I              FCCU                        A2FCCU                                        CLE169
+     I              FACT                        A2FACT                                        CLE169
+     I              FCNO                        A2FCNO                                        CLE169
 
      IAPOSTJD0
      I              CNUM                        APCNUM
@@ -667,7 +696,11 @@
 
       ** Access ACCNTAB/GLACNTQD
 
+     C     CLE169        IFEQ      'Y'                                                        CLE169
+     C                   EXSR      SRACCTUP2                                                  CLE169
+     C                   ELSE                                                                 CLE169
      C                   EXSR      SRACCTUPD
+     C                   ENDIF                                                                CLE169
                                                                                           AR1023928A
       ** Access RSACMTPD                                                                  AR1023928A
                                                                                           AR1023928A
@@ -2382,9 +2415,12 @@
      C                   EVAL      WTEOC = 0
      C                   EVAL      WTEOF = 0
 
-     C                   EVAL      WCUST = FCCU
-     C                   EVAL      WFCLT = FACT
-     C                   EVAL      WFCSQ = FCNO
+     C**********         EVAL      WCUST = FCCU                                               CLE169
+     C**********         EVAL      WFCLT = FACT                                               CLE169
+     C**********         EVAL      WFCSQ = FCNO                                               CLE169
+     C                   EVAL      WCUST = ACFCCU                                             CLE169
+     C                   EVAL      WFCLT = ACFACT                                             CLE169
+     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
 
      C**********         IF        WFACILTY <> *ZEROS                                         CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2457,9 +2493,12 @@
       ** Generate 'AS' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C                   EVAL      KFCNUM = FCCU
-     C                   EVAL      KFFACT = FACT
-     C                   EVAL      KFFCNO = FCNO
+     C**********         EVAL      KFCNUM = FCCU                                              CLE169
+     C**********         EVAL      KFFACT = FACT                                              CLE169
+     C**********         EVAL      KFFCNO = FCNO                                              CLE169
+     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
+     C                   EVAL      KFFACT = ACFACT                                            CLE169
+     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
      C                   EVAL      WNMVMT = 'N'                                              BUG3035
      C                   EVAL      WACTION = 'AS'
      C                   EVAL      WACTCCY = ACCCY
@@ -2576,9 +2615,12 @@
       ** Generate 'AC' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C                   EVAL      KFCNUM = FCCU
-     C                   EVAL      KFFACT = FACT
-     C                   EVAL      KFFCNO = FCNO
+     C**********         EVAL      KFCNUM = FCCU                                              CLE169
+     C**********         EVAL      KFFACT = FACT                                              CLE169
+     C**********         EVAL      KFFCNO = FCNO                                              CLE169
+     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
+     C                   EVAL      KFFACT = ACFACT                                            CLE169
+     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
      C                   EVAL      WNMVMT = 'N'                                              BUG3035
      C                   EVAL      WACTION = 'AC'
      C                   EVAL      WACTCCY = ACCCY
@@ -2743,9 +2785,12 @@
 
      C                   ELSE                                                                BUG3035
                                                                                              BUG3035
-     C                   EVAL      WCUST = FCCU                                              BUG3035
-     C                   EVAL      WFCLT = FACT                                              BUG3035
-     C                   EVAL      WFCSQ = FCNO                                              BUG3035
+     C**********         EVAL      WCUST = FCCU                                       BUG3035 CLE169
+     C**********         EVAL      WFCLT = FACT                                       BUG3035 CLE169
+     C**********         EVAL      WFCSQ = FCNO                                       BUG3035 CLE169
+     C                   EVAL      WCUST = ACFCCU                                             CLE169
+     C                   EVAL      WFCLT = ACFACT                                             CLE169
+     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
                                                                                              BUG3035
      C**********         IF        WFACILTY <> *ZEROS                                 BUG3035 CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2763,9 +2808,12 @@
                                                                                              BUG3035
      C                   IF        *IN15 = *OFF                                              BUG3035
                                                                                              BUG3035
-     C                   MOVE      FCCU          KFCNUM                                      BUG3035
-     C                   MOVE      FACT          KFFACT                                      BUG3035
-     C                   MOVE      FCNO          KFFCNO                                      BUG3035
+     C**********         MOVE      FCCU          KFCNUM                               BUG3035 CLE169
+     C**********         MOVE      FACT          KFFACT                               BUG3035 CLE169
+     C**********         MOVE      FCNO          KFFCNO                               BUG3035 CLE169
+     C                   MOVE      ACFCCU        KFCNUM                                       CLE169
+     C                   MOVE      ACFACT        KFFACT                                       CLE169
+     C                   MOVE      ACFCNO        KFFCNO                                       CLE169
      C                   EVAL      WTRANSID = *ZEROS                                         BUG3035
      C                   EVAL      WACTION = 'AR'                                            BUG3035
      C                   EVAL      WACTCCY = ACCCY                                           BUG3035
@@ -2844,6 +2892,8 @@
      C                   DOW       NOT %EOF(RSACMTL3)
 
      C                   IF        VUDT < BJDNWD
+     C                             OR        CLE169 = 'Y'                                     CLE169
+     C                             AND       PTDT < BJDNWD                                    CLE169
 
      C                   EVAL      KACCNUM = CUSN
      C                   EVAL      KACCCY = CCYD
@@ -2857,7 +2907,11 @@
      C**********         EVAL      WFCLT = FACT                                              BUG3035
      C**********         EVAL      WFCSQ = FCNO                                              BUG3035
 
+     C     CLE169        IFEQ      'Y'                                                        CLE169
+     C     KACCNT        CHAIN     ACCNTJ2                            15                      CLE169
+     C                   ELSE                                                                 CLE169
      C     KACCNT        CHAIN     ACCNTJ0                            15
+     C                   ENDIF                                                                CLE169
 
       ** Database error
 
@@ -2868,9 +2922,18 @@
      C                   EXSR      *PSSR
      C                   ELSE
 
-     C                   EVAL      WCUST = FCCU                                              BUG3035
-     C                   EVAL      WFCLT = FACT                                              BUG3035
-     C                   EVAL      WFCSQ = FCNO                                              BUG3035
+     C**********         EVAL      WCUST = FCCU                                       BUG3035 CLE169
+     C**********         EVAL      WFCLT = FACT                                       BUG3035 CLE169
+     C**********         EVAL      WFCSQ = FCNO                                       BUG3035 CLE169
+     C     CLE169        IFEQ      'Y'                                                        CLE169
+     C                   EVAL      WCUST = A2FCCU                                             CLE169
+     C                   EVAL      WFCLT = A2FACT                                             CLE169
+     C                   EVAL      WFCSQ = A2FCNO                                             CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WCUST = ACFCCU                                             CLE169
+     C                   EVAL      WFCLT = ACFACT                                             CLE169
+     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
+     C                   ENDIF                                                                CLE169
 
      C**********         IF        WFACILTY <> *ZEROS                                         CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2894,11 +2957,21 @@
       ** Generate 'AC' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C                   EVAL      KFCNUM = FCCU
-     C                   EVAL      KFFACT = FACT
-     C                   EVAL      KFFCNO = FCNO
+     C**********         EVAL      KFCNUM = FCCU                                              CLE169
+     C**********         EVAL      KFFACT = FACT                                              CLE169
+     C**********         EVAL      KFFCNO = FCNO                                              CLE169
      C                   EVAL      WACTION = 'AC'
+     C                   IF        CLE169 = 'Y'                                               CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+     C                   EVAL      KFCNUM = A2FCCU                                            CLE169
+     C                   EVAL      KFFACT = A2FACT                                            CLE169
+     C                   EVAL      KFFCNO = A2FCNO                                            CLE169
+     C                   ELSE                                                                 CLE169
      C                   EVAL      WACTCCY = ACCCY
+     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
+     C                   EVAL      KFFACT = ACFACT                                            CLE169
+     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
+     C                   ENDIF                                                                CLE169
      C                   EVAL      WACTDAT = BJRDNB
 
       ** Determine Current Valuation Details
@@ -2969,6 +3042,856 @@
      C                   ENDSR
 
       *****************************************************************
+      /EJECT
+      *****************************************************************                       CLE169
+      *                                                               *                       CLE169
+      * SRACCTUP2 - Access Records in ACCNTAB/GLACNTQD                *                       CLE169
+      *                                                               *                       CLE169
+      *****************************************************************                       CLE169
+                                                                                              CLE169
+     C     SRACCTUP2     BEGSR                                                                CLE169
+                                                                                              CLE169
+     C     *LOVAL        SETLL     ACCNTJ2                                                    CLE169
+     C                   READ      ACCNTJ2                                                    CLE169
+                                                                                              CLE169
+      ** Read first record                                                                    CLE169
+                                                                                              CLE169
+     C                   DOW       NOT %EOF(ACCNTJ2)                                          CLE169
+                                                                                              CLE169
+     C                   IF        F1FCHD <> 0                                                CLE169
+                                                                                              CLE169
+     C                   EVAL      WCUST = PFCU                                               CLE169
+     C                   EVAL      WFCLT = PFTP                                               CLE169
+     C                   EVAL      WFCSQ = PFSQ                                               CLE169
+     C                   EVAL      KFCNUM = PFCU                                              CLE169
+     C                   EVAL      KFFACT = PFTP                                              CLE169
+     C                   EVAL      KFFCNO = PFSQ                                              CLE169
+     C                   EVAL      WFCNUM = PFCU                                              CLE169
+     C                   EVAL      WFFACT = PFTP                                              CLE169
+     C                   EVAL      WFFCNO = PFSQ                                              CLE169
+                                                                                              CLE169
+      ** If Previous Facility <> *BLANKS                                                      CLE169
+                                                                                              CLE169
+     C                   IF        WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CLE169
+     C                             WCUST <> *ZEROS AND                                        CLE169
+     C                             WFCSQ <> *ZEROS                                            CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            15                      CLE169
+                                                                                              CLE169
+     C                   IF        *IN15 = *ON                                                CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     PEFCLFL3                           16                      CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** If record not found in PEFCLFM, do not execute further.                              CLE169
+      *                                                                                       CLE169
+     C                   IF        *IN15 = *OFF OR *IN16 = *OFF                               CLE169
+                                                                                              CLE169
+      ** If live record                                                                       CLE169
+                                                                                              CLE169
+     C                   IF        RECI <> 'R'                                                CLE169
+                                                                                              CLE169
+     C                   EVAL      KFACNUM = PFCU                                             CLE169
+     C                   MOVEL     PFTP          KFAFCTY                                      CLE169
+     C                   MOVE      PFSQ          KFAFCTY                                      CLE169
+     C                   EVAL      KFAACBR = A2BRCA                                           CLE169
+     C                   EVAL      KFAACCU = A2CNUM                                           CLE169
+     C                   EVAL      KFAACCY = A2CCY                                            CLE169
+     C                   EVAL      KFAACCD = A2ACOD                                           CLE169
+     C                   EVAL      KFAACSQ = A2ACSQ                                           CLE169
+     C                   EVAL      WCOMPF1 = KFACNUM                                          CLE169
+     C                   EVAL      WCOMPF2 = KFAFCTY                                          CLE169
+     C                   EVAL      WCOMPFA = *BLANKS                                          CLE169
+     C                   EVAL      WCOMPFB = *ZEROS                                           CLE169
+                                                                                              CLE169
+     C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
+     C                   READ      FACHSAL5                               17                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMPFA = FACNUM                                           CLE169
+     C                   EVAL      WCOMPFB = FAFCTY                                           CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and WCOMPARE1 = WCOMPARE2                     CLE169
+                                                                                              CLE169
+     C                   EVAL      RWRKDAT = FADATE                                           CLE169
+                                                                                              CLE169
+     C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
+     C                   READ      FACHSAL5                                                   CLE169
+                                                                                              CLE169
+      ** Update record in FACHISA                                                             CLE169
+                                                                                              CLE169
+     C                   DOW       NOT %EOF(FACHSAL5)                                         CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMPFA = FACNUM                                           CLE169
+     C                   EVAL      WCOMPFB = FAFCTY                                           CLE169
+                                                                                              CLE169
+     C                   IF        WCOMPARE1 = WCOMPARE2                                      CLE169
+     C                   EVAL      FAREVI = 'R'                                               CLE169
+     C                   EVAL      FAGNDT = BJRDNB                                            CLE169
+     C                   EVAL      FACFGI = *BLANKS                                           CLE169
+     C                   UPDATE    FACHISA5                                                   CLE169
+     C                   ELSE                                                                 CLE169
+     C                   LEAVE                                                                CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Read next record                                                                     CLE169
+                                                                                              CLE169
+     C                   READ      FACHSAL5                                                   CLE169
+     C                   ENDDO                                                                CLE169
+                                                                                              CLE169
+      ** Check if Previous Facility in FACACT                                                 CLE169
+                                                                                              CLE169
+     C                   EVAL      KBRCA = WSBRCA                                             CLE169
+     C                   EVAL      KCNUM = PFCU                                               CLE169
+     C                   MOVE      PFSQ          KFCTY                                        CLE169
+     C                   MOVEL     PFTP          KFCTY                                        CLE169
+                                                                                              CLE169
+     C     KFACACT       CHAIN     FACACTL1                           17                      CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   IF        RWRKDAT < FCDATE                                           CLE169
+     C                   EVAL      FCDATE = RWRKDAT                                           CLE169
+     C                   UPDATE    FACACTF                                                    CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ELSE                                                                 CLE169
+                                                                                              CLE169
+     C                   EVAL      RSBRCA = WSBRCA                                            CLE169
+     C                   EVAL      FCCNUM = PFCU                                              CLE169
+     C                   MOVE      PFSQ          FCFCTY                                       CLE169
+     C                   MOVEL     PFTP          FCFCTY                                       CLE169
+     C                   EVAL      FCDATE = RWRKDAT                                           CLE169
+     C                   WRITE     FACACTF                                                    CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   IF        CLE023 = 'Y' and RWRKDAT < BJRDNB                          CLE169
+                                                                                              CLE169
+     C                   EVAL      KHBRCA = WSBRCA                                            CLE169
+     C                   EVAL      KHCNUM = PFCU                                              CLE169
+     C                   EVAL      KHFACT = PFTP                                              CLE169
+     C                   EVAL      KHFCNO = PFSQ                                              CLE169
+                                                                                              CLE169
+     C     KFACHISH      CHAIN     FACHISHL                           17                      CLE169
+                                                                                              CLE169
+      ** Update FACHISH                                                                       CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   EVAL      FHRWKR = 'Y'                                               CLE169
+     C                   EVAL      FHRWTP = 'B'                                               CLE169
+                                                                                              CLE169
+     C                   IF        FHRWDT = 0 or FHRWDT > RWRKDAT                             CLE169
+     C                   EVAL      FHRWDT = RWRKDAT                                           CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   UPDATE    FACHISHF                                                   CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** If facility is tranche                                                               CLE169
+                                                                                              CLE169
+     C                   IF        TRCA = 'TR'                                                CLE169
+                                                                                              CLE169
+     C                   EVAL      KFACNUM = CANM                                             CLE169
+     C                   MOVEL     CAFT          KFAFCTY                                      CLE169
+     C                   MOVE      CAFN          KFAFCTY                                      CLE169
+     C                   EVAL      KFAACBR = A2BRCA                                           CLE169
+     C                   EVAL      KFAACCU = A2CNUM                                           CLE169
+     C                   EVAL      KFAACCY = A2CCY                                            CLE169
+     C                   EVAL      KFAACCD = A2ACOD                                           CLE169
+     C                   EVAL      KFAACSQ = A2ACSQ                                           CLE169
+     C                   EVAL      WCOMPF1 = KFACNUM                                          CLE169
+     C                   EVAL      WCOMPF2 = KFAFCTY                                          CLE169
+     C                   EVAL      WCOMPFA = *BLANKS                                          CLE169
+     C                   EVAL      WCOMPFB = *ZEROS                                           CLE169
+                                                                                              CLE169
+     C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
+     C                   READ      FACHSAL5                               17                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMPFA = FACNUM                                           CLE169
+     C                   EVAL      WCOMPFB = FAFCTY                                           CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and WCOMPARE1 = WCOMPARE2                     CLE169
+     C                   MOVE      BRCA          CABRCA            3                          CLE169
+                                                                                              CLE169
+     C                   EVAL      RWRKDAT = FADATE                                           CLE169
+                                                                                              CLE169
+     C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
+     C                   READ      FACHSAL5                                                   CLE169
+                                                                                              CLE169
+      ** Update record in FACHISA                                                             CLE169
+                                                                                              CLE169
+     C                   DOW       NOT %EOF(FACHSAL5)                                         CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMPFA = FACNUM                                           CLE169
+     C                   EVAL      WCOMPFB = FAFCTY                                           CLE169
+                                                                                              CLE169
+     C                   IF        WCOMPARE1 = WCOMPARE2                                      CLE169
+     C                   EVAL      FAREVI = 'R'                                               CLE169
+     C                   EVAL      FAGNDT = BJRDNB                                            CLE169
+     C                   EVAL      FACFGI = *BLANKS                                           CLE169
+     C                   UPDATE    FACHISA5                                                   CLE169
+     C                   ELSE                                                                 CLE169
+     C                   LEAVE                                                                CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Read next record                                                                     CLE169
+                                                                                              CLE169
+     C                   READ      FACHSAL5                                                   CLE169
+     C                   ENDDO                                                                CLE169
+                                                                                              CLE169
+      ** Check if Previous Facility in FACACT                                                 CLE169
+                                                                                              CLE169
+     C                   EVAL      KBRCA = CABRCA                                             CLE169
+     C                   EVAL      KCNUM = CANM                                               CLE169
+     C                   MOVEL     CAFT          KFCTY                                        CLE169
+     C                   MOVE      CAFN          KFCTY                                        CLE169
+                                                                                              CLE169
+     C     KFACACT       CHAIN     FACACTL1                           17                      CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   IF        RWRKDAT < FCDATE                                           CLE169
+     C                   EVAL      FCDATE = RWRKDAT                                           CLE169
+     C                   UPDATE    FACACTF                                                    CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ELSE                                                                 CLE169
+                                                                                              CLE169
+     C                   EVAL      RSBRCA = CABRCA                                            CLE169
+     C                   EVAL      FCCNUM = CANM                                              CLE169
+     C                   MOVE      CAFN          FCFCTY                                       CLE169
+     C                   MOVEL     CAFT          FCFCTY                                       CLE169
+     C                   EVAL      FCDATE = RWRKDAT                                           CLE169
+     C                   WRITE     FACACTF                                                    CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   IF        CLE023 = 'Y' and RWRKDAT < BJRDNB                          CLE169
+                                                                                              CLE169
+     C                   EVAL      KHBRCA = CABRCA                                            CLE169
+     C                   EVAL      KHCNUM = CANM                                              CLE169
+     C                   EVAL      KHFACT = CAFT                                              CLE169
+     C                   EVAL      KHFCNO = CAFN                                              CLE169
+                                                                                              CLE169
+     C     KFACHISH      CHAIN     FACHISHL                           17                      CLE169
+                                                                                              CLE169
+      ** Update FACHISH                                                                       CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   EVAL      FHRWKR = 'Y'                                               CLE169
+     C                   EVAL      FHRWTP = 'B'                                               CLE169
+                                                                                              CLE169
+     C                   IF        FHRWDT = 0 or FHRWDT > RWRKDAT                             CLE169
+     C                   EVAL      FHRWDT = RWRKDAT                                           CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   UPDATE    FACHISHF                                                   CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   EVAL      WNMVMT = 'Y'                                               CLE169
+     C                   EVAL      WACTBAL = 0                                                CLE169
+     C                   EVAL      WTEOP = 0                                                  CLE169
+     C                   EVAL      WTEOC = 0                                                  CLE169
+     C                   EVAL      WTEOF = 0                                                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WCUST = A2FCCU                                             CLE169
+     C                   EVAL      WFCLT = A2FACT                                             CLE169
+     C                   EVAL      WFCSQ = A2FCNO                                             CLE169
+                                                                                              CLE169
+     C                   IF        WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CLE169
+     C                             WCUST <> *ZEROS AND                                        CLE169
+     C                             WFCSQ <> *ZEROS                                            CLE169
+                                                                                              CLE169
+     C                   EVAL      WACTBAL = LDBL                                             CLE169
+                                                                                              CLE169
+      ** Access APOSTPD/GLACPHPD record                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      KACNUM = A2CNUM                                            CLE169
+     C                   EVAL      KACCY = A2CCY                                              CLE169
+     C                   EVAL      KAACOD = A2ACOD                                            CLE169
+     C                   EVAL      KAACSQ = A2ACSQ                                            CLE169
+     C                   EVAL      KABRCA = A2BRCA                                            CLE169
+     C                   EVAL      KAPSTD = *LOVAL                                            CLE169
+     C                   EVAL      WCOMAC1 = A2CNUM                                           CLE169
+     C                   EVAL      WCOMAC2 = A2CCY                                            CLE169
+     C                   EVAL      WCOMAC3 = A2ACOD                                           CLE169
+     C                   EVAL      WCOMAC4 = A2ACSQ                                           CLE169
+     C                   EVAL      WCOMAC5 = A2BRCA                                           CLE169
+     C                   EVAL      WCOMACA = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACB = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACC = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACD = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACE = *BLANKS                                          CLE169
+                                                                                              CLE169
+     C     KAPOST        SETLL     APOSTJ2                                                    CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+                                                                                              CLE169
+     C                   DOW       NOT %EOF(APOSTJ2)                                          CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMACA = APCNUM                                           CLE169
+     C                   EVAL      WCOMACB = CCY                                              CLE169
+     C                   EVAL      WCOMACC = APACOD                                           CLE169
+     C                   EVAL      WCOMACD = APACSQ                                           CLE169
+     C                   EVAL      WCOMACE = BRCA                                             CLE169
+                                                                                              CLE169
+     C                   IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD                    CLE169
+                                                                                              CLE169
+     C                   IF        DRCR = 0                                                   CLE169
+     C                   EVAL      WACTBAL = WACTBAL - PSTA                                   CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WACTBAL = WACTBAL + PSTA                                   CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ELSE                                                                 CLE169
+                                                                                              CLE169
+      *                                                                                       CLE169
+      ** Compare the two details before leaving the loop to make sure no record in            CLE169
+      ** APOSTJ2 was left behind in processing.                                               CLE169
+      *                                                                                       CLE169
+     C                   IF        WCOMPACC1 <> WCOMPACC2                                     CLE169
+     C                   LEAVE                                                                CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Read next record                                                                     CLE169
+                                                                                              CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+     C                   ENDDO                                                                CLE169
+                                                                                              CLE169
+      ** Generate 'AS' entry                                                                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WTRANSID = *ZEROS                                          CLE169
+     C                   EVAL      KFCNUM = A2FCCU                                            CLE169
+     C                   EVAL      KFFACT = A2FACT                                            CLE169
+     C                   EVAL      KFFCNO = A2FCNO                                            CLE169
+     C                   EVAL      WNMVMT = 'N'                                               CLE169
+     C                   EVAL      WACTION = 'AS'                                             CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+     C                   EVAL      WACTDAT = F1FCHD                                           CLE169
+                                                                                              CLE169
+      ** Determine Valuation Details                                                          CLE169
+                                                                                              CLE169
+     C                   EXSR      SRVALDET                                                   CLE169
+                                                                                              CLE169
+     C                   EVAL      WREVAMT = WEXPOFF                                          CLE169
+                                                                                              CLE169
+      ** Process Action                                                                       CLE169
+                                                                                              CLE169
+     C                   EXSR      SRPROCACT                                                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WTEOP = WEXPOFF                                            CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      WCCY1 = A2CCY                                              CLE169
+     C                   EVAL      WCCY2 = ORFCCY                                             CLE169
+     C                   EVAL      WINAMT = WEXPOFF                                           CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOF = WOUTAMT                                            CLE169
+                                                                                              CLE169
+     C                   MOVE      WCUST         KFCNUM                                       CLE169
+     C                   MOVE      WFCLT         KFFACT                                       CLE169
+     C                   MOVE      WFCSQ         KFFCNO                                       CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            17                      CLE169
+                                                                                              CLE169
+      ** If facility is tranche                                                               CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and TRCA = 'TR'                               CLE169
+     C                   EVAL      WCCY1 = ORFCCY                                             CLE169
+     C                   EVAL      WCCY2 = CACY                                               CLE169
+     C                   EVAL      WINAMT = WTEOF                                             CLE169
+     C                   EVAL      WRATE = WTRXRAT                                            CLE169
+     C                   EVAL      WMDIN = WTRMDIN                                            CLE169
+     C                   EVAL      GIVEN = 'Y'                                                CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOC = WOUTAMT                                            CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Update GLACNTQD                                                                      CLE169
+                                                                                              CLE169
+     C                   EVAL      KACCNUM = A2CNUM                                           CLE169
+     C                   EVAL      KACCCY = A2CCY                                             CLE169
+     C                   EVAL      KACACOD = A2ACOD                                           CLE169
+     C                   EVAL      KACACSQ = A2ACSQ                                           CLE169
+     C                   EVAL      KACBRCA = A2BRCA                                           CLE169
+                                                                                              CLE169
+     C     KACCNT        CHAIN     GLACNTL3                           15                      CLE169
+     C                                                                                        CLE169
+     C                   IF        *IN15 = *OFF                                               CLE169
+      *                                                                                       CLE169
+     C                   EVAL      F1ACBL = WACTBAL                                           CLE169
+     C                   EVAL      F1TEXO = WTEOP                                             CLE169
+     C                   EVAL      F1TEOF = WTEOF                                             CLE169
+      *                                                                                       CLE169
+     C                   IF        TRCA = 'TR'                                                CLE169
+     C                   EVAL      F1TEOC = WTEOC                                             CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   UPDATE    GLACNTD0                                                   CLE169
+      *                                                                                       CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Access APOSTPD/GLACPHPD record                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      KACNUM = A2CNUM                                            CLE169
+     C                   EVAL      KACCY = A2CCY                                              CLE169
+     C                   EVAL      KAACOD = A2ACOD                                            CLE169
+     C                   EVAL      KAACSQ = A2ACSQ                                            CLE169
+     C                   EVAL      KABRCA = A2BRCA                                            CLE169
+     C                   EVAL      KAPSTD = *LOVAL                                            CLE169
+     C                   EVAL      WCOMAC1 = A2CNUM                                           CLE169
+     C                   EVAL      WCOMAC2 = A2CCY                                            CLE169
+     C                   EVAL      WCOMAC3 = A2ACOD                                           CLE169
+     C                   EVAL      WCOMAC4 = A2ACSQ                                           CLE169
+     C                   EVAL      WCOMAC5 = A2BRCA                                           CLE169
+     C                   EVAL      WCOMACA = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACB = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACC = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACD = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACE = *BLANKS                                          CLE169
+                                                                                              CLE169
+     C     KAPOST        SETLL     APOSTJ2                                                    CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+                                                                                              CLE169
+     C                   DOW       NOT %EOF(APOSTJ2)                                          CLE169
+                                                                                              CLE169
+     C                   EVAL      WCOMACA = APCNUM                                           CLE169
+     C                   EVAL      WCOMACB = CCY                                              CLE169
+     C                   EVAL      WCOMACC = APACOD                                           CLE169
+     C                   EVAL      WCOMACD = APACSQ                                           CLE169
+     C                   EVAL      WCOMACE = BRCA                                             CLE169
+                                                                                              CLE169
+     C                   IF        WCOMPACC1 = WCOMPACC2 and PSTD > F1FCHD                    CLE169
+                                                                                              CLE169
+     C                   IF        DRCR = 0                                                   CLE169
+     C                   EVAL      WACTBAL = WACTBAL + PSTA                                   CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WACTBAL = WACTBAL - PSTA                                   CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Generate 'AC' entry                                                                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WTRANSID = *ZEROS                                          CLE169
+     C                   EVAL      KFCNUM = A2FCCU                                            CLE169
+     C                   EVAL      KFFACT = A2FACT                                            CLE169
+     C                   EVAL      KFFCNO = A2FCNO                                            CLE169
+     C                   EVAL      WNMVMT = 'N'                                               CLE169
+     C                   EVAL      WACTION = 'AC'                                             CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+     C                   EVAL      WACTDAT = PSTD                                             CLE169
+                                                                                              CLE169
+      ** Determine Valuation Details                                                          CLE169
+                                                                                              CLE169
+     C                   EXSR      SRVALDET                                                   CLE169
+                                                                                              CLE169
+     C                   EVAL      WREVAMT = WEXPOFF                                          CLE169
+                                                                                              CLE169
+      ** Process Action                                                                       CLE169
+                                                                                              CLE169
+     C                   EXSR      SRPROCACT                                                  CLE169
+                                                                                              CLE169
+     C                   EVAL      WTEOP = WEXPOFF                                            CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      WCCY1 = A2CCY                                              CLE169
+     C                   EVAL      WCCY2 = ORFCCY                                             CLE169
+     C                   EVAL      WINAMT = WEXPOFF                                           CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOF = WOUTAMT                                            CLE169
+                                                                                              CLE169
+     C                   MOVE      WCUST         KFCNUM                                       CLE169
+     C                   MOVE      WFCLT         KFFACT                                       CLE169
+     C                   MOVE      WFCSQ         KFFCNO                                       CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            17                      CLE169
+                                                                                              CLE169
+      ** If facility is tranche                                                               CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and TRCA = 'TR'                               CLE169
+     C                   EVAL      WCCY1 = ORFCCY                                             CLE169
+     C                   EVAL      WCCY2 = CACY                                               CLE169
+     C                   EVAL      WINAMT = WTEOF                                             CLE169
+     C                   EVAL      WRATE = WTRXRAT                                            CLE169
+     C                   EVAL      WMDIN = WTRMDIN                                            CLE169
+     C                   EVAL      GIVEN = 'Y'                                                CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOC = WOUTAMT                                            CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Update GLACNTQD                                                                      CLE169
+                                                                                              CLE169
+     C                   EVAL      KACCNUM = A2CNUM                                           CLE169
+     C                   EVAL      KACCCY = A2CCY                                             CLE169
+     C                   EVAL      KACACOD = A2ACOD                                           CLE169
+     C                   EVAL      KACACSQ = A2ACSQ                                           CLE169
+     C                   EVAL      KACBRCA = A2BRCA                                           CLE169
+                                                                                              CLE169
+     C     KACCNT        CHAIN     GLACNTL3                           15                      CLE169
+                                                                                              CLE169
+     C                   IF        *IN15 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   EVAL      F1ACBL = WACTBAL                                           CLE169
+                                                                                              CLE169
+     C                   IF        WTEOF >= 0 OR WINCOFF = 'Y'                                CLE169
+     C                   EVAL      F1TEXO = WTEOP                                             CLE169
+     C                   EVAL      F1TEOF = WTEOF                                             CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   IF        TRCA = 'TR'                                                CLE169
+     C                   EVAL      F1TEOC = WTEOC                                             CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   UPDATE    GLACNTD0                                                   CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+     C                   ELSE                                                                 CLE169
+      *                                                                                       CLE169
+      ** Compare the two details before leaving the loop to make sure no record in            CLE169
+      ** APOSTJ2 was left behind in processing.                                               CLE169
+      *                                                                                       CLE169
+     C                   IF        WCOMPACC1 <> WCOMPACC2                                     CLE169
+     C                   LEAVE                                                                CLE169
+     C                   ENDIF                                                                CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Read next record                                                                     CLE169
+      *                                                                                       CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+     C                   ENDDO                                                                CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   IF        WNMVMT = 'Y' AND                                           CLE169
+     C                             WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CLE169
+     C                             WCUST <> *ZEROS AND                                        CLE169
+     C                             WFCSQ <> *ZEROS                                            CLE169
+                                                                                              CLE169
+     C                   EVAL      WTRANSID = *ZEROS                                          CLE169
+     C                   MOVE      WCUST         KFCNUM                                       CLE169
+     C                   MOVE      WFCLT         KFFACT                                       CLE169
+     C                   MOVE      WFCSQ         KFFCNO                                       CLE169
+     C                   EVAL      WACTION = 'AR'                                             CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+     C                   EVAL      WACTDAT = BJRDNB                                           CLE169
+     C                   EVAL      WREVAMT = F1TEXO                                           CLE169
+                                                                                              CLE169
+      ** Process Action                                                                       CLE169
+                                                                                              CLE169
+     C                   EXSR      SRPROCACT                                                  CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      WCCY1 = WACTCCY                                            CLE169
+     C                   EVAL      WCCY2 = ORFCCY                                             CLE169
+     C                   EVAL      WINAMT = F1TEXO                                            CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      F1TEOF = WOUTAMT                                           CLE169
+                                                                                              CLE169
+      ** If facility is tranche                                                               CLE169
+                                                                                              CLE169
+     C                   MOVE      WCUST         KFCNUM                                       CLE169
+     C                   MOVE      WFCLT         KFFACT                                       CLE169
+     C                   MOVE      WFCSQ         KFFCNO                                       CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            17                      CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and TRCA = 'TR'                               CLE169
+                                                                                              CLE169
+     C                   IF        ORFCCY = CACY                                              CLE169
+     C                   EVAL      F1TEOC = F1TEOF                                            CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WCCY1 = ORFCCY                                             CLE169
+     C                   EVAL      WCCY2 = CACY                                               CLE169
+     C                   EVAL      WINAMT = F1TEOF                                            CLE169
+     C                   EVAL      WRATE = WTRXRAT                                            CLE169
+     C                   EVAL      WMDIN = WTRMDIN                                            CLE169
+     C                   EVAL      GIVEN = 'Y'                                                CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      F1TEOC = WOUTAMT                                           CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   UPDATE    GLACNTD0                                                   CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ELSE                                                                 CLE169
+                                                                                              CLE169
+     C                   EVAL      WCUST = A2FCCU                                             CLE169
+     C                   EVAL      WFCLT = A2FACT                                             CLE169
+     C                   EVAL      WFCSQ = A2FCNO                                             CLE169
+                                                                                              CLE169
+     C                   IF        WCUST <> *BLANKS AND WFCLT <> *ZEROS AND                   CLE169
+     C                             WCUST <> *ZEROS AND                                        CLE169
+     C                             WFCSQ <> *ZEROS                                            CLE169
+                                                                                              CLE169
+     C                   EVAL      KACCNUM = A2CNUM                                           CLE169
+     C                   EVAL      KACCCY = A2CCY                                             CLE169
+     C                   EVAL      KACACOD = A2ACOD                                           CLE169
+     C                   EVAL      KACACSQ = A2ACSQ                                           CLE169
+     C                   EVAL      KACBRCA = A2BRCA                                           CLE169
+                                                                                              CLE169
+     C     KACCNT        CHAIN     GLACNTL3                           15                      CLE169
+                                                                                              CLE169
+     C                   IF        *IN15 = *OFF                                               CLE169
+                                                                                              CLE169
+     C                   MOVE      A2FCCU        KFCNUM                                       CLE169
+     C                   MOVE      A2FACT        KFFACT                                       CLE169
+     C                   MOVE      A2FCNO        KFFCNO                                       CLE169
+     C                   EVAL      WTRANSID = *ZEROS                                          CLE169
+     C                   EVAL      WACTION = 'AR'                                             CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+     C                   EVAL      WACTDAT = BJRDNB                                           CLE169
+     C                   EVAL      WREVAMT = F1TEXO                                           CLE169
+                                                                                              CLE169
+      ** Process Action                                                                       CLE169
+                                                                                              CLE169
+     C                   EXSR      SRPROCACT                                                  CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   EVAL      WCCY1 = WACTCCY                                            CLE169
+     C                   EVAL      WCCY2 = ORFCCY                                             CLE169
+     C                   EVAL      WINAMT = F1TEXO                                            CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      F1TEOF = WOUTAMT                                           CLE169
+                                                                                              CLE169
+      ** If facility is tranche                                                               CLE169
+                                                                                              CLE169
+     C                   MOVE      WCUST         KFCNUM                                       CLE169
+     C                   MOVE      WFCLT         KFFACT                                       CLE169
+     C                   MOVE      WFCSQ         KFFCNO                                       CLE169
+                                                                                              CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            17                      CLE169
+                                                                                              CLE169
+      ** Convert amount                                                                       CLE169
+                                                                                              CLE169
+     C                   IF        *IN17 = *OFF and TRCA = 'TR'                               CLE169
+                                                                                              CLE169
+     C                   IF        ORFCCY = CACY                                              CLE169
+     C                   EVAL      F1TEOC = F1TEOF                                            CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WCCY1 = ORFCCY                                             CLE169
+     C                   EVAL      WCCY2 = CACY                                               CLE169
+     C                   EVAL      WINAMT = F1TEOF                                            CLE169
+     C                   EVAL      WRATE = WTRXRAT                                            CLE169
+     C                   EVAL      WMDIN = WTRMDIN                                            CLE169
+     C                   EVAL      GIVEN = 'Y'                                                CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      F1TEOC = WOUTAMT                                           CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   UPDATE    GLACNTD0                                                   CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Initialise field                                                                     CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WACTBAL = F1ACBL                                           CLE169
+     C                   EVAL      WTEOP = F1TEXO                                             CLE169
+     C                   EVAL      WTEOF = F1TEOF                                             CLE169
+     C                   EVAL      WTEOC = F1TEOC                                             CLE169
+      *                                                                                       CLE169
+      ** Access APOSTPD record                                                                CLE169
+      *                                                                                       CLE169
+     C                   EVAL      KACNUM = A2CNUM                                            CLE169
+     C                   EVAL      KACCY  = A2CCY                                             CLE169
+     C                   EVAL      KAACOD = A2ACOD                                            CLE169
+     C                   EVAL      KAACSQ = A2ACSQ                                            CLE169
+     C                   EVAL      KABRCA = A2BRCA                                            CLE169
+     C                   EVAL      KAPSTD = WPRUN                                             CLE169
+     C                   EVAL      WCOMAC1 = A2CNUM                                           CLE169
+     C                   EVAL      WCOMAC2 = A2CCY                                            CLE169
+     C                   EVAL      WCOMAC3 = A2ACOD                                           CLE169
+     C                   EVAL      WCOMAC4 = A2ACSQ                                           CLE169
+     C                   EVAL      WCOMAC5 = A2BRCA                                           CLE169
+     C                   EVAL      WCOMACA = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACB = *BLANKS                                          CLE169
+     C                   EVAL      WCOMACC = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACD = *ZEROS                                           CLE169
+     C                   EVAL      WCOMACE = *BLANKS                                          CLE169
+      *                                                                                       CLE169
+     C     KAPOST        SETLL     APOSTJ2                                                    CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+      *                                                                                       CLE169
+     C                   DOW       NOT %EOF(APOSTJ2)                                          CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WPROC = *BLANKS                                            CLE169
+     C                   EVAL      WCOMACA = APCNUM                                           CLE169
+     C                   EVAL      WCOMACB = CCY                                              CLE169
+     C                   EVAL      WCOMACC = APACOD                                           CLE169
+     C                   EVAL      WCOMACD = APACSQ                                           CLE169
+     C                   EVAL      WCOMACE = BRCA                                             CLE169
+      *                                                                                       CLE169
+     C                   IF        WCOMPACC1 = WCOMPACC2                                      CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WPROC = 'N'                                                CLE169
+      *                                                                                       CLE169
+     C                   IF        PSTD = WPRUN AND VALD <= BJRDNB                            CLE169
+     C                             AND DLREF = *BLANKS                                        CLE169
+      *                                                                                       CLE169
+     C                   IF        VALD < PRUN                                                CLE169
+     C                   EVAL      WACTDAT = BJRDNB                                           CLE169
+     C                   ELSEIF    VALD > PRUN                                                CLE169
+     C                   EVAL      WACTDAT = VALD                                             CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Check if batch posting                                                               CLE169
+      *                                                                                       CLE169
+     C                   EVAL      KBEDT = PSTD                                               CLE169
+     C                   EVAL      KBTNB = %SUBST(SPOS:1:3)                                   CLE169
+     C                   EVAL      BTCHK = %CHECK('0123456789':KBTNB)                         CLE169
+     C                   IF        BTCHK = 0                                                  CLE169
+     C     KJOENT        CHAIN     GLJEHHL0                                                   CLE169
+      *                                                                                       CLE169
+     C                   IF        NOT %FOUND(GLJEHHL0)                                       CLE169
+     C                   EVAL      WPROC = 'Y'                                                CLE169
+     C                   ENDIF                                                                CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   ELSEIF    PSTD = BJRDNB                                              CLE169
+     C                   EVAL      WACTDAT = PSTD                                             CLE169
+      *                                                                                       CLE169
+      ** Check if real time posting                                                           CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WBTCH = %SUBST(SPOS:1:3)                                   CLE169
+     C     WBTCH         CHAIN     GLJENHL0                                                   CLE169
+      *                                                                                       CLE169
+     C                   IF        %FOUND(GLJENHL0) and BRBTSF = 'S'                          CLE169
+     C                   EVAL      WPROC = 'Y'                                                CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Process posting record                                                               CLE169
+      *                                                                                       CLE169
+     C                   IF        WPROC = 'Y'                                                CLE169
+      *                                                                                       CLE169
+     C                   IF        DRCR = 0                                                   CLE169
+     C                   EVAL      WACTBAL = WACTBAL + PSTA                                   CLE169
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      WACTBAL = WACTBAL - PSTA                                   CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Generate 'AC' entry                                                                  CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WTRANSID = *ZEROS                                          CLE169
+     C                   EVAL      KFCNUM = WCUST                                             CLE169
+     C                   EVAL      KFFACT = WFCLT                                             CLE169
+     C                   EVAL      KFFCNO = WFCSQ                                             CLE169
+     C                   EVAL      WACTION = 'AC'                                             CLE169
+     C                   EVAL      WACTCCY = A2CCY                                            CLE169
+      *                                                                                       CLE169
+      ** Determine Valuation Details                                                          CLE169
+      *                                                                                       CLE169
+     C                   EXSR      SRCVALDET                                                  CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WREVAMT = WEXPOFF                                          CLE169
+      *                                                                                       CLE169
+      ** Process Action                                                                       CLE169
+      *                                                                                       CLE169
+     C                   EXSR      SRPROCACT                                                  CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WTEOP = WEXPOFF                                            CLE169
+      *                                                                                       CLE169
+      ** Convert amount                                                                       CLE169
+      *                                                                                       CLE169
+     C                   EVAL      WCCY1 = A2CCY                                              CLE169
+     C                   EVAL      WCCY2 = ORFCCY                                             CLE169
+     C                   EVAL      WINAMT = WEXPOFF                                           CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOF = WOUTAMT                                            CLE169
+      *                                                                                       CLE169
+     C     KFCLTY        CHAIN     FCLTYL3                            17                      CLE169
+      *                                                                                       CLE169
+      ** If facility is tranche                                                               CLE169
+      *                                                                                       CLE169
+     C                   IF        *IN17 = *OFF AND TRCA = 'TR'                               CLE169
+     C                   EVAL      WCCY1 = ORFCCY                                             CLE169
+     C                   EVAL      WCCY2 = CACY                                               CLE169
+     C                   EVAL      WINAMT = WTEOF                                             CLE169
+     C                   EVAL      WRATE = WTRXRAT                                            CLE169
+     C                   EVAL      WMDIN = WTRMDIN                                            CLE169
+     C                   EVAL      GIVEN  = 'Y'                                               CLE169
+     C                   EXSR      SRCONVERT                                                  CLE169
+     C                   EVAL      WTEOC = WOUTAMT                                            CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+      ** Update GLACNTQD                                                                      CLE169
+      *                                                                                       CLE169
+     C     KACCNT        CHAIN     GLACNTL3                           15                      CLE169
+      *                                                                                       CLE169
+     C                   IF        *IN15 = *OFF                                               CLE169
+      *                                                                                       CLE169
+     C                   EVAL      F1ACBL = WACTBAL                                           CLE169
+      *                                                                                       CLE169
+     C                   IF        WTEOF >= 0 OR WINCOFF = 'Y'                                CLE169
+     C                   EVAL      F1TEXO = WTEOP                                             CLE169
+     C                   EVAL      F1TEOF = WTEOF                                             CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   IF        TRCA = 'TR'                                                CLE169
+     C                   EVAL      F1TEOC = WTEOC                                             CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   UPDATE    GLACNTD0                                                   CLE169
+      *                                                                                       CLE169
+     C                   ENDIF                                                                CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   ELSE                                                                 CLE169
+      *                                                                                       CLE169
+      ** Compare the two details before leaving the loop to make sure                         CLE169
+      ** no record in APOSTJ2 was left behind in processing.                                  CLE169
+      *                                                                                       CLE169
+     C                   IF        WCOMPACC1 <> WCOMPACC2                                     CLE169
+     C                   LEAVE                                                                CLE169
+     C                   ENDIF                                                                CLE169
+     C                   ENDIF                                                                CLE169
+      *                                                                                       CLE169
+     C                   READ      APOSTJ2                                                    CLE169
+     C                   ENDDO                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+     C                   ENDIF                                                                CLE169
+                                                                                              CLE169
+      ** Read next record                                                                     CLE169
+                                                                                              CLE169
+     C                   READ      ACCNTJ2                                                    CLE169
+     C                   ENDDO                                                                CLE169
+                                                                                              CLE169
+     C                   ENDSR                                                                CLE169
+                                                                                              CLE169
+      *****************************************************************                       CLE169
       /EJECT
       *****************************************************************
       *                                                               *
@@ -3667,12 +4590,21 @@
 
      C                   IF        WACTION = 'AS' or WACTION = 'AC'
      C                             or WACTION = 'AR'                                         BUG3035
+     C                   IF        CLE169 = 'N'                                               CLE169
      C                   EVAL      HAACBR = ACBRCA
      C                   EVAL      HAACCU = ACCNUM
      C                   EVAL      HAACCY = ACCCY
      C                   EVAL      HAACCD = ACACOD
      C                   EVAL      HAACSQ = ACACSQ
      C                   EVAL      HAACNO = ACACNO
+     C                   ELSE                                                                 CLE169
+     C                   EVAL      HAACBR = A2BRCA                                            CLE169
+     C                   EVAL      HAACCU = A2CNUM                                            CLE169
+     C                   EVAL      HAACCY = A2CCY                                             CLE169
+     C                   EVAL      HAACCD = A2ACOD                                            CLE169
+     C                   EVAL      HAACSQ = A2ACSQ                                            CLE169
+     C                   EVAL      HAACNO = A2ACNO                                            CLE169
+     C                   ENDIF                                                                CLE169
      C                   ELSE
      C                   EVAL      HAACBR = *BLANKS
      C**********         EVAL      HAACCU = *ZEROS                                            CSD027
@@ -3867,11 +4799,19 @@
      C                   EVAL      KFACNUM = PFCU
      C                   MOVEL     PFTP          KFAFCTY
      C                   MOVE      PFSQ          KFAFCTY
+     C                   IF        CLE169 = 'Y'                                               CLE169
+     C                   EVAL      KFAACBR = A2BRCA                                           CLE169
+     C                   EVAL      KFAACCU = A2CNUM                                           CLE169
+     C                   EVAL      KFAACCY = A2CCY                                            CLE169
+     C                   EVAL      KFAACCD = A2ACOD                                           CLE169
+     C                   EVAL      KFAACSQ = A2ACSQ                                           CLE169
+     C                   ELSE                                                                 CLE169
      C                   EVAL      KFAACBR = ACBRCA
      C                   EVAL      KFAACCU = ACCNUM
      C                   EVAL      KFAACCY = ACCCY
      C                   EVAL      KFAACCD = ACACOD
      C                   EVAL      KFAACSQ = ACACSQ
+     C                   ENDIF                                                                CLE169
      C                   EVAL      KFADATE = WACTDAT
      C                   EVAL      WCOMFC1 = KFACNUM
      C                   EVAL      WCOMFC2 = KFAFCTY
@@ -3966,7 +4906,11 @@
 
       ** Access Account Code details
 
+     C                   IF        CLE169 = 'Y'                                               CLE169
+     C                   MOVE      A2ACOD        PACOD                                        CLE169
+     C                   ELSE                                                                 CLE169
      C                   MOVE      ACACOD        PACOD
+     C                   ENDIF                                                                CLE169
 
      C                   CALLB     'AOACODR0'
      C                   PARM      *BLANKS       PRTCD
@@ -4001,7 +4945,11 @@
 
      C                   IF        WINCOFF = 'C'
 
+     C                   IF        CLE169 = 'Y'                                               CLE169
+     C                   MOVEL     A2CNUM        PCNUM                                        CLE169
+     C                   ELSE                                                                 CLE169
      C                   MOVEL     ACCNUM        PCNUM
+     C                   ENDIF                                                                CLE169
 
       ** Access Customer details
 
@@ -4445,6 +5393,10 @@
      C                   KFLD                    KAACSQ
      C                   KFLD                    KABRCA
      C                   KFLD                    KAPSTD
+      *                                                                                       CLE169
+     C     KJOENT        KLIST                                                                CLE169
+     C                   KFLD                    KBEDT                                        CLE169
+     C                   KFLD                    KBTNB                                        CLE169
 
       ** Access Bank Details
 
@@ -4485,6 +5437,19 @@
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CLE023 = 'Y'
      C                   ENDIF
+      *                                                                                       CLE169
+      ** Check if CLE169 is switched on                                                       CLE169
+      *                                                                                       CLE169
+     C                   EVAL      CLE169 = 'N'                                               CLE169
+     C                   Callb     'AOSARDR0'                                                 CLE169
+     C                   Parm      *BLANKS       PRTCD                                        CLE169
+     C                   Parm      '*VERIFY'     POPTN                                        CLE169
+     C                   Parm      'CLE169'      PSARD                                        CLE169
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CLE169
+      *                                                                                       CLE169
+     C                   If        PRtcd = *Blanks                                            CLE169
+     C                   eval      CLE169 = 'Y'                                               CLE169
+     C                   Endif                                                                CLE169
 
       ** Open report file
 
@@ -4525,6 +5490,11 @@
       ** Create/Instantiate "CalcClass" java object (one time only)
 
      C                   EVAL      CalcClassObj = crtCalcClass(Parm8)
+      *                                                                                       CLE169
+      ** Retrieve previous rundate                                                            CLE169
+      *                                                                                       CLE169
+     C                   IN        JNSTAT                                                     CLE169
+     C                   EVAL      WPRUN = PRUN                                               CLE169
 
      C                   ENDSR
 

@@ -3770,6 +3770,8 @@
      C                   EVAL      KBTNB = %SUBST(SPOS:1:3)                                   CLE169
      C                   EVAL      BTCHK = %CHECK('0123456789':KBTNB)                         CLE169
      C                   IF        BTCHK = 0                                                  CLE169
+     C                             OR %SUBST(SPOS:3:5) = 'GE-IC'                              CLE169
+     C                             AND VALD = BJRDNB                                          CLE169
      C     KJOENT        CHAIN     GLJEHHL0                                                   CLE169
       *                                                                                       CLE169
      C                   IF        NOT %FOUND(GLJEHHL0)                                       CLE169

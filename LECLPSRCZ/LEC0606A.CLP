@@ -10,9 +10,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD050829           Date 08May18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      MD033997           Date 11May15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD033997           Date 11May15              */
 /*                      AR1061928          Date 30Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
@@ -33,8 +32,6 @@
 /*                      S01194                  DATE  08FEB90       */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD050829 - Facility status is not yet ‘Expired’ even if    */
-/*                  its expiry date has already passed.             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD033997 - Move process of facility expiry on 2nd COB.     */
 /*       AR1061928 - LEC06 on MSGW during clean COB                 */
@@ -71,24 +68,6 @@
                         VALUE('FACILITIES UPDATE ')
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                   /*MD050829*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*MD050829*/
-             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                  /*MD050829*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                   /*MD050829*/
-             DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1)                                 /*MD050829*/
-             DCL        VAR(&RERUN1) TYPE(*CHAR) LEN(10)                                /*MD050829*/
-/**/                                                                                    /*MD050829*/
-/* Check if CLE134 is installed */                                                      /*MD050829*/
-/**/                                                                                    /*MD050829*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD050829*/
-             CHGVAR     VAR(&SARD) VALUE('CLE134')                                      /*MD050829*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD050829*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)                              /*MD050829*/
-             CHGVAR     VAR(&CLE134) VALUE('Y')                                         /*MD050829*/
-             ENDDO                                                                      /*MD050829*/
-             ELSE       (DO)                                                            /*MD050829*/
-             CHGVAR     VAR(&CLE134) VALUE('N')                                         /*MD050829*/
-             ENDDO                                                                      /*MD050829*/
                                                                                           /*CLE039*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
@@ -148,19 +127,7 @@
 /* FACILITIES FILE UPDATE PHASE ONE                                 */
 /************CALL PGM(LE0460)****************************************/ /* CPF */
 /************CALL PGM(LE0461)****************************************/ /* CPF */        /*MD033997*/
-/* If CLE134 is OFF, override RERUN parameter so that facility will still expire */     /*MD050829*/
-/* Save original RERUN, just in case the component fails and needs to be restarted */   /*MD050829*/
-             IF         COND(&CLE134 *EQ 'N') THEN(DO)                                  /*MD050829*/
-             CHGVAR     VAR(&RERUN1) VALUE(&RERUN)                                      /*MD050829*/
-             CHGVAR     VAR(&RERUN) VALUE('NEWCOB')                                     /*MD050829*/
-             ENDDO                                                                      /*MD050829*/
-                                                                                        /*MD050829*/
              CALL PGM(LE0461) PARM(&RERUN)                                              /*MD033997*/
-                                                                                        /*MD050829*/
-/* If CLE134 is OFF, restore original RERUN value. */                                   /*MD050829*/
-             IF         COND(&CLE134 *EQ 'N') THEN(DO)                                  /*MD050829*/
-             CHGVAR     VAR(&RERUN) VALUE(&RERUN1)                                      /*MD050829*/
-             ENDDO                                                                      /*MD050829*/
                                                                                           /*CLE039*/
              IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)                                  /*CLE039*/
                 COMMIT                                                                    /*CLE039*/

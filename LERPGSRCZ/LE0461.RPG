@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050829           Date 10May18               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031146           Date 07Apr16               *
       *                 MD033997           Date 11May15               *
       *                 MD024682           Date 09May14               *
@@ -104,6 +105,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050829 -  Facility status is not yet ‘Expired’ even if its *
+      *              expiry date has already passed.                  *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031146 - Ensure that FCUPDFM/N files has the correct FRNT  *
@@ -1226,6 +1229,8 @@
      C*
      C           DTEX      IFLE EVCD
      C           RECI      ANDEQ'D'
+     C           CLE134    IFEQ 'N'                                                         MD050829
+     C           CLE134    OREQ 'Y'                                                         MD050829
      C           WNCOB     ANDEQ'NEWCOB'                                                    MD033997
      C                     MOVE 'E'       RECI
      C/COPY WNCPYSRC,LE0461C012
@@ -1235,6 +1240,7 @@
      C                     Z-ADD*ZEROS    RVDT                                               BUG8707
      C                     MOVE *BLANKS   RVFR                                               BUG8707
      C                     Z-ADD*ZEROS    RVDY                                               BUG8707
+     C                     ENDIF                                                            MD050829
      C                     END
      C*
      C***  WRITE NEW FACILITIES FILES
@@ -1616,6 +1622,34 @@
      C                     ELSE                                                               CLE039
      C                     MOVE 'N'       CLE039                                              CLE039
      C                     ENDIF                                                              CLE039
+      *                                                                                     MD050829
+      ** Check if CLE134 (Past Due Processing) is switched on                               MD050829
+      *                                                                                     MD050829
+     C                     CALL 'AOSARDR0'                                                  MD050829
+     C                     PARM *BLANKS   PRTCD   7                                         MD050829
+     C                     PARM '*VERIFY' POPTN   7                                         MD050829
+     C                     PARM 'CLE134'  PSARD   6                                         MD050829
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050829
+      *                                                                                     MD050829
+     C           PRTCD     IFNE *BLANKS                                                     MD050829
+     C           PRTCD     ANDNE'*NRF   '                                                   MD050829
+     C           *LOCK     IN   LDA                                                         MD050829
+     C                     MOVEL'LE0461'  DBPGM                                             MD050829
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD050829
+     C                     MOVEL'CLE134'  DBKEY                                             MD050829
+     C                     Z-ADD14        DBASE                                             MD050829
+     C                     OUT  LDA                                                         MD050829
+     C                     SETON                     U7U8LR                                 MD050829
+     C                     SETON                     99                                     MD050829
+     C                     EXSR *PSSR                                                       MD050829
+     C                     EXSR TERM                                                        MD050829
+     C                     ENDIF                                                            MD050829
+      *                                                                                     MD050829
+     C           PRTCD     IFEQ *BLANKS                                                     MD050829
+     C                     MOVE 'Y'       CLE134  1                                         MD050829
+     C                     ELSE                                                             MD050829
+     C                     MOVE 'N'       CLE134                                            MD050829
+     C                     ENDIF                                                            MD050829
       *                                                                                       CLE039
       ** Key list for LF/LEFCLTLG                                                             CLE039
       *                                                                                       CLE039

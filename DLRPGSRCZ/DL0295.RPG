@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL096             Date 22Sep14               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. MD034609           Date 17Jun15               *
+      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD023685           Date 21Nov13               *
       *                 MD026977           Date 23May14               *
       *                 CRE098             Date 02Dec13               *
@@ -181,6 +182,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD034609 - Witholding tax posted in local currency instead   *
+      *             of transaction currency. Don't treat as TAX KEY   *
+      *             if event code is I or M.                          *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -3062,6 +3066,26 @@
 0608 C**
      C*                                                                   S01408
      C/COPY WNCPYSRC,DL0295CP10                                           S01408
+      ** FIX FOR WITHHOLDING TAX.                                                           MD034609
+      ** IF THIS IS A TAX KEY AND THE POSTING REFERENCE IS 2 THEN THE                       MD034609
+      ** ACCOUNT KEY IS TRYING TO POST THE TAX TO THE SETTLEMENT                            MD034609
+      ** ACCOUNT AND IT SHOULD THEREFORE BE IN EVENT CURRENCY AND NOT                       MD034609
+      ** BASE.  THERE IS THEREFORE NO NEED FOR THE ADDITIONAL POSTINGS                      MD034609
+      ** TO SPOT AND TRADE EQUIVALENT ACCOUNTS.                                             MD034609
+      ** ALL THIS GETS SOLVED IF WE DON'T TREAT THIS KEY AS A TAX KEY.                      MD034609
+      *                                                                                     MD034609
+     C           EVSUB     IFEQ 'T'                                                         MD034609
+     C           EVCOD     ANDEQ'I'                                                         MD034609
+     C           ECCY      ANDNEBJLCCY                                                      MD034609
+     C           EVSUB     OREQ 'T'                                                         MD034609
+     C           EVCOD     ANDEQ'M'                                                         MD034609
+     C           ECCY      ANDNEBJLCCY                                                      MD034609
+     C           *IN35     IFEQ '1'                                                         MD034609
+     C                     MOVE '0'       *IN60                                             MD034609
+     C                     ELSE                                                             MD034609
+     C                     MOVE '1'       *IN60                                             MD034609
+     C                     ENDIF                                                            MD034609
+     C                     ENDIF                                                            MD034609
      C*                                                                   S01408
 0609 C   34                EXSR PREF1
      C/COPY WNCPYSRC,DL0295C077

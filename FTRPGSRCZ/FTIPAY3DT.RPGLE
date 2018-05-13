@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT157             Date 29Aug14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD034828           Date 01Jul15               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -58,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034828 - Commission & Charges details are lost after       *
+      *             confirm complete                                  *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -1117,6 +1120,7 @@
       *
      C     PMode         IFEQ      '*SIN  '
      C     PSJobName     OREQ      'QZDASOINIT'                                               CAP084
+     C     NoDft         ANDNE     'Y'                                                      MD034828
      C     PSJobName     OREQ      'QSQSRVR'                                                  247277
      C     NoDft         ANDNE     'Y'                                                       BUG4141
      C     PSJobName     OREQ      'APISERVER '                                               260709

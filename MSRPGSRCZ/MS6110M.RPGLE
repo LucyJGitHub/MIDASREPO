@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 250527             Date 19Aug14               *
-      *  Prev Amend No. 251373             Date 30Jan08               *
+      *  Last Amend No. AR214111           Date 26Jun15               *
+      *  Prev Amend No. 250527             Date 19Aug14               *
+      *                 251373             Date 30Jan08               *
       *                 MD023406           Date 12Nov13               *
       *                 AR976772           Date 23May12               *
       *                 CSW212             Date 03May12               *
@@ -76,6 +77,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR214111 - Incoming messages were not retrieved properly by  *
+      *             MidasPlus. Reveresed part of 257554 to remove the *
+      *             checking of the zone as the incoming message does *
+      *             not have this information.                        *
+      *           - Applied for MD034610.                             *
       *  250527 - When messages are passed from MMM via MQ Series set *
       *           header length to '1'. Applied fix 250335.           *
       *  251373 - Do not process 'PAPER' messages coming from         *
@@ -1104,7 +1110,7 @@
      C                   MOVEL     MINONE        MDMID
      C**********         MOVEL     MCSYTM        MDCID                               CSW039 BUG14494
      C**********         MOVEL     CINONE        MDCID                               BUG14494 257554
-     C                   MOVEL     MCSYTM        MDCID                                        257554
+     C**********         MOVEL     MCSYTM        MDCID                               257554 AR214111
      C*****              MOVEL     CINONE        MDCID                                        CSW039
  
       ** Clear message buffer

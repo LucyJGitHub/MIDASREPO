@@ -16,8 +16,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD027587           Date 19Jun14               *
-      *  Prev Amend No. AR1078953          Date 18Jan13               *
+      *  Last Amend No. 246752             Date 29Jun15               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *                 AR1078953          Date 18Jan13               *
       *                 AR1070246          Date 08Jan13               *
       *                 CGL130             Date 28Sep12               *
       *                 AR996631           Date 28Jun12               *
@@ -59,6 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  246752 - Batches remain Held after Accepting. Wrong valida-  *
+      *           tion for Single Branch. Applied for MD034561        *
       *  MD027587 - Unable to use the C for Copy and T for Template   *
       *             (Recompile)                                       *
       *  AR1078953 - Blank Batch Number is not accepted by the system *
@@ -354,12 +357,12 @@
      C                   MOVE      'Y'           BTNBINS           1                          CAP084
      C                   ENDIF                                                                CAP084
      C                   ENDIF                                                                CAP084
- 
+
       ** If system is multi-branching, validate Branch Code.
       ** Else, default Branch Code to Bank's Single Branch Code.
- 
+
       /COPY WNCPYSRC,GLBITHV004
- 
+
      C     BJSBRC        IFEQ      *BLANKS
       * Amend mode                                                                           BUG3546
      C     JAVAUSER      IFEQ      'Y'                                                       BUG3546
@@ -374,56 +377,58 @@
      C                   EXSR      SRBRCD
      C                   ELSE
      C                   EVAL      B1BCDA = BJSBRC
-     C                   EVAL      DDBCDA = *BLANKS
+     C**********         EVAL      DDBCDA = *BLANKS                                           246752
+     C                   EVAL      DDBCDA = BJSBRC                                            246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV005
- 
+
       ** Validate Department Code.
- 
+
       /COPY WNCPYSRC,GLBITHV006
- 
+
      C                   EXSR      SRDPCD
- 
+
       /COPY WNCPYSRC,GLBITHV007
- 
+
       ** If system is multi-branching, validate Multiple
       ** Branch Batch Indicator.  Else, default Multiple
       ** Branch Batch Indicator to 'N'.
- 
+
       /COPY WNCPYSRC,GLBITHV008
- 
+
      C     BJSBRC        IFEQ      *BLANKS
      C                   EXSR      SRMBRB
      C                   ELSE
      C                   EVAL      B1MBRB = 'N'
-     C                   EVAL      DDMBRB = *BLANKS
+     C**********         EVAL      DDMBRB = *BLANKS                                           246752
+     C                   EVAL      DDMBRB = 'N'                                               246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV009
- 
+
       ** Validate Batch Description.
- 
+
       /COPY WNCPYSRC,GLBITHV010
- 
+
      C                   EXSR      SRBDES
- 
+
       /COPY WNCPYSRC,GLBITHV011
- 
+
       ** Validate Batch Total.
- 
+
       /COPY WNCPYSRC,GLBITHV012
- 
+
      C                   EXSR      SRBTOT
- 
+
       /COPY WNCPYSRC,GLBITHV013
- 
+
       ** Validate No. of Items.
- 
+
       /COPY WNCPYSRC,GLBITHV014
- 
+
      C                   EXSR      SRNOIS
- 
+
       ***Validate*Month*End*Adjustment*Batch                                           CSC024 CSC054
       ** Validate Period End Adjustments Batch                                                CSC054
                                                                                               CSC024
@@ -431,11 +436,11 @@
      C                   EXSR      SRPEAB                                                     CSC054
                                                                                               CSC024
       /COPY WNCPYSRC,GLBITHV015
- 
+
       ** Validate Batch Held/Accepted Indicator.
- 
+
       /COPY WNCPYSRC,GLBITHV016
- 
+
       ** If coming from a java user then allow held/accept indicator to be 'D'                CAP084
       ** so that the batch header can be deleted.                                             CAP084
                                                                                               CAP084
@@ -624,17 +629,17 @@
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017
- 
+
       ** If invalid Branch Code, default Branch to User Branch
       ** Code to enable the batch to be corrected through the
       ** existing maintenance.
- 
+
      C     DDBcdaOK      IFEQ      'N'
      C                   EVAL      B1BCDA = WBrch
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV018
- 
+
      C                   RETURN
       *
       *****************************************************************

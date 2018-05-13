@@ -13,8 +13,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*      1990, 1993                                               *
 0009 F*                                                               *
-      *  Last Amend No. MD020428           Date 14May13               *
-      *  Prev Amend No. CRE083AU           Date 06Aug12               *
+      *  Last Amend No. MD037414           Date 18Feb16               *
+      *  Prev Amend No. MD020428           Date 14May13               *
+      *                 CRE083AU           Date 06Aug12               *
       *                 AR947093A          Date 04May12               *
       *                 AR947093           Date 26Apr12               *
       *                 AR847249           Date 28Jan12               *
@@ -52,6 +53,14 @@
 0011 F*                                                               *
      F*****************************************************************
      F*                                                               *
+     F*  MD037414- COB component REC74 fails.  DB error 3 in RE0740   *
+     F*            There are no live accouts record with DRIB or CRIB *
+     F*            not equal to zero.  There are only closed accounts *
+     F*          - The program un-necessarily execute call to AOBSRTR0*
+     F*            with field CCYCD.  Since no live records exist     *
+     F*            field CCYCD never got initialized with data        *
+     F*          - Removed call to AOBSRTR0 as it serves no purpose   *
+      *            Applied for MD037773.                              *
       *  MD020428 - RCHGRA database difference                        *
       *  CRE083AU - COB Restructure - RE COB Optimisation Phase 1     *
       *  AR947093A - Base Rate amendment resulted to 0 interest rate  *
@@ -811,26 +820,26 @@
      C** Update Base Rates File                                           S01413
      C** Set pointer to SDBSRTPD record for TABLETK Ccy-Base combination  075081
      C*                                                                   S01413
-     C*LR********          CALL 'AOCUSTR0'                         S01413 075081
-     CLR                   CALL 'AOBSRTR0'                                075081
-     C                     PARM '*MSG   ' @RTCD   7                       S01413
-     C                     PARM '*KEY   ' @OPTN   7                       S01413
-     C***********          PARM CCYBR     @KEY1  10                S01413 075081
-     C***********          PARM           @KEYST  7                S01413 075081
-     C                     PARM CCYCD     @CYCD   3                       075081
-     C                     PARM BASE      @BSRC   2                       075081
+     C*LR*******           CALL 'AOCUSTR0'                         S01413 075081
+     C*LR*******           CALL 'AOBSRTR0'                                           075081 MD037414
+     C**********           PARM '*MSG   ' @RTCD   7                                  S01413 MD037414
+     C**********           PARM '*KEY   ' @OPTN   7                                  S01413 MD037414
+     C**********           PARM CCYBR     @KEY1  10                           S01413 075081 MD037414
+     C**********           PARM           @KEYST  7                S01413 075081
+     C**********           PARM CCYCD     @CYCD   3                                  075081 MD037414
+     C**********           PARM BASE      @BSRC   2                                  075081 MD037414
      C***********SDCUST    PARM SDCUST    DSSDY                    S01413 075081
      C***********SDBSRT    PARM SDBSRT    DSFDY                    075081 CSD006
-     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
-     CLR         @RTCD     IFNE *BLANKS                                   S01413
-     CLR         *LOCK     IN   LDA                                       S01413
-     CLR                   MOVELCCYBR     DBKEY                           S01413
+     C******     SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+     C*LR******* @RTCD     IFNE *BLANKS                                              S01413 MD037414
+     C*LR******* *LOCK     IN   LDA                                                  S01413 MD037414
+     C*LR*******           MOVELCCYBR     DBKEY                                      S01413 MD037414
      C*LR********          MOVEL'SDCUSTPD'DBFILE           ********S01413 075081
-     CLR                   MOVEL'SDBSRTPD'DBFILE           ***************075081
-     CLR                   Z-ADD003       DBASE            * DB ERROR 03 *S01413
-     CLR                   SETON                     U7    ***************075081
-     CLR                   GOTO ENDLR                      ***************S01413
-     CLR                   END                                            S01413
+     C*LR*******           MOVEL'SDBSRTPD'DBFILE           ***************           075081 MD037414
+     C*LR*******           Z-ADD003       DBASE            * DB ERROR 03 *           S01413 MD037414
+     C*LR*******           SETON                     U7    ***************           075081 MD037414
+     C*LR*******           GOTO ENDLR                      ***************           S01413 MD037414
+     C*LR***               END
      C*                                                                   S01413
      CLR 51      *LOVAL    SETLLSDBSRTL1                                  S01194
 0354 CLR 51                GOTO READB                                     S01194

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD024294           Date 07May14               *
-      *  Prev Amend No. CCB023             Date 06Aug12               *
+      *  Last Amend No. MD034991           Date 21Jul15               *
+      *  Prev Amend No. MD024294           Date 07May14               *
+      *                 CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD034991 - Cob report CB0300P1 and CB0030P2 are not archived *
+      *             in StorQM                                         *
       *  MD024294 - Added information on time taken by Main CoB       *
       *  CCB023 - COB Restructure - Input Cycle Termination           *
       *  CCB015 - CoB Audit Report Enhancement.                       *
@@ -334,6 +337,10 @@
      C*
      C                     Z-ADD0         EDWF    50
      C                     Z-ADD0         ETWF    60
+      *                                                                                     MD034991
+      ** Initialize print flag for SCC0420 20001                                            MD034991
+      *                                                                                     MD034991
+     C                     MOVE *BLANK    PRTFLG  1                                         MD034991
      C*
      C** OPEN COMPONENT DETAILS FILE (CBCOMSL5)
      C*
@@ -368,6 +375,19 @@
      C** DO WHILE RECORDS FOUND ON CBCOMSL5
      C*
      C           *IN50     DOWEQ'0'
+      *                                                                                     MD034991
+      ** If SCC0420 20001 was read, save some details                                       MD034991
+      *                                                                                     MD034991
+     C           DHCOTT    IFEQ 'SCC0420'                                                   MD034991
+     C           DHCSEQ    ANDEQ'20001'                                                     MD034991
+     C                     MOVELDHCOTT    SVCOTT                                            MD034991
+     C                     MOVELDHCSEQ    SVCSEQ                                            MD034991
+     C                     MOVELDHCTXT    SVCTXT                                            MD034991
+     C                     ELSE                                                             MD034991
+      *                                                                                     MD034991
+      ** Tag to print SCC0420 20001 when EOF                                                MD034991
+      *                                                                                     MD034991
+     C           PRTTAG    TAG                                                              MD034991
       *                                                                   102910
       *  If this is component CBC0540 00001, then retrieve current        102910
       *  date and time as an approximation of the ending time             102910
@@ -383,6 +403,11 @@
      C                     PARM           DFMT    1                       102910
      C                     MOVE DAYNOA    DHCEDE                          102910
      C                     MOVE STIME     DHCETI                          102910
+      *                                                                                     MD034991
+      ** Save the Start Date and Time of SCC0420 20001                                      MD034991
+      *                                                                                     MD034991
+     C                     MOVE DHCEDE    SVCSDE                                            MD034991
+     C                     MOVE DHCETI    SVCSTI                                            MD034991
       *                                                                   102910
      C                     ENDIF                                          102910
       *                                                                                     MD024294
@@ -606,9 +631,28 @@
      C*
      C** READ COMPONENTS FILE CBCOMSL5
      C*
+     C                     ENDIF                                                            MD034991
      C                     READ CBCOMSL5                 50
      C*
      C                     END
+      *                                                                                     MD034991
+      ** Get the End Date and Time for SCC0420 20001                                        MD034991
+      *                                                                                     MD034991
+     C           PRTFLG    IFNE 'Y'                                                         MD034991
+     C                     CALL 'CBTIME'                                                    MD034991
+     C                     PARM           DAYNOA                                            MD034991
+     C                     PARM           STIME                                             MD034991
+     C                     PARM           DFMT                                              MD034991
+     C                     MOVE DAYNOA    DHCEDE                                            MD034991
+     C                     MOVE STIME     DHCETI                                            MD034991
+     C                     MOVE SVCSDE    DHCSDE                                            MD034991
+     C                     MOVE SVCSTI    DHCSTI                                            MD034991
+     C                     MOVELSVCOTT    DHCOTT                                            MD034991
+     C                     MOVELSVCSEQ    DHCSEQ                                            MD034991
+     C                     MOVELSVCTXT    DHCTXT                                            MD034991
+     C                     MOVEL'Y'       PRTFLG                                            MD034991
+     C                     GOTO PRTTAG                                                      MD034991
+     C                     ENDIF
      C*
      C** CLOSE COMPONENT DETAIL FILE
      C*
@@ -751,6 +795,13 @@
      C           *LIKE     DEFN DHCSTI    STMCOB                                            MD024294
      C           *LIKE     DEFN DHCEDE    EDMCOB                                            MD024294
      C           *LIKE     DEFN DHCETI    ETMCOB                                            MD024294
+     C           *LIKE     DEFN DHCOTT    SVCOTT                                            MD034991
+     C           *LIKE     DEFN DHCSEQ    SVCSEQ                                            MD034991
+     C           *LIKE     DEFN DHCSDE    SVCSDE                                            MD034991
+     C           *LIKE     DEFN DHCEDE    SVCEDE                                            MD034991
+     C           *LIKE     DEFN DHCSTI    SVCSTI                                            MD034991
+     C           *LIKE     DEFN DHCTXT    SVCTXT                                            MD034991
+     C           *LIKE     DEFN DHCETI    SVCETI                                            MD034991
       *                                                                                     MD024294
      C                     Z-ADD0         SDMCOB                                            MD024294
      C                     Z-ADD0         STMCOB                                            MD024294

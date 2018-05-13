@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD024120           Date 19Aug14               *
-      *  Prev Amend No. CGL120 *CREATE     Date 06Aug12               *
+      *  Last Amend No. MD033737           Date 17May15               *
+      *  Prev Amend No. MD024120           Date 19Aug14               *
+      *                 CGL120 *CREATE     Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033737 - GLC3320T2 00009 looping during COB.               *
+      *             Applied for MD034243.
       *  MD024120 - GLC3320 Performance Issues                        *
       *  CGL120 - GL COB Components Task Split                        *
       *                                                               *
@@ -116,6 +119,11 @@
  
       ** Index record found: Set FROM and TO RRNs
  
+      ** Set From and To RRN to 9999999999 when total record of file                        MD033737
+      **  less than the Subtask No set for the component in CBCMPNPD                        MD033737
+     C                   IF        GLTRRN = 9999999999                                      MD033737
+     C                   Z-ADD     9999999999    GLFRRN                                     MD033737
+     C                   ELSE                                                               MD033737
      C     BLKSZE        ADD       GLFRRN        GLFRRN
      C     BLKSZE        ADD       GLFRRN        GLTRRN
      C     GLTRRN        SUB       1             GLTRRN
@@ -123,6 +131,7 @@
      C     GLTRRN        IFGE      RECCNT
      C                   Z-ADD     9999999999    GLTRRN
      C                   ENDIF
+     C                   ENDIF                                                              MD033737
  
       ** Update index record
  
@@ -179,9 +188,14 @@
       ** Distribute records evenly to subtasks                                              MD024120
                                                                                             MD024120
      C                   EVAL      BLKSZE = %DIV(RECCNT:SubtaskNo)                          MD024120
-     C                   IF        %REM(BLKSZE:SubtaskNo) > 0                               MD024120
+     C                   IF        BLKSZE = 0                                               MD033737
+     C                   EVAL      BLKSZE = 1                                               MD033737
+     C                   ELSE                                                               MD033737
+     C**********         IF        %REM(BLKSZE:SubtaskNo) > 0                      MD024120 MD033737
+     C                   IF        %REM(RECCNT:SubtaskNo) > 0                               MD033737
      C                   EVAL      BLKSZE = BLKSZE + 1                                      MD024120
      C                   ENDIF                                                              MD024120
+     C                   ENDIF                                                              MD033737
  
      C                   ENDSR
       *****************************************************************

@@ -10,8 +10,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CDL096             Date 22Sep14               *
-      *  Prev Amend No. CDL094             Date 03Jun14               *
+      *  Last Amend No. MD034567A          Date 29Jul15               *
+      *  Prev Amend No. MD034675           Date 03Jul15               *
+      *                 AR598353           Date 05Jun15               *
+      *                 AR694628A          Date 05Jun15               *
+      *                 AR694628           Date 05Jun15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 03Jun14               *
       *                 CDL093             Date 24Apr14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR916823           Date 12Jun13               *
@@ -132,6 +137,18 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD034675A - Wrong computation of total interest and principal*
+      *              in field 34E                                     *
+      *  MD034675 - INVALID MESSAGES GENERATED FOR 'CI',PI/PD' and    *
+      *             'SC' events                                       *
+      *  AR983540 - MT320 message Nak by SWIFT. Ensure that for SC    *
+      *             deal amendments, when 22B is CONF, 30X should be  *
+      *             generated instead of 32H. Applied for MD034571    *
+      *  AR694628A - Tag 22A in MMM still equal to AMND. Need to move *
+      *              'A' in AORR when deal has SC or EM amendment.    *
+      *              Applied for MD034571                             *
+      *  AR694628 - Error on SC deal amendment on MT320. Ensure fields*
+      *             get correct values after SC. Applied for MD034571 *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
@@ -450,6 +467,7 @@
      I              AIAP                            FDAIAP                                  AR916823
      I              IPRD                            FDIPRD                                  AR916823
      I              ICTD                            FDICTD                                  AR916823
+     I              AIPD                            FDAIPD                                  MD034675
      I              INTF                            FDINTF                                  AR916823
       ** Rename for conflicting fields of DEALSDC                                           AR916823
       *                                                                                     AR916823
@@ -4201,12 +4219,12 @@
      C                     SELEC                                          CSW200
       *                                                                   CSW200
      C           CWRD      WHEQ 'AMEND'                                   CSW200
-     C           MGMATU    IFEQ 'C'                                       CSW200
-     C                     MOVEL'NEWT'    MFLD                            CSW200
-     C                     ELSE                                           CSW200
+     C********** MGMATU    IFEQ 'C'                                                  CSW200 MD034675
+     C**********           MOVEL'NEWT'    MFLD                                       CSW200 MD034675
+     C**********           ELSE                                                      CSW200 MD034675
      C                     MOVEL'AMND'    MFLD                            CSW200
      C                     MOVE 'Y'       WAMND                                             AR916823
-     C                     ENDIF                                          CSW200
+     C**********           ENDIF                                                     CSW200 MD034675
       *                                                                   CSW200
      C           CWRD      WHEQ 'CANCEL'                                  CSW200
      C                     MOVEL'CANC'    MFLD                            CSW200
@@ -4215,6 +4233,16 @@
      C           CWRD      OREQ 'ROLLOVER'                                CSW200
      C                     MOVEL'NEWT'    MFLD                            CSW200
      C                     ENDSL                                          CSW200
+      *                                                                                     AR694628
+      ** If fixed deposit has a SC amendment 22A should be AMND                             AR694628
+      *                                                                                     AR694628
+     C           MGEVTP    IFEQ 'SC'                                                        AR694628
+     C           MGEVTP    OREQ 'EM'                                                        AR598353
+     C           MGEVTP    OREQ 'PI'                                                        MD034675
+     C           MGEVTP    OREQ 'PD'                                                        MD034675
+     C           MGEVTP    OREQ 'BC'                                                        MD034675
+     C                     MOVEL'AMND'    MFLD                                              AR694628
+     C                     ENDIF                                                            AR694628
       *                                                                   CSW200
      C                     MOVEL':22A:'   MTAG                            CSW200
       *                                                                                       CSW024
@@ -4234,12 +4262,15 @@
      C           X         OCUR MULT                                      CSW200
      C                     SELEC                                          CSW200
       *                                                                   CSW200
-     C           MGEVTP    WHEQ 'SC'                                                          245960
+     C********** MGEVTP    WHEQ 'SC'                                                 245960 MD034675
+     C           MGEVTP    WHEQ 'EM'                                                        MD034675
+     C********** MGEVTP    OREQ 'EM'                                               AR598353 MD034675
      C***********          MOVEL'CINT'    MFLD                                         245960 261382
      C                     MOVEL'CONF'    MFLD                                                261382
       *                                                                                       245960
-     C           MGMATU    WHEQ 'C'                                       CSW200
-     C           MGMATU    OREQ 'I'                                       CSW200
+     C********** MGMATU    WHEQ 'C'                                                  CSW200 MD034675
+     C           MGMATU    WHEQ 'I'                                                         MD034675
+     C********** MGMATU    OREQ 'I'                                                  CSW200 MD034675
      C                     MOVEL'MATU'    MFLD                            CSW200
       *                                                                   CSW200
      C           CWRD      WHEQ 'NEW'                                     CSW200
@@ -4782,6 +4813,13 @@
      C                     ENDIF                                          CSW200
      C                     ENDIF                                          CSW200
      C/COPY WNCPYSRC,MG0320C069
+      *                                                                                     AR694628
+      ** If fixed depost has SC amendment 32H should be zero.                               AR694628
+      *                                                                                     AR694628
+     C           MGEVTP    IFEQ 'SC'                                                        AR694628
+     C           MGEVTP    OREQ 'EM'                                                        AR598353
+     C                     Z-ADD0         ZAMNT                                             AR694628
+     C                     ENDIF                                                            AR694628
       *                                                                   CSW200
      C                     CALL 'ZM0040'                                  CSW200
      C                     PARM           ZAMNT  130                      CSW200
@@ -4790,6 +4828,11 @@
      C                     PARM           ZSCCY   3                       CSW200
      C                     PARM           ZERR    1                       CSW200
      C                     PARM           ZSWDPC                                              222373
+     C           MGEVTP    IFEQ 'SC'                                                        MD034675
+     C           MGEVTP    OREQ 'BC'                                                        MD034675
+     C           MGEVTP    OREQ 'PI'                                                        MD034675
+     C           MGEVTP    OREQ 'PD'                                                        MD034675
+     C                     ELSE                                                             MD034675
       *                                                                   CSW200
      C                     ADD  1         X                               CSW200
      C           X         OCUR MULT                                      CSW200
@@ -4801,6 +4844,7 @@
      C           'N'       CAT  MFLD      MFLD                            CSW200
      C                     ENDIF                                          CSW200
       *                                                                   CSW200
+     C                     ENDIF                                                            MD034675
      C                     END                                            CSW200
      C*                                                                   CSW200
      C                     END                                            CSW200
@@ -4927,6 +4971,79 @@
      C                     ENDIF                                          CSW200
       *                                                                   CSW200
      C                     ENDIF                                          CSW200
+      *                                                                                     AR694628
+      ** When fixed deposit has SC amendment 34E should be the interest                     AR694628
+      ** amount of next interest period.                                                    AR694628
+      *                                                                                     AR694628
+     C           MGEVTP    IFEQ 'SC'                                                        AR694628
+     C           MGEVTP    OREQ 'EM'                                                        AR598353
+     C                     MOVELMGTNUM    WDLNO   60                                        AR694628
+     C           WDLNO     CHAINDEALSC               40                                     AR694628
+     C           *IN40     IFEQ '0'                                                         AR694628
+     C                     Z-ADDFDIACD    ZIBEG                                             AR694628
+     C                     Z-ADDMGVDAT    ZIEND                                             AR694628
+     C                     Z-ADDMGPCPL    ZIAMT                                             AR694628
+     C                     Z-ADDFDINTR    ZIRATE                                            AR694628
+     C                     EXSR GLINTC                                                      AR694628
+     C                     Z-ADDZINTR     ZAMNT                                             AR694628
+      *                                                                                     AR694628
+     C           MGEVTP    IFEQ 'EM'                                                        AR598353
+     C           FDNIDT    IFNE 0                                                           AR598353
+     C           FDNIDT    ANDLTMGMDAT                                                      AR598353
+     C                     Z-ADDFDNIDT    ZIEND                                             AR598353
+     C                     ELSE                                                             AR598353
+     C                     Z-ADDMGMDAT    ZIEND                                             AR598353
+     C                     ENDIF                                                            AR598353
+     C                     ELSE                                                             AR598353
+     C           FDNIDT    IFNE 0                                                           AR694628
+     C                     Z-ADDFDNIDT    ZIEND                                             AR694628
+     C                     ELSE                                                             AR694628
+     C                     Z-ADDFDMDAT    ZIEND                                             AR694628
+     C                     ENDIF                                                            AR694628
+     C                     ENDIF                                                            AR598353
+     C                     Z-ADDMGPCPL    ZIAMT                                             AR694628
+     C                     Z-ADDMGVDAT    ZIBEG                                             AR694628
+     C                     Z-ADDMGINTR    ZIRATE                                            AR694628
+     C                     EXSR GLINTC                                                      AR694628
+     C           JRDFC     IFEQ 'Y'                                                         AR694628
+     C           ZINTR     ADD  ZAMNT     ZAMNT                                             AR694628
+     C                     ELSE                                                             AR694628
+     C           ZINTR     ADD  ZAMNT     ZAMNT     H                                       AR694628
+     C                     ENDIF                                                            AR694628
+     C           ZAMNT     ADD  FDAITC    ZAMNT                                             AR694628
+     C           ZAMNT     ADD  FDAIAN    ZAMNT                                             AR694628
+     C           ZAMNT     ADD  FDAIAP    ZAMNT                                             AR694628
+     C           ZAMNT     SUB  FDIPRD    ZAMNT                                             AR694628
+     C           ZAMNT     SUB  FDICTD    ZAMNT                                             AR694628
+     C                     ENDIF                                                            AR694628
+     C                     ENDIF                                                            AR694628
+      *                                                                                     MD034675
+     C           MGEVTP    IFEQ 'PI'                                                        MD034675
+     C           MGEVTP    OREQ 'PD'                                                        MD034675
+     C********** MGEVTP    OREQ 'SC'                                              MD034675 MD034675A
+     C                     MOVELMGTNUM    WDLNO   60                                        MD034675
+     C           WDLNO     CHAINDEALSC               40                                     MD034675
+     C           *IN40     IFEQ '0'                                                         MD034675
+     C                     Z-ADDMGVDAT    ZIBEG                                             MD034675
+     C                     Z-ADDMGMDAT    ZIEND                                             MD034675
+     C                     Z-ADDMGPCPL    ZIAMT                                             MD034675
+     C                     Z-ADDMGINTR    ZIRATE                                            MD034675
+     C                     EXSR GLINTC                                                      MD034675
+     C                     Z-ADDZINTR     INTAM  130                                        MD034675
+      *                                                                                     MD034675
+     C           INTAM     ADD  FDAITC    INTAM                                             MD034675
+     C           INTAM     ADD  FDAIAN    INTAM                                             MD034675
+     C           INTAM     ADD  FDAIAP    INTAM                                             MD034675
+     C           INTAM     SUB  FDIPRD    INTAM                                             MD034675
+     C           INTAM     SUB  FDICTD    INTAM                                             MD034675
+     C********** INTAM     ADD  FDAIPD    INTAM                                   MD034675 MD034675A
+     C           MGPCPL    ADD  INTAM     ZAMNT                                             MD034675
+     C                     ENDIF                                                            MD034675
+      *                                                                                     MD034675
+     C                     Z-ADDINTAM     ZAMNT                                             MD034675
+     C                     ENDIF                                                            MD034675
+      *                                                                                     MD034675
+      *                                                                                     MD034675
       *                                                                   CSW200
       **  Format currency and interest amount.                            CSW200
      C/COPY WNCPYSRC,MG0320C070
@@ -6995,7 +7112,12 @@
      C           MGMATU    ANDEQ'I'                                       186781
      C                     MOVEL'Y'       CFPF                            186781
      C                     END                                            186781
+     C           MGEVTP    IFEQ 'SC'                                                       AR694628A
+     C           MGEVTP    OREQ 'EM'                                                       AR694628A
+     C                     MOVE 'A'       AORR                                             AR694628A
+     C                     ELSE                                                            AR694628A
      C                     MOVE MGCHTP    AORR                                                CSW025
+     C                     ENDIF                                                           AR694628A
       *                                                                                     AR916823
       ** For Interest Adjustment, if 22A is AMND, AORR must be 'A'                          AR916823
       *                                                                                     AR916823

@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD024120A          Date 19Aug14               *
-      *  Prev Amend No. MD024120           Date 12Dec13               *
+      *  Last Amend No. MD033737           Date 17May15               *
+      *  Prev Amend No. MD024120A          Date 19Aug14               *
+      *                 MD024120           Date 12Dec13               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
       *                 MD020566           Date 21May13               *
@@ -75,6 +76,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD033737 - GLC3320T2 00009 looping during COB.               *
+      *             Applied for MD034243.
       *  MD024120A - Error encountered on GLACBAPD update             *
       *  MD024120 - GLC3320 Performance Issues                        *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -386,6 +389,7 @@
      D TSCommitLimit   S                   INZ LIKE( CommitCtr )                            MD024120
      D PerformLRPrc    S               N                                                   MD024120A
      D LastRRN         S                   INZ LIKE( GLTERN )                              MD024120A
+     D RRN             S                   INZ LIKE( GLFERN )                               MD033737
      D True            C                   CONST( *ON )                                    MD024120A
      D False           C                   CONST( *OFF )                                   MD024120A
                                                                                             MD024120
@@ -526,7 +530,8 @@
      I/COPY WNCPYSRC,GL3320I001
      C/EJECT
      C                   MOVEA     CPY@          BIS@             80
-     C                   Z-ADD     0             RRN               9 0                        CGL120
+     C**********         Z-ADD     0             RRN               9 0               CGL120 MD033737
+     C                   Z-ADD     0             RRN                                        MD033737
      C                   MOVE      *BLANKS       OP_PRTF           1                          CGL142
      C*
      C   01              SETOFF                                       02        * Control First
@@ -922,7 +927,15 @@
      C                   ENDIF                                                             MD024120A
                                                                                            MD024120A
      C                   IF        %FOUND( GLACBAPD )                                      MD024120A
+      *                                                                                     MD033737
+     C                   IF        GLFERN = ALL9                                            MD033737
+     C                   EVAL      RRN = GLFERN                                             MD033737
+     C                   EVAL      LastRRN = GLTERN                                         MD033737
+     C                   EVAL      PerformLRPrc = True                                      MD033737
+     C                   ELSE                                                               MD033737
+      *                                                                                     MD033737
      C     GLTERN        IFNE      ALL9                                                    AR1097401
+     C     PerformLRPrc  ANDNE     True                                                     MD033737
      C     GLTERN        SETGT     ACCNTAB                                                 AR1097401
      C                   READP(N)  ACCNTAB                                                 AR1097401
      C                   IF        NOT %EOF                                                AR1097401
@@ -934,6 +947,8 @@
      C                   SETOFF                                       0405                    CGL120
      C                   READ      ACCNTAB                                                    CGL120
      C                   ENDIF                                                             MD024120A
+      *                                                                                     MD033737
+     C                   ENDIF                                                              MD033737
                                                                                            MD024120A
      C**********         DOW       NOT %EOF(ACCNTAB) AND RRN <= GLTERN              CGL120 MD024120A
      C                   DOW       NOT %EOF(ACCNTAB) AND RRN <= LastRRN                    MD024120A

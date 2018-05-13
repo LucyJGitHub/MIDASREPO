@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD032077           Date 26Jan15               *
-      *  Prev Amend No. MD030906           Date 13Nov14               *
+      *  Last Amend No. MD037938           Date 22Mar16               *
+      *  Prev Amend No. MD034973           Date 16Jul15               *
+      *                 MD032077           Date 26Jan15               *
+      *                 MD030906           Date 13Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
       *                 CFT151             Date 20Mar14               *
@@ -91,6 +93,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037938 - Unable to exit IPAY maintenance because of wrong  *
+      *             action code being validated.                      *
+      *  MD034973 - FT Payment Charges defaulting error               *
       *  MD032077 - Blank Front Office ID after authorisation. Do not *
       *             override IPFRNT when APFOTRANID is blank.         *
       *  MD030906 - Counterparty Nostro not defaulted.                *
@@ -180,21 +185,22 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** GL Accounts file
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
- 
+
       ** Payment Charges file
-     FPYCHGDB   IF   E           K DISK    INFSR(*PSSR)
+     F***PYCHGDBIF   E           K DISK    INFSR(*PSSR)                                     MD034973
+     FPYCHGL1   IF   E           K DISK    INFSR(*PSSR)                                     MD034973
      F                                     PREFIX(PY)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -213,48 +219,48 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -263,40 +269,40 @@
      D*SysValOME       C                   CONST('OMEIndicator')                       CSC024 CSC054
      D SysValPEA       C                   CONST('PEAIndicator')                              CSC054
       ** System Values Array                                                                  CSC024
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Narrative for Sender
      D PSNAR           S             35    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Work array for setting up new Payment Reference
      D WYA2            S              1    DIM(18)
- 
+
       ** Work array for Amount for FONTIS processing
      D WYA1            S              1    DIM(15)
- 
+
       ** Work array
      D WA              S              1    DIM(15)
- 
+
       ** Work array used in SR CWVAL to store content of tag
      D W@CW            S              1    DIM(256)
- 
+
       ** Work array used in SR CWVAL to store value extracted
      D W@VL            S              1    DIM(256)
- 
+
       ** Work array for warning message Ids
      D WPrvWarnAr      S                   Dim(ArrayMax)
      D                                     Like(WMsgIDArr)
- 
+
       ** Commitment Control Job Array                                                         CSC022
      D WJobs           S             10A   Dim(10)                                            CSC022
       **                                                                                      CSC022
       ** Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Incoming transaction in screen format
      D TranInIPY1    E DS                  EXTNAME(FTIPY1PD)
      D TranInIP1A    E DS                  EXTNAME(FTIPY1APD)
@@ -317,17 +323,17 @@
      D TranInIPY9    E DS                  EXTNAME(FTIPY9PD)                                  CER049
       *
      D TranInIP6A    E DS                  EXTNAME(FTIPY6APD)                                 CER030
- 
+
       ** Valid file layout
      D ValidIPAY     E DS                  EXTNAME(FTVIPAYPD)
      D ValidIPY2     E DS                  EXTNAME(FTVIPY2PD)
- 
+
       ** Valid file layout - default
      D DefValid      E DS                  EXTNAME(FTVIPAYPD)
      D                                     PREFIX(D#)
      D DefValidx     E DS                  EXTNAME(FTVIPY2PD)
      D                                     PREFIX(D#)
- 
+
       * Valid Incoming payment                                                                CER001
      D IPAYValPmt    E DS                  EXTNAME(FTVIPLX1PD)                                CER001
                                                                                               CER001
@@ -358,7 +364,7 @@
      D IPAYFilFmt    E DS                  EXTNAME(INPAYDD)
      D IPY2FilFmt    E DS                  EXTNAME(INPAYXPD)
      D                                     PREFIX(CR)                                         CER001
- 
+
       ** Current transaction in screen format
      D CurTrIPY1     E DS                  EXTNAME(FTIPY1PD)
      D                                     PREFIX(O)
@@ -387,11 +393,11 @@
       *                                                                                       CER030
      D CurTrIP6A     E DS                  EXTNAME(FTIPY6APD)                                 CER030
      D                                     PREFIX(O)                                          CER030
- 
+
       ** Extra data in file format
      D ExtData       E DS                  EXTNAME(FTIPEXPD)
      D RegData       E DS                  EXTNAME(FTIPRXPD)                                  CER001
- 
+
       ** Error indicators
      D OKTrIPY1      E DS                  EXTNAME(FTEIPY1PD)
      D OKTrIPY2      E DS                  EXTNAME(FTEIPY2PD)
@@ -404,63 +410,63 @@
       *                                                                                       CSW209
       ** Incoming Payments Lvl 2 Scrn 8 error indicators                                      CSW209
      D OKTrIPY8      E DS                  EXTNAME(FTEIPY8PD)                                 CSW209
- 
+
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for API ICD details
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** Externally described DS for General Ledger ICD details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Externally described DS for Midas Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Externally described DS for Funds Transfer ICD details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
- 
+
       ** Externally described DS for Retail ICD details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  SDRETLACCD   E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       ** Externally described DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Externally described DS for Branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Externally described DS for FONTIS details
      D SDFONT        E DS                  EXTNAME(SDFONTPD)
- 
+
       ** Externally described DS for Account details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(IF)
- 
+
       ** Externally described DS for Counterpary nostro                                     MD030906
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)                                MD030906
                                                                                             MD030906
       ** Externally described DS for Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC2       E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 Status DataArea Layout
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
      D  WPRDTE                 5      9  0
- 
+
       ** SD Status DataArea Layout
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** SCCMTJOB DataArea Layout                                                             CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WDSJobs                4    103A                                                      CSC022
@@ -469,33 +475,33 @@
      D PCNTRL          DS           256
      D  PGLUI                  4      4
      D  PVATT                  6      6
- 
+
       ** DS for VAT details
      D PVATDS          DS
      D  PVATR                 10     12P 4
- 
+
       ** DS for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10
      D  PDBRN                 11     13
      D  PDPPT                 14     16
- 
+
       ** DS for CASH details
      D PCSHDTA         DS           512
      D  WDACACD               21     24  0
- 
+
       ** DS to split Message Reference when maintenance is called
       ** by linked maintenance/enquiry
      D WMsgRefDS       DS
      D  WRefMsg                1      8  0
      D  WRefPrt                9     11  0
- 
+
       **  DS for Date change
      D WWDT            DS             6
      D  WD1                    1      2
      D  WD2                    3      4
      D  WD3                    5      6
- 
+
       ** DS for Account key
      D***WACKYDS         DS            18                                                     CGL029
      D WACKYDS         DS            24                                                       CGL029
@@ -508,7 +514,7 @@
      D  KACCD                 10     19  0                                                    CGL029
      D  KACSQ                 20     21  0                                                    CGL029
      D  KBRCA                 22     24                                                       CGL029
- 
+
       ** DS for IBANs full account
      D PIBANAcc        DS
      D**IBCNUM**               1      6  0                                                    CSD027
@@ -520,19 +526,19 @@
      D  IBACOD                10     19  0                                                    CGL029
      D  IBACSQ                20     21  0                                                    CGL029
      D  IBBRCA                22     24                                                       CGL029
- 
+
       ** DS to format P53
      D                 DS
      D  WWP53                  1     35
      D  WWP53A                 1      1
      D  WWP53B                 2     35
- 
+
       ** DS to format P59
      D                 DS
      D  WWP59                  1     35
      D  WWP59A                 1      1
      D  WWP59B                 2     35
- 
+
       ** DS to format work variable of Beneficiary
      D                 DS
      D  WWBNC1                 1     35
@@ -543,17 +549,17 @@
      D  WWACD1                 7     16                                                       CGL029
      D  WWSQN1                17     18                                                       CGL029
      D  WWBCH1                19     21                                                       CGL029
- 
+
       ** DS for obtaining Rate
      D WR1             DS
      D  WSR                    1     13
      D                                     DIM(13)
- 
+
       ** DS for obtaining Rate (SRRATE36)
      D WWR1            DS
      D  W@R1                   1     13
      D                                     DIM(13)
- 
+
       ** Work array - Multiple lines of First Line of Pxx fields
      D                 DS
      D  LFLT                   1    295    DIM(5)
@@ -577,7 +583,7 @@
      D  TV4                  208    236                                                       247398
      D  BG5                  237    266                                                       247398
      D  TV5                  267    295                                                       247398
- 
+
       ** Data structure used for FT0010
      D P#0010          DS           256
      D  P#NDCY                 1      3
@@ -595,20 +601,20 @@
      D  P#OVRT                55     55
      D  P#SDIN                56     56
      D  P#RTDS                57     59P 4
- 
+
      D  P#FRCY                11     13
      D  P#FRAM                14     20P 0
      D  P#FRDT                21     23P 0
      D  P#TOCY                24     26
      D  P#TOAM                27     33P 0
      D  P#TODT                44     46P 0
- 
+
      D  P#PMSQ                60     69
      D  P#INDC                70     74
      D  P#RTCD                75     81
      D  P#INTC                82     99  3
      D  P#INTD               100    117  3
- 
+
       ** Break down MIDAS equivalent
      D WRCDE2          DS
      D  WRCNUM                 1      6
@@ -623,7 +629,7 @@
      D  WRBRCD                22     24                                                       CGL029
      D  WRCDSQ                16     21                                                       CGL029
      D  WRCSB                 10     24                                                       CGL029
- 
+
       ** DS to hold G/L account number
      D WDSGLDG         DS
      D  WGLCST                 1      6
@@ -634,7 +640,7 @@
      D  WGLACD                10     19                                                       CGL029
      D  WGLSQN                20     21                                                       CGL029
      D  WGLBCH                22     24                                                       CGL029
- 
+
       ** Output Data Structure for reformatted address
      D POADD           DS           175
      D  OADD1                  1     35
@@ -642,20 +648,20 @@
      D  OADD3                 71    105
      D  OADD4                106    140
      D  OADD5                141    175
- 
+
       ** DS for Additional Info details
      D PAddInfm        DS           196
- 
+
       ** DS for Default Charge Amounts
      D PCharges        DS           196
- 
+
       ** DS for Default Charge Currencies
      D PChgCcy         DS            48
- 
+
       ** DS for next Incoming Payment Reference Number
      D WINPAY          DS             4
      D  WINSQ                  1      4  0
- 
+
       ** Warning message work inds for charges screen
      D PChgWarn        DS            24
      D  WFTF3176               1      1
@@ -682,23 +688,23 @@
      D  WFTF3173              22     22
      D  WFTF3174              23     23
      D  WFTF3175              24     24
- 
+
      D W@CHK           C                   CONST('0123456789.')
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       ** Fields (1000A) to receive the incoming transaction                                  CSF011A
      D Trans01         S           1000A                                                     CSF011A
      D Trans03         S           1000A                                                     CSF011A
@@ -718,20 +724,20 @@
      D***Trans5009       S            500A                                             CER030 262664
      D Trans5008A      S            500A                                                      262664
      D RegData500      S            500A                                                      CER001
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Mode = '*FRONT' (Front Office Transaction Interface)
       ** Mode = '      ' (Not Front Office Transaction Interface)
      D PMode           S              6A
      D PModuleId       S              2A
- 
+
       ** Entry parameters
      D UpdateYN        S              1A
      D Buffer          S           6000A
      D APIRetc         S              1A
- 
+
      D PRetCodeIn      S             10                                                       CER001
      D PActn           S              1                                                       CER001
      D PFrontID        S             20                                                       CER001
@@ -763,7 +769,7 @@
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
      D/COPY WNCPYSRC,FTH00559
- 
+
       ** Work variables
      D PParmLEVEL      S              1A   INZ('1')
      D PLinkPgm        S             10A   INZ(*BLANKS)
@@ -782,13 +788,13 @@
      D WSubIP6         S              1A
      D WArrPtr         S              3S 0                                                    CSC022
      D WSkpComtRolbk   S              1A                                                      CSC022
- 
+
      D PPRefInsert     S              1A   INZ(*BLANK)
      D WLvl2           S              1A
      D OKSWTN          S              1A
      D OKSEQNO         S              1A
      D WBTPCRD         S              5P 2
- 
+
      D PPrvTRI         S             34A
      D PPrvNDAM        S             14A
      D PPYBR           S              3A
@@ -796,12 +802,12 @@
      D PSNDDS          S             18A
      D PRCCDS          S             18A
      D PBNCDS          S             18A
- 
+
      D PSetInCy        S              1A
      D PSetTPSD        S              5P 0
      D PPayInCy        S              1A
      D PPayTPSD        S              5P 0
- 
+
      D PPrvCDRT        S              1A
      D***PPrvCDRO        S             12A                                                    CGL029
      D PPrvCDRO        S             18A                                                      CGL029
@@ -815,15 +821,15 @@
      D POCcy           S              3A
      D POInCy          S              1A
      D PONbdp          S              1P 0
- 
+
      D PFrcRedisplay   S              1A
      D PPrvDDRCRM      S             12A
      D PPrvTotChg      S             15P 0
      D PCDROChg        S              1A
- 
+
      D PStatus         S             10A
      D PPYTP           S              2A
- 
+
      D PIncData        S           2000A
      D PCurData        S           2000A
      D PResetFld       S              1A
@@ -833,7 +839,7 @@
      D PFmt            S              1A
      D PDate           S              6P 0
      D PADate          S              7A
- 
+
      D WN2             S              2P 0
      D WA4             S              4A
      D WA2             S              2A
@@ -841,7 +847,7 @@
      D WA6             S              6A
      D IA              S              2P 0
      D PTranID         S             20A
- 
+
      D PRtCd           S              7A   INZ(*BLANK)
      D POptn           S              7A   INZ(*BLANK)
      D PSard           S              7A   INZ(*BLANK)
@@ -851,17 +857,17 @@
      D PLCDP           S              1P 0
      D PLMDIn          S              1P 0
      D PLSpot          S             13P 8
- 
+
      D POrigActn       S              1A
      D PFTOV           S              1A
      D PResponse       S              1A   INZ('S')
- 
+
      D PErrMs          S              7A
      D ZalignOk        S              1A
      D ZField          S             16A
      D ZADec           S              1P 0
      D ZADig           S              2P 0
- 
+
      D WErr            S              1A   INZ(*BLANK)
      D PACTD           S              8A
      D L               S              2P 0
@@ -927,29 +933,32 @@
      D CSW209          S              1A                                                      CSW209
      D CSC054          S              1A                                                      CSC054
       *                                                                                       CSC054
+     D PCNUM           S              6A                                                    MD034973
+     D PPYTY           S              2A                                                    MD034973
+     D PPYST           S              2A                                                    MD034973
       ** +--------------------------------------+
       ** ¦ /COPYs                               ¦
       ** ¦ ======                               ¦
       ** +--------------------------------------+
- 
+
       /COPY MECPYSRC,ME1100_ILE
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
      D OVERRIDE        S              1                                                       CFT115
      D SOVRO           S             10                                                       CFT115
      D SPWRD           S             10                                                       CFT115
       /COPY WNCPYSRC,FTIPAYV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -964,14 +973,14 @@
       *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
- 
+
       /COPY WNCPYSRC,FTIPAYV003
- 
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
       ** the appropriate (externally described) data structure.
- 
+
      C**********         MOVEL     Trans5001     TranInIPY1                                  CSF011A
      C                   MOVEL     Trans01       TranInIPY1                                  CSF011A
      C                   MOVEL     Trans5002     TranInIP1A
@@ -1000,15 +1009,19 @@
      C                   Else                                                                 255190
      C                   Eval      PMTPY = NewButton                                          255190
      C                   Endif                                                                255190
- 
+
       ** Reset variables gradually updated
      C                   EXSR      ResetCycle
- 
+
       /COPY WNCPYSRC,FTIPAYV004
- 
+
       ** Validate action code
      C*****DDACTN        IFNE      'S'                                                BUG1282 CFT157
-     C     DDACTN        IFNE      'C'                                                        CFT157
+     C*****DDACTN        IFNE      'C'                                               CFT157 MD037938
+     C     CFT157        IFEQ      'N'                                                      MD037938
+     C     DDACTN        ANDNE     'S'                                                      MD037938
+     C     CFT157        OREQ      'Y'                                                      MD037938
+     C     DDACTN        ANDNE     'C'                                                      MD037938
      C                   EXSR      ValidateAc
      C                   ELSE                                                                BUG1282
       *                                                                                      BUG1282
@@ -1018,21 +1031,21 @@
      C                   EVAL      *INLR = *ON                                               BUG1282
      C                   RETURN                                                              BUG1282
      C                   ENDIF                                                               BUG1282
- 
+
       /COPY WNCPYSRC,FTIPAYV005
- 
+
       ** If error in validation of action code, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Processing depends upon action code
      C                   SELECT
- 
+
       ** INSERT
       ** ======
      C                   WHEN         DDACTN = 'I'
- 
+
       ** Set up necessary swift fields if swift reference is entered and
       ** it is still not yet reserved.
      C                   IF        DDSWTN <> *BLANKS AND
@@ -1044,32 +1057,32 @@
      C                   ENDIF                                                                BUG515
       *                                                                                       BUG515
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,FTIPAYV006
- 
+
       ** Validate incoming Incoming Payment details.
      C                   EXSR      ValidateTr
- 
+
       /COPY WNCPYSRC,FTIPAYV007
- 
+
       ** AMEND
       ** =====
      C                   WHEN         DDACTN = 'A'
- 
+
       /COPY WNCPYSRC,FTIPAYV008
- 
+
       ** Convert original Incoming Payment details from file
       ** to screen format.
      C                   EXSR      ConvertIPAY
- 
+
       /COPY WNCPYSRC,FTIPAYV009
- 
+
       ** Check if there are substitutions in the screen
       ** details.
      C                   EXSR      ChkDtaSubs
- 
+
       /COPY WNCPYSRC,FTIPAYV010
- 
+
       *                                                                                       CFT120
       ** Following lines taken from CFT009 in FTIPAY4DP no longer used                        CFT120
       ** in Java front end. Prevents spot rate on CFT009 extension file                       CFT120
@@ -1086,29 +1099,29 @@
       *                                                                                       CFT120
       ** Validate incoming Incoming Payment details.
      C                   EXSR      ValidateTr
- 
+
       /COPY WNCPYSRC,FTIPAYV011
- 
+
       ** Check if amended fields are amendable.
      C                   EXSR      ValidateAmd
- 
+
       /COPY WNCPYSRC,FTIPAYV012
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       ** Populate Account Details                                                             CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
       /COPY WNCPYSRC,FTIPAYV013
- 
+
       ** Write to database
      C                   IF        UpdateYN = 'Y' AND
      C                             Idx = 0 AND
      C                             WErr = *BLANK
- 
+
       /COPY WNCPYSRC,FTIPAYV014
      C                   EXSR      SetUpValid
      C                   EXSR      UpdateDB
@@ -1118,9 +1131,9 @@
      C                   EXSR      DlRsMsg                                                   BUG3279
      C                   ENDIF                                                               BUG3279
      C                   ENDIF
- 
+
       ** Set up default charges and currencies in TranInIPY6
- 
+
      C                   EVAL      %SUBST(TranInIPY6:11:196) = PCharges
      C                   EVAL      WPICCY = PICCY
      C                   EVAL      WPOCCY = POCCY
@@ -1128,9 +1141,9 @@
       ** If error occurred, save IPINMTPY to SavedPMTPY, else blank                           255190
       *                                                                                       255190
      C                   Eval      NewButton = IPINMTPY                                       255190
- 
+
       ** Remerge buffer with all relevant data structures
- 
+
      C                   EVAL      Buffer = TranInIPY1 + TranInIP1A +
      C                                      TranInIPY2 + TranInIPY3 +
      C                                      TranInIPY4 + TranInIP4A +
@@ -1145,18 +1158,18 @@
      C                                      AAuth +                                           CAP211
      C                                      RegData +                                         CER001
      C                                      ExtData
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FTIPAYV015
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1166,51 +1179,51 @@
       *                                                               *
       *****************************************************************
      C     ValidateAc    BEGSR
- 
+
       ** Validate action code versus transaction IDs supplied
       ** The Transaction in file format from the FT database is retrieved
       ** as well.
- 
+
      C                   CALLB     'FTIPAYRTV'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
      C                   PARM      *BLANKS       PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** Front Office Transaction Id
      C                   PARM                    APFOTranId
- 
+
       ** Payment Reference
      C                   PARM                    DDPREF
- 
+
       ** Booking Branch
      C                   PARM                    DDBRCA
- 
+
       ** SWIFT Reference
      C                   PARM                    DDSWTN
- 
+
       ** Entry Point
      C                   PARM                    PParmLevel
- 
+
       ** Linked Program
      C                   PARM                    PLinkPgm
- 
+
       ** Validate Payment Reference for Insert
      C                   PARM      'Y'           PPrefInsert
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
       *
@@ -1219,49 +1232,49 @@
       *
       ** ZMUSER - Default Branch
      C                   PARM                    PDBRN
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** FT Batch Auth and Credit Advices
      C                   PARM                    CFT003
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** OK Action Code
      C                   PARM                    OKACTN
- 
+
       ** OK Payment Reference
      C                   PARM                    OKPREF
- 
+
       ** OK Booking Branch
      C                   PARM                    OKBRCA
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
      C                   PARM                    IPY2FilFmt
- 
+
       /COPY WNCPYSRC,FTIPAYV016
                                                                                               CER001
      C                   IF        ULX043 = 'Y'                                               CER001
@@ -1305,7 +1318,7 @@
                                                                                               CER001
      C                   ENDIF                                                                CER001
                                                                                               CER001
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1315,101 +1328,101 @@
       *                screen format                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     ConvertIPAY   BEGSR
- 
+
      C                   CALLB     'FTIPAYCVT'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
      C                   PARM                    IPY2FilFmt
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDBANK - Date Format Indicator
      C                   PARM                    BJDFIN
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDGELR - Profit Centre Used
      C                   PARM                    BKPRCU
- 
+
       ** SDGELR - Originating Branch Used
      C                   PARM                    BKOBRU
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** SDFTFR - Fixed Charge Currency
      C                   PARM                    FCHCCY
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** EMU FT Settlement Currency Conversion
      C                   PARM                    CEU006
- 
+
       ** BLI Funds Transfer Enhancement Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** Electronic Banking Interface IATs and TPPs
      C                   PARM                    CGL009
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
      C                   PARM                    CFT010
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Incoming Payments Lvl 1 Scrn details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY1
      C                   PARM                    CurTrIP1A
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/1 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY2
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/2 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY3
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY4
      C                   PARM                    CurTrIP4A
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY5
- 
+
       ** Incoming Payments Margin Info details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY6
@@ -1426,37 +1439,37 @@
       ** - screen format                                                                      CER030
       *                                                                                       CER030
      C                   PARM                    CurTrIP6A                                    CER030
- 
+
       ** DS for Additional Information details
      C                   PARM                    PAddInfm
- 
+
       ** SWIFT Reference
      C                   PARM                    DDSWTN
- 
+
       ** Sequence No.
      C                   PARM                    DDSEQNO
- 
+
       ** Incoming Payment Status
      C                   PARM                    PStatus
- 
+
       ** Payment Type
      C                   PARM                    PPYTP
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1465,16 +1478,16 @@
       *  ChkDtaSubs - Data Substitution Routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkDtaSubs    BEGSR
- 
+
       ** Substitute the data for the various parts of the transaction.
- 
+
      C                   IF        WSUBIP1 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1485,16 +1498,16 @@
      C                   PARM      TranInIPY1    PIncData
       ** Current Data
      C                   PARM      CurTrIPY1     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIPY1
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP1a = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1505,16 +1518,16 @@
      C                   PARM      TranInIP1A    PIncData
       ** Current Data
      C                   PARM      CurTrIP1A     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIP1A
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP2 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1525,16 +1538,16 @@
      C                   PARM      TranInIPY2    PIncData
       ** Current Data
      C                   PARM      CurTrIPY2     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIPY2
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP3 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1545,16 +1558,16 @@
      C                   PARM      TranInIPY3    PIncData
       ** Current Data
      C                   PARM      CurTrIPY3     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIPY3
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP4 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1565,16 +1578,16 @@
      C                   PARM      TranInIPY4    PIncData
       ** Current Data
      C                   PARM      CurTrIPY4     PCurData
- 
+
      C                   MOVEL     PIncDATA      TranInIPY4
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP4a = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1585,16 +1598,16 @@
      C                   PARM      TranInIP4A    PIncData
       ** Current Data
      C                   PARM      CurTrIP4A     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIP4A
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP5 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1605,16 +1618,16 @@
      C                   PARM      TranInIPY5    PIncData
       ** Current Data
      C                   PARM      CurTrIPY5     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIPY5
- 
+
      C                   ENDIF
- 
+
      C                   IF        WSUBIP6 = 'Y'
- 
+
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return Code
@@ -1625,11 +1638,11 @@
      C                   PARM      TranInIPY6    PIncData
       ** Current Data
      C                   PARM      CurTrIPY6     PCurData
- 
+
      C                   MOVEL     PIncData      TranInIPY6
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSF011
@@ -2038,59 +2051,59 @@
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY1
- 
+
       ** Incoming Payments Lvl 1 Scrn details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY1
- 
+
       ** Reset of Fields in Error Required (Y/N)
      C                   PARM      'N'           PResetFld
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDMMOD - Multibranch Indicator
      C                   PARM                    BGMBIN
- 
+
       ** SDGELR - Profit Centre Used
      C                   PARM                    BKPRCU
- 
+
       ** SDGELR - Profit Centre Amendable
      C                   PARM                    BKPRCA
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    AMFldNamAr
      C                   PARM                    AMMsgIdArr
      C                   PARM                    AMMsgDtaAr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    AmIdx
- 
+
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    OKTrIPY1
- 
+
       ** OK Amendments field
      C                   PARM                    PAmendOK
- 
+
       ** If errors occurred, overwrite previous error information.
- 
+
      C                   IF        AmIdx <> 0
      C                   MOVEA     AMFldNamAr    FldNameArr
      C                   MOVEA     AMMsgIdArr    MsgIdArr
      C                   MOVEA     AMMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2100,44 +2113,44 @@
       *              reference/sequence                                *
       *                                                                *
       ******************************************************************
- 
+
      C     SrEISwft      BEGSR
- 
+
       ** Initialise screen formats.
- 
+
      C                   EXSR      SRInScn
- 
+
       ** Get swift message reference details
- 
+
      C                   EXSR      SRMKey
- 
+
      C                   IF        WErr <> *BLANK
      C                   GOTO      EEISwft
      C                   ENDIF
- 
+
       ** Reserve message
- 
+
      C                   EXSR      SRMsgRsv
- 
+
       ** If the SWIFT Reference is already allocated to another job,
       ** then display error messages.
- 
+
      C                   IF        WErr <> *BLANK
      C                   GOTO      EEISwft
      C                   ENDIF
- 
+
       ** Call ME1100 to translate the data of the messages for FT
       ** fields.
- 
+
      C                   CALL      'ME1100'                             0101
      C                   PARM      '*TRANS  '    PACTD
      C                   PARM                    PHEAD
      C                   PARM      *BLANKS       PDATA
      C                   PARM      *BLANKS       PDAT2                                        CSW209
      C                   PARM      *BLANKS       PRTN
- 
+
       ** If call to program resulted in an error, then end program.
- 
+
      C                   IF        PRTN = '*ERROR*' AND
      C                             *IN01
      C                   MOVEL     '*CALL'       DBKEY
@@ -2145,13 +2158,13 @@
      C                   Z-ADD     1             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set up the Detail screen fields from the message.
- 
+
       ** Sender.
- 
+
      C                   MOVEL     PSNDR         ODDSND1
- 
+
      C                   IF        PSN <> *BLANKS
      C                   MOVEL     PSN           DSTRAN
      C                   IF        PSNDR = 'CASHIER'
@@ -2162,47 +2175,47 @@
      C                   MOVEL     TMLIN3        ODDSND3
      C                   MOVEL     TMLIN4        ODDSND4
      C                   ENDIF
- 
+
       ** Message Type.
- 
+
      C                   MOVE      PMTPY         IPINMTPY
- 
+
       ** Msg Unique Reference.
- 
+
      C                   Z-ADD     PHMSGR        IPINMSGR
- 
+
       ** SWIFT Reference.
- 
+
      C                   MOVEL     PHMIR         DDSWTN
      C                   MOVEL     PHMIR         ODDSWTN
- 
+
       ** Part Number.
- 
+
      C                   MOVE      PHPART        DDSEQNO
      C                   MOVE      PHPART        ODDSEQNO
      C                   Z-ADD     PHPART        IPINKPRT
- 
+
       ** SWIFT Priority Code.
- 
+
      C                   MOVE      PMPRY         ODDSWPC
- 
+
       ** Branch Code.
- 
+
      C                   IF        PBRCA <> *BLANKS
      C                   MOVEL     PBRCA         ODDBRCA
      C                   ENDIF
- 
+
       ** Transaction Reference No.
- 
+
      C                   IF        P20 <> *BLANKS
      C                   MOVEL     P20           DSTRAN
      C                   MOVEL     TTREF         IPINTRNO
      C                   ELSE
      C                   MOVEL     *BLANKS       IPINTRNO
      C                   ENDIF
- 
+
       ** Related Reference.
- 
+
      C                   IF        P21 <> *BLANKS
      C                   MOVEL     P21           DSTRAN
      C                   MOVEL     TTREF         IPRLPR
@@ -2210,13 +2223,13 @@
      C                   ELSE
      C                   MOVEL     *BLANKS       IPRLPR
      C                   ENDIF
- 
+
      C                   IF        CFT014 = 'Y'
- 
+
       ** Sender's Charge fields
- 
+
      C                   IF        P71FX <> *BLANKS
- 
+
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P71FX         DSTRAN
      C                   Z-ADD     1             L
@@ -2225,14 +2238,14 @@
      C                   MOVEL     TMLIN3        TV3
      C                   MOVEL     TMLIN4        TV4
      C                   MOVEL     TMLIN5        TV5
- 
+
      C                   DOW       L <= 5  AND
      C                             LFLT(L) <> *BLANK
- 
+
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     LFLT(L)       DSTRAN
      C                   EXSR      SrCcyA33B
- 
+
      C                   SELECT
      C                   WHEN      L = 1
      C                   MOVEL     WCAAM         ODDSCH1
@@ -2250,33 +2263,33 @@
      C                   MOVEL     WCAAM         ODDSCH5
      C                   MOVEL     WCACY         ODDSCC5
      C                   ENDSL
- 
+
      C                   ADD       1             L
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Receiver's Charge field
- 
+
      C                   IF        P71G <> *BLANKS
- 
+
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     'N'           I2INRCUS
      C                   MOVEL     P71G          DSTRAN
      C                   EXSR      SrCcyA33B
- 
+
       ** Save receiver's charges info for input to SR/SROV32AM
- 
+
      C                   MOVEL     WCACY         WRCHCY
      C                   MOVEL     WCAAM         WRCHAM
- 
+
      C                   CALL      'AOCURRR0'                           8080
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      WCACY         PCHR03
      C     SDCURR        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS  AND
      C                             NOT(*IN80)
      C                   MOVE      *BLANK        ZFIELD
@@ -2284,65 +2297,65 @@
      C     13            SUB       A6NBDP        ZADIG
      C                   Z-ADD     A6NBDP        ZADEC
      C                   Z-ADD     A6NBDP        WRCRMNDP
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZalignOK
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
      C                   PARM                    ZADIG
- 
+
      C                   IF        ZAlignOK = 'Y'
      C                   MOVE      ZFIELD        I2INRCNW
      C                   MOVEL     WCACY         I2INRCCN
      C                   ENDIF
- 
+
       ** Default receiver's charges screen field
      C                   MOVEL     WCAAM         ODDRCRM
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Settlement Value Date/Currency/Amount.
- 
+
      C                   IF        PDCA <> *BLANKS
- 
+
      C                   MOVEL     PDCA          DSTRAN
- 
+
       ** Settlement Value Date.
- 
+
      C                   MOVEL     TVVDAT        WWDT
- 
+
       ** MMDDYY format display.
- 
+
      C                   IF        BJDFIN = 'M'
- 
+
      C                   EVAL      ODDSLDT = WD2 + WD3 + WD1
- 
+
      C                   ELSE
- 
+
       ** DDMMYY format display.
- 
+
      C                   EVAL      ODDSLDT = WD3 + WD2 + WD1
- 
+
      C                   ENDIF
- 
+
       ** Settlement Currency.
- 
+
      C                   MOVEL     TVCCY         ODDSMCY
- 
+
       ** Settlement Amount.
- 
+
      C                   IF        PNWRK <> 'FONTIS'
- 
+
       ** Format amount field (change ',' decimal point to '.').
- 
+
      C                   MOVEA     *BLANKS       WYA1
      C                   MOVEA     TVAMT         WYA1
      C                   Z-ADD     1             Cx
- 
+
      C                   DOU       Cx > 15
      C                   IF        WYA1(Cx) =  ','
      C                   MOVE      '.'           WYA1(Cx)
@@ -2351,12 +2364,12 @@
      C                   ADD       1             Cx
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEA     WYA1          WAMT
- 
+
      C                   IF        CFT014 = 'Y' AND
      C                             P71G <> *BLANKS
- 
+
      C                   MOVEL     ODDSLDT       ZDateIn
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDateIn
@@ -2375,13 +2388,13 @@
      C                   ELSE
      C                   MOVEL     WAMT          ODDSMAM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Ordering Customer.
- 
+
      C                   IF        P50 <> *BLANKS
      C                   MOVEL     P50           DSTRAN
      C                   MOVEL     TMLIN1        ODDORC1
@@ -2390,9 +2403,9 @@
      C                   MOVEL     TMLIN4        ODDORC4
      C                   MOVEL     TMLIN5        ODDORC5                                      CFT032
      C                   ENDIF
- 
+
       ** Ordering Institution.
- 
+
      C                   IF        P52 <> *BLANKS
      C                   MOVEL     P52           DSTRAN
      C                   MOVEL     TMLIN1        ODDOBK1
@@ -2401,9 +2414,9 @@
      C                   MOVEL     TMLIN4        ODDOBK4
      C                   MOVEL     TMLIN5        ODDOBK5
      C                   ENDIF
- 
+
       ** Sender's Correspondent.
- 
+
      C                   IF        P53 <> *BLANKS
      C                   MOVEL     P53           DSTRAN
      C                   MOVEL     TMLIN1        ODDSNC1
@@ -2412,11 +2425,11 @@
      C                   MOVEL     TMLIN4        ODDSNC4
      C                   MOVEL     TMLIN5        ODDSNC5
      C                   ENDIF
- 
+
       ** Receiver's Correspondent.
- 
+
      C                   IF        P54 <> *BLANKS
- 
+
      C                   MOVEL     P54           DSTRAN
      C                   MOVEL     TMLIN1        ODDRCO1
      C                   MOVEL     TMLIN2        ODDRCO2
@@ -2428,16 +2441,16 @@
      C                   MOVEL     TMLIN3        IPINRCO3
      C                   MOVEL     TMLIN4        IPINRCO4
      C                   MOVEL     TMLIN5        IPINRCO5
- 
+
       ** If Network is SWIFT, find field type.
       ** Otherwise, default it to 'U'.
- 
+
      C                   IF        PNWRK = 'SWIFT '
- 
+
       ** Set up field type, if A->S, B->T, D->U.
- 
+
      C     1             SUBST     TRTAG:4       WWK1
- 
+
      C                   SELECT
      C                   WHEN      WWK1 = 'A'
      C                   MOVEL     'S'           IPINRCRT
@@ -2446,28 +2459,28 @@
      C                   OTHER
      C                   MOVEL     'U'           IPINRCRT
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
       ** Network is not SWIFT.
- 
+
      C                   MOVEL     'U'           IPINRCRT
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       IPINRCRT
      C                   MOVEL     *BLANKS       IPINRCO1
      C                   MOVEL     *BLANKS       IPINRCO2
      C                   MOVEL     *BLANKS       IPINRCO3
      C                   MOVEL     *BLANKS       IPINRCO4
      C                   MOVEL     *BLANKS       IPINRCO5
- 
+
      C                   ENDIF
- 
+
       ** Intermediary.
- 
+
      C                   IF        P56 <> *BLANKS
      C                   MOVEL     P56           DSTRAN
      C                   MOVEL     TMLIN1        ODDINB1
@@ -2476,9 +2489,9 @@
      C                   MOVEL     TMLIN4        ODDINB4
      C                   MOVEL     TMLIN5        ODDINB5
      C                   ENDIF
- 
+
       ** Account with Institution.
- 
+
      C                   IF        P57 <> *BLANKS
      C                   MOVEL     P57           DSTRAN
      C                   MOVEL     TMLIN1        ODDACBK
@@ -2487,16 +2500,16 @@
      C                   MOVEL     TMLIN3        IPINACB3
      C                   MOVEL     TMLIN4        IPINACB4
      C                   MOVEL     TMLIN5        IPINACB5
- 
+
       ** If Network is SWIFT, find field type.
       ** Otherwise, default it to 'U'.
- 
+
      C                   IF        PNWRK = 'SWIFT '
- 
+
       ** Set up field type, if A->S, B->T, D->U.
- 
+
      C     1             SUBST     TRTAG:4       WWK1
- 
+
      C                   SELECT
      C                   WHEN      WWK1 = 'A'
      C                   MOVEL     'S'           IPINACBT
@@ -2505,30 +2518,30 @@
      C                   OTHER
      C                   MOVEL     'U'           IPINACBT
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
       ** Network is not SWIFT.
- 
+
      C                   MOVEL     'U'           IPINACBT
- 
+
      C                   ENDIF
- 
+
       ** P57 equals blanks.
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       IPINACBT
      C                   MOVEL     *BLANKS       IPINACB1
      C                   MOVEL     *BLANKS       IPINACB2
      C                   MOVEL     *BLANKS       IPINACB3
      C                   MOVEL     *BLANKS       IPINACB4
      C                   MOVEL     *BLANKS       IPINACB5
- 
+
      C                   ENDIF
- 
+
       ** Beneficiary Institution/ Beneficiary Customer.
- 
+
      C                   IF        P58 <> *BLANKS
      C                   MOVEL     P58           DSTRAN
      C                   MOVEL     TMLIN1        ODDBNC1
@@ -2537,7 +2550,7 @@
      C                   MOVEL     TMLIN4        ODDBNC4
      C                   MOVEL     TMLIN5        ODDBNC5
      C                   ENDIF
- 
+
      C                   IF        P59 <> *BLANKS
      C                   MOVEL     P59           DSTRAN
      C                   MOVEL     TMLIN1        ODDBNC1
@@ -2546,9 +2559,9 @@
      C                   MOVEL     TMLIN4        ODDBNC4
      C                   MOVEL     TMLIN5        ODDBNC5
      C                   ENDIF
- 
+
       ** Details of Payment.
- 
+
      C                   IF        P70 <> *BLANKS
      C                   MOVEL     P70           DSTRAN
      C                   MOVEL     TMLIN1        ODDDTP1
@@ -2556,7 +2569,7 @@
      C                   MOVEL     TMLIN3        ODDDTP3
      C                   MOVEL     TMLIN4        ODDDTP4
      C                   ENDIF
- 
+
       *                                                                                       CER030
       ** Move Extended Narratives to screen fields                                            CER030
       *                                                                                       CER030
@@ -2571,26 +2584,26 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
       ** Details of Charges.
- 
+
      C                   IF        P71 <> *BLANKS
      C                   MOVEL     P71           DSTRAN
      C                   MOVEL     TTREF         ODDDTCH
      C                   IF        CFT014 = 'Y'
- 
+
      C                   IF        TTREF = 'OUR'
      C                   MOVE      'A'           ODDADDC
      C                   ELSE
      C                   MOVE      'D'           ODDADDC
      C                   ENDIF
- 
+
       ** Check if receiver's charges screen field needs to be changed
- 
+
      C                   IF        ODDADDC = 'A' AND
      C                             ODDSMCY <> I2INRCCN  AND
      C                             I2INRCNW <>  0
- 
+
       ** Calculate receiver's charges network in settlement currency
- 
+
      C                   CLEAR                   P#0010
      C                   Z-ADD     WSLDT         P#FRDT
      C                   Z-ADD     WSLDT         P#TODT
@@ -2601,23 +2614,23 @@
      C                   Z-ADD     0             P#RATE
      C                   CALL      'FT0010'
      C                   PARM                    P#0010
- 
+
      C                   IF        P#RTCD <> *BLANKS
      C                   Z-ADD     2             DBASE
      C                   MOVEL     'FT0010'      DBFILE
      C                   MOVEL     '*CALL '      DBKEY
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      P#TOAM        ZFIELD
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      WRCRMNDP      ZADEC
      C                   MOVE      ZFIELD        ODDRCRM
- 
+
       ** Left-justify the amount
- 
+
      C                   Z-ADD     1             CX
      C                   MOVE      *BLANKS       WYA1
      C                   MOVEA     ODDRCRM       WYA1(1)
@@ -2631,22 +2644,22 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Bank to Bank Information.
- 
+
       ** Access Settlement Currency details.
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      ODDSMCY       PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        P72 <> *BLANKS
- 
+
      C                   MOVEL     P72           DSTRAN
      C                   MOVEL     TMLIN1        ODDBBI1
      C                   MOVEL     TMLIN2        ODDBBI2
@@ -2654,11 +2667,11 @@
      C                   MOVEL     TMLIN4        ODDBBI4
      C                   MOVEL     TMLIN5        ODDBBI5
      C                   MOVEL     TMLIN6        ODDBBI6
- 
+
      C                   IF        P33B = *BLANKS
- 
+
      C     '/OCMT/'      SCAN      P72           WOCMT
- 
+
      C                   IF        WOCMT <> 0
      C                   MOVEL     '/OCMT'       WCW
      C                   MOVEL     P72           WCWLIN
@@ -2666,54 +2679,54 @@
      C                   MOVEL     WCWCY         ODDNDCY
      C                   MOVEL     WCWAM         ODDNDAM
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Additional Mapping for CASHIER.
- 
+
       ** Pay Value Date/Currency/Amount.
- 
+
      C                   IF        SDCA <> *BLANKS
- 
+
      C                   Z-ADD     0             TVVDAT
      C                   MOVEL     SDCA          DSTRAN
- 
+
       ** Pay Value Date.
- 
+
      C                   IF        TVVDAT <> 0
- 
+
      C                   MOVEL     TVVDAT        WWDT
- 
+
       ** MMDDYY format display.
- 
+
      C                   IF        BJDFIN = 'M'
- 
+
      C                   EVAL      ODDPYDT = WD2 + WD3 + WD1
- 
+
      C                   ELSE
- 
+
       ** DDMMYY format display.
- 
+
      C                   EVAL      ODDPYDT = WD3 + WD2 + WD1
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Pay Currency.
- 
+
      C                   MOVEL     TVCCY         ODDPCCY
- 
+
       ** Pay Amount.
- 
+
       ** Format amount field (change ',' decimal point to '.').
- 
+
      C                   MOVEA     *BLANKS       WYA1
      C                   MOVEA     TVAMT         WYA1
      C                   Z-ADD     1             Cx
- 
+
      C                   DOU       Cx > 15
      C                   IF        WYA1(Cx) = ','
      C                   MOVE      '.'           WYA1(Cx)
@@ -2722,53 +2735,53 @@
      C                   ADD       1             Cx
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEA     WYA1          WAMT
      C                   MOVEL     WAMT          ODDPYAM
- 
+
      C                   ENDIF
- 
+
       ** Funding Currency/Funding Amount.
- 
+
      C                   IF        PDC2 <> *BLANKS
- 
+
      C                   Z-ADD     0             TVVDAT
      C                   MOVEL     PDC2          DSTRAN
- 
+
       ** Settlement Value Date.
- 
+
      C                   IF        TVVDAT <> 0
- 
+
      C                   MOVEL     TVVDAT        WWDT
- 
+
       ** MMDDYY format display.
- 
+
      C                   IF        BJDFIN = 'M'
- 
+
      C                   EVAL      ODDSLDT = WD2 + WD3 + WD1
- 
+
      C                   ELSE
- 
+
       ** DDMMYY format display.
- 
+
      C                   EVAL      ODDSLDT = WD3 + WD2 + WD1
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Settlement Currency.
- 
+
      C                   MOVEL     TVCCY         ODDSMCY
- 
+
       ** Settlement AMount.
- 
+
       ** Format amount field (change ',' decimal point to '.').
- 
+
      C                   MOVEA     *BLANKS       WYA1
      C                   MOVEA     TVAMT         WYA1
      C                   Z-ADD     1             Cx
- 
+
      C                   DOU       Cx > 15
      C                   IF        WYA1(CX) = ','
      C                   MOVE      '.'           WYA1(Cx)
@@ -2777,136 +2790,136 @@
      C                   ADD       1             Cx
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEA     WYA1          WAMT
      C                   MOVEL     WAMT          ODDSMAM
- 
+
      C                   ENDIF
- 
+
       ** Rate.
- 
+
      C                   IF        ODDPYAM <> *BLANKS AND
      C                             ODDSMAM <> *BLANKS
- 
+
       ** Get the numeric value of DDPYAM.
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      ODDPCCY       PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   MOVEL     ODDPCCY       DBKEY
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   Z-ADD     3             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     A6NBDP        WPCYD
- 
+
       ** Align amount.
- 
+
      C                   Z-ADD     WPCYD         ZADEC
      C     11            SUB       WPCYD         ZADIG
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVE      ODDPYAM       ZFIELD
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZalignOk
      C                   PARM                    ZField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZalignOK = 'Y'
      C                   MOVE      ZFIELD        W1PYA
      C                   ENDIF
- 
+
       ** Get the numeric value of ODDSMAM.
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      ODDSMCY       PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   MOVEL     ODDSMCY       DBKEY
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Z-ADD     A6NBDP        WSMCY
- 
+
       ** Align amount.
- 
+
      C                   Z-ADD     WSMCY         ZADEC
      C     11            SUB       WSMCY         ZADIG
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVE      ODDSMAM       ZFIELD
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZalignOk
      C                   PARM                    ZField
      C                   PARM                    ZADec
      C                   PARM                    ZADig
- 
+
      C                   IF        ZalignOk = 'Y'
      C                   MOVE      ZFIELD        W1SMA
      C                   ENDIF
- 
+
      C                   IF        W1PYA <> 0 AND
      C                             W1SMA <> 0
- 
+
       ** Calculate the Rate by dividing the larger amount
       ** by the smaller amount.
- 
+
      C                   IF        W1PYA >= W1SMA
      C     W1PYA         DIV       W1SMA         W1RTE
      C                   MOVE      *BLANKS       ODDSMAM
      C                   ENDIF
- 
+
      C                   IF        W1SMA > W1PYA
      C     W1PYA         DIV       W1SMA         W1RTE
      C                   MOVE      *BLANKS       ODDPYAM
      C                   ENDIF
- 
+
       ** Format Rate field.
- 
+
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      W1RTE         ZFIELD
      C                   Z-ADD     7             ZADEC2
- 
+
      C                   CALLB     'ZAEDITM'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC2
- 
+
      C                   MOVE      ZFIELD        ODDRATE
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        PNWRK = 'CASHV8'
- 
+
       ** Receiver's Correspondent and Ordering Bank.
- 
+
      C                   IF        P54 <> *BLANKS
- 
+
      C                   MOVEL     P54           DSTRAN
      C                   MOVEL     *BLANKS       ODDRCO1
      C                   MOVEL     TMLIN         ODDRCO1
      C                   MOVEL     *BLANKS       ODDOBK1
      C                   MOVEL     TMLIN         ODDOBK1
- 
+
      C                   ELSE
- 
+
       ** Use the default account code from CASH dataarea and
       ** build the account number.
- 
+
       ** Get Branch internal customer.
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRTCD
@@ -2914,40 +2927,40 @@
      C                   PARM      ODDBRCA       PBRCH
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   MOVEL     ODDBRCA       DBKEY
      C                   MOVEL     'SDBRCHPD'    DBFILE
      C                   Z-ADD     5             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve Retail account number.
- 
+
      C                   MOVE      A8BICN        KACNUM
      C                   MOVEL     ODDSMCY       KACCCY
      C                   MOVE      WDACACD       KACCD
      C                   Z-ADD     1             KACSQ
      C                   MOVEL     ODDBRCA       KBRCA
- 
+
      C     KAccnt        CHAIN     ACCNT                              01
- 
+
      C                   IF        *IN01
      C                   MOVEL     WACKYDS       DBKEY
      C                   MOVEL     'ACCNT'       DBFILE
      C                   Z-ADD     6             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Move Retail account number to Receiver's Correspondent.
- 
+
      C                   MOVEL     *BLANKS       ODDRCO1
      C                   MOVE      ACNO          ODDRCO1
- 
+
      C                   ENDIF
- 
+
       ** Account with Institution.
- 
+
      C                   IF        P57 <> *BLANKS
      C                   MOVEL     P57           DSTRAN
      C                   MOVEL     *BLANKS       WREAC
@@ -2955,60 +2968,60 @@
      C                   MOVEL     *BLANKS       ODDACBK
      C                   MOVEL     WREAC         ODDACBK
      C                   ENDIF
- 
+
      C                   MOVEL     'N'           ODDOPIN
- 
+
      C                   ENDIF
- 
+
      C                   IF        CFT014 = 'Y'
- 
+
       ** Third Reimbursment Institution
- 
+
      C                   IF        P55 <> *BLANKS
- 
+
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P55           DSTRAN
- 
+
       ** Map 1st line of SWIFT values into screen fields
      C                   MOVEL     TMLIN1        ODDTRIB
- 
+
      C                   IF        CFT004 = 'Y'
- 
+
       ** Check whether the field carries an IBAN
       ** If it is the case, move the IBAN into the 'screen' field
       ** which will be validated afterwards
- 
+
      C                   MOVEL     ODDTRIB       P@IBAN
- 
+
       ** Check that it is a valid IBAN
      C                   CALL      'AOIBANR2'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM                    P@IBAN
      C                   PARM      *BLANKS       DSSDY
- 
+
       ** Network information is mapped onto the 'screen' field
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVEL     *BLANK        ODDTRIB
- 
+
       ** '/' has been removed
      C                   MOVEL     P@IBAN        ODDTRIB
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Bank Operation Code
- 
+
      C                   IF        P23B <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P23B          DSTRAN
      C                   MOVEL     TTREF         ODDBOCD
      C                   ENDIF
- 
+
       ** Instruction Code
- 
+
      C                   IF        P23E <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P23E          DSTRAN
@@ -3018,17 +3031,17 @@
      C                   MOVEL     TMLIN4        ODDICD4
      C                   MOVEL     TMLIN5        ODDICD5
      C                   ENDIF
- 
+
       ** Transaction Code
- 
+
      C                   IF        P26T <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P26T          DSTRAN
      C                   MOVEL     TTREF         ODDTTCD
      C                   ENDIF
- 
+
       ** Instructed Currency/Amount
- 
+
      C                   IF        P33B <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P33B          DSTRAN
@@ -3036,18 +3049,18 @@
      C                   MOVEL     WCACY         ODDNDCY
      C                   MOVEL     WCAAM         ODDNDAM
      C                   ENDIF
- 
+
       ** Original Rate Currency/Amount
- 
+
      C                   IF        P36 <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P36           DSTRAN
      C                   EXSR      SRRATE36
      C                   MOVEL     W36RT         ODDOEXR
      C                   ENDIF
- 
+
       ** Regulatory Reporting
- 
+
      C                   IF        P77B <> *BLANKS
      C                   MOVEL     *BLANK        DSTRAN
      C                   MOVEL     P77B          DSTRAN
@@ -3055,9 +3068,9 @@
      C                   MOVEL     TMLIN2        ODDRRP2
      C                   MOVEL     TMLIN3        ODDRRP3
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *                                                                                       CSW209
      C                   IF        CSW209 = 'Y'                                               CSW209
       *                                                                                       CSW209
@@ -3154,31 +3167,31 @@
       *                                                                                       CSW209
      C                   ENDIF                                                                CSW209
       ** Default in Pay Currency.
- 
+
      C                   MOVE      ODDSMCY       ODDPCCY
- 
+
       ** Set up fields for Incoming FONTIS Messages.
- 
+
      C                   IF        PNWRK = 'FONTIS'
      C                   EXSR      SRFont
      C                   ENDIF
- 
+
       ** Decode data if feature installed.
- 
+
      C                   IF        CFT002 = 'Y'
- 
+
       ** Call ME1580 to translate the data of the messages for
       ** FT fields.
- 
+
      C                   CALL      'ME1580'                             0101
      C                   PARM      '*TRANS  '    PACTD
      C                   PARM                    PHEAD
      C                   PARM                    PDATA
      C                   PARM                    PDAT2                                        CSW209
      C                   PARM      *BLANKS       PRTN
- 
+
       ** If call to program resulted in an error, then end program.
- 
+
      C                   IF        PRTN = '*ERROR*' OR
      C                             *IN01
      C                   MOVEL     '*CALL'       DBKEY
@@ -3186,16 +3199,16 @@
      C                   Z-ADD     7             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If clearing, then copy.  Otherwise, map.
- 
+
      C                   EXSR      SRIMsg
- 
+
      C                   ENDIF
- 
+
       ** Initialise screen fields with details of the electronic
       ** message.
- 
+
      C                   MOVEL     CurTrIPY1     TranInIPY1
      C                   MOVEL     CurTrIP1A     TranInIP1A
      C                   MOVEL     CurTrIPY2     TranInIPY2
@@ -3209,14 +3222,14 @@
      C                   MOVEL     CurTrIPY7     TranInIPY7                                   CSW209
      C                   MOVEL     CurTrIPY8     TranInIPY8                                   CSW209
      C                   ENDIF                                                                CSW209
- 
+
       ** Set Reserved Electronic Message flag to 'Y'.
- 
+
      C**********         MOVEL     'Y'           DDSWFLG                                      CGL029
      C                   MOVEL     'Y'           DDSWFLG           1                          CGL029
- 
+
      C     EEISwft       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3226,14 +3239,14 @@
       *****************************************************************
       *
      C     SRInScn       BEGSR
- 
+
       ** Set up default values on Level 1 screen.
- 
+
      C                   MOVEL     'N'           DDSWPC
      C                   MOVEL     'D'           DDADDC
- 
+
       ** Save Incoming Payments Lvl 1 screen details.
- 
+
      C                   MOVEL     TranInIPY1    CurTrIPY1
      C                   MOVEL     TranInIP1A    CurTrIP1A
      C                   MOVEL     TranInIPY2    CurTrIPY2
@@ -3247,7 +3260,7 @@
      C                   MOVEL     TranInIPY7    CurTrIPY7                                    CSW209
      C                   MOVEL     TranInIPY8    CurTrIPY8                                    CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3258,21 +3271,21 @@
       *           or a valid SWIFT Reference                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMKey        BEGSR
- 
+
       ** Set up part number parameter.
- 
+
      C                   MOVEL     DDSEQNO       WSEQNO
- 
+
      C     WSEQNO        IFEQ      0
      C                   Z-ADD     1             PKPRT
      C                   ELSE
      C                   Z-ADD     WSEQNO        PKPRT
      C                   ENDIF
- 
+
       ** Check status of SWIFT Reference entered.
- 
+
      C                   CALL      'ME1080'                             0101
      C                   PARM      '*KEY   '     PACT
      C     PHMSGR        PARM      *ZEROS        PMSGR
@@ -3280,9 +3293,9 @@
      C     PHMOR         PARM      DDSWTN        PMOR
      C     PHMIR         PARM      DDSWTN        PMIR
      C                   PARM      *BLANKS       PRTN
- 
+
       ** If call to program resulted in an error, then end program.
- 
+
      C     PRTN          IFEQ      '*ERROR*'
      C     *IN01         OREQ      *ON
      C                   MOVEL     '*CALL'       DBKEY
@@ -3290,9 +3303,9 @@
      C                   Z-ADD     8             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Message may not be processed by FT.
- 
+
      C     PRTN          IFEQ      'MIN0197'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0197'     PErrMs
@@ -3300,15 +3313,15 @@
      C                   MOVEL     *BLANKS       DDSWTN
      C                   GOTO      EMKey
      C                   ENDIF
- 
+
       ** A SWIFT Reference was entered.
- 
+
       ** If any errors are detected, an error indicator is set on,
       ** control returns to SREISwft and from there, returns
       ** immediately to Initial screen processing.
- 
+
       ** MIN0101 - SWIFT Reference not found or invalid.
- 
+
      C     PRTN          IFEQ      'MIN0101'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0101'     PErrMs
@@ -3316,10 +3329,10 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMKey
      C                   ENDIF
- 
+
       ** MIN0100 - Message part does not exist or has already been
       ** processed by Funds Transfer.
- 
+
      C     PRTN          IFEQ      'MIN0100'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0100'     PErrMs
@@ -3327,9 +3340,9 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMKey
      C                   ENDIF
- 
+
       ** MIN0103 - SWIFT Reference already reserved for this job.
- 
+
      C     PRTN          IFEQ      'MIN0103'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0103'     PErrMs
@@ -3337,9 +3350,9 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMKey
      C                   ENDIF
- 
+
       ** MIN0104 - SWIFT Reference reserved for another job.
- 
+
      C     PRTN          IFEQ      'MIN0104'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0104'     PErrMs
@@ -3347,9 +3360,9 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMKey
      C                   ENDIF
- 
+
      C     EMKey         ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3358,12 +3371,12 @@
       *             for use by the current job only                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMsgRsv      BEGSR
- 
+
       ** The SWIFT Reference must be written to the reserved messages
       ** file to prevent other workstations accessing it for update.
- 
+
      C                   CALL      'ME1070'                             0101
      C                   PARM      '*RESERV'     PACT
      C                   PARM                    PMSGR
@@ -3371,9 +3384,9 @@
      C                   PARM                    PMOR
      C                   PARM                    PMIR
      C                   PARM      *BLANKS       PRTN
- 
+
       ** If call to program resulted in an error, then end program.
- 
+
      C     PRTN          IFEQ      '*ERROR*'
      C     *IN01         OREQ      *ON
      C                   MOVEL     '*CALL'       DBKEY
@@ -3381,13 +3394,13 @@
      C                   Z-ADD     9             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If any errors are detected, an error indicator is set on,
       ** control returns to SREISwft and from there, returns
       ** to Initial screen processing.
- 
+
       ** MIN0107 - Message previously reserved for this job.
- 
+
      C     PRTN          IFEQ      'MIN0107'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0107'     PErrMs
@@ -3395,9 +3408,9 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMsgRsv
      C                   ENDIF
- 
+
       ** MIN0108 - Message already reserved for another job.
- 
+
      C     PRTN          IFEQ      'MIN0108'
      C                   MOVEL     'Y'           WErr
      C                   MOVEL     'MIN0108'     PErrMs
@@ -3405,12 +3418,12 @@
      C                   EXSR      SRSndM
      C                   GOTO      EMsgRsv
      C                   ENDIF
- 
+
       ** If the SWIFT Reference is valid and available for use, then
       ** a reservation on the Reserved Messages file was made.
- 
+
       ** MIN0109 - Message is now reserved for this job.
- 
+
      C     PRTN          IFEQ      'MIN0109'
       **********                                                                      CSC022 BUG3279
       ***Execute commit if SAR CSC022 is not enrolled or                              CSC022 BUG3279
@@ -3421,9 +3434,9 @@
      C                   COMMIT
      C**********         EndIf                                                        CSC022 BUG3279
      C                   ENDIF
- 
+
      C     EMsgRsv       ENDSR
- 
+
       *****************************************************************                      BUG1282
       /EJECT                                                                                 BUG1282
       *****************************************************************                      BUG1282
@@ -3468,9 +3481,9 @@
       *           or a valid SWIFT Reference                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCcyA33B     BEGSR
- 
+
       ** INPUT
       ** =====
       ** DS for tags  (will NOT be blanked at the end of the S/R)
@@ -3478,37 +3491,37 @@
       ** OUTPUT
       ** ======
       ** Currency
- 
+
       ** Amount
      C                   MOVEL     *BLANKS       WCACY
      C                   MOVEL     *BLANKS       WCAAM
- 
+
       ** Currency
      C                   MOVEL     TTCCY         WCACY
- 
+
       ** Amount
       ** Format amount field (change ',' decimal point to '.').
- 
+
      C                   MOVE      *BLANKS       WYA1
      C                   MOVEA     TTAMT         WYA1
      C                   Z-ADD     1             CX
- 
+
      C                   DOU       CX > 15
- 
+
      C                   IF        WYA1(CX) =  ','
      C                   MOVE      '.'           WYA1(CX)
      C                   Z-ADD     16            Cx
      C                   ELSE
      C                   ADD       1             Cx
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   MOVEA     WYA1          WAMT
      C                   MOVEL     WAMT          WCAAM
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3516,9 +3529,9 @@
       *  SROV32AM  - Overwrite transaction amount                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SROV32AM      BEGSR
- 
+
       ** INPUTS
       ** ------
       ** Input amount
@@ -3533,27 +3546,27 @@
      C                   MOVE      WOVOPR        WOVOPR            4
       ** Value date
      C     *LIKE         DEFINE    ZDateOut      WOVVLD
- 
+
       ** OUTPUTS
       ** -------
       ** Amount overwritten
      C     *LIKE         DEFINE    DDSMAM        WOVAMT
- 
+
       ** Temporary variables
       ** -------------------
       ** Transaction amount numeric format
      C     *LIKE         DEFINE    P#TOAM        WOVTAN
       ** Receiver's charges amount numeric format
      C     *LIKE         DEFINE    P#TOAM        WOVRCN
- 
+
       ** Reset output parameters and temporary variables
- 
+
      C                   MOVEL     *BLANK        WOVAMT
      C                   Z-ADD     0             WOVTAN
      C                   Z-ADD     0             WOVRCN
- 
+
       ** Retrieve details of transaction currency
- 
+
      C                   CALL      'AOCURRR0'                           8080
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -3711,7 +3724,7 @@
      C                   MOVEL     *BLANK        WOVRCY
      C                   MOVEL     *BLANK        WOVOPR
      C                   Z-ADD     0             WOVVLD
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3723,7 +3736,7 @@
       *****************************************************************
       *
      C     SRRATE36      BEGSR
- 
+
       ** INPUTS
       ** ------
       ** Code work lines
@@ -3736,25 +3749,25 @@
      C     *LIKE         DEFINE    A6NBDP        W36DPT
       ** Decimal Position
      C     *LIKE         DEFINE    A6NBDP        W36DP            +1
- 
+
      C                   MOVEL     *BLANK        W36RT
      C                   Z-ADD     0             W36DPT
      C                   Z-ADD     0             W36DP
- 
+
       ** Map Rate
       ** Move possible 12 chars to work array and work string
- 
+
      C     12            SUBST     TMLIN1:1      @R               13
      C                   MOVEA     @R            W@R1
      C                   CLEAR                   @R
- 
+
       ** If ',' in rate string @R change to '.'
       ** Only need to check valid chars till one ',' found
      C                   Z-ADD     1             @C                3 0
      C                   MOVE      *BLANK        @T                1
- 
+
      C     1             DO        12            @C
- 
+
      C     W@R1(@C)      IFEQ      ','
      C                   MOVE      '.'           W@R1(@C)
       ** Retrieve the number of decimal position
@@ -3765,7 +3778,7 @@
      C                   ELSE
      C     12            SUB       @C            W36DP
      C                   ENDIF
- 
+
       ** Decimal position can be handled only on one 1 digit
       ** => range 0-9  (otherwise truncated to 9)
      C     W36DP         IFGT      9
@@ -3773,23 +3786,23 @@
      C                   ELSE
      C                   Z-ADD     W36DP         W36DPT
      C                   ENDIF
- 
+
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   Z-ADD     1             @C
      C                   MOVE      *BLANKS       @T                1
      C                   MOVEA     W@R1          @R
- 
+
       ** Get amount - upto 12 chars possible
- 
+
      C     @C            DOUGT     12
- 
+
      C                   MOVE      W@R1(@C)      @T
      C     W@CHK         CHECK     @T            @F                       82
- 
+
       ** Char not valid must be end of rate
      C     *IN82         IFEQ      *ON
      C     @C            IFNE      1
@@ -3798,18 +3811,18 @@
      C                   ENDIF
      C                   LEAVE
      C                   ENDIF
- 
+
       ** All chars in string are ok
      C     @C            IFEQ      12
      C                   MOVEL     @R            W36RT
      C                   ENDIF
- 
+
      C                   ADD       1             @C
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3819,41 +3832,41 @@
       *****************************************************************
       *
      C     SRFOCmt2      BEGSR
- 
+
       ** Initialise working fields for FONTIS.
- 
+
      C                   MOVE      *BLANKS       WCWCY             3
      C                   MOVE      *BLANKS       WCWAM            14
- 
+
       ** Retrieve Notified Delivery Currency and Amount.
- 
+
      C                   MOVEL     '012345'      WCHK             11
      C                   MOVE      '6789.'       WCHK
- 
+
      C     WCW           SCAN      WCWLIN:1      WF                3 0    01
- 
+
      C     *IN01         IFEQ      *ON
- 
+
       ** Map Currency Code -> ODDNDCY.
- 
+
      C                   ADD       6             WF
      C     3             SUBST     WCWLIN:WF     WCWCY
- 
+
       ** Map Amount -> ODDNDAM.
- 
+
       ** Move possible 15 chars to work array and work string.
- 
+
      C                   ADD       3             WF
      C     15            SUBST     WCWLIN:WF     WS               15
      C                   MOVEA     WS            WA
      C                   CLEAR                   WS
- 
+
       ** If ',' in amount string WS, change to '.'.
       ** Only need to check valid chars till one ',' found.
- 
+
      C                   Z-ADD     1             WC                3 0
      C                   MOVE      *BLANKS       WT                1
- 
+
      C     1             DO        15            WC
      C                   MOVE      WA(WC)        WT
      C     WT            IFEQ      ','
@@ -3861,20 +3874,20 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   Z-ADD     1             WC
      C                   MOVE      *BLANKS       WT                1
      C                   MOVEA     WA            WS
- 
+
       ** Get Amount - up to 15 chars possible.
- 
+
      C     WC            DOUGT     15
- 
+
      C                   MOVE      WA(WC)        WT
      C     WCHK          CHECK     WT            WF                       01
- 
+
       ** Char not valid, must be end of Amount.
- 
+
      C     *IN01         IFEQ      *ON
      C     WC            IFNE      1
      C     WC            SUB       1             WF
@@ -3882,26 +3895,26 @@
      C                   ENDIF
      C                   LEAVE
      C                   ENDIF
- 
+
       ** All chars in string ok.
- 
+
      C     WC            IFEQ      15
      C                   MOVEL     WS            WCWAM
      C                   ENDIF
- 
+
      C                   ADD       1             WC
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Reset variables.
- 
+
      C                   MOVEL     *BLANKS       WCWLIN          256
      C                   MOVEL     *BLANKS       WCW               6
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3911,32 +3924,32 @@
       *****************************************************************
       *
      C     SRFont        BEGSR
- 
+
       ** Set up defaults for FONTIS.
- 
+
      C                   MOVE      'N'           ODDSWPC
      C                   MOVE      *BLANKS       ODDACBK
      C                   MOVE      *BLANKS       ODDACBB
- 
+
       ** Retrieve Electronic Banking ICD details.
- 
+
      C                   CALL      'AOFONTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST'      POPTN
      C     SDFONT        PARM      SDFONT        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   MOVEL     '*FIRST'      DBKEY
      C                   MOVEL     'SDFONTPD'    DBFILE
      C                   Z-ADD     027           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVE      F8IPST        ODDPYST
      C                   MOVE      F8TBKC        ODDBOKC
- 
+
       ** Related Reference.
- 
+
      C     P20           IFNE      *BLANKS
      C                   MOVEL     P20           DSTRAN
      C                   MOVEL     TTREF         IPRLPR
@@ -3945,25 +3958,25 @@
      C                   MOVEL     *BLANKS       IPRLPR
      C                   MOVEL     *BLANKS       ODDRLPR
      C                   ENDIF
- 
+
       ** Pay Currency/Value Date/Amount.
- 
+
      C     PDCA          IFNE      *BLANKS
- 
+
      C                   MOVEL     PDCA          DSTRAN
- 
+
       ** Pay Currency.
- 
+
      C                   MOVEL     TVCCY         ODDPCCY
- 
+
       ** Pay Amount.
- 
+
       ** Format amount field (change ',' decimal point to '.').
- 
+
      C                   MOVEA     *BLANKS       WYA1
      C                   MOVEA     TVAMT         WYA1
      C                   Z-ADD     1             Cx
- 
+
      C     Cx            DOUGT     15
      C     WYA1(Cx)      IFEQ      ','
      C                   MOVE      '.'           WYA1(Cx)
@@ -3972,83 +3985,83 @@
      C                   ADD       1             Cx
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   MOVEA     WYA1          WNLAM
      C                   MOVEA     WYA1          WWPYAM           14
- 
+
      C                   EXSR      SRNull
- 
+
      C     WNLNUL        IFEQ      'N'
      C                   MOVEL     WWPYAM        ODDPYAM
      C                   ELSE
      C                   MOVEL     *BLANKS       ODDPYAM
      C                   ENDIF
- 
+
       ** Pay Value Date.
- 
+
      C                   MOVEL     TVVDAT        WWDT
- 
+
       ** MMDDYY format display.
- 
+
      C     BJDFIN        IFEQ      'M'
- 
+
      C                   EVAL      ODDPYDT = WD2 + WD3 + WD1
- 
+
      C                   ELSE
- 
+
       ** DDMMYY format display.
- 
+
      C                   EVAL      ODDPYDT = WD3 + WD2 + WD1
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM      ODDPYDT       PDateIn           6
      C                   PARM      *ZERO         PDaynoOut         5 0
      C                   PARM      BJDFIN        PDateFmt          1
      C                   PARM                    PError            1
- 
+
      C     PError        IFNE      'Y'
      C                   Z-ADD     PDaynoOut     WVLDT
      C                   ELSE
      C                   Z-ADD     BJRDNB        WVLDT             5 0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Debit Account.
- 
+
      C     P53           IFNE      *BLANKS
- 
+
      C                   MOVE      *BLANKS       WWP53P           35
      C                   MOVEL     P53           DSTRAN
      C                   MOVEL     TMLIN1        WWP53
- 
+
      C     WWP53A        IFEQ      '/'
      C                   MOVEL     WWP53B        WWP53P
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       ODDSND2
      C                   MOVEL     *BLANKS       ODDSND3
      C                   MOVEL     *BLANKS       ODDSND4
- 
+
      C     ' '           CHECKR    WWP53P        WWLEN             2 0
- 
+
       ** Check if it is a Retail Account.
- 
+
      C     WWLEN         IFEQ      10
- 
+
      C                   MOVEL     WWP53P        PPRETL
      C                   MOVEL     *BLANKS       PPCNUM
      C                   MOVEL     *BLANKS       PPCUCD
      C                   MOVEL     *BLANKS       PPACCD
      C                   MOVEL     *BLANKS       PPACSQ
      C                   MOVEL     *BLANKS       PPBRCA
- 
+
      C                   ELSE
- 
+
       ** Account is not Retail but General Ledger.
- 
+
      C                   MOVEL     *BLANKS       PPRETL
      C     3             SUBST     WWP53P:1      PPBRCA
      C     6             SUBST     WWP53P:4      PPCNUM
@@ -4057,11 +4070,11 @@
      C*****2****         SUBST     WWP53P:17     PPACSQ                                       CGL029
      C     10            SUBST     WWP53P:13     PPACCD                                       CGL029
      C     2             SUBST     WWP53P:23     PPACSQ                                       CGL029
- 
+
      C                   ENDIF
- 
+
       ** Access Account Details.
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *BLANKS       PPRTCD            7
      C                   PARM      '*KEY   '     PPOPTN            7
@@ -4073,13 +4086,13 @@
      C                   PARM                    PPACSQ            2
      C                   PARM                    PPBRCA            3
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS
- 
+
       ** If it is a G/L Account, we put the Branch as the end
       ** (BRCA/CUST/CCY/ACOD/SEQ) => (CUST/CCY/ACOD/SEQ/BRCA).
       ** If it is a Retail one, we don't format it.
- 
+
      C     WWLEN         IFEQ      10
      C                   MOVEL     WWP53P        ODDSND1
      C                   ELSE
@@ -4092,12 +4105,12 @@
      C     2             SUBST     WWP53P:23     WGLSQN                                       CGL029
      C                   MOVEL     WDSGLDG       ODDSND1
      C                   ENDIF
- 
+
      C                   MOVEL     IFBRCA        ODDBRCA
      C                   MOVEL     IFBRCA        ODDORBR
- 
+
      C                   ELSE
- 
+
       ** If no valid account in tag 53 we concatenate line of
       ** 53 (A/C debited)  + first lines of 50 (Ord Cust)
      C                   MOVEL     WWP53P        ODDSND1
@@ -4105,19 +4118,19 @@
      C                   MOVEL     TMLIN1        ODDSND2
      C                   MOVEL     TMLIN2        ODDSND3
      C                   MOVEL     TMLIN3        ODDSND4
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Profit Centre.
- 
+
      C     BKPRCU        IFEQ      'Y'
- 
+
       ** Retrieve default Profit Centre.
- 
+
      C     BKPCDU        IFEQ      'Y'
- 
+
      C                   CALLB     'AOPRFMR0'                           01
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      ODDBOKC       PBOKC             2
@@ -4129,51 +4142,51 @@
      C                   PARM      *BLANKS       PACOF             2
      C                   PARM      *BLANKS       PCUST             6
      C     ODDPRFC       PARM      *BLANKS       PPRFC             4
- 
+
      C                   IF        *In01 = *On
      C                   MOVEL     '*CALL'       DBKEY
      C                   MOVEL     'AOPRFMR0'    DBFILE
      C                   Z-ADD     028           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ODDPRFC       IFEQ      *BLANKS
      C                   MOVEL     F8TPFC        ODDPRFC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Beneficiary Customer.
- 
+
      C     P59           IFNE      *BLANKS
- 
+
      C                   MOVE      *BLANKS       WWP59P           35
      C                   MOVEL     P59           DSTRAN
      C                   MOVEL     TMLIN1        WWP59
- 
+
      C     WWP59A        IFEQ      '/'
      C                   MOVEL     WWP59B        WWP59P
      C                   ENDIF
- 
+
      C     ' '           CHECKR    WWP59P        WWLEN
- 
+
       ** Check if it is a Retail Account.
- 
+
      C     WWLEN         IFEQ      10
- 
+
      C                   MOVEL     WWP59P        PPRETL
      C                   MOVEL     *BLANKS       PPCNUM
      C                   MOVEL     *BLANKS       PPCUCD
      C                   MOVEL     *BLANKS       PPACCD
      C                   MOVEL     *BLANKS       PPACSQ
      C                   MOVEL     *BLANKS       PPBRCA
- 
+
      C                   ELSE
- 
+
       ** Account is not Retail but General Ledger.
- 
+
      C                   MOVEL     *BLANKS       PPRETL
      C     3             SUBST     WWP59P:1      PPBRCA
      C     6             SUBST     WWP59P:4      PPCNUM
@@ -4182,11 +4195,11 @@
      C*****2****         SUBST     WWP59P:17     PPACSQ                                       CGL029
      C     10            SUBST     WWP59P:13     PPACCD                                       CGL029
      C     2             SUBST     WWP59P:23     PPACSQ                                       CGL029
- 
+
      C                   ENDIF
- 
+
       ** Access Account details.
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PPRTCD
      C                   PARM      '*KEY   '     PPOPTN
@@ -4197,9 +4210,9 @@
      C                   PARM                    PPACSQ
      C                   PARM                    PPBRCA
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C     PPRTCD        IFEQ      *BLANKS
- 
+
      C     WWLEN         IFEQ      10
      C                   MOVEL     WWP59P        ODDBNC1
      C                   ELSE
@@ -4211,48 +4224,48 @@
      C     2             SUBST     WWP59P:17     WWSQN1                                       CGL029
      C                   MOVEL     WWBNC1        ODDBNC1
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       ODDBNC2
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Details of Charges.
- 
+
      C     P71           IFNE      *BLANKS
- 
+
      C                   MOVEL     P71           DSTRAN
- 
+
      C     TTREF         IFEQ      'OUR'
      C                   MOVEL     'A'           ODDADDC
      C                   ELSE
      C                   MOVEL     'D'           ODDADDC
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     'D'           ODDADDC
- 
+
      C                   ENDIF
- 
+
       ** Sender to Receiver Information.
- 
+
      C     P72           IFEQ      *BLANKS
- 
+
       ** Settlement CCY will be the same as the Account to be Debited.
- 
+
      C                   MOVEL     *BLANKS       ODDSMCY
- 
+
       ** FT fields have been cleared in SREISwft.
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SRICChk
- 
+
      C                   MOVEL     P72           DSFONT
      C     WFound        IFEQ      'Y'
      C                   MOVEL     *BLANKS       ODDBBI6
@@ -4269,7 +4282,7 @@
      C                   MOVEL     FN72L5        ODDBBI5
      C                   MOVEL     FN72L6        ODDBBI6
      C                   ENDIF
- 
+
      C                   MOVEL     '/REF/'       WCW
      C                   MOVEL     FONT72        WCWLIN
      C                   Z-ADD     30            WCWLEN
@@ -4277,7 +4290,7 @@
      C     WCWVAL        IFNE      *BLANK
      C                   MOVEL     WCWVAL        ODDFDLR
      C                   ENDIF
- 
+
      C                   MOVEL     '/ORIG/'      WCW
      C                   MOVEL     FONT72        WCWLIN
      C                   EXSR      SRFOCmt2
@@ -4286,62 +4299,62 @@
      C                   ELSE
      C                   MOVEL     *BLANKS       ODDSMCY
      C                   ENDIF
- 
+
      C                   MOVEL     WCWAM         WNLAM
      C                   EXSR      SRNull
- 
+
      C     WNLNUL        IFEQ      'N'
      C                   MOVEL     WCWAM         ODDSMAM
      C                   ELSE
      C                   MOVEL     *BLANKS       ODDSMAM
      C                   ENDIF
- 
+
      C                   MOVEL     '/RATE/'      WCW
      C                   MOVEL     FONT72        WCWLIN
      C                   EXSR      SRRate
      C                   MOVEL     WCWRT         WNLAM
      C                   EXSR      SRNull
- 
+
      C     WNLNUL        IFEQ      'Y'
- 
+
      C                   MOVEL     *BLANKS       WCWRT
- 
+
      C                   ELSE
- 
+
       ** Decimal places in FT are stored on 8 digits
       ** => truncated if greater.
- 
+
      C     WCWDPT        IFGT      8
- 
+
      C     '.'           SCAN      WCWRT         IN                2 0
- 
+
       ** Extract Digits + comma.
- 
+
      C     IN            SUBST(P)  WCWRT:1       W014A            14
      C                   ADD       1             IN
- 
+
       ** Extract Decimals after comma.
- 
+
      C     8             SUBST(P)  WCWRT:IN      W008A             8
      C     W014A         CAT(P)    W008A:0       WCWRT
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     WCWRT         IFNE      *BLANKS
      C                   MOVE      WCWRT         ODDRATE
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     'N'           ODDOPIN
      C                   MOVEL     *BLANKS       ODDNDAM
- 
+
      C     ODDSMCY       IFEQ      ODDNDCY
      C                   MOVEL     *BLANK        ODDNDCY
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       ODDSNC1
      C                   MOVEL     *BLANKS       ODDSNC2
      C                   MOVEL     *BLANKS       ODDSNC3
@@ -4352,9 +4365,9 @@
      C                   MOVEL     *BLANKS       ODDINB3
      C                   MOVEL     *BLANKS       ODDINB4
      C                   MOVEL     *BLANKS       ODDINB5
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4362,37 +4375,37 @@
       *  SRNull - Test if Amount is null                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNULL        BEGSR
- 
+
       ** Initialise working fields.
- 
+
      C                   MOVEL     'Y'           WNLNUL            1
      C                   MOVEL     '123456'      WNUL              9
      C                   MOVE      '789'         WNUL
- 
+
      C     WNLAM         IFNE      *BLANK
      C                   MOVEL     *BLANKS       WYA1
      C                   MOVEA     WNLAM         WYA1
- 
+
      C                   DO        15            IN
- 
+
      C     WNUL          CHECK     WYA1(IN)                               01
- 
+
      C     *IN01         IFEQ      '0'
      C                   MOVEL     'N'           WNLNUL
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Initialise working fields.
- 
+
      C                   MOVEL     *BLANKS       WNLAM            15
      C                   MOVEL     *BLANKS       WYA1              1
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -4402,11 +4415,11 @@
       *  SRICChk - Scan for /OCMT/, /ORIG/, /RATE/                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRICChk       BEGSR
- 
+
      C                   MOVEL     *BLANKS       WFound            1
- 
+
      C     '/RATE/'      SCAN      P72:1         PX                3 0    81
      C     *IN81         IFEQ      *OFF
      C     '/ORIG/'      SCAN      P72:1         PX                       81
@@ -4414,13 +4427,13 @@
      C     '/OCMT/'      SCAN      P72:1         PX                       81
      C                   ENDIF
      C                   ENDIF
- 
+
      C     *IN81         IFEQ      *ON
      C                   MOVE      'Y'           WFound
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4428,41 +4441,41 @@
       *  SRRate - Retrieve the Rate and the Multiply/Divide indicator *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRate        BEGSR
- 
+
       ** Reset work variables.
- 
+
      C                   MOVEL     *BLANK        WCWRT            14
      C                   Z-ADD     0             WCWDPT            1 0
      C                   Z-ADD     0             WCWDP             2 0
- 
+
      C     WCW           SCAN      WCWLIN:1      WF                3 0    01
- 
+
      C     *IN01         IFEQ      *ON
- 
+
      C                   ADD       6             WF
- 
+
       ** Move possible 13 chars to work array and work string.
- 
+
      C     13            SUBST     WCWLIN:WF     WR               13
      C                   MOVEA     WR            WSR
      C                   CLEAR                   WR
- 
+
       ** If ',' in rate string WR, change to '.'.
       ** Only need to check valid chars till one ',' found.
- 
+
      C                   Z-ADD     1             WC                3 0
      C                   MOVE      *BLANKS       WT                1
- 
+
      C     1             DO        13            WC
- 
+
      C     WSR(WC)       IFEQ      ','
- 
+
      C                   MOVE      '.'           WSR(WC)
- 
+
       ** Retrieve the number of decimal position.
- 
+
      C     WCHK          CHECK     WR1           WF                3 0
      C     WF            IFNE      0
      C     WF            SUB       1             WF
@@ -4470,35 +4483,35 @@
      C                   ELSE
      C     13            SUB       WC            WCWDP
      C                   ENDIF
- 
+
       ** Decimal position can be handled only on one 1 digit
       ** => range 0-9  (otherwise, truncated to 9).
- 
+
      C     WCWDP         IFGT      9
      C                   Z-ADD     9             WCWDPT
      C                   ELSE
      C                   Z-ADD     WCWDP         WCWDPT
      C                   ENDIF
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   Z-ADD     1             WC
      C                   MOVE      *BLANKS       WT                1
      C                   MOVEA     WSR           WR
- 
+
       ** Get Amount - up to 13 chars possible.
- 
+
      C     WC            DOUGT     13
- 
+
      C                   MOVE      WSR(WC)       WT
      C     WCHK          CHECK     WT            WF                       01
- 
+
       ** Char not valid must be end of rate.
- 
+
      C     *IN01         IFEQ      *ON
      C     WC            IFNE      1
      C     WC            SUB       1             WF
@@ -4506,26 +4519,26 @@
      C                   ENDIF
      C                   LEAVE
      C                   ENDIF
- 
+
       ** All chars in string ok.
- 
+
      C     WC            IFEQ      13
      C                   MOVEL     WR            WCWRT
      C                   ENDIF
- 
+
      C                   ADD       1             WC
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Reset input variables.
- 
+
      C                   MOVEL     *BLANKS       WCWLIN
      C                   MOVEL     *BLANKS       WCW
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4533,32 +4546,32 @@
       *  SRIMsg - Map translated data for incoming messages           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRIMsg        BEGSR
- 
+
       ** Set up the detail screen fields from the message.
- 
+
       ** Sender.
- 
+
       ** In FONTIS, this field can be translated only by
       ** the sender correspondant (P53).
- 
+
      C     PNWRK         IFNE      'FONTIS'
- 
+
      C     PSN           IFNE      *BLANKS
- 
+
      C                   MOVEL     PSN           DSTRAN
- 
+
      C     TRCODE        IFNE      *BLANKS
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
@@ -4567,9 +4580,9 @@
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C                   MOVEL     WWACNO        ODDSND1
- 
+
       ** If Currency the same as Settle and Nostro, use Nostro.
- 
+
      C     WWNCCY        WHENEQ    ODDSMCY
      C     WWNONB        ANDNE     *BLANKS
      C                   MOVE      *BLANKS       ODDSND1
@@ -4577,9 +4590,9 @@
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C     WWNCCY        CAT(P)    WWNONB        ODDSND1
- 
+
       ** If Currency the same, use GL Account.
- 
+
      C     WRCYCD        WHENEQ    ODDSMCY
      C                   MOVE      *BLANKS       ODDSND1
      C                   MOVE      *BLANKS       ODDSND2
@@ -4589,55 +4602,55 @@
      C                   MOVE      '   '         TRCODE
      C                   ENDIF
      C                   MOVEL     TRCODE        ODDSND1
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDSND1
      C                   MOVE      *BLANKS       ODDSND2
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C                   MOVEL     WRCNUM        ODDSND1
- 
+
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     TMLIN2        ODDSND2
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Senders Correspondent.
- 
+
       **  By default, will translate the Sender field in FONTIS.
- 
+
      C                   MOVEL     P54           DSTRAN
      C                   MOVEL     TRCODE        WRCDE2
- 
+
      C     P54           IFEQ      *BLANKS
      C     P53           ANDNE     *BLANKS
      C     P54           ORNE      *BLANKS
      C     WRCNUM        ANDEQ     '501116'
      C     P53           ANDNE     *BLANKS
- 
+
      C                   MOVEL     P53           DSTRAN
      C                   MOVEL     TRCODE        WRCDE2
- 
+
      C     TRCODE        IFNE      *BLANKS
      C     WRCNUM        ANDNE     '501116'
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
@@ -4646,9 +4659,9 @@
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C                   MOVEL     WWACNO        ODDSND1
- 
+
       ** If Currency the same as Settle and Nostro, use Nostro.
- 
+
      C     WWNCCY        WHENEQ    ODDSMCY
      C     WWNONB        ANDNE     *BLANKS
      C                   MOVE      *BLANKS       ODDSND1
@@ -4656,9 +4669,9 @@
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C     WWNCCY        CAT(P)    WWNONB        ODDSND1
- 
+
       ** If Currency the same, use GL Account.
- 
+
      C     WRCYCD        WHENEQ    ODDSMCY
      C                   MOVE      *BLANKS       ODDSND1
      C                   MOVE      *BLANKS       ODDSND2
@@ -4668,145 +4681,145 @@
      C                   MOVE      '   '         TRCODE
      C                   ENDIF
      C                   MOVEL     TRCODE        ODDSND1
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDSND1
      C                   MOVE      *BLANKS       ODDSND2
      C                   MOVE      *BLANKS       ODDSND3
      C                   MOVE      *BLANKS       ODDSND4
      C                   MOVEL     WRCNUM        ODDSND1
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Receiver's Correspondent.
- 
+
      C                   SELECT
- 
+
      C     PNWRK         WHENEQ    'YENKSI'
- 
+
      C     P54           WHENNE    *BLANKS
- 
+
      C                   MOVEL     P54           DSTRAN
      C                   MOVEL     TRCODE        WRCDE2
      C     TRCODE        IFNE      *BLANKS
      C     WRCNUM        ANDEQ     '501116'
      C                   MOVE      *BLANKS       ODDRCO1
      C                   ENDIF
- 
+
      C     TRCODE        IFNE      *BLANKS
      C     WRCNUM        ANDNE     '501116'
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
      C                   MOVE      *BLANKS       ODDRCO1
      C                   MOVEL     WWACNO        ODDRCO1
- 
+
       ** If Currency the same as Settle and Nostro, use Nostro.
- 
+
      C     WWNCCY        WHENEQ    ODDSMCY
      C     WWNONB        ANDNE     *BLANKS
      C                   MOVE      *BLANKS       ODDRCO1
      C                   MOVEL     WWNONB        ODDRCO1
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDRCO1
      C                   MOVEL     WRCNUM        ODDRCO1
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
       ** Account with Institution.
- 
+
       ** Can't be translated if FONTIS message.
- 
+
      C     PNWRK         IFNE      'FONTIS'
- 
+
      C     P57           IFNE      *BLANKS
- 
+
      C                   MOVEL     P57           DSTRAN
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C     TRCODE        IFNE      *BLANKS
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
      C                   MOVE      *BLANKS       ODDACBK
      C                   MOVEL     WWACNO        ODDACBK
- 
+
       ** If Currency the same as Settle and Nostro, use Nostro.
- 
+
      C     WWNCCY        WHENEQ    ODDSMCY
      C     WWNONB        ANDNE     *BLANKS
      C                   MOVE      *BLANKS       ODDACBK
      C                   MOVEL     WWNONB        ODDACBK
- 
+
       ** If Currency the same, use GL Account.
- 
+
      C     WRCYCD        WHENEQ    ODDSMCY
      C                   MOVE      *BLANKS       ODDACBK
      C     WRCNUM        CAT       WRCDSQ        ODDACBK
      C     BGMBIN        IFEQ      'Y'
      C                   MOVE      WRBRCD        ODDACBB
      C                   ENDIF
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDACBK
      C                   MOVEL     WRCNUM        ODDACBK
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Beneficiary Institution/ Beneficiary Customer.
- 
+
      C     P58           IFNE      *BLANKS
- 
+
      C                   MOVEL     P58           DSTRAN
- 
+
      C     TRCODE        IFNE      *BLANKS
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
@@ -4816,9 +4829,9 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
       ** If Currency the same, use GL Account.
- 
+
      C     WRCYCD        WHENEQ    ODDSMCY
      C                   MOVE      *BLANKS       ODDBNC1
      C     BGMBIN        IFNE      'Y'
@@ -4829,9 +4842,9 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDBNC1
      C                   MOVEL     WRCNUM        ODDBNC1
@@ -4839,27 +4852,27 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     P59           IFNE      *BLANKS
- 
+
      C                   MOVEL     P59           DSTRAN
- 
+
       ** Translate to Nostro and Retail account numbers.
- 
+
      C     TRCODE        IFNE      *BLANKS
- 
+
      C                   EXSR      SRTran
- 
+
      C                   SELECT
- 
+
       ** If Local and Account Currency Local, then use Retail number.
- 
+
      C     BJLCCY        WHENEQ    ODDSMCY
      C     WRCYCD        ANDEQ     ODDSMCY
      C     WWACNO        ANDNE     0
@@ -4869,9 +4882,9 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
       ** If Currency the same, use GL Account.
- 
+
      C     WRCYCD        WHENEQ    ODDSMCY
      C                   MOVE      *BLANKS       ODDBNC1
      C     BGMBIN        IFNE      'Y'
@@ -4882,9 +4895,9 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
       ** Use Customer Number.
- 
+
      C                   OTHER
      C                   MOVE      *BLANKS       ODDBNC1
      C                   MOVEL     WRCNUM        ODDBNC1
@@ -4892,15 +4905,15 @@
      C                   MOVEL     *BLANKS       ODDBNC3
      C                   MOVEL     *BLANKS       ODDBNC4
      C                   MOVEL     *BLANKS       ODDBNC5
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4908,45 +4921,45 @@
       *  SRTran - Translate to Retail and Nostro Code                 *
       *                                                               *
       *****************************************************************
- 
+
      C     SRTran        BEGSR
- 
+
      C     *LIKE         DEFINE    ACNO          WWACNO
      C     *LIKE         DEFINE    A7CYCD        WWNCCY
      C     *LIKE         DEFINE    A7NONB        WWNONB
- 
+
       ** Clear Retail number and Nostro Code.
- 
+
      C                   Z-ADD     *ZERO         WWACNO
      C                   MOVEL     *BLANKS       WWNCCY
      C                   MOVEL     *BLANKS       WWNONB
- 
+
       ** If TRCODE has no Currency, exit.
- 
+
      C                   MOVE      TRCODE        WRCDE2
      C     WRCYCD        IFEQ      *BLANKS
      C                   GOTO      ETran
      C                   ENDIF
- 
+
       ** Find Account details.
- 
+
      C                   MOVEL     TRCODE        WACKYDS
      C     KAccnt        CHAIN     ACCNTABF                           01
- 
+
      C     *IN01         IFEQ      *OFF
      C     RECI          ANDEQ     'D'
      C     ATYP          ANDEQ     'R'
      C                   Z-ADD     ACNO          WWACNO
      C                   ENDIF
- 
+
       ** Move numeric fields to parameter fields.
- 
+
      C                   MOVEL     CNUM          PCUST
      C                   MOVEL     ACOD          PACCD
      C                   MOVEL     ACSQ          PACSN
- 
+
       ** Find Nostro details.
- 
+
      C                   CALLB     'AONOSTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
@@ -4960,14 +4973,14 @@
      C                   PARM      *BLANKS       PCSSN            10
      C                   PARM      *BLANKS       PPNOI             1
      C     SDNOST        PARM      *BLANKS       DSFDY
- 
+
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVEL     A7CYCD        WWNCCY
      C                   MOVEL     A7NONB        WWNONB
      C                   ENDIF
- 
+
      C     ETran         ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -5004,7 +5017,7 @@
       *
       ** Length of search argument
      C     ' '           CHECKR    WCW           WLn
- 
+
      C     WCW:WLn       SCAN      WCWLIN:1      WVL                      81
      C     *IN81         IFEQ      *ON
      C                   MOVEA     WCWLIN        W@CW
@@ -5030,7 +5043,7 @@
      C                   MOVEL     *BLANKS       WCWLIN
      C                   MOVEL     *BLANKS       WCW
      C                   Z-ADD     0             WCWLEN            3 0
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5040,11 +5053,11 @@
       *  SRSndM - Send error message to screen                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSndM        BEGSR
- 
+
       ** Add error message to array passed to screen.
- 
+
      C**********         Z-ADD     1             Ex                3 0                        BUG515
      C******BLANK        LOOKUP    FldNameArr(Ex)                         99                  BUG515
      C**********         MOVEL     '*ANY'        FldNameArr(Ex)                               BUG515
@@ -5052,7 +5065,7 @@
      C                   Z-ADD     1             Idx                                          BUG515
      C                   EVAL      FldNameArr(Idx) = 'DDSWTN'                                 BUG515
      C                   EVAL      MsgIdArr(Idx) = PErrMs                                     BUG515
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5063,13 +5076,13 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       ** Move Incoming Payment details retrieved from the Midas
       ** database file into the update file record.  If no
       ** record has been retrieved (i.e. in Insert), fields
       ** contain initial values (zeros, blanks and 'Y's for
       ** VAT flags).
- 
+
      C                   If        DDACTN <> 'I'                                              255190
      C                   MOVEL     IPAYFilFmt    ValidIPAY
      C                   Endif                                                                255190
@@ -5080,24 +5093,24 @@
      C                   ELSE                                                                BUG7101
      C                   CLEAR                   ValidIPY2                                   BUG7101
      C                   ENDIF
- 
+
       ** Validate Level 1 screen details.
- 
+
      C                   EXSR      ValidateTr1
- 
+
       ** Check if errors found in main screen
      C                   IF        Idx <> *ZERO
      C                   EVAL      WFirstErr = 'Y'
      C                   ENDIF
- 
+
       ** Initialise Level 2 Processing flag for update of Level 2
       ** details.
- 
+
      C                   EVAL      WLvl2 = *BLANK
- 
+
       ** Level 2 screen details exist.
       ** Or 'level joiner' = 'Y'                                                              243991
- 
+
      C                   IF        TranInIPY2 <> *BLANKS OR
      C                             TranInIPY3 <> *BLANKS OR
      C                             TranInIPY4 <> *BLANKS OR
@@ -5107,70 +5120,84 @@
      C                             TranInIPY6 <> *BLANKS OR                                   243991
      C                             TranInIP6A <> *BLANKS OR                                   CER030
      C                             BTLVJN     =  'Y'                                          243991
- 
+
       ** Set Level 2 Processing flag for update of Level 2 details.
- 
+
      C                   EVAL      WLvl2 = 'Y'
- 
+
       ** If Action is Insert, or Action is Amend and Level 2
       ** details have not been entered, default Transfer
       ** Commission Tariff based on Charges Branch.
- 
+
      C                   IF        (DDACTN = 'I' OR
      C                             DDACTN = 'A' AND
      C                             INLVL2 <> 'Y') AND
      C                             DDTRCT = *BLANKS
- 
-     C     PPYBR         CHAIN     PYCHGDB                            01
+
+     C                   EVAL      PPYTY = 'IN'                                             MD034973
+     C                   EVAL      PCNUM = DDBNC1                                           MD034973
+     C                   EVAL      PPYST = DDPYST                                           MD034973
+     C     PPYKEY        CHAIN     PYCHGL1                            01                    MD034973
+     C   01              EVAL      PPYST = *BLANKS                                          MD034973
+     C   01              EVAL      PPYTY = *BLANKS                                          MD034973
+     C   01PPYKEY        CHAIN     PYCHGL1                            01                    MD034973
+     C   01              EVAL      PPYTY = 'IN'                                             MD034973
+     C   01              EVAL      PCNUM = *BLANKS                                          MD034973
+     C   01              EVAL      PPYST = DDPYST                                           MD034973
+     C   01PPYKEY        CHAIN     PYCHGL1                            01                    MD034973
+     C   01              EVAL      PPYST = *BLANKS                                          MD034973
+     C   01PPYKEY        CHAIN     PYCHGL1                            01                    MD034973
+     C*****PPYBR         CHAIN     PYCHGDB                            01                    MD034973
+     C   01PPYBR         CHAIN     PYCHGL1                            01                    MD034973
      C                   IF        NOT(*IN01)
      C                   EVAL      DDTRCT = PYDFTRCT
      C                   MOVEL     TranInIPY3    CurTrIPY3
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Level 2 screen 1 details.
- 
+
      C                   EXSR      ValidateTr2
- 
+
       ** Validate Level 2 screen 2 details.
- 
+
      C                   EXSR      ValidateTr3
- 
+
       ** Perform the following only if no errors found in
       ** screen 1 details so as to avoid database errors
       ** in computations
- 
+
      C                   IF        WFirstErr <> 'Y'
- 
+
       ** Default Charges and Commission details on Level 2
       ** screen 3.
- 
+
      C                   IF        CFT009 = 'N'
      C                   EXSR      ValCcyVat
      C                   EXSR      DefaultChrg
      C                   ENDIF
- 
+
       ** Validate Level 2 screen 3 details.
- 
+
      C                   EXSR      ValidateTr4
      C**********         ENDIF                                                               BUG6864
- 
+
       ** Validate Margin Infomation sobroutine.
- 
+
      C                   EXSR      ValidateMg
      C                   ENDIF                                                               BUG6864
- 
+
      C                   ELSE
- 
+
       ** Compute Charges and Commissions, and Total VAT Amounts
       ** based on Level 1 details if there are no errors
- 
+
      C                   IF        WFirstErr <> 'Y' AND
      C                             CFT009 = 'N'
      C                   EXSR      ValCcyVat
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CER001
      C                   IF        ULX043 = 'Y'                                               CER001
@@ -5216,7 +5243,7 @@
      C                   EXSR      ValidateTr8                                                CSW209
      C                   ENDIF                                                                CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -5225,318 +5252,318 @@
       *  ValidateTr1 - Validate Level 1 screen details                *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr1   BEGSR
- 
+
      C                   CALLB     'FTIPAYIVL'
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** SWIFT Reference
      C                   PARM                    DDSWTN
- 
+
       ** Sequence Number
      C                   PARM                    DDSEQNO
- 
+
       ** Booking Branch
      C                   PARM                    DDBRCA
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** OK Payment Reference
      C                   PARM                    OKPREF
- 
+
       ** Linked Program
      C                   PARM                    PLinkPgm
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
- 
+
       ** Incoming Payments extra data
      C                   PARM                    ExtData
      C/COPY WNCPYSRC,FTH00363
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDMMOD - Multibranch Indicator
      C                   PARM                    BGMBIN
- 
+
       ** ZMUSER - Default Branch
      C                   PARM                    PDBRN
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** OK Action Code
      C                   PARM                    OKACTN
- 
+
       ** OK SWIFT Reference
      C                   PARM                    OKSWTN
- 
+
       ** OK Sequence No.
      C                   PARM                    OKSEQNO
- 
+
       ** OK Booking Branch
      C                   PARM                    OKBRCA
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
      C                   Z-add     BTPCRD        WBTPCRD
- 
+
      C                   CALLB     'FTIPAY1VL'
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
- 
+
      C                   PARM                    TranInIPY1
      C                   PARM                    TranInIP1A
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details from incoming transaction
       ** - screen format
- 
+
      C                   PARM                    TranInIPY5
- 
+
       ** Third Reimbursement Institution (previous)
      C                   PARM      *BLANKS       PPrvTRI
- 
+
       ** Previous Instructed Amount
      C                   PARM      *BLANKS       PPrvNDAM
- 
+
       ** Base Currency No. of Decimal Places
      C                   PARM                    PBCDP
- 
+
       ** Payment Type
      C                   PARM                    PPYTP
- 
+
       ** Incoming Payments Lvl 1 Scrn details retrieved from file
       ** - screen format
      C                   PARM                    CurTrIPY1
- 
+
       ** Incoming Payments extra data
      C                   PARM                    ExtData
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Midas Run Date
      C                   PARM                    PProcDte
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDBANK - Location Code
      C                   PARM                    BJSLCD
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDBANK - Back Value Period in Days
      C                   PARM                    BJBVPD
- 
+
       ** SDBANK - Date Format Indicator
      C                   PARM                    BJDFIN
- 
+
       ** SDGELR - Currency Code for Euro
      C                   PARM                    BKEURO
- 
+
       ** SDGELR - Profit Centre Default Used
      C                   PARM                    BKPCDU
- 
+
       ** SDGELR - Profit Centre Used
      C                   PARM                    BKPRCU
- 
+
       ** SDGELR - Originating Branch Used
      C                   PARM                    BKOBRU
- 
+
       ** SDGELR - Originating Branch/User Vald Req.
      C                   PARM                    BKOBUV
- 
+
       ** SDMMOD - Retail Banking
      C                   PARM                    BGRTBN
- 
+
       ** SDMMOD - Multibranch Indicator
      C                   PARM                    BGMBIN
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** SDMMOD - Dealing Foreign Exchange
      C                   PARM                    BGDLFX
- 
+
       ** SDMMOD - Dealing Money Market
      C                   PARM                    BGDLMM
- 
+
       ** SDRETL - Retail A/c Number Required?
      C                   PARM                    BMRANR
- 
+
       ** SDFTFR - Level Join indicator
      C                   PARM                    BTLVJN
- 
+
       ** SDFTFR - Percent Rate Discrepancy
      C                   PARM                    WBTPCRD
- 
+
       ** SDMMOD - Interest on Accrual
      C                   PARM                    BGIOAC
- 
+
       ** ZMUSER - Department Code
      C                   PARM                    PDPPT
- 
+
       ** ZMUSER - User Id
      C                   PARM                    PUSRID
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** SDFTFR - Fixed Charge Currency
      C                   PARM                    FCHCCY
- 
+
       ** SDFTFR - Charges calculated in transaction ccy
      C                   PARM                    CHTRCY
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** EMU FT Settlement Currency Conversion
      C                   PARM                    CEU006
- 
+
       ** Electronic Banking Interface IATs and TPPs
      C                   PARM                    CGL009
- 
+
       ** IBAN numbers
      C                   PARM                    CFT004
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
      C                   PARM                    CFT010
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
                                                                                               CGL014
       ** Collaterals Processing                                                               CGL014
                                                                                               CGL014
      C                   PARM                    CGL014                                       CGL014
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Incoming Payments Lvl 1 Scrn error indicators
      C                   PARM                    OKTrIPY1
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
       ** Incoming Payments (additional details) for file update - file format
      C                   PARM                    ValidIPY2
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** Account with Bank's full account
      C                   PARM                    PACBDS
- 
+
       ** Sender's full account
      C                   PARM                    PSNDDS
- 
+
       ** Receiver Correspondence's full account
      C                   PARM                    PRCCDS
       *                                                                                     BUG15006
       ** Third Reimbursemnt Party  full account                                             BUG15006
      C                   PARM                    PTRBDS           24                        BUG15006
- 
+
       ** Beneficiary's full account
      C                   PARM                    PBNCDS
- 
+
       ** IBANs full account
      C                   PARM                    PIBANAcc
- 
+
       ** Settlement In Currency Indicator
      C                   PARM                    PSetInCy
- 
+
       ** Settlement EMU Transaction Period Start Date
      C                   PARM                    PSetTPSD
- 
+
       ** Payment In Currency Indicator
      C                   PARM                    PPayInCy
- 
+
       ** Payment EMU Transaction Period Start Date
      C                   PARM                    PPayTPSD
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
       ** Saved default charges
      C                   PARM                    DefValid
      C                   PARM                    DefValidX
@@ -5550,7 +5577,7 @@
      C                   ENDIF                                                                230309
       *                                                                                       230309
      C/COPY WNCPYSRC,FTIPAYV023
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5561,87 +5588,87 @@
       *              Amounts based on Level 1 details                 *
       *                                                               *
       *****************************************************************
- 
+
      C     ValCcyVat     BEGSR
- 
+
      C                   CALLB     'FTIPAY1CH'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY1
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
- 
+
       ** Incoming Payments (extension) retrieved from file - file fmt
      C                   PARM                    IPY2FilFmt
- 
+
       ** Incoming Payments (extension) for file update - file format
      C                   PARM                    ValidIPY2
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** Base Currency No. of Decimal Places
      C                   PARM                    PBCDP
- 
+
       ** Local Currency No. of Decimal Places
      C                   PARM                    PLCDP
- 
+
       ** Local Currency Multiply/Divide Indicator
      C                   PARM                    PLMDIN
- 
+
       ** Local Currency Spot Rate
      C                   PARM                    PLSPOT
- 
+
       ** Entry Point
      C                   PARM                    PParmLevel
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** BLI Payment Charges Enhancements
      C                   PARM                    S01506
- 
+
       ** BLI Extended Payment Charges
      C                   PARM                    S01508
- 
+
       ** FT Batch Authorization and Credit Advices
      C                   PARM                    CFT004
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5650,9 +5677,9 @@
       *  ValidateTr2 - Validate Level 2 screen 1 details              *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr2   BEGSR
- 
+
       *                                                                                       255190
       ** Move saved PMTPY when IPINMTPY is blank (not selected from ME1100)                   255190
       ** Or error occurred from previous try (re-enter)                                       255190
@@ -5665,53 +5692,53 @@
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Incoming Payments Lvl 1 Scrn format definition file 2
      C                   PARM                    TranInIP1A
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/1 details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY2
- 
+
       ** Incoming Payments Lvl 2 Scrn 1/2 details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY3
- 
+
       ** Incoming Payments extra data
      C                   PARM                    ExtData
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Midas Run Date
      C                   PARM                    PProcDte
- 
+
       ** SDBANK - Back Value Period in Days
      C                   PARM                    BJBVPD
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDMMOD - Multibranch Indicator
      C                   PARM                    BGMBIN
- 
+
       ** SDMMOD - Retail Banking
      C                   PARM                    BGRTBN
- 
+
       ** SDRETL - Retail A/c Number Required?
      C                   PARM                    BMRANR
- 
+
       ** MT103 Messages Generation for FT
      C                   PARM                    CFT014
       *                                                                                     BUG15006
@@ -5723,32 +5750,32 @@
       *                                                                                     BUG15006
       ** Network                                                                            BUG15006
      C                   PARM                    PNWRK             6                        BUG15006
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Incoming Payments Lvl 2 Scrn 1 error indicators
      C                   PARM                    OKTrIPY2
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5764,117 +5791,117 @@
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY1
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY5
- 
+
       ** Incoming Payments (additional info) for file update
       ** - file format
      C                   PARM                    ValidIPY2
- 
+
       ** Incoming Payments retrieved from file - file format
      C                   PARM                    IPAYFilFmt
- 
+
       ** Payment Type
      C                   PARM                    PPYTP
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Previous values of 'Charges to the Debit of a/c'
- 
+
      C                   PARM                    PPrvCDRT
      C                   PARM                    PPrvCDRO
      C                   PARM                    PPrvCDBR
      C                   PARM                    PPrvCDRC                                     CFT120
- 
+
       ** Recalcution flag.
- 
+
      C                   PARM                    PReCalc
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Local Currency Code
      C                   PARM                    BJLCCY
- 
+
       ** SDFTFR - Charges Currency
      C                   PARM                    BTCHCY
- 
+
       ** VAT Default Flag
      C                   PARM                    PVATT
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** BLI Payment Charges Enhancements
      C                   PARM                    S01506
- 
+
       ** BLI Extended Payment Charges
      C                   PARM                    S01508
- 
+
       ** FT Batch Authorization and Credit Advices
      C                   PARM                    CFT004
- 
+
       ** MT103 Messages Generation for FT
      C                   PARM                    CFT014
       *                                                                                       CFT120
       ** FT IN/OP - Charges on DR of Account Ccy                                              CFT120
       *                                                                                       CFT120
      C                   PARM                    CFT120                                       CFT120
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Input Charge Currency In Currency Flag
      C                   PARM                    PIINCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Input Charge Currency EMU Transmission Period Start Date
      C                   PARM                    PITPSD
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Output Charge Currency In Currency Flag
      C                   PARM                    POINCY
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** DS for Default Charge Currencies
      C                   PARM                    PChgCcy
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -5884,118 +5911,118 @@
       *  ValidateTr3 - Validate Level 2 screen 2 details              *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr3   BEGSR
- 
+
      C                   CALLB     'FTIPAY3VL'
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY4
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 file 2 from incoming transaction
       ** - screen format
      C                   PARM                    TranInIP4A
- 
+
       ** Settlement In Currency Indicator
      C                   PARM                    PSetInCy
- 
+
       ** Settlement EMU Transaction Period Start Date
      C                   PARM                    PSetTPSD
- 
+
       ** Payment In Currency Indicator
      C                   PARM                    PPayInCy
- 
+
       ** Payment EMU Transaction Period Start Date
      C                   PARM                    PPayTPSD
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
       ** Incoming Payments extra data
      C                   PARM                    ExtData
- 
+
       ** Charges Branch
      C                   PARM                    PPYBR
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDGELR - Currency Code for Euro
      C                   PARM                    BKEURO
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** VAT Default Flag
      C                   PARM                    PVATT
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** EMU FT Settlement Currency Conversion
      C                   PARM                    CEU006
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** MT103 Messages Generation for FT
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 error indicators
      C                   PARM                    OKTrIPY3
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
       ** Incoming Payments (additional details) for file update
      C                   PARM                    ValidIPY2
- 
+
       ***DS*for*Default*Charge*Amounts*********************************                       222373
      C*****              PARM                    PCharges                                     222373
       *****                                                                                   222373
@@ -6007,7 +6034,7 @@
       *  ValidateTr4 - Validate Level 2 screen 3 details              *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr4   BEGSR
       *                                                                                       CFT120
       ** Check if new value entered for Charges to the debit of                               CFT120
@@ -6021,115 +6048,115 @@
      C                   EVAL      PCDROCHG = *BLANKS                                         CFT120
      C                   ENDIF                                                                CFT120
      C                   ENDIF                                                                CFT120
- 
+
      C                   CALLB     'FTIPAY4VL'
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Incoming Payments Lvl 1 details
      C                   PARM                    TranInIPY1
- 
+
       ** Incoming Payments Lvl 2 Scrn 2 details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY5
- 
+
       ** Settlement In Currency Indicator
      C                   PARM                    PSetInCy
- 
+
       ** Settlement EMU Transaction Period Start Date
      C                   PARM                    PSetTPSD
- 
+
       ** Payment In Currency Indicator
      C                   PARM                    PPayInCy
- 
+
       ** Payment EMU Transaction Period Start Date
      C                   PARM                    PPayTPSD
- 
+
       ** Input Charge Currency
      C                   PARM                    PICCY
- 
+
       ** Input Charge Currency No. of Decimal Places
      C                   PARM                    PINBDP
- 
+
       ** Output Charge Currency
      C                   PARM                    POCCY
- 
+
       ** Output Charge Currency No. of Decimal Places
      C                   PARM                    PONBDP
- 
+
       ** Saved default charges
      C                   PARM                    DefValid
      C                   PARM                    DefValidx
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Midas Run Date
      C                   PARM                    PPROCDTE
- 
+
       ** SDBANK - Back Value Period in Days
      C                   PARM                    BJBVPD
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDBANK - Local currency code
      C                   PARM                    BJLCCY
- 
+
       ** SDMMOD - Multibranch Indicator
      C                   PARM                    BGMBIN
- 
+
       ** SDMMOD - Retail Banking
      C                   PARM                    BGRTBN
- 
+
       ** SDRETL - Retail A/c Number Required?
      C                   PARM                    BMRANR
- 
+
       ** SDGELR - Currency Code for Euro
      C                   PARM                    BKEURO
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** VAT Default Flag
      C                   PARM                    PVATT
- 
+
       ** VAT Rate
      C                   PARM                    PVATR
- 
+
       ** SDFTFR - Charges calculated in transaction ccy
      C                   PARM                    CHTRCY
- 
+
       ** SDFTFR - Charges currency indicator
      C                   PARM                    BTCHCY
- 
+
       ** SDFTFR - Fixed charge currency
      C                   PARM                    FCHCCY
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** EMU FT Settlement Currency Conversion
      C                   PARM                    CEU006
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** MT103 Messages Generation for FT
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
      C                   PARM                    CFT010
@@ -6137,59 +6164,59 @@
       ** FT IN/OP - Charges on DR of Account Ccy                                              CFT120
       *                                                                                       CFT120
      C                   PARM                    CFT120                                       CFT120
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Incoming Payments Lvl 2 Scrn 3 error indicators
      C                   PARM                    OKTrIPY4
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
       ** Incoming Payments (extension) for file update - file format
      C                   PARM                    ValidIPY2
- 
+
       ** DS for Default Charge Amounts
      C                   PARM                    PCharges
- 
+
       ** Force redisplay
      C                   PARM                    PFrcReDisplay
- 
+
       ** I/O: Previous Receiver's charges remitted input
       **      Its value is maintained in FTVIRCRM
      C                   PARM                    PPrvDDRCRM
- 
+
       ** I/O: Previous Total charges calculated
       **      Its value is maintained in FTVIRCRM
      C                   PARM                    PPrvTotChg
- 
+
       ** Charges to the debit of - field changed (Y or blank)
      C                   PARM                    PCDROChg
- 
+
       ** Previous warning messages array
      C                   PARM                    WPrvWarnAr
- 
+
       ** Warning message work inds for charges screen
      C                   PARM                    PChgWarn
      C                   PARM                    BENEDrBlck                                 MD025111
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6198,23 +6225,23 @@
       *  ValidateMg - Validate Margin Information details             *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateMg    BEGSR
- 
+
      C                   CALLB     'FTIPAY5VL'
       *                             =========
       ** INPUT
       ** =====
- 
+
      C                   PARM      '*FRONT'      PMode
- 
+
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse
- 
+
       ** Incoming Payments Lvl 1 Scrn details from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY1
- 
+
       ** Incoming Payments Margin info from incoming transaction
       ** - screen format
      C                   PARM                    TranInIPY6
@@ -6228,42 +6255,42 @@
       ** defaulting value of Retail Transaction Type                                          CER030
       *                                                                                       CER030
      C                   PARM                    DDTTCD                                       CER030
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDMMOD - Analytical Accounting
      C                   PARM                    BGN0ST
- 
+
       ** OUTPUT
       ** ======
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning flds/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Incoming Payments Margin info error indicators
      C                   PARM                    OKTrIPY5
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
       *                                                                                       CER030
       ** Extension Valid File Value for Transaction code                                      CER030
       *                                                                                       CER030
      C                   PARM                    I2INTTCD                                     CER030
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSW209
@@ -6381,27 +6408,27 @@
       *               updated during each run of this program         *
       *                                                               *
       *****************************************************************
- 
+
      C     ResetCycle    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrIPY1
      C                   CLEAR                   CurTrIP1A
      C                   CLEAR                   CurTrIPY2
@@ -6415,7 +6442,7 @@
      C                   CLEAR                   CurTrIPY7                                    CSW209
      C                   CLEAR                   CurTrIPY8                                    CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C                   MOVE      *ALL'Y'       OKTrIPY1
      C                   MOVE      *ALL'Y'       OKTrIPY2
      C                   MOVE      *ALL'Y'       OKTrIPY3
@@ -6425,10 +6452,10 @@
      C                   MOVE      *ALL'Y'       OKTrIPY7                                     CSW209
      C                   MOVE      *ALL'Y'       OKTrIPY8                                     CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C                   CLEAR                   ValidIPAY
      C                   CLEAR                   ValidIPY2
- 
+
      C                   MOVE      *BLANKS       PStatus
      C                   MOVE      'IN'          PPYTP
                                                                                              CSF011A
@@ -6481,7 +6508,7 @@
      C                   EVAL      DDCDTN  = *BLANKS                                         CSF011A
      C                   EVAL      DDCDAN  = *BLANKS                                         CSF011A
      C                   EVAL      DDCDSW  = *BLANKS                                         CSF011A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6491,16 +6518,16 @@
       *               valid file record.                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SetUpValid    BEGSR
- 
+
       ** INSERT
       ** ======
      C                   IF        DDACTN = 'I'
- 
+
       ** Update Incoming Payments data area with next
       ** Sequence Number.
- 
+
      C                   IF        CFT151 = 'N'                                               CFT151
      C     *DTAARA       DEFINE    INPAYDA       WINPAY
      C     *LOCK         IN        WINPAY
@@ -6533,35 +6560,35 @@
      C                   ENDIF                                                                CFT151
                                                                                               CFT151
      C                   ENDIF                                                                CFT151
- 
+
       ** Record Id.
- 
+
      C                   MOVEL     'D'           IPRECI
- 
+
       ** Payment Type.
- 
+
      C                   EVAL      IPPYTP = 'IN'
- 
+
       ** Original Entry Dates.
- 
+
      C                   Z-ADD     BJRDNB        PDayNo
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDayNo
      C                   PARM      BJDFIN        PFMT
      C                   PARM      *ZERO         PDate
      C                   PARM      *BLANKS       PADate
- 
+
      C                   Z-ADD     BJRDNB        IPOEDT
      C                   Z-ADD     PDate         IPOEDTD1
- 
+
      C                   MOVE      PDate         WN2
      C     WN2           IFLT      72
      C                   Z-ADD     20            IPOEDTD2
      C                   ELSE
      C                   Z-ADD     19            IPOEDTD2
      C                   ENDIF
- 
+
      C                   MOVEL     PDate         WA4
      C     BJDFIN        IFNE      'M'
      C                   MOVEL     WA4           WA2
@@ -6569,23 +6596,23 @@
      C                   MOVEL     WA2A          WA4
      C                   MOVE      WA2           WA4
      C                   ENDIF
- 
+
      C                   MOVE      PDate         WA2
      C                   MOVEL     WA2           PDate
      C                   MOVE      WA4           PDate
      C                   Z-ADD     PDate         IPOEDTD3
- 
+
       ** New Payment Reference.
- 
+
      C                   IF        CSC011 = 'Y' AND LIBR = S1SUPP
- 
+
      C                   Z-ADD     WPRDTE        PDAYNO
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDAYNO
      C                   PARM      BJDFIN        PFMT
      C                   PARM      *ZERO         PPRDATE
      C                   PARM      *BLANKS       PPRADATE
- 
+
      C                   MOVEL     PPRDATE       WA4
      C     BJDFIN        IFNE      'M'
      C                   MOVEL     WA4           WA2
@@ -6593,7 +6620,7 @@
      C                   MOVEL     WA2A          WA4
      C                   MOVE      WA2           WA4
      C                   ENDIF
- 
+
      C                   MOVE      PPRDATE       WA2
      C                   MOVEL     WA2           PPRDATE
      C                   MOVE      WA4           PPRDATE
@@ -6611,60 +6638,60 @@
      C                   MOVEA     WA4           WYA1(8)
      C                   MOVEA     IPPYTP        WYA1(12)
      C                   MOVEA     '00'          WYA1(14)
- 
+
      C     1             DO        15            IA
      C                   IF        WYA1(IA) = ' '
      C                   MOVEL     '0'           WYA1(IA)
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        GENPREF = 'Y'                                              CSC024
      C                             OR DDPREF = *BLANKS                                        CSC024
      C                   MOVEA     WYA1(1)       IPPREF
      C                   ELSE                                                                 CSC024
      C                   EVAL      IPPREF = DDPREF                                            CSC024
      C                   ENDIF                                                                CSC024
- 
+
       ** Level 1 Valid Indicator.
- 
+
      C                   EVAL      IPINLVL1 = 'Y'
- 
+
      C                   ENDIF
- 
+
       ** INSERT OR AMEND
       ** ===============
- 
+
      C                   IF        DDACTN = 'I' or
      C                             DDACTN = 'A'
- 
+
       ** Input Officer 1.
- 
+
      C**********         EVAL      IPINUSR1 = PSUser                                         BUG1493
      C                   EVAL      IPINUSR1 = PUSRID                                         BUG1493
- 
+
       ** Level 2 details have been processed.
- 
+
      C                   IF        WLVL2 = 'Y'
- 
+
       ** Input Officer 2.
      C**********         EVAL      IPINUSR2 = PSUser                                         BUG1493
      C                   EVAL      IPINUSR2 = PUSRID                                         BUG1493
       ** Level 2 Valid Indicator.
      C                   EVAL      IPINLVL2 = 'Y'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** DELETE
       ** ======
- 
+
      C                   IF        DDACTN = 'D'
      C                             or (DDACTN = 'S' AND CFT157 = 'Y')                         CFT157
- 
+
       ** Move Incoming Payment details retrieved from file
       ** directly to the Valid Record data structure.
- 
+
      C                   MOVEL     IPAYFilFmt    ValidIPAY
      C                   IF        CFT003 = 'Y' or CFT014 = 'Y'
      C                             OR CFT009 = 'Y'
@@ -6672,20 +6699,20 @@
      C                   ELSE                                                                BUG7101
      C                   CLEAR                   ValidIPY2                                   BUG7101
      C                   ENDIF
- 
+
       ** Record Id - update to 'C'.
- 
+
      C                   EVAL      IPRECI = 'C'
       *
      C                   ENDIF
- 
+
       ** Enquire.
- 
+
      C                   IF        DDACTN = 'E'
- 
+
       ** Move Incoming Payment details retrieved from file
       ** directly to the Valid Record data structure.
- 
+
      C                   MOVEL     IPAYFilFmt    ValidIPAY
      C                   IF        CFT003 = 'Y' or CFT014 = 'Y'
      C                             OR CFT009 = 'Y'
@@ -6693,9 +6720,9 @@
      C                   ELSE                                                                BUG7101
      C                   CLEAR                   ValidIPY2                                   BUG7101
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** STOP                                                                                 CFT157
       ** ====                                                                                 CFT157
                                                                                               CFT157
@@ -6709,44 +6736,44 @@
      C                   ENDIF                                                                CFT157
                                                                                               CFT157
       ** Last Change Type, Date and Time.
- 
+
      C                   MOVEL     DDACTN        IPCHTP
      C                   Z-ADD     BJRDNB        IPLCD
      C                   TIME                    IPLCHT
- 
+
       ** Message Header details.
- 
+
      C                   IF        APFOTRANID <> *Blanks                                    MD032077
      C                   EVAL      IPFRNT = APFOTRANID
      C                   EVAL      IPREPA = APRPRLOCN
      C                   ENDIF                                                              MD032077
- 
+
       ** Set up the following fields for update of FTVIPY2PD
- 
+
      C                   IF        CFT003 = 'Y' OR
      C                             CFT014 = 'Y' OR
      C                             CFT009 = 'Y'
- 
+
      C/COPY WNCPYSRC,FTH00416
      C                   EVAL      I2INAUTO = 'N'
      C/COPY WNCPYSRC,FTH00417
- 
+
      C                   IF        DDACTN = 'I' OR
      C                             DDACTN = 'A' OR
      C                             DDACTN = 'D'
      C                             or (DDACTN = 'S' AND CFT157 = 'Y')                         CFT157
- 
+
      C                   IF        DDACTN = 'I'
      C                   EVAL      I2INRECI = 'D'
      C                   EVAL      I2INPREF = IPPREF
      C                   EVAL      I2INFRNT = IPFRNT
      C                   ENDIF
- 
+
      C                   EVAL      I2INTMST = IPTMST
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,FTIPAYV017
                                                                                              BUG4196
       * Restore Timestamp from the original record                                           BUG4196
@@ -6754,9 +6781,9 @@
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
      C                   MOVEL     @TimeStamp    IPTMST                                      BUG4196
      C                   ENDIF                                                               BUG4196
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6764,83 +6791,83 @@
       *  UpdateDB - Update database                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateDB      BEGSR
- 
+
       ** Update files.
- 
+
      C                   CALLB     'FTIPAYUPD'
       *                             =========
       ** INPUT
       ** =====
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
- 
+
       ** Incoming Payments for file update - file format
      C                   PARM                    ValidIPAY
- 
+
       ** Incoming Payments (additional details) for file update
      C                   PARM                    ValidIPY2
- 
+
       ** IBANs full account
      C                   PARM                    PIBANAcc
- 
+
       ** Originally Insert from Level 2 Entry
      C                   PARM      *BLANK        POrigActn
- 
+
       ** FT Override for GL Balances
      C                   PARM                    PFTOV
- 
+
       ** FT Control Data
      C                   PARM                    PCNTRL
- 
+
       ** Network
      C                   PARM                    PNWRK
- 
+
       ** Entry Point
      C                   PARM                    PParmLevel
- 
+
       ** STANDING DATA
       ** =============
- 
+
       ** SDBANK - Base Currency Code
      C                   PARM                    BJCYCD
- 
+
       ** SDBANK - Midas Run Date
      C                   PARM                    BJRDNB
- 
+
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
- 
+
       ** SDGELR - Originating Branch/User Vald Req.
      C                   PARM                    BKOBUV
- 
+
       ** ZMUSER - Default Branch
      C                   PARM                    PDBRN
- 
+
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       ** Batch Authorisation
      C                   PARM                    CFT003
- 
+
       ** IBAN numbers
      C                   PARM                    CFT004
- 
+
       ** BLI FT Enhancements Feature
      C                   PARM                    S01494
- 
+
       ** BLI VAT Processing Feature
      C                   PARM                    S01499
- 
+
       ** STP Phase 2 MT103
      C                   PARM                    CFT014
- 
+
       ** Fees & Charges
      C                   PARM                    CFT009
      C                   PARM                    CFT010
- 
+
       ** 24 X 7
      C                   PARM                    CSC011
      C                   PARM                    CSD015
@@ -6848,12 +6875,12 @@
       *                                                                                       CAP211
      C                   PARM                    AAuth                                        CAP211
      C                   PARM                    APUSERID                                     CAP211
- 
+
       /COPY WNCPYSRC,FTIPAYV018
- 
+
       ** If errors occurred on update, rollback uncommitted file
       ** changes.
- 
+
      C                   IF        RetCodeOut <> *BLANKS and
      C                             RetCodeOut <> '*RECUPD'
      C                   MOVEL     '0'           APIRetc
@@ -6898,17 +6925,17 @@
      C                   MOVE      IPTMST        @TimeStamp                                 BUG13159
       *                                                                                     BUG13159
      C                   ENDIF
- 
+
       ** If update not done due to record being updated by another
       ** workstation, display message "The last transaction was not
       ** applied to the database." to the next screen.
- 
+
      C                   IF        RetCodeOut <> *BLANKS
      C                   Z-ADD     1             Idx
      C                   EVAL      FldNameArr(Idx) = '*ANY'
      C                   EVAL      MsgIdArr(Idx) = 'FTA0120'
      C                   ENDIF
- 
+
      C                   IF        ULX043 = 'Y'                                               CER001
                                                                                               CER001
      C                   EVAL      #LLXIPPREF = IPPREF                                        CER001
@@ -6923,7 +6950,7 @@
      C                   ENDIF                                                                CER001
                                                                                               CER001
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -6932,12 +6959,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       ** Transaction information
      C**********         PARM                    Trans5001                                   CSF011A
      C                   PARM                    Trans01                                     CSF011A
@@ -6955,288 +6982,288 @@
      C**********         PARM                    Trans5009                             CER030 262664
      C                   PARM                    Trans5008A                                   262664
      C                   PARM                    Trans5011                                    CER049
- 
+
       ** Extra Data
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData500
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Warning error fields/message IDs/message data (arrays)
       ** from/to caller
- 
+
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    MsgFArray
- 
+
       ** Update Transaction
      C                   PARM                    UpdateYN
- 
+
       ** Output Buffer
      C                   PARM                    Buffer
- 
+
       ** API Return Code
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    NewButton         3                          255190
      C                   PARM                    AAuth             1                        BUG22146
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTIPAYM01
- 
+
       ** Set up the name of the module Id used to make the transaction
       ** number unique.
- 
+
      C                   EVAL      PModuleId = 'FT'
- 
+
       ** Access Bank details.
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD details.
- 
+
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Access General Ledger ICD details.
- 
+
      C**********         CALLB     'AOGELRR0'                                                 CGL029
      C                   CALLB     'AOGELRR1'                                                 CGL029
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ** Access Midas Modules details.
- 
+
      C                   CALLB     'AOMMODR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Access Funds Transfer ICD details.
- 
+
      C                   CALL      'AOFTFRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDFTFR        PARM      SDFTFR        DSFDY
- 
+
       ** Access Retail ICD details if Retail module is
       ** installed.
- 
+
      C                   IF        BGRTBN = 'Y'
- 
+
      C                   CALLB     'AORETLR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01494
       ** (BLI FT Enhancements Feature) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01494'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01494
      C                   ELSE
      C                   MOVEL     'N'           S01494
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01499 (BLI VAT Processing)
       ** is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01499'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01499
      C                   ELSE
      C                   MOVEL     'N'           S01499
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01506 (BLI Payment Charges
       ** Enhancements) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01506'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01506
      C                   ELSE
      C                   MOVEL     'N'           S01506
      C                   ENDIF
- 
+
       ** Access SAR file to determine if S01508 (BLI Extended Payment
       ** Charges) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'S01508'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           S01508
      C                   ELSE
      C                   MOVEL     'N'           S01508
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CEU006 (EMU FT Settlement
       ** Currency Conversion) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CEU006'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CEU006
      C                   ELSE
      C                   MOVEL     'N'           CEU006
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CGL009 (Electronic Banking
       ** Interface IATs and TPPs) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CGL009'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CGL009
      C                   ELSE
      C                   MOVEL     'N'           CGL009
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT002 (Straight
       ** Through Processing Phase 1) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CFT002'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     PRTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CFT002
      C                   ELSE
      C                   MOVEL     'N'           CFT002
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT004 (IBAN
       ** numbers) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT004'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT004
      C                   ELSE
      C                   MOVEL     'N'           CFT004
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT003 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT003'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT003
      C                   ELSE
      C                   MOVEL     'N'           CFT003
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT014 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT014'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT014
      C                   ELSE
      C                   MOVEL     'N'           CFT014
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT009 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT009'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT009
      C                   ELSE
      C                   MOVEL     'N'           CFT009
      C                   ENDIF
- 
+
       ** Access SAR file to determine if CFT010 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CFT010'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CFT010
      C                   ELSE
      C                   MOVEL     'N'           CFT010
      C                   ENDIF
- 
+
      C                   EVAL      PProcDte = BJRDNB
- 
+
       ** Access SAR details file to see if 24X7 (CSC011) is installed.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** If installed, get support system prefix and current system prefix and
       ** use processing date defined in SC24X7 dataarea when support system is active
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -7247,7 +7274,7 @@
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   ENDIF
- 
+
       *                                                                                       CSW209
       ** Check if SWIFT 2009 feature is ON                                                    CSW209
       *                                                                                       CSW209
@@ -7261,13 +7288,13 @@
      C                   ENDIF                                                                CSW209
       *                                                                                       CSW209
       ** Check if Compliance Watch Enhancement (CSD015) is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSD015'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CSD015
      C                   ELSE
@@ -7295,15 +7322,15 @@
      C                   EVAL      CSD015 = 'N'                                               CSD083
      C                   ENDIF                                                                CSD083
                                                                                               CSD083
- 
+
       ** Access SAR details to see if CCF001 is switched on.
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CCF001'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   MOVEL     'Y'           CCF001
      C                   ELSE
@@ -7332,7 +7359,7 @@
      C                   ELSE                                                                 CER001
      C                   MOVEL     'N'           ULX043                                       CER001
      C                   ENDIF                                                                CER001
- 
+
       **                                                                                      CSC022
       ** Access SAR details to see if CSC022 is switched on                                   CSC022
       **                                                                                      CSC022
@@ -7508,26 +7535,26 @@
      C/COPY WNCPYSRC,FTH00483
       ** If S01499 is installed, retrieve VAT Rate.
       ** OR if CFT010 is installed
- 
+
      C                   IF        S01499 = 'Y' AND
      C                             CFT009 = 'N' OR
      C                             CFT010 = 'Y'
- 
+
      C                   CALL      'AOVATR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C                   PARM                    PVATDS
- 
+
      C                   ENDIF
- 
+
       ** Access FT Control Data.
- 
+
      C                   CALL      'FT0005'                             9090
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    PCNTRL
- 
+
       ** Error occurred.
- 
+
      C                   IF        *IN90 OR
      C                             PRtCd <> *BLANKS
      C                   MOVEL     '*CALL'       DBKEY
@@ -7535,33 +7562,33 @@
      C                   Z-ADD     1             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set up FT Override for GL Balances.
- 
+
      C                   IF        PGLUI = 'I'
      C                   MOVEL     'Y'           PFTOV
      C                   ELSE
      C                   MOVEL     *BLANK        PFTOV
      C                   ENDIF
- 
+
       ** Access Currency details file for Base Currency details.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BJCYCD        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6NBDP        PBCDP
- 
+
       ** Access Currency details file for Local Currency details.
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      BJLCCY        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6NBDP        PLCDp
      C                   IF        A6MDIN = 'M'
      C                   Z-ADD     1             PLMDIn
@@ -7569,7 +7596,7 @@
      C                   Z-ADD     0             PLMDIn
      C                   ENDIF
      C                   Z-ADD     A6SPRT        PLSpot
- 
+
      C/COPY WNCPYSRC,FTIPAYCC07
       ** Check if enhancement CFT157 is on                                                    CFT157
                                                                                               CFT157
@@ -7597,32 +7624,37 @@
       **********                                                                             BUG7029
      C******DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C**********         IN        ZMUSER                                                    BUG7029
- 
+
       ** Define Account key list.
- 
+
      C     KAccnt        KLIST
      C                   KFLD                    KACNUM
      C                   KFLD                    KACCCY
      C                   KFLD                    KACCD
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCA
- 
+     C     PPYKEY        KLIST                                                              MD034973
+     C                   KFLD                    PPYBR                                      MD034973
+     C                   KFLD                    PCNUM                                      MD034973
+     C                   KFLD                    PPYTY                                      MD034973
+     C                   KFLD                    PPYST                                      MD034973
+
      C     *LIKE         DEFINE    DDSMCY        WRCHCY
      C     *LIKE         DEFINE    DDSMAM        WRCHAM
      C     *LIKE         DEFINE    DDSMCY        WCACY
      C     *LIKE         DEFINE    DDSMAM        WCAAM
- 
+
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
       ** Hook to enable non-core initial processing to be included
- 
+
       /COPY WNCPYSRC,FTIPAYV019
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT

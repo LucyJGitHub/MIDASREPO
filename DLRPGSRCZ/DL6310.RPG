@@ -10,8 +10,11 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 183944             Date 25Nov14               *
-      *  Prev Amend No. MD028991           Date 25Nov14               *
+      *  Last Amend No. MD034675           Date 03Jul15               *
+      *  Prev Amend No. AR598353           Date 04Jun14               *
+      *                 AR694628           Date 05Jun15               *
+      *                 183944             Date 25Nov14               *
+      *                 MD028991           Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
@@ -90,6 +93,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD034675 - Invalid messages generated for 'CI',PI/PD' and    *
+      *             'SC' events                                       *
+      *  AR598353 - Generate MT320 message for Amendment Type 'EM'.   *
+      *             Suppress MT320 for NAP/NAS deals with Amendment   *
+      *             Type 'SC'. Applied for MD034571                   *
+      *  AR694628 - Error on SC deal amendment on MT320. Ensure fields*
+      *             get correct values after SC. Applied for MD034571 *
       *  183944 - Duplicate MT330 with codeword 'SETTLE' generated    *
       *           on COB of the day when the deal is called. This     *
       *           confirmation is already generated in Input Cycle.   *
@@ -1242,6 +1252,13 @@
      C           TYPE      BEGSR
       *                                                                   CSW005
      C                     MOVE *BLANKS   @TYP                            CSW005
+     C                     MOVE *BLANKS   D@AMD   1                                         MD034675
+     C           *LIKE     DEFN DAAM      D@AAM                                             MD034675
+     C           *LIKE     DEFN RTSP      D@RSP                                             MD034675
+     C           *LIKE     DEFN BRTE      D@BRT                                             MD034675
+     C                     Z-ADD*ZEROS    D@AAM                                             MD034675
+     C                     Z-ADD*ZEROS    D@RSP                                             MD034675
+     C                     Z-ADD*ZEROS    D@BRT                                             MD034675
       *
       ** Check for deal amendment confirmations
       *
@@ -1265,6 +1282,26 @@
      C                     OUT  LDA
      C                     EXSR *PSSR
      C                     END
+     C           AMTP      IFEQ 'PD'                                                        MD034675
+     C           AMTP      OREQ 'PI'                                                        MD034675
+      ** DEAL AMENDMENT FLAG                                                                MD034675
+     C                     MOVE 'Y'       D@AMD                                             MD034675
+      ** DEAL AMENDMENT AMOUNT                                                              MD034675
+     C                     Z-ADDDAAM      D@AAM                                             MD034675
+     C                     ENDIF                                                            MD034675
+      *                                                                                     MD034675
+     C           AMTP      IFEQ 'SC'                                                        MD034675
+      ** DEAL AMENDMENT FLAG                                                                MD034675
+     C                     MOVE 'Y'       D@AMD                                             MD034675
+      ** DEAMSDI INTEREST RATE                                                              MD034675
+     C                     Z-ADDRTSP      D@RSP                                             MD034675
+     C                     ENDIF                                                            MD034675
+      *                                                                                     MD034675
+     C           AMTP      IFEQ 'BC'                                                        MD034675
+     C                     MOVE 'Y'       D@AMD                                             MD034675
+      ** DEAMSDI BASE RATE                                                                  MD034675
+     C                     Z-ADDBRTE      D@BRT                                             MD034675
+     C                     ENDIF                                                            MD034675
       *
       ** Event type saves amentment type to indicate deal amendment
       ** Check for rate change (SC) or principal change (PI/PD)
@@ -1279,6 +1316,10 @@
      C           AMTP      IFEQ 'SI'                                                          222546
      C                     MOVE '350'     @TYP                                                222546
      C                     ELSE
+      *                                                                                     AR598353
+     C           DRCDT     IFEQ 'D'                                                         AR598353
+     C           DRCDT     OREQ 'E'                                                         AR598353
+     C                     ELSE                                                             AR598353
       *                                                                                       245960
      C           DTYP      IFEQ 'CD'                                                          245960
      C           DTYP      OREQ 'CL'                                                          245960
@@ -1291,9 +1332,12 @@
      C           CDL006    ANDEQ'Y'                                                           245960
      C                     MOVE '330'     @TYP             *MT330 message*
      C                     ELSE                                                               245960
+     C           AMTP      IFNE 'CI'                                                        MD034675
      C                     MOVE '320'     @TYP                                                245960
+     C                     ENDIF                                                            MD034675
      C                     END                                                                245960
       *                                                                                       245960
+     C                     ENDIF                                                            AR598353
      C                     END
      C                     END                                                                222546
      C**                                                                  E29588
@@ -2041,6 +2085,15 @@
       *                                                                   CSW200
      C                     Z-ADDDDAT      MGTDAT                          CSW200
      C                     Z-ADDPCPL      MGPCPL                          CSW200
+      *
+     C           D@AMD     IFEQ 'Y'                                                         MD034675
+     C           AMTP      IFEQ 'PI'                                                        MD034675
+     C                     ADD  D@AAM     MGPCPL                                            MD034675
+     C                     END                                                              MD034675
+     C           AMTP      IFEQ 'PD'                                                        MD034675
+     C                     SUB  D@AAM     MGPCPL                                            MD034675
+     C                     END                                                              MD034675
+     C                     ENDIF                                                            MD034675
       *                                                                                     AR784699
      C                     MOVE 'N'       WTXDT   1                                         AR784699
      C                     Z-ADD*ZEROS    WNTAMT                                            AR784699
@@ -2104,6 +2157,24 @@
      C                     ENDIF                                                            AR784699
      C                     ENDIF                                                            AR784699
      C                     ENDIF                                                            AR784699
+      *                                                                                     AR694628
+      ** Value date should be the effective date of interest change                         AR694628
+      *                                                                                     AR694628
+     C           AMTP      IFEQ 'SC'                                                        AR694628
+     C           AMTP      OREQ 'BC'                                                        MD034675
+     C           AMTP      OREQ 'PI'                                                        MD034675
+     C           AMTP      OREQ 'PD'                                                        MD034675
+     C                     Z-ADDVDAT      MGVDAT                                            AR694628
+     C                     ENDIF                                                            AR694628
+      *                                                                                     AR598353
+      ** Maturity date should be the Early Maturity date for deal                           AR598353
+      ** amendment type 'EM' and Trade date should be the Value date                        AR598353
+      ** of the deal amendment                                                              AR598353
+      *                                                                                     AR598353
+     C           AMTP      IFEQ 'EM'                                                        AR598353
+     C                     Z-ADDEMDAT     MGMDAT                                            AR598353
+     C                     Z-ADDVDAT      MGTDAT                                            AR598353
+     C                     ENDIF                                                            AR598353
       *                                                                   CSW200
       **  If interest amount on ECONXCY/PF is negative make it positive   CSW200
       *                                                                   CSW200
@@ -2117,6 +2188,14 @@
       *                                                                   CSW200
      C                     MOVELICBS      MGICBS                          CSW200
      C                     Z-ADDINTR      MGINTR                          CSW200
+     C           D@AMD     IFEQ 'Y'                                                         MD034675
+     C           AMTP      IFEQ 'SC'                                                        MD034675
+     C           D@RSP     ADD  BRTE      MGINTR                                            MD034675
+     C                     END                                                              MD034675
+     C           AMTP      IFEQ 'BC'                                                        MD034675
+     C           D@RSP     ADD  D@BRT     MGINTR                                            MD034675
+     C                     END                                                              MD034675
+     C                     ENDIF                                                            MD034675
      C                     MOVELIPFR      MGIPFR                          CSW200
      C                     Z-ADDNIDT      MGNIDT                          CSW200
       *                                                                   CSW200
@@ -2140,6 +2219,10 @@
      C                     MOVELBENN      MGBENN                          CSW200
      C                     MOVELBENA      MGBENA                          CSW200
       *                                                                   CSW200
+     C           AMTP      IFEQ 'SC'                                                        AR694628
+     C           BRTE      ADD  RTSP      MGINTR                                            AR694628
+     C                     ENDIF                                                            AR694628
+      *                                                                                     AR694628
      C                     EXSR LORD                                      CSW200
       *                                                                   CSW200
       ** Move settlement currencies.                                      CSW200

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048346           Date 20Dec17               *
-      *  Prev Amend No. MD048077           Date 07Nov17               *
+      *  Last Amend No. MD049118           Date 29Jan18               *
+      *  Prev Amend No. MD048346           Date 20Dec17               *
+      *                 MD048077           Date 07Nov17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD048035           Date 12Oct17               *
@@ -87,6 +88,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049118 - Netting ICD account is validated when projections *
+      *             are created. It will no longer project to an acct *
+      *             that does not exist.                              *
       *  MD048346 - FX netting ICD will not prioritize customer branch*
       *             of the FX nets, instead, it will prioritize:      *
       *             (1) system value branch code; if blank,           *
@@ -242,6 +246,7 @@
       *       82         Lokup indicator                              *
       *       83         GENERAL ERROR INDICATOR                      *
       *       84         DATABASE ERROR INDICATOR                     *
+      *       85         ACCOUNT NOT FOUND IN ACCOUNT TAB             *                     MD049118
       *
       *  KC            F3 pressed ==> Exit
       *  KE            F5         ==> Refresh
@@ -298,6 +303,7 @@
      FMEMOSL1 UF  E           K        DISK         KINFSR *PSSR                            MD041420
      F                                              KCOMIT                                 MD041420A
      FSDNOSTL4IF  E           K        DISK         KINFSR *PSSR                            MD041420
+     FACCNTL0 IF  E           K        DISK         KINFSR *PSSR                            MD049118
       *
      F/COPY WNCPYSRC,FXH00156
      E                    CPY@    1   1 80
@@ -3251,8 +3257,11 @@
      C                     MOVELAMNETR    OTR1                                              MD021333
       *                                                                                     MD021333
       ** Write RSACMTPD reversal record.                                                    MD021333
-      *                                                                                     MD021333
+      *Check if account exists before writing                                               MD049118
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD021333
+     C                     ENDIF                                                            MD049118
       *                                                                                     MD021333
       ** Update MEMOS, PRONO, OLPOS                                                         MD041420
       *                                                                                     MD041420
@@ -3272,7 +3281,12 @@
      C                     ELSE                                                             MD044815
      C                     Z-ADD1         DORC                                              MD044815
      C                     ENDIF                                                            MD044815
+      *Check if Netting ICD account exists before writing                                   MD049118
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD044815
+     C                     ENDIF                                                            MD049118
+     C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                      MD044815
      C                     EXSR UPDPRN                                                      MD044815
      C                     EXSR UPDOLP                                                      MD044815
@@ -3345,7 +3359,12 @@
      C                     MOVE *BLANKS   CMOD                                              MD048035
      C                     MOVE *BLANKS   ETYP                                              MD048035
      C                     MOVE *BLANKS   MTYP                                              MD048035
+      *Check if account exists before writing                                               MD049118
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD048035
+     C                     ENDIF                                                            MD049118
+     C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                      MD048035
      C                     EXSR UPDPRN                                                      MD048035
      C                     EXSR UPDOLP                                                      MD048035
@@ -3546,7 +3565,12 @@
      C                     MOVELNBRCA     BRCA                                              MD021333
      C                     MOVELACOD      ACDE                                              MD021333
       *                                                                                     MD021333
+      *Check if account exists before writing                                               MD049118
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD021333
+     C                     ENDIF                                                            MD049118
+     C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                     MD041420A
      C                     EXSR UPDPRN                                                     MD041420A
      C                     EXSR UPDOLP                                                     MD041420A
@@ -3599,7 +3623,12 @@
      C                     Z-ADD1         DORC                                              MD032914
      C                     ENDIF                                                            MD032914
       *                                                                                     MD032914
+      *Check if account exists before writing
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                    MD023887A
+     C                     ENDIF                                                            MD049118
+     C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                     MD041420A
      C                     EXSR UPDPRN                                                     MD041420A
      C                     EXSR UPDOLP                                                     MD041420A
@@ -3703,6 +3732,19 @@
       *                                                                                     MD021333
      C                     ENDSR                                                            MD021333
       *                                                                                     MD021333
+      /EJECT                                                                                MD049118
+      *****************************************************************                     MD049118
+      * Subroutine  :  EXIST                                          *                     MD049118
+      * Function    :  To check for live account before calling       *                     MD049118
+      *                                                               *                     MD049118
+      *                                                               *                     MD049118
+      * Called by   :  Various subroutines                            *                     MD049118
+      * Calls       :  None                                           *                     MD049118
+      *****************************************************************                     MD049118
+     C           EXIST     BEGSR                                                            MD049118
+     C           RSACNT    SETLLACCNTABF                                                    MD049118
+     C           RSACNT    CHAINACCNTABF             85                                     MD049118
+     C                     ENDSR                                                            MD049118
       /EJECT                                                                                MD041420
       *****************************************************************                     MD041420
       * Subroutine  :  UPDMEM                                         *                     MD041420
@@ -4024,7 +4066,12 @@
      C                     MOVEL'01'      ASNC                                              MD045437
      C                     MOVELAMBRCA    BRCA                                              MD045437
      C                     MOVELBNNEAC    ACDE                                              MD045437
+      *Check if account exists before writing                                               MD049118
+     C                     EXSR EXIST                                                       MD049118
+     C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD045437
+     C                     ENDIF                                                            MD049118
+     C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                      MD045437
      C                     EXSR UPDPRN                                                      MD045437
      C                     EXSR UPDOLP                                                      MD045437

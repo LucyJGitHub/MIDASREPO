@@ -5,7 +5,7 @@
 /*EXI *  TEXT('Midas MG Reteieve UUID Data Queue')                    *
       *****************************************************************
       *                                                               *
-      *  Midas - General Ledger Module                                *
+      *  Midas - Message Management Module                            *
       *                                                               *
       *  MG001802 - Midas MG Retrieve UUID Data Queue                 *
       *                                                               *

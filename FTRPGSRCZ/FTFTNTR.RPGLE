@@ -13,21 +13,23 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212  *CREATE    Date 15Sep14               *
+      *  Last Amend No. CFT163             Date 04May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CFT163 - FT Nostro Transfer Authorisation (RPG)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -39,61 +41,65 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D NoTrScnFmt    E DS                  EXTNAME(FTFTNTPD)
       * Transaction in screen format
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D NoTrFilFmt    E DS                  EXTNAME(NTRANDD)
       ** Transaction in file format
- 
+
      D ExtData       E DS                  EXTNAME(FTFTEXPD)
       ** Extra Data
- 
+
+     D AuthData      E DS                  EXTNAME(FTNAUTPD)                                 CFT163
+     D                                     PREFIX(N)                                         CFT163
+      ** FTNT Authorisation                                                                  CFT163
+
       **-----------------------------------------------------------------------
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External DS for Customer Details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
       **-----------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D AuthComp        S              1
      D FwdBck          S              1
      D DDTFRF_In       S             15
@@ -110,15 +116,15 @@
      D APRESPMODE      S              1
      D OKACTN          S              1
      D OKTFRF          S              1
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PCNUM           S             10
      D PKYST           S              7
- 
+
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -130,12 +136,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   NoTrFilFmt
      C     DDACTN_In     IFEQ      *BLANK
@@ -145,7 +151,7 @@
      C                   MOVEL     'E'           NTACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -158,7 +164,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      FTFTNTRED
@@ -180,15 +186,15 @@
      C     Idx           IFEQ      0
      C                   EXSR      FTFTNTCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        @ERRMS <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'TFRF  '      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
       ** Populate customer details
      C                   IF        NTINBT = 'C'
       *
@@ -213,12 +219,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       * Build buffer with required output
      C                   MOVE      TMST          @TimeStamp
      C                   EVAL                    Buffer = NoTrScnFmt
-     C                                           + ExtData + @TimeStamp
- 
+     C**********                                 + ExtData + @TimeStamp                      CFT163
+     C                                           + ExtData + @TimeStamp +                    CFT163
+     C                                            AuthData                                   CFT163
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       **********************************************************************
@@ -252,18 +260,18 @@
       *
       * Front Office ID READ
      C                   PARM      *BLANK        @FRNT
- 
+
      C                   ENDSR
       **********************************************************************
      C     FTFTNTRTV     BEGSR
- 
+
      C                   CALLB     'FTFTNTRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM      *BLANKS       ReturnCode
- 
+
      C                   PARM                    ModeofOp
       * Response mode
      C                   PARM      'S'           APRESPMODE
@@ -273,9 +281,9 @@
      C                   PARM      *BLANKS       FRNT
       * Transfer Reference
      C                   PARM                    TFRF
- 
+
       * OUTPUTS
- 
+
       * (Current) Transaction in file format
      C                   PARM                    NoTrFilFmt
       * OK - Action code
@@ -288,24 +296,24 @@
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
- 
+
+
      C                   ENDSR
       **********************************************************************
      C     FTFTNTCVT     BEGSR
- 
+
      C                   CALLB     'FTFTNTCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM      *BLANKS       ReturnCode
       * (Current) Transaction in file format
      C                   PARM                    NoTrFilFmt
- 
+
       * OUTPUTS
       * (Current) Transaction in screen format
      C                   PARM                    NoTrScnfmt
- 
+
      C                   ENDSR
       **********************************************************************
       ** The following /COPY contains the standard program status

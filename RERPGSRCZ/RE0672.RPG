@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. MD048795           Date 30Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035554           Date 25May16               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -76,6 +77,7 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD048795  - Check if FX netting by chaining to FXNETML3. If  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -256,6 +258,11 @@
       *
       *  Deals file
       *
+     FFXNETML3IF  E           K        DISK                                                 MD048795
+     F                                              KINFSR SRFILE                           MD048795
+      *                                                                                     MD048795
+      *  FX Nets File                                                                       MD048795
+      *                                                                                     MD048795
      FCLOAN   IF  E           K        DISK                           UC
      F                                              KINFSR SRFILE
      F            CLOANHHF                          KIGNORE
@@ -1044,7 +1051,25 @@
      C           *IN90     IFEQ '0'
      C                     MOVELDTYP      TRYP
      C                     ELSE
+      * Not a Deal, Might be FX net if OTTP='NT' and chain is correct                       MD048795
+     C           OTTP      IFEQ 'NT'                                                        MD048795
+     C                     MOVE *BLANKS   NETREF 19                                         MD048795
+     C                     MOVEL'DL#'     NETREF                                            MD048795
+     C                     MOVE SWCR      NETREF                                            MD048795
+     C           NETREF    CHAINFXNETML3             90                                     MD048795
+      * If record found in FXNETML3 then it is an FXNET.                                    MD048795
+     C           *IN90     IFEQ '0'                                                         MD048795
+     C                     MOVE OTTP      TRYP                                              MD048795
+     C                     MOVE '00'      NRTC                                              MD048795
+     C                     MOVE '000000'  TNMR                                              MD048795
+     C                     MOVELNETREF    OTR1                                              MD048795
+     C                     ELSE                                                             MD048795
+     C                     MOVEL'DL'      TRYP                                              MD048795
+     C                     ENDIF                                                            MD048795
+     C* OTTP is Not NT, default to DL                                                       MD048795
+     C                     ELSE                                                             MD048795
      C                     MOVEL'DL'      TRYP
+     C                     ENDIF                                                            MD048795
      C                     END
       *
      C                     ELSE                                                               CAP204

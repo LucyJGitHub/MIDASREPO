@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD048795           Date 30Jan18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL025             Date 26Jan05              */
+/*                      CDL025             Date 26Jan05              */
 /*                      228542             Date 05Aug04              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -34,7 +35,7 @@
 /*                                                                   */
 /********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -61,9 +62,9 @@
              DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)             /*CCB009*/
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*CSC020*/
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(50)                                   /*CSC020*/
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 /*                                                                                        /*CSC020*/
@@ -94,61 +95,61 @@
              RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
                           NBR(&CCB009NBR)                             /*CCB009*/
              ENDDO                                                    /*CCB009*/
- 
+
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
- 
+
              CLRPFM     FILE(FXNTIPPD)
- 
+
              CLRPFM     FILE(FXNACTPD)
- 
+
              SNDPGMMSG  MSG('Net Deals File Daily Update') +
                           TOMSGQ(MRUNQ)
- 
+
 /* Call program CB0160 to get value of restart indicator.         */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* If it is NOT a restart.                                        */
- 
+
              IF         COND(&STAT *EQ 'N') THEN(DO)
- 
+
 /* Create journal & receiver   */
- 
+
                 CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
              IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
                 CHKOBJ     OBJ(&JLIB/JRFXC0960) OBJTYPE(*JRNRCV)
                 MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTRCV))
- 
+
                 CHKOBJ     OBJ(&JLIB/JFXC0960) OBJTYPE(*JRN)
                 MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTJRN))
- 
+
                 ENDJRNPF   FILE(*ALL) JRN(JFXC0960)
- 
+
                 GOTO       CMDLBL(JRNFILE)
- 
+
  CRTRCV:        CRTJRNRCV  JRNRCV(&JLIB/JRFXC0960)
- 
+
  CRTJRN:        CRTJRN     JRN(&JLIB/JFXC0960) JRNRCV(&JLIB/JRFXC0960)
- 
+
  JRNFILE:       STRJRNPF   FILE(FXNETMPD) JRN(JFXC0960) IMAGES(*BOTH)
- 
+
              IF         COND(&CDL025 *EQ '       ') THEN(DO)          /*CDL025*/
                 STRJRNPF   FILE(FXNETSPD) JRN(JFXC0960) IMAGES(*BOTH) /*CDL025*/
              ENDDO                                                    /*CDL025*/
- 
+
              ENDDO                                                    /*CCB009*/
              ENDDO
- 
+
 /* If it is a restart */
- 
+
              IF         COND(&STAT *EQ 'Y') THEN(DO)
 /*                                                                      CCB009*/
 /* If Feature CCB009 is 'on' (close of business journaling),            CCB009*/
@@ -211,7 +212,7 @@
                           TOENT(&FINISH)                              /*CDL025*/
              MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)        /*CDL025*/
              ENDDO                                                    /*CDL025*/
- 
+
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
@@ -223,62 +224,64 @@
                 RMVJRNCHG  JRN(JFXC0960) FILE((FXNETSPD))             /*CDL025*/
                 MONMSG     (CPF7049)                                  /*CDL025*/
              ENDDO                                                    /*CDL025*/
- 
+
              ENDDO                                                    /*CCB009*/
              ENDDO
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+/* Set U1 to 1 for actual posting in FX0960                                               MD048795*/
+             CHGJOB     SWS(1XXXXXXX)                                                   /*MD048795*/
              CALL       PGM(FX0960)
- 
+
 /* Successful completion - delete journal & receiver   */
- 
+
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
- 
+/* Set U1 back to 0 if no errors occurred                                                 MD048795*/
+                CHGJOB     SWS(0XXXXXXX)                                                /*MD048795*/
 /* Call CB0150 to update restart indicator */
- 
+
                 CHGVAR     VAR(&STAT) VALUE('N')
- 
+
                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
 /*                                                                      CCB009*/
              IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
                 ENDJRNPF   FILE(*ALL) JRN(JFXC0960)
- 
+
                 DLTJRN     JRN(JFXC0960)
- 
+
                 CHGJOB     INQMSGRPY(*DFT)
- 
+
                 DLTJRNRCV  JRNRCV(JRFXC0960)
- 
+
                 CHGJOB     INQMSGRPY(*RQD)
              ENDDO                                                    /*CCB009*/
- 
+
 /**********     RGZPFM     FILE(FXNETMPD)                                                 /*228542*/
 /**********     MONMSG     MSGID(CPF2981)                                                 /*228542*/
              CALL       PGM(SCC000060) PARM('FXNETMPD' '*FIRST')                          /*228542*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*228542*/
- 
+
              IF         COND(&CDL025 *EQ '       ') THEN(DO)          /*CDL025*/
              CALL       PGM(SCC000060) PARM('FXNETSPD' '*FIRST')      /*CDL025*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                              /*CDL025*/
              ENDDO                                                    /*CDL025*/
- 
- 
+
+
              ENDDO
- 
+
 /* Unsuccessful completion - remove journalled changes   */
- 
+
              ELSE       CMD(DO)
- 
+
 /*                                                                      CCB009*/
 /* If Feature CCB009 is 'on' (close of business journaling),            CCB009*/
 /*                                                                      CCB009*/
@@ -337,31 +340,31 @@
              ELSE       CMD(DO)                                       /*CCB009*/
                 RMVJRNCHG  JRN(JFXC0960) FILE((FXNETMPD))
                 MONMSG     (CPF7049)
- 
+
              IF         COND(&CDL025 *EQ '       ') THEN(DO)          /*CDL025*/
                 RMVJRNCHG  JRN(JFXC0960) FILE((FXNETSPD))             /*CDL025*/
                 MONMSG     (CPF7049)                                  /*CDL025*/
              ENDDO                                                    /*CDL025*/
- 
+
                 ENDJRNPF   FILE(*ALL) JRN(JFXC0960)
- 
+
                 DLTJRN     JRN(JFXC0960)
- 
+
                 CHGJOB     INQMSGRPY(*DFT)
- 
+
                 DLTJRNRCV  JRNRCV(JRFXC0960)
- 
+
                 CHGJOB     INQMSGRPY(*RQD)
              ENDDO                                                    /*CCB009*/
- 
+
 /* Call CB0150 to update restart indicator */
- 
+
                CHGVAR     VAR(&STAT) VALUE('N')
- 
+
                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Database error processing */
- 
+
                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                   ROLLBACK
@@ -370,22 +373,22 @@
                   GOTO       CMDLBL(END)
                ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           FXC0960 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/
 /*                                                                                        /*CSC020*/

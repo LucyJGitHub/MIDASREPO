@@ -19,7 +19,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD048795           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048795 - Is now called in DLC10, and, FX0960 differentiates*
+      *             between actual posting and shadow posting through *
+      *             *INU1 - only FXNACTPD and FX0960AU are updated in *
+      *             shadow posting setup.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -325,7 +330,9 @@
       *
      C                     OPEN FX0960P1
      C                     EXSR RCFP1
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     WRITEFX0960HH
+     C                     ENDIF                                                            MD04879
      C                     MOVE 'D'       RARECI
      C                     MOVE '01'      RABOKC
       *
@@ -355,13 +362,17 @@
       *
      C           AMRECI    IFEQ 'R'
      C           AMRECI    OREQ 'X'
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     DELETFXNETMD0
+     C                     ENDIF                                                            MD048795
       ** Delete splits if exist                                                          CDL025
      C           CDL025    IFEQ 'Y'                                                      CDL025
      C           RANETR    SETLLFXNETSPD                                                 CDL025
      C           RANETR    READEFXNETSPD                 99                              CDL025
      C           *IN99     DOWEQ'0'                                                      CDL025
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     DELETFXNETSD0                                                 CDL025
+     C                     ENDIF                                                            MD048795
      C           RANETR    READEFXNETSPD                 99                              CDL025
      C                     ENDDO                                                         CDL025
      C                     ENDIF                                                         CDL025
@@ -374,7 +385,9 @@
       *
       ** Release future valued confirmed and matured NETS
       *
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     EXCPTRELNET
+     C                     ENDIF                                                            MD048795
      C                     ELSE
      C           AMRECI    IFNE 'C'
       *
@@ -408,14 +421,18 @@
      C                     END
      C                     WRITEFXNACTD0
      C                     MOVE 'M'       AMRECI
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     UPDATFXNETMD0
+     C                     ENDIF                                                            MD048795
       ** Update splits if exist                                                          CDL025
      C           CDL025    IFEQ 'Y'                                                      CDL025
      C           RANETR    SETLLFXNETSPD                                                 CDL025
      C           RANETR    READEFXNETSPD                 99                              CDL025
      C           *IN99     DOWEQ'0'                                                      CDL025
      C                     MOVE 'M'       ASRECI                                         CDL025
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     UPDATFXNETSD0                                                 CDL025
+     C                     ENDIF                                                            MD048795
      C           RANETR    READEFXNETSPD                 99                              CDL025
      C                     ENDDO                                                         CDL025
      C                     ENDIF                                                         CDL025
@@ -481,13 +498,17 @@
       *
       ** Print Header if overflow
       *
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     WRITEFX0960HH
+     C                     ENDIF                                                            MD048795
      C                     MOVE '0'       *IN39
      C                     END
       *
       ** Print Detail
       *
+     C           *INU1     IFEQ *ON                                                         MD048795
      C                     WRITEFX0960DD
+     C                     ENDIF                                                            MD048795
       *
       ** Set indicator to show record reported
       *
@@ -516,11 +537,13 @@
       **  not occured.(*PSSR).
       *
      C           WRUN      IFEQ *BLANK
+     C           *INU1     IFEQ *ON                                                         MD048795
      C           *IN40     IFEQ *ON
      C                     WRITEFX0960EN
      C                     ELSE
      C                     WRITEFX0960ND
      C                     ENDIF
+     C                     ENDIF                                                            MD04879
      C                     ENDIF
       *
       **  End Program and Return.

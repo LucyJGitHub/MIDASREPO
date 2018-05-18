@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. BUG23732           Date 23Apr09              */
+/*       Last Amend No. MD048795           Date 15Jan18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      BUG23732           Date 23Apr09              */
 /*                      BUG23123           Date 09Mar09              */
 /*                      BUG23008           Date 20Feb09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -40,6 +41,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD048795 - Added FX0960 call for FX Netting Projections     */
+/*                  generation when settlement is retail             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG23732- Joint Account threshold                           */
 /*       BUG23123 - Report: Does not show Retail Account Number      */
@@ -192,7 +195,7 @@
 /**/                                                                  /*CDL002*/
              OVRDBF     FILE(DAMSIN) TOFILE(DEAMS)
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABDLEI)                   /*S01194*/
- 
+
              CALL       PGM(DL4040)                                   /*075876*/
 /**/                                                                  /*075876*/
              IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)              /*075876*/
@@ -240,6 +243,9 @@
 /*/COPY WNCPYSRC,DLC10MPE                                             /*S01408*/
                 DLTOVR     FILE(*ALL)
 /**/
+                IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)                             /*MD048795*/
+                  CALL       PGM(FX0960)                                                /*MD048795*/
+                ENDDO                                                                   /*MD048795*/
 /*/COPY WNCPYSRC,DLC10002                                            */
                 IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
 /**/

@@ -15,8 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE169             Date 07Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD026463           Date 07Apr18               *
+      *  Prev Amend No. MD045032           Date 07Apr18               *
       *                 MD024229           Date 18Apr16               *
       *                 AR1059786          Date 18Apr16               *
       *                 MD030379           Date 13Oct14               *
@@ -79,8 +79,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE169 - Contingent Accounting Changes for Overdraft.        *
-      *           Applied fixes MD045032 and MD047606.                *
+      *  MD026463 - For expired facilities do not generate CFA for    *
+      *             account movement as FE is already processed before*
+      *             Applied for MD047606.                             *
+      *             Applied for CLE169.                               *
+      *  MD045032 - No reversal entries for previous facility.        *
+      *             Generate reversal CFA entry for deleted history   *
+      *             of previous facility.                             *
+      *             Applied for CLE169.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024229 - If accounting is to be generated for Credit       *
       *             Agreement, Revolving Indicator of the Tranche     *
@@ -205,10 +211,10 @@
      F            CLOANHHF                          KIGNORE                                   210051
      F            CLOANCKF                          KIGNORE                                   210051
      F            CLOANZ1F                          KIGNORE                                   210051
-      *                                                                                       CLE169
-     FLECLHIL0IF  E           K        DISK         KINFSR *PSSR                              CLE169
-     F            FACHISAF                          KRENAMEFACHISCL                           CLE169
-      *                                                                                       CLE169
+      *                                                                                     MD045032
+     FLECLHIL0IF  E           K        DISK         KINFSR *PSSR                            MD045032
+     F            FACHISAF                          KRENAMEFACHISCL                         MD045032
+      *                                                                                     MD045032
      FSDCURRL1IF  E           K        DISK                                                 CLE075AR
      FSDBRCHL1IF  E           K        DISK                                                 CLE075AR
       *
@@ -447,13 +453,13 @@
       *                                                                                    AR1059786
      I              'GenCAContingentAcctg'C         SVALUE                                 AR1059786
       *                                                                                    AR1059786
-      *                                                                                       CLE169
-     IAKDSAC      DS                                                                          CLE169
-     I                                        1   3 SVACBR                                    CLE169
-     I                                        4   9 SVACCU                                    CLE169
-     I                                       10  12 SVACCY                                    CLE169
-     I                                       13  220SVACCD                                    CLE169
-     I                                       23  240SVACSQ                                    CLE169
+      *                                                                                     MD045032
+     IAKDSAC      DS                                                                        MD045032
+     I                                        1   3 SVACBR                                  MD045032
+     I                                        4   9 SVACCU                                  MD045032
+     I                                       10  12 SVACCY                                  MD045032
+     I                                       13  220SVACCD                                  MD045032
+     I                                       23  240SVACSQ                                  MD045032
      I/COPY ZSRSRC,ZHASHZ2
       *
      ISDBANK    E DSSDBANKPD
@@ -622,14 +628,14 @@
      C           DTEX      ANDLTWRUND                                                         240202
      C                     MOVE 'N'       WPROC2                                              240202
      C                     ENDIF                                                              240202
-      *                                                                                       CLE169
-      ** CFA not needed for account movements valued after expiry date                        CLE169
-      *                                                                                       CLE169
-     C           RECI      IFEQ 'E'                                                           CLE169
-     C           FADATE    ANDGTDTEX                                                          CLE169
-     C           FAACNO    ANDNE0                                                             CLE169
-     C                     MOVE 'N'       WPROC2                                              CLE169
-     C                     ENDIF                                                              CLE169
+      *                                                                                     MD026463
+      ** CFA not needed for account movements valued after expiry date                      MD026463
+      *                                                                                     MD026463
+     C           RECI      IFEQ 'E'                                                         MD026463
+     C           FADATE    ANDGTDTEX                                                        MD026463
+     C           FAACNO    ANDNE0                                                           MD026463
+     C                     MOVE 'N'       WPROC2                                            MD026463
+     C                     ENDIF                                                            MD026463
       *
       ** After detail processing, update HISUPD.
       *
@@ -664,12 +670,12 @@
      C           WPNAM     IFEQ '        '                                                  MD030379
      C                     EXSR SRREVR                                                        209828
      C                     ENDIF                                                            MD030379
-      *                                                                                       CLE169
-      ** Check for facilites which CL history have been reversed                              CLE169
-      *                                                                                       CLE169
-     C           CLE025    IFEQ 'Y'                                                           CLE169
-     C                     EXSR SRCLRV                                                        CLE169
-     C                     ENDIF                                                              CLE169
+      *                                                                                     MD045032
+      ** Check for facilites which CL history have been reversed                            MD045032
+      *                                                                                     MD045032
+     C           CLE025    IFEQ 'Y'                                                         MD045032
+     C                     EXSR SRCLRV                                                      MD045032
+     C                     ENDIF                                                            MD045032
       *
       ** FINAL PROCESSING
       *
@@ -1365,14 +1371,14 @@
      C                     MOVE 'R'       WTYPE                                               CLE025
      C                     Z-SUBFAAAMT    LKEAMT                                              CLE025
      C                     ENDIF                                                              CLE025
-      *                                                                                       CLE169
-      ** Generate accrual account key or repayment account key                                CLE169
-      ** for revolving facility.                                                              CLE169
-      *                                                                                       CLE169
-     C           WTYPE     IFEQ 'A'                                                           CLE169
-     C           WTYPE     OREQ 'R'                                                           CLE169
-     C           FARCIN    ANDEQ'Y'                                                           CLE169
-      *                                                                                       CLE169
+      *                                                                                     MD045032
+      ** Generate accrual account key or repayment account key                              MD045032
+      ** for revolving facility.                                                            MD045032
+      *                                                                                     MD045032
+     C           WTYPE     IFEQ 'A'                                                         MD045032
+     C           WTYPE     OREQ 'R'                                                         MD045032
+     C           FARCIN    ANDEQ'Y'                                                         MD045032
+      *                                                                                     MD045032
      C           FAACTN    IFEQ 'FX'                                                          CLE025
      C                     MOVELATP@,23   RACTN                                               CLE025
      C                     MOVELFADEAL    RACTN                                               CLE025
@@ -1430,7 +1436,7 @@
      C                     ENDIF                                                             BUG3035
       *                                                                                       CLE025
      C                     EXSR SRAKEY                                                        CLE025
-     C                     ENDIF                                                              CLE169
+     C                     ENDIF                                                            MD045032
       *                                                                                       CLE025
      C                     ENDIF                                                              CLE025
       *                                                                                       CLE025
@@ -1453,15 +1459,15 @@
       *                                                                                       CLE025
      C                     MOVELATP@,34   RACTN                                               CLE025
      C                     MOVELFAMCY     RACTN                                               CLE025
-      *                                                                                       CLE169
-      ** Generate accrual account key or repayment account key                                CLE169
-      ** for revolving facility.                                                              CLE169
-      *                                                                                       CLE169
-     C           WTYPE     IFEQ 'A'                                                           CLE169
-     C           WTYPE     OREQ 'R'                                                           CLE169
-     C           FARCIN    ANDEQ'Y'                                                           CLE169
+      *                                                                                     MD045032
+      ** Generate accrual account key or repayment account key                              MD045032
+      ** for revolving facility.                                                            MD045032
+      *                                                                                     MD045032
+     C           WTYPE     IFEQ 'A'                                                         MD045032
+     C           WTYPE     OREQ 'R'                                                         MD045032
+     C           FARCIN    ANDEQ'Y'                                                         MD045032
      C                     EXSR SRAKEY                                                        CLE025
-     C                     ENDIF                                                              CLE169
+     C                     ENDIF                                                            MD045032
       *                                                                                       CLE025
      C                     ENDIF                                                              CLE025
       *
@@ -1643,18 +1649,18 @@
      C                     Z-ADDFADATE    LKEDAT
       *                                                                                       209828
      C                     ENDIF                                                              209828
-      *                                                                                       CLE169
-     C           WCLKY     IFEQ 'Y'                                                           CLE169
-     C                     MOVE 'F'       LKRECI                                              CLE169
-     C           KEYFCL    CHAINFCLTYL2              83                                       CLE169
-     C                     MOVELPRFC      LKPRFC                                              CLE169
-     C                     MOVEL*BLANKS   LKLNNO                                              CLE169
-     C                     MOVE SVFCTY    LKLNNO                                              CLE169
-     C                     MOVE SVCNUM    LKCNUM                                              CLE169
-     C                     MOVE SVBRCA    LKBRCD                                              CLE169
-     C                     Z-ADDSVFASQ    LKACSQ                                              CLE169
-     C                     Z-ADDWRUND     LKEDAT                                              CLE169
-     C                     ENDIF                                                              CLE169
+      *                                                                                     MD045032
+     C           WCLKY     IFEQ 'Y'                                                         MD045032
+     C                     MOVE 'F'       LKRECI                                            MD045032
+     C           KEYFCL    CHAINFCLTYL2              83                                     MD045032
+     C                     MOVELPRFC      LKPRFC                                            MD045032
+     C                     MOVEL*BLANKS   LKLNNO                                            MD045032
+     C                     MOVE SVFCTY    LKLNNO                                            MD045032
+     C                     MOVE SVCNUM    LKCNUM                                            MD045032
+     C                     MOVE SVBRCA    LKBRCD                                            MD045032
+     C                     Z-ADDSVFASQ    LKACSQ                                            MD045032
+     C                     Z-ADDWRUND     LKEDAT                                            MD045032
+     C                     ENDIF                                                            MD045032
       *                                                                                       CLE025
      C           FAACTN    IFNE 'S1'                                                          CLE025
      C           FAACTN    ANDNE'I1'                                                          CLE025
@@ -2186,135 +2192,135 @@
      C                     ENDSR                           End of SRREVR                      209828
       *                                                                                       209828
       *****************************************************************                       209828
-      /TITLE SR/SRCLRV                                                                        CLE169
-      *****************************************************************                       CLE169
-      *                                                               *                       CLE169
-      *  SRCLRV - Generate account keys for facilities with CL        *                       CLE169
-      *           Account Historty for reversal                       *                       CLE169
-      *                                                               *                       CLE169
-      *****************************************************************                       CLE169
-      *                                                                                       CLE169
-     C           SRCLRV    BEGSR                                                              CLE169
-      *                                                                                       CLE169
-     C                     MOVE '0'       *IN20                                               CLE169
-      *                                                                                       CLE169
-     C           *LOVAL    SETLLLECLHIL0                                                      CLE169
-     C                     READ LECLHIL0                 38                                   CLE169
-      *                                                                                       CLE169
-     C                     MOVE BRCA      SVBRCA  3                                           CLE169
-     C                     MOVE FACNUM    SVCNUM  6                                           CLE169
-     C                     Z-ADDFAFCTY    SVFCTY  50                                          CLE169
-     C                     MOVE FAACBR    SVACBR  3                                           CLE169
-     C                     MOVE FAACCU    SVACCU  6                                           CLE169
-     C                     MOVE FAACCY    SVACCY  3                                           CLE169
-     C                     Z-ADDFAACCD    SVACCD 100                                          CLE169
-     C                     Z-ADDFAACSQ    SVACSQ  20                                          CLE169
-     C                     Z-ADDFAACNO    SVACNO 100                                          CLE169
-      *                                                                                       CLE169
-     C                     Z-ADD*ZERO     WKAAMT 150                                          CLE169
-      *                                                                                       CLE169
-     C           *IN38     DOWEQ*OFF                                                          CLE169
-      *                                                                                       CLE169
-     C           SVBRCA    IFEQ BRCA                                                          CLE169
-     C           SVCNUM    ANDEQFACNUM                                                        CLE169
-     C           SVFCTY    ANDEQFAFCTY                                                        CLE169
-     C           SVACNO    ANDEQFAACNO                                                        CLE169
-      *                                                                                       CLE169
-     C           FAAAMT    IFGE 0                                                             CLE169
-     C           FAAAMT    ORLT 0                                                             CLE169
-     C           FARCIN    ANDEQ'Y'                                                           CLE169
-     C                     ADD  FAAAMT    WKAAMT                                              CLE169
-     C                     ENDIF                                                              CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C           SVBRCA    IFNE BRCA                                                          CLE169
-     C           SVCNUM    ORNE FACNUM                                                        CLE169
-     C           SVFCTY    ORNE FAFCTY                                                        CLE169
-     C           SVACNO    ORNE FAACNO                                                        CLE169
-     C                     EXSR SRCLWR                                                        CLE169
-      *                                                                                       CLE169
-     C                     Z-ADD*ZERO     WKAAMT                                              CLE169
-      *                                                                                       CLE169
-      ** Save Details                                                                         CLE169
-      *                                                                                       CLE169
-     C                     MOVE BRCA      SVBRCA                                              CLE169
-     C                     MOVE FACNUM    SVCNUM                                              CLE169
-     C                     Z-ADDFAFCTY    SVFCTY                                              CLE169
-     C                     MOVE FAACBR    SVACBR                                              CLE169
-     C                     MOVE FAACCU    SVACCU                                              CLE169
-     C                     MOVE FAACCY    SVACCY                                              CLE169
-     C                     Z-ADDFAACCD    SVACCD                                              CLE169
-     C                     Z-ADDFAACSQ    SVACSQ                                              CLE169
-     C                     Z-ADDFAACNO    SVACNO                                              CLE169
-      *                                                                                       CLE169
-     C           FAAAMT    IFGE 0                                                             CLE169
-     C           FAAAMT    ORLT 0                                                             CLE169
-     C           FARCIN    ANDEQ'Y'                                                           CLE169
-     C                     ADD  FAAAMT    WKAAMT                                              CLE169
-     C                     ENDIF                                                              CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C                     READ LECLHIL0                 38                                   CLE169
-     C                     ENDDO                                                              CLE169
-      *                                                                                       CLE169
-      ** Write last record                                                                    CLE169
-      *                                                                                       CLE169
-     C                     EXSR SRCLWR                                                        CLE169
-      *                                                                                       CLE169
-     C                     ENDSR                                                              CLE169
-      *****************************************************************                       CLE169
-      /TITLE SR/SRCLWR                                                                        CLE169
-      *****************************************************************                       CLE169
-      *                                                               *                       CLE169
-      *  SRCLWR - Write account keys for CL reversal                  *                       CLE169
-      *                                                               *                       CLE169
-      *****************************************************************                       CLE169
-     C           SRCLWR    BEGSR                                                              CLE169
-      *                                                                                       CLE169
-     C                     MOVE *BLANKS   ACKEY                                               CLE169
-      *                                                                                       CLE169
-     C                     MOVE SVBRCA    WBRCA                                               CLE169
-     C                     MOVE SVCNUM    WCNUM                                               CLE169
-     C           SVFCTY    DIV  100       WFACT                                               CLE169
-     C                     Z-ADDSVFCTY    WFCNO                                               CLE169
-      *                                                                                       CLE169
-     C           KEYFCL    CHAINFCLTYL1              81                                       CLE169
-     C           *IN81     IFEQ '1'                                                           CLE169
-     C           KEYFCL    CHAINPEFCLFL1             81                                       CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C                     MOVE FCTI      FHFTIN                                              CLE169
-     C                     Z-ADDACSQ      SVFASQ  20                                          CLE169
-      *                                                                                       CLE169
-     C                     Z-ADD*ZERO     LKEAMT                                              CLE169
-      *                                                                                       CLE169
-     C           WKAAMT    IFGE 0                                                             CLE169
-     C                     MOVE 'A'       WTYPE                                               CLE169
-     C                     Z-ADDWKAAMT    LKEAMT                                              CLE169
-     C                     ELSE                                                               CLE169
-     C                     MOVE 'R'       WTYPE                                               CLE169
-     C                     Z-SUBWKAAMT    LKEAMT                                              CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C           LKEAMT    IFNE 0                                                             CLE169
-     C           *IN81     ANDEQ'0'                                                           CLE169
-     C           TRCA      ANDNE'CA'                                                          CLE169
-      *                                                                                       CLE169
-     C           BMRANR    IFEQ 'Y'                                                           CLE169
-     C                     MOVELATP@,37   RACTN                                               CLE169
-     C                     MOVELSVACNO    RACTN                                               CLE169
-     C                     ELSE                                                               CLE169
-     C                     MOVELATP@,38   RACTN                                               CLE169
-     C                     MOVELAKDSAC    RACTN                                               CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C                     MOVE 'Y'       WCLKY   1                                           CLE169
-     C                     EXSR SRAKEY                                                        CLE169
-     C                     MOVE ' '       WCLKY                                               CLE169
-     C                     ENDIF                                                              CLE169
-      *                                                                                       CLE169
-     C                     ENDSR                                                              CLE169
-      *****************************************************************                       CLE169
+      /TITLE SR/SRCLRV                                                                      MD045032
+      *****************************************************************                     MD045032
+      *                                                               *                     MD045032
+      *  SRCLRV - Generate account keys for facilities with CL        *                     MD045032
+      *           Account Historty for reversal                       *                     MD045032
+      *                                                               *                     MD045032
+      *****************************************************************                     MD045032
+      *                                                                                     MD045032
+     C           SRCLRV    BEGSR                                                            MD045032
+      *                                                                                     MD045032
+     C                     MOVE '0'       *IN20                                             MD045032
+      *                                                                                     MD045032
+     C           *LOVAL    SETLLLECLHIL0                                                    MD045032
+     C                     READ LECLHIL0                 38                                 MD045032
+      *                                                                                     MD045032
+     C                     MOVE BRCA      SVBRCA  3                                         MD045032
+     C                     MOVE FACNUM    SVCNUM  6                                         MD045032
+     C                     Z-ADDFAFCTY    SVFCTY  50                                        MD045032
+     C                     MOVE FAACBR    SVACBR  3                                         MD045032
+     C                     MOVE FAACCU    SVACCU  6                                         MD045032
+     C                     MOVE FAACCY    SVACCY  3                                         MD045032
+     C                     Z-ADDFAACCD    SVACCD 100                                        MD045032
+     C                     Z-ADDFAACSQ    SVACSQ  20                                        MD045032
+     C                     Z-ADDFAACNO    SVACNO 100                                        MD045032
+      *                                                                                     MD045032
+     C                     Z-ADD*ZERO     WKAAMT 150                                        MD045032
+      *                                                                                     MD045032
+     C           *IN38     DOWEQ*OFF                                                        MD045032
+      *                                                                                     MD045032
+     C           SVBRCA    IFEQ BRCA                                                        MD045032
+     C           SVCNUM    ANDEQFACNUM                                                      MD045032
+     C           SVFCTY    ANDEQFAFCTY                                                      MD045032
+     C           SVACNO    ANDEQFAACNO                                                      MD045032
+      *                                                                                     MD045032
+     C           FAAAMT    IFGE 0                                                           MD045032
+     C           FAAAMT    ORLT 0                                                           MD045032
+     C           FARCIN    ANDEQ'Y'                                                         MD045032
+     C                     ADD  FAAAMT    WKAAMT                                            MD045032
+     C                     ENDIF                                                            MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C           SVBRCA    IFNE BRCA                                                        MD045032
+     C           SVCNUM    ORNE FACNUM                                                      MD045032
+     C           SVFCTY    ORNE FAFCTY                                                      MD045032
+     C           SVACNO    ORNE FAACNO                                                      MD045032
+     C                     EXSR SRCLWR                                                      MD045032
+      *                                                                                     MD045032
+     C                     Z-ADD*ZERO     WKAAMT                                            MD045032
+      *                                                                                     MD045032
+      ** Save Details                                                                       MD045032
+      *                                                                                     MD045032
+     C                     MOVE BRCA      SVBRCA                                            MD045032
+     C                     MOVE FACNUM    SVCNUM                                            MD045032
+     C                     Z-ADDFAFCTY    SVFCTY                                            MD045032
+     C                     MOVE FAACBR    SVACBR                                            MD045032
+     C                     MOVE FAACCU    SVACCU                                            MD045032
+     C                     MOVE FAACCY    SVACCY                                            MD045032
+     C                     Z-ADDFAACCD    SVACCD                                            MD045032
+     C                     Z-ADDFAACSQ    SVACSQ                                            MD045032
+     C                     Z-ADDFAACNO    SVACNO                                            MD045032
+      *                                                                                     MD045032
+     C           FAAAMT    IFGE 0                                                           MD045032
+     C           FAAAMT    ORLT 0                                                           MD045032
+     C           FARCIN    ANDEQ'Y'                                                         MD045032
+     C                     ADD  FAAAMT    WKAAMT                                            MD045032
+     C                     ENDIF                                                            MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C                     READ LECLHIL0                 38                                 MD045032
+     C                     ENDDO                                                            MD045032
+      *                                                                                     MD045032
+      ** Write last record                                                                  MD045032
+      *                                                                                     MD045032
+     C                     EXSR SRCLWR                                                      MD045032
+      *                                                                                     MD045032
+     C                     ENDSR                                                            MD045032
+      *****************************************************************                     MD045032
+      /TITLE SR/SRCLWR                                                                      MD045032
+      *****************************************************************                     MD045032
+      *                                                               *                     MD045032
+      *  SRCLWR - Write account keys for CL reversal                  *                     MD045032
+      *                                                               *                     MD045032
+      *****************************************************************                     MD045032
+     C           SRCLWR    BEGSR                                                            MD045032
+      *                                                                                     MD045032
+     C                     MOVE *BLANKS   ACKEY                                             MD045032
+      *                                                                                     MD045032
+     C                     MOVE SVBRCA    WBRCA                                             MD045032
+     C                     MOVE SVCNUM    WCNUM                                             MD045032
+     C           SVFCTY    DIV  100       WFACT                                             MD045032
+     C                     Z-ADDSVFCTY    WFCNO                                             MD045032
+      *                                                                                     MD045032
+     C           KEYFCL    CHAINFCLTYL1              81                                     MD045032
+     C           *IN81     IFEQ '1'                                                         MD045032
+     C           KEYFCL    CHAINPEFCLFL1             81                                     MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C                     MOVE FCTI      FHFTIN                                            MD045032
+     C                     Z-ADDACSQ      SVFASQ  20                                        MD045032
+      *                                                                                     MD045032
+     C                     Z-ADD*ZERO     LKEAMT                                            MD045032
+      *                                                                                     MD045032
+     C           WKAAMT    IFGE 0                                                           MD045032
+     C                     MOVE 'A'       WTYPE                                             MD045032
+     C                     Z-ADDWKAAMT    LKEAMT                                            MD045032
+     C                     ELSE                                                             MD045032
+     C                     MOVE 'R'       WTYPE                                             MD045032
+     C                     Z-SUBWKAAMT    LKEAMT                                            MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C           LKEAMT    IFNE 0                                                           MD045032
+     C           *IN81     ANDEQ'0'                                                         MD045032
+     C           TRCA      ANDNE'CA'                                                        MD045032
+      *                                                                                     MD045032
+     C           BMRANR    IFEQ 'Y'                                                         MD045032
+     C                     MOVELATP@,37   RACTN                                             MD045032
+     C                     MOVELSVACNO    RACTN                                             MD045032
+     C                     ELSE                                                             MD045032
+     C                     MOVELATP@,38   RACTN                                             MD045032
+     C                     MOVELAKDSAC    RACTN                                             MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C                     MOVE 'Y'       WCLKY   1                                         MD045032
+     C                     EXSR SRAKEY                                                      MD045032
+     C                     MOVE ' '       WCLKY                                             MD045032
+     C                     ENDIF                                                            MD045032
+      *                                                                                     MD045032
+     C                     ENDSR                                                            MD045032
+      *****************************************************************                     MD045032
       /TITLE SR/*PSSR
       *****************************************************************
       *                                                               *

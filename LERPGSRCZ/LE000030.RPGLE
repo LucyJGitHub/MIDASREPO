@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE169             Date 07Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045032           Date 07Apr18               *
+      *  Prev Amend No. CLE169             Date 07Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD023117           Date 13Jan15               *
       *                 MD026331           Date 13Jan15               *
@@ -68,8 +69,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045032 - No account movement for new attached facility     *
+      *             Renamed FCCU, FACT and FCNO fields of ACCNTJ*     *
+      *             files to generate movement to correct facility.   *
+      *             Applied for CLE169.                               *
       *  CLE169 - Contingent Accounting Changes for Overdraft. Also   *
-      *           applied fixes MD044705, MD045370, and MD045032.     *
+      *           applied fixes MD044705 and MD045370.                *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD023117 - Double postings of S1 event on a rollover deal.   *
@@ -627,9 +632,9 @@
      I              ACOD                        ACACOD
      I              ACSQ                        ACACSQ
      I              ACNO                        ACACNO
-     I              FCCU                        ACFCCU                                        CLE169
-     I              FACT                        ACFACT                                        CLE169
-     I              FCNO                        ACFCNO                                        CLE169
+     I              FCCU                        ACFCCU                                      MD045032
+     I              FACT                        ACFACT                                      MD045032
+     I              FCNO                        ACFCNO                                      MD045032
       *                                                                                       CLE169
      IACCNTJD2                                                                                CLE169
      I              BRCA                        A2BRCA                                        CLE169
@@ -638,9 +643,9 @@
      I              ACOD                        A2ACOD                                        CLE169
      I              ACSQ                        A2ACSQ                                        CLE169
      I              ACNO                        A2ACNO                                        CLE169
-     I              FCCU                        A2FCCU                                        CLE169
-     I              FACT                        A2FACT                                        CLE169
-     I              FCNO                        A2FCNO                                        CLE169
+     I              FCCU                        A2FCCU                                      MD045032
+     I              FACT                        A2FACT                                      MD045032
+     I              FCNO                        A2FCNO                                      MD045032
 
      IAPOSTJD0
      I              CNUM                        APCNUM
@@ -2415,12 +2420,12 @@
      C                   EVAL      WTEOC = 0
      C                   EVAL      WTEOF = 0
 
-     C**********         EVAL      WCUST = FCCU                                               CLE169
-     C**********         EVAL      WFCLT = FACT                                               CLE169
-     C**********         EVAL      WFCSQ = FCNO                                               CLE169
-     C                   EVAL      WCUST = ACFCCU                                             CLE169
-     C                   EVAL      WFCLT = ACFACT                                             CLE169
-     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
+     C**********         EVAL      WCUST = FCCU                                             MD045032
+     C**********         EVAL      WFCLT = FACT                                             MD045032
+     C**********         EVAL      WFCSQ = FCNO                                             MD045032
+     C                   EVAL      WCUST = ACFCCU                                           MD045032
+     C                   EVAL      WFCLT = ACFACT                                           MD045032
+     C                   EVAL      WFCSQ = ACFCNO                                           MD045032
 
      C**********         IF        WFACILTY <> *ZEROS                                         CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2493,12 +2498,12 @@
       ** Generate 'AS' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C**********         EVAL      KFCNUM = FCCU                                              CLE169
-     C**********         EVAL      KFFACT = FACT                                              CLE169
-     C**********         EVAL      KFFCNO = FCNO                                              CLE169
-     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
-     C                   EVAL      KFFACT = ACFACT                                            CLE169
-     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
+     C**********         EVAL      KFCNUM = FCCU                                            MD045032
+     C**********         EVAL      KFFACT = FACT                                            MD045032
+     C**********         EVAL      KFFCNO = FCNO                                            MD045032
+     C                   EVAL      KFCNUM = ACFCCU                                          MD045032
+     C                   EVAL      KFFACT = ACFACT                                          MD045032
+     C                   EVAL      KFFCNO = ACFCNO                                          MD045032
      C                   EVAL      WNMVMT = 'N'                                              BUG3035
      C                   EVAL      WACTION = 'AS'
      C                   EVAL      WACTCCY = ACCCY
@@ -2615,12 +2620,12 @@
       ** Generate 'AC' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C**********         EVAL      KFCNUM = FCCU                                              CLE169
-     C**********         EVAL      KFFACT = FACT                                              CLE169
-     C**********         EVAL      KFFCNO = FCNO                                              CLE169
-     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
-     C                   EVAL      KFFACT = ACFACT                                            CLE169
-     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
+     C**********         EVAL      KFCNUM = FCCU                                            MD045032
+     C**********         EVAL      KFFACT = FACT                                            MD045032
+     C**********         EVAL      KFFCNO = FCNO                                            MD045032
+     C                   EVAL      KFCNUM = ACFCCU                                          MD045032
+     C                   EVAL      KFFACT = ACFACT                                          MD045032
+     C                   EVAL      KFFCNO = ACFCNO                                          MD045032
      C                   EVAL      WNMVMT = 'N'                                              BUG3035
      C                   EVAL      WACTION = 'AC'
      C                   EVAL      WACTCCY = ACCCY
@@ -2785,12 +2790,12 @@
 
      C                   ELSE                                                                BUG3035
                                                                                              BUG3035
-     C**********         EVAL      WCUST = FCCU                                       BUG3035 CLE169
-     C**********         EVAL      WFCLT = FACT                                       BUG3035 CLE169
-     C**********         EVAL      WFCSQ = FCNO                                       BUG3035 CLE169
-     C                   EVAL      WCUST = ACFCCU                                             CLE169
-     C                   EVAL      WFCLT = ACFACT                                             CLE169
-     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
+     C**********         EVAL      WCUST = FCCU                                     BUG3035 MD045032
+     C**********         EVAL      WFCLT = FACT                                     BUG3035 MD045032
+     C**********         EVAL      WFCSQ = FCNO                                     BUG3035 MD045032
+     C                   EVAL      WCUST = ACFCCU                                           MD045032
+     C                   EVAL      WFCLT = ACFACT                                           MD045032
+     C                   EVAL      WFCSQ = ACFCNO                                           MD045032
                                                                                              BUG3035
      C**********         IF        WFACILTY <> *ZEROS                                 BUG3035 CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2808,12 +2813,12 @@
                                                                                              BUG3035
      C                   IF        *IN15 = *OFF                                              BUG3035
                                                                                              BUG3035
-     C**********         MOVE      FCCU          KFCNUM                               BUG3035 CLE169
-     C**********         MOVE      FACT          KFFACT                               BUG3035 CLE169
-     C**********         MOVE      FCNO          KFFCNO                               BUG3035 CLE169
-     C                   MOVE      ACFCCU        KFCNUM                                       CLE169
-     C                   MOVE      ACFACT        KFFACT                                       CLE169
-     C                   MOVE      ACFCNO        KFFCNO                                       CLE169
+     C**********         MOVE      FCCU          KFCNUM                             BUG3035 MD045032
+     C**********         MOVE      FACT          KFFACT                             BUG3035 MD045032
+     C**********         MOVE      FCNO          KFFCNO                             BUG3035 MD045032
+     C                   MOVE      ACFCCU        KFCNUM                                     MD045032
+     C                   MOVE      ACFACT        KFFACT                                     MD045032
+     C                   MOVE      ACFCNO        KFFCNO                                     MD045032
      C                   EVAL      WTRANSID = *ZEROS                                         BUG3035
      C                   EVAL      WACTION = 'AR'                                            BUG3035
      C                   EVAL      WACTCCY = ACCCY                                           BUG3035
@@ -2922,18 +2927,18 @@
      C                   EXSR      *PSSR
      C                   ELSE
 
-     C**********         EVAL      WCUST = FCCU                                       BUG3035 CLE169
-     C**********         EVAL      WFCLT = FACT                                       BUG3035 CLE169
-     C**********         EVAL      WFCSQ = FCNO                                       BUG3035 CLE169
-     C     CLE169        IFEQ      'Y'                                                        CLE169
-     C                   EVAL      WCUST = A2FCCU                                             CLE169
-     C                   EVAL      WFCLT = A2FACT                                             CLE169
-     C                   EVAL      WFCSQ = A2FCNO                                             CLE169
-     C                   ELSE                                                                 CLE169
-     C                   EVAL      WCUST = ACFCCU                                             CLE169
-     C                   EVAL      WFCLT = ACFACT                                             CLE169
-     C                   EVAL      WFCSQ = ACFCNO                                             CLE169
-     C                   ENDIF                                                                CLE169
+     C**********         EVAL      WCUST = FCCU                                     BUG3035 MD045032
+     C**********         EVAL      WFCLT = FACT                                     BUG3035 MD045032
+     C**********         EVAL      WFCSQ = FCNO                                     BUG3035 MD045032
+     C     CLE169        IFEQ      'Y'                                                      MD045032
+     C                   EVAL      WCUST = A2FCCU                                           MD045032
+     C                   EVAL      WFCLT = A2FACT                                           MD045032
+     C                   EVAL      WFCSQ = A2FCNO                                           MD045032
+     C                   ELSE                                                               MD045032
+     C                   EVAL      WCUST = ACFCCU                                           MD045032
+     C                   EVAL      WFCLT = ACFACT                                           MD045032
+     C                   EVAL      WFCSQ = ACFCNO                                           MD045032
+     C                   ENDIF                                                              MD045032
 
      C**********         IF        WFACILTY <> *ZEROS                                         CLE041
      C**********         IF        WCUST <> *ZEROS AND WFCLT <> *ZEROS AND             CLE041 CSD027
@@ -2957,20 +2962,20 @@
       ** Generate 'AC' entry
 
      C                   EVAL      WTRANSID = *ZEROS
-     C**********         EVAL      KFCNUM = FCCU                                              CLE169
-     C**********         EVAL      KFFACT = FACT                                              CLE169
-     C**********         EVAL      KFFCNO = FCNO                                              CLE169
+     C**********         EVAL      KFCNUM = FCCU                                            MD045032
+     C**********         EVAL      KFFACT = FACT                                            MD045032
+     C**********         EVAL      KFFCNO = FCNO                                            MD045032
      C                   EVAL      WACTION = 'AC'
      C                   IF        CLE169 = 'Y'                                               CLE169
      C                   EVAL      WACTCCY = A2CCY                                            CLE169
-     C                   EVAL      KFCNUM = A2FCCU                                            CLE169
-     C                   EVAL      KFFACT = A2FACT                                            CLE169
-     C                   EVAL      KFFCNO = A2FCNO                                            CLE169
+     C                   EVAL      KFCNUM = A2FCCU                                          MD045032
+     C                   EVAL      KFFACT = A2FACT                                          MD045032
+     C                   EVAL      KFFCNO = A2FCNO                                          MD045032
      C                   ELSE                                                                 CLE169
      C                   EVAL      WACTCCY = ACCCY
-     C                   EVAL      KFCNUM = ACFCCU                                            CLE169
-     C                   EVAL      KFFACT = ACFACT                                            CLE169
-     C                   EVAL      KFFCNO = ACFCNO                                            CLE169
+     C                   EVAL      KFCNUM = ACFCCU                                          MD045032
+     C                   EVAL      KFFACT = ACFACT                                          MD045032
+     C                   EVAL      KFFCNO = ACFCNO                                          MD045032
      C                   ENDIF                                                                CLE169
      C                   EVAL      WACTDAT = BJRDNB
 

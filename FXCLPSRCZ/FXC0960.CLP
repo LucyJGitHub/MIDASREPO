@@ -26,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD048795 - Set U1 to 1 for actual posting in FX0960         */
+?*                  and to 0 if no errors occurred                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CDL025 - FX Netting Payment Generation                      */
 /*       228542 - RGZPFM has changed at R5V3                         */

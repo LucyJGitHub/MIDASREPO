@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD050114           Date 14Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -42,6 +43,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD050114 - Failure handling issue in COB component LEC0701  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -91,31 +93,31 @@
 /*                                                  */                /*CLE007*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
  
-             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)
-             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)              */                   /*MD050114*/
+/**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)            */                   /*MD050114*/
  
-             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+/**********  DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)          */                   /*MD050114*/
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MCSTAT) TYPE(*CHAR) LEN(256)             /*S01427*/
              DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(13)    /*E39477*/
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*E40242*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*E40242*/
-             DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                 /*087362*/
+/**********  DCL        VAR(&COUNT) TYPE(*DEC) LEN(1)                            /*087362 MD050114*/
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*CCB009*/
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                /*CCB009*/
-             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')      /*CCB009*/
+/**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')                 /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/* Declare variable CCB009 - flag for switchable feature           */ /*CCB009*/
+/**Declare*variable*CCB009*-*flag*for*switchable*feature************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
 /**/                                                                  /*CCB009*/
 /* Declare job name, user and number for remove journal changes    */ /*CCB009*/
 /**/                                                                  /*CCB009*/
-             DCL        VAR(&CCB009JOB) TYPE(*CHAR) LEN(10)           /*CCB009*/
-             DCL        VAR(&CCB009USR) TYPE(*CHAR) LEN(10)           /*CCB009*/
-             DCL        VAR(&CCB009NBR) TYPE(*CHAR) LEN(6)            /*CCB009*/
-             DCL        VAR(&CB0180DA) TYPE(*CHAR) LEN(26)            /*CCB009*/
+/**********  DCL        VAR(&CCB009JOB) TYPE(*CHAR) LEN(10)        */            /*CCB009 MD050114*/
+/**********  DCL        VAR(&CCB009USR) TYPE(*CHAR) LEN(10)        */            /*CCB009 MD050114*/
+/**********  DCL        VAR(&CCB009NBR) TYPE(*CHAR) LEN(6)         */            /*CCB009 MD050114*/
+/**********  DCL        VAR(&CB0180DA) TYPE(*CHAR) LEN(26)         */            /*CCB009 MD050114*/
              DCL        VAR(&START) TYPE(*DEC) LEN(10 0)              /*CCB009*/
              DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)             /*CCB009*/
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*CSC020*/
@@ -123,6 +125,12 @@
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
              DCL        VAR(&WCRUN) TYPE(*CHAR) LEN(1)                                    /*CLE134*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*MD050114*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                   /*MD050114*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                    /*MD050114*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                /*MD050114*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*MD050114*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*MD050114*/
 /*/COPY WNCPYSRC,LEC0701004                                          */
  
              DCLF       FILE(SDMGMEPD)
@@ -140,8 +148,11 @@
              CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                          /*CSC020*/
              CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
                           *CAT &CSEQA)                                                    /*CSC020*/
-             SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('S') +
-                          TEXT(&STEXT)                                                    /*CSC020*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                          /*MD050114*/
+/**********  SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('S') +      */                   /*MD050114*/
+/**********               TEXT(&STEXT)                             */            /*CSC020 MD050114*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)                                        /*MD050114*/
  
 /* set switches */
              CHGJOB     LOG(4) LOGCLPGM(*YES) SWS(00100000)
@@ -152,10 +163,10 @@
                           TOMSGQ(MRUNQ)
 /*/COPY WNCPYSRC,LEC0701013                                          */
 /**/                                                                  /*CCB009*/
-/** Check for Switchable feature CCB009.                           */ /*CCB009*/
+/***Check*for*Switchable*feature*CCB009.****************************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
-                          'CCB009' &AOFMT)                            /*CCB009*/
+/**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +     */                   /*MD050114*/
+/**********               'CCB009' &AOFMT)                         */            /*CCB009 MD050114*/
 /*                                                  */                /*CLE007*/
 /* Check if Enhancement Number CLE007 is present.   */                /*CLE007*/
 /*                                                  */                /*CLE007*/
@@ -227,48 +238,48 @@
              ENDDO                                                    /*S01427*/
 /*/COPY WNCPYSRC,LEC0701015                                          */
 /* Journal transaction and message files */
-             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+/**********  RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             */                   /*MD050114*/
              RTVDTAARA  DTAARA(RUNDAT) RTNVAR(&RUNDAT) /*E39477*/
  
-             CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))
-             CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'JLIB')
+/**********  CHGVAR     VAR(&PREFIX) VALUE(%SST(&SDSTAT 6 2))      */                   /*MD050114*/
+/**********  CHGVAR     VAR(&JLIB) VALUE(&PREFIX *CAT 'JLIB')      */                   /*MD050114*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,LEC0701MP1                                          */
 /**/                                                                  /*CCB009*/
-             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)           /*CCB009*/
+/**********  CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)        */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/*   If Restart, Remove Journalled Changes   */                       /*CCB009*/
+/****If*Restart,*Remove*Journalled*Changes****/                                  /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-                IF         COND(&STAT *EQ 'Y') THEN(DO)               /*CCB009*/
+/**********     IF         COND(&STAT *EQ 'Y') THEN(DO)                          /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/* If Feature CCB009 is 'on' (close of business journaling),       */ /*CCB009*/
+/**If*Feature*CCB009*is*'on'*(close*of*business*journaling),********/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CCB009 *EQ '       ') THEN(DO)          /*CCB009*/
+/**********  IF         COND(&CCB009 *EQ '       ') THEN(DO)       */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/* Retrieve data area CB0180DA from QTEMP.                         */ /*CCB009*/
+/**Retrieve*data*area*CB0180DA*from*QTEMP.**************************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             RTVDTAARA  DTAARA(QTEMP/CB0180DA) RTNVAR(&CB0180DA)      /*CCB009*/
+/**********  RTVDTAARA  DTAARA(QTEMP/CB0180DA) RTNVAR(&CB0180DA)   */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/* If data area is not blank, calculate the job name, user and no. */ /*CCB009*/
-/* of the previous run of this component.                             /*CCB009*/
+/**If*data*area*is*not*blank,*calculate*the*job*name,*user*and*no.**/            /*CCB009 MD050114*/
+/**of*the*previous*run*of*this*component.***************************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CB0180DA *NE ' ') THEN(DO)              /*CCB009*/
+/**********  IF         COND(&CB0180DA *NE ' ') THEN(DO)           */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CHGVAR     VAR(&CCB009JOB) VALUE(%SST(&CB0180DA 1 10))   /*CCB009*/
-             CHGVAR     VAR(&CCB009USR) VALUE(%SST(&CB0180DA 11 10))  /*CCB009*/
-             CHGVAR     VAR(&CCB009NBR) VALUE(%SST(&CB0180DA 21 6))   /*CCB009*/
+/**********  CHGVAR     VAR(&CCB009JOB) VALUE(%SST(&CB0180DA 1 10))  */          /*CCB009 MD050114*/
+/**********  CHGVAR     VAR(&CCB009USR) VALUE(%SST(&CB0180DA 11 10)) */          /*CCB009 MD050114*/
+/**********  CHGVAR     VAR(&CCB009NBR) VALUE(%SST(&CB0180DA 21 6))  */          /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/*  Retrieve the most recent journal entry sequence number         */ /*CCB009*/
-/*  for the specific job.                                          */ /*CCB009*/
+/***Retrieve*the*most*recent*journal*entry*sequence*number**********/            /*CCB009 MD050114*/
+/***for*the*specific*job.*******************************************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
-                          TOENT(*FIRST) SEARCH(*DESCEND) +
-                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
-                          RTNSEQNBR(&START)                           /*CCB009*/
+/**********  RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) + */                /*MD050114*/
+/**********               TOENT(*FIRST) SEARCH(*DESCEND) +         */                   /*MD050114*/
+/**********               JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +  */                   /*MD050114*/
+/**********               RTNSEQNBR(&START)                        */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)               /*CCB009*/
-             CHGVAR     VAR(&START) VALUE(0)                          /*CCB009*/
-             ENDDO                                                    /*CCB009*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)            */            /*CCB009 MD050114*/
+/**********  CHGVAR     VAR(&START) VALUE(0)                       */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
 /***********************************************************************CCB009**************CSC020*/
 /***Retrieve*the*first*journal*entry*sequence*number********************CCB009**************CSC020*/
 /***for*the*specific*job.***********************************************CCB009**************CSC020*/
@@ -281,64 +292,64 @@
 /************CHGVAR*****VAR(&FINISH)*VALUE(0)***************************CCB009**************CSC020*/
 /************ENDDO******************************************************CCB009**************CSC020*/
 /**/                                                                                      /*CLE134*/
-             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
-/*  Retrieve the most recent journal entry sequence number         */                     /*CLE134*/
-/*  for the specific job.                                          */                     /*CLE134*/
+/**********  IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)         */            /*CLE134 MD050114*/
+/***Retrieve*the*most*recent*journal*entry*sequence*number**********/            /*CLE134 MD050114*/
+/***for*the*specific*job.*******************************************/            /*CLE134 MD050114*/
 /**/                                                                                      /*CLE134*/
-             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
-                          TOENT(*FIRST) SEARCH(*DESCEND) +
-                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
-                          RTNSEQNBR(&START)                                               /*CLE134*/
+/**********  RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) + */                /*MD050114*/
+/**********               TOENT(*FIRST) SEARCH(*DESCEND) +         */                   /*MD050114*/
+/**********               JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +  */                   /*MD050114*/
+/**********               RTNSEQNBR(&START)                        */            /*CLE134 MD050114*/
 /**/                                                                                      /*CLE134*/
-             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                   /*CLE134*/
-             CHGVAR     VAR(&START) VALUE(0)                                              /*CLE134*/
-             ENDDO                                                                        /*CLE134*/
-             ENDDO                                                                        /*CLE134*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)            */            /*CLE134 MD050114*/
+/**********  CHGVAR     VAR(&START) VALUE(0)                       */            /*CLE134 MD050114*/
+/**********  ENDDO                                                 */           /*CLE134 MD050114*/
+/**********  ENDDO                                                 */            /*CLE134 MD050114*/
 /*                                                                                          CSC020*/
-/*  Determine starting journal sequence number of job.                                      CSC020*/
+/***Determine*starting*journal*sequence*number*of*job.**************/            /*CSC020 MD050114*/
 /*                                                                                          CSC020*/
-             SCRTVJCMP  COMP(&CNAM) CSEQ(&CSEQ) FLAG('S') +
-                          JOB(&CCB009JOB) USER(&CCB009USR) +
-                          NUMBER(&CCB009NBR) SEQ(&FINISH)                                 /*CSC020*/
+/**********  SCRTVJCMP  COMP(&CNAM) CSEQ(&CSEQ) FLAG('S') +        */                   /*MD050114*/
+/**********               JOB(&CCB009JOB) USER(&CCB009USR) +       */                   /*MD050114*/
+/**********               NUMBER(&CCB009NBR) SEQ(&FINISH)          */            /*CSC020 MD050114*/
 /**/                                                                  /*CCB009*/
-/*  Remove journaled changes.                                      */ /*CCB009*/
+/***Remove*journaled*changes.***************************************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
-                          THEN(DO)                                    /*CCB009*/
-             RMVJRNCHG  JRN(ICJRN) FILE((FCLTYFM) (FCLTYFN) +
-                          (LOAMSDK) (MGOREFPD) (MGOMSGPD) +
-                          (CLOANCL) (MGOEXTPD)) FROMENT(&START) +
-                          TOENT(&FINISH)                              /*183583*/
+/**********  IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +*/            /*CCB009 MD050114*/
+/**********               THEN(D)                                  */            /*CCB009 MD050114*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((FCLTYFM) (FCLTYFN) +      */                   /*MD050114*/
+/**********               (LOAMSDK) (MGOREFPD) (MGOMSGPD) +        */                   /*MD050114*/
+/**********               (CLOANCL) (MGOEXTPD)) FROMENT(&START) +  */                   /*MD050114*/
+/**********               TOENT(&FINISH)                           */            /*183583 MD050114*/
 /**********       (CLOANCL)) FROMENT(&START) TOENT(&FINISH) */ /*CCB009 183583*/
-             MONMSG     MSGID(CPF0000 MCH0000)                        /*CCB009*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                     */            /*CCB009 MD050114*/
 /*/COPY WNCPYSRC,LEC0701018                                          */
-             ENDDO                                                    /*CCB009*/
-             IF         COND(&CLE007 *EQ 'Y') THEN(DO)                /*CCB009*/
-             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
-                          THEN(DO)                                    /*CCB009*/
-             RMVJRNCHG  JRN(ICJRN) FILE((LEPXTAA) (LEPXTAB) +
-                          (LEPXTAC)) FROMENT(&START) TOENT(&FINISH) +
-                                                                      /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ELSE       CMD(DO)                                       /*CCB009*/
-             RMVJRNCHG  JRN(JLEC0701) FILE((FCLTYFM) (FCLTYFN) +
-                         (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL) +
-                         (MGOEXTPD))                                  /*183583*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  IF         COND(&CLE007 *EQ 'Y') THEN(DO)             */            /*CCB009 MD050114*/
+/**********  IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +*/                   /*MD050114*/
+/**********               THEN(DO)                                 */            /*CCB009 MD050114*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((LEPXTAA) (LEPXTAB) +      */                   /*MD050114*/
+/**********               (LEPXTAC)) FROMENT(&START) TOENT(&FINISH) + */                /*MD050114*/
+/**********                                                        */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/*********** ENDDO                                                 */            /*CCB009 MD050114*/
+/*********** ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  ELSE       CMD(DO)                                    */            /*CCB009 MD050114*/
+/**********  RMVJRNCHG  JRN(JLEC0701) FILE((FCLTYFM) (FCLTYFN) +   */                   /*MD050114*/
+/**********              (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL) + */                 /*MD050114*/
+/**********              (MGOEXTPD))                               */            /*183583 MD050114*/
 /**********      (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL)) */ /*CCB009 183583*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
-/*/COPY WNCPYSRC,LEC0701019                                          */
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                           /*CCB009 MD050114*/
+/*/COPY*WNCPYSRC,LEC0701019*******************************************/                 /*MD050114*/
                                                                       /*CCB009*/
-             IF         COND(&CLE007 *EQ 'Y') THEN(DO)                /*CCB009*/
-             RMVJRNCHG  JRN(JLEC0701) FILE((LEPXTAA) (LEPXTAB) +
-                          (LEPXTAC))                                  /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
+/**********  IF         COND(&CLE007 *EQ 'Y') THEN(DO)             */            /*CCB009 MD050114*/
+/**********  RMVJRNCHG  JRN(JLEC0701) FILE((LEPXTAA) (LEPXTAB) +   */                   /*MD050114*/
+/**********               (LEPXTAC))                               */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
  
                                                            /* E29371 */
 /************CRTJRNRCV  JRNRCV(&JLIB/TEMPRCV)               */
@@ -347,30 +358,30 @@
 /************CRTJRN     JRN(&JLIB/LETEMPJRN) JRNRCV(LETEMPRCV)*/      /*CCB009*/
  
 /**/                                                                  /*CCB009*/
-/* If Feature CCB009 is NOT 'on' (close of business journaling),   */ /*CCB009*/
+/**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
-             ENDJRNPF   FILE(*ALL) JRN(JLEC0701)                      /*CCB009*/
-             MONMSG MSGID(CPF0000)                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
+/**********  IF         COND(&CCB009 *NE '       ') THEN(DO)       */            /*CCB009 MD050114*/
+/**********  ENDJRNPF   FILE(*ALL) JRN(JLEC0701)                   */            /*CCB009 MD050114*/
+/**********  MONMSG MSGID(CPF0000)                                 */            /*CCB009 MD050114*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             ENDCMTCTL                                                /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCM0000)                /*CCB009*/
+/**********  ENDCMTCTL                                             */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCM0000)             */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-/* If Feature CCB009 is NOT 'on' (close of business journaling),   */ /*CCB009*/
+/**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
-             DLTJRN     JRN(JLEC0701)                                 /*CCB009*/
-             MONMSG     MSGID(CPF0000)                                /*CCB009*/
+/**********  IF         COND(&CCB009 *NE '       ') THEN(DO)       */            /*CCB009 MD050114*/
+/**********  DLTJRN     JRN(JLEC0701)                              */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000)                             */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CHGJOB     INQMSGRPY(*DFT)                               /*CCB009*/
-             DLTJRNRCV  JRNRCV(JRLEC0701)                             /*CCB009*/
-             MONMSG     MSGID(CPF0000)                                /*CCB009*/
-             CHGJOB     INQMSGRPY(*RQD)                               /*CCB009*/
+/**********  CHGJOB     INQMSGRPY(*DFT)                            */            /*CCB009 MD050114*/
+/**********  DLTJRNRCV  JRNRCV(JRLEC0701)                          */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000)                             */            /*CCB009 MD050114*/
+/**********  CHGJOB     INQMSGRPY(*RQD)                            */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CRTJRNRCV  JRNRCV(&JLIB/JRLEC0701)                       /*CCB009*/
+/**********  CRTJRNRCV  JRNRCV(&JLIB/JRLEC0701)                    */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CRTJRN     JRN(&JLIB/JLEC0701) JRNRCV(&JLIB/JRLEC0701)   /*CCB009*/
+/**********  CRTJRN     JRN(&JLIB/JLEC0701) JRNRCV(&JLIB/JRLEC0701)*/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
 /************STRJRNPF   FILE(LOAMSDK FCLTYFM FCLTYFN MGOREFPD +
 /*************            MGOMSGPD MGF100PD MGF210PD MGF202PD +
@@ -382,113 +393,113 @@
 /*************            CLOANCL) JRN(LETEMPJRN) IMAGES(*BOTH) +
 /*************            OMTJRNE(*NONE)                              /*087362*/
                                                           /* E29371 */
-RETRY:                                                                /*087362*/
+/******RETRY:*******************************************************/            /*087362 MD050114*/
 /*********STRJRNPF   FILE(LOAMSDK) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(LOAMSDK) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(LOAMSDK) JRN(JLEC0701) IMAGES(*BOTH) +   */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(FCLTYFM) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(FCLTYFM) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(FCLTYFM) JRN(JLEC0701) IMAGES(*BOTH) +   */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(FCLTYFN) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(FCLTYFN) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(FCLTYFN) JRN(JLEC0701) IMAGES(*BOTH) +   */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(MGOREFPD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(MGOREFPD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(MGOREFPD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(MGOMSGPD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(MGOMSGPD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
-          STRJRNPF   FILE(MGOEXTPD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*183583*/
-             MONMSG     MSGID(CPF7030)                                /*183583*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*183583*/
+/*********STRJRNPF   FILE(MGOMSGPD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
+/*********STRJRNPF   FILE(MGOEXTPD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*183583 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*183583 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*183583 MD050114*/
 /*********STRJRNPF   FILE(MGF100PD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(MGF100PD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(MGF100PD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(MGF202PD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(MGF202PD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(MGF202PD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(MGF210PD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(MGF210PD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
+/*********STRJRNPF   FILE(MGF210PD) JRN(JLEC0701) IMAGES(*BOTH) +  */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
 /*********STRJRNPF   FILE(CLOANCL) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*087362*/ /*CCB009*/
-          STRJRNPF   FILE(CLOANCL) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*087362*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*087362*/
-             IF         COND(&CLE007 *EQ 'Y') THEN(DO)                /*CLE007*/
+/*********STRJRNPF   FILE(CLOANCL) JRN(JLEC0701) IMAGES(*BOTH) +   */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*087362 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*087362 MD050114*/
+/**********  IF         COND(&CLE007 *EQ 'Y') THEN(DO)             */            /*CLE007 MD050114*/
 /*********STRJRNPF   FILE(LEPXTAA) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*CLE007*/ /*CCB009*/
-          STRJRNPF   FILE(LEPXTAA) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*CLE007*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*CLE007*/
+/*********STRJRNPF   FILE(LEPXTAA) JRN(JLEC0701) IMAGES(*BOTH) +                        /*MD050114*/
+/**********               OMTJRNE(*NONE)                                         /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                                           /*CLE007 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))                /*CLE007 MD050114*/
 /*********STRJRNPF   FILE(LEPXTAB) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*CLE007*/ /*CCB009*/
-          STRJRNPF   FILE(LEPXTAB) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*CLE007*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*CLE007*/
+/*********STRJRNPF   FILE(LEPXTAB) JRN(JLEC0701) IMAGES(*BOTH) +                        /*MD050114*/
+/**********               OMTJRNE(*NONE)                                         /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                                           /*CLE007 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))                /*CLE007 MD050114*/
 /*********STRJRNPF   FILE(LEPXTAC) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*CLE007*/ /*CCB009*/
-          STRJRNPF   FILE(LEPXTAC) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*CLE007*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*CLE007*/
+/*********STRJRNPF   FILE(LEPXTAC) JRN(JLEC0701) IMAGES(*BOTH) +   */                   /*MD050114*/
+/**********               OMTJRNE(*NONE)                           */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                             */            /*CLE007 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*CLE007 MD050114*/
 /*********STRJRNPF   FILE(LEFEED) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*127652*/ /*CCB009*/
-          STRJRNPF   FILE(LEFEED) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*127652*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*127652*/
+/*********STRJRNPF   FILE(LEFEED) JRN(JLEC0701) IMAGES(*BOTH) +                         /*MD050114*/
+/**********               OMTJRNE(*NONE)                                         /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                                           /*127652 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))                /*127652 MD050114*/
 /*********STRJRNPF   FILE(LEFEEAD) JRN(LETEMPJRN) IMAGES(*BOTH) +
                           OMTJRNE(*NONE)*****************/ /*127652*/ /*CCB009*/
-          STRJRNPF   FILE(LEFEEAD) JRN(JLEC0701) IMAGES(*BOTH) +
-                          OMTJRNE(*NONE)                              /*CCB009*/
-             MONMSG     MSGID(CPF7030)                                /*127652*/
-             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*127652*/
-             ENDDO                                                    /*127652*/
+/*********STRJRNPF   FILE(LEFEEAD) JRN(JLEC0701) IMAGES(*BOTH) +                        /*MD050114*/
+/**********               OMTJRNE(*NONE)                                         /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF7030)                                           /*127652 MD050114*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))                /*127652 MD050114*/
+/**********  ENDDO                                                               /*127652 MD050114*/
                                                                       /*087362*/
-/*/COPY WNCPYSRC,LEC0701002                                          */
-             GOTO       CMDLBL(BYPASS)                                /*087362*/
+/*/COPY*WNCPYSRC,LEC0701002*****************************************/                   /*MD050114*/
+/**********  GOTO       CMDLBL(BYPASS)                             */            /*087362 MD050114*/
                                                                       /*087362*/
-JRNFAIL:                                                              /*087362*/
-             CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                 /*087362*/
-             IF         COND(&COUNT *LE 3) THEN(DO)                   /*087362*/
-             DLYJOB     DLY(60)                                       /*087362*/
-             GOTO       CMDLBL(RETRY)                                 /*087362*/
-             ENDDO                                                    /*087362*/
-             ELSE       CMD(DO)                                       /*087362*/
-             GOTO       CMDLBL(ERROR)                                 /*087362*/
-             ENDDO                                                    /*087362*/
-             ENDDO                                                    /*CCB009*/
+/*****JRNFAIL:******************************************************/            /*087362 MD050114*/
+/**********  CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)                            /*087362 MD050114*/
+/**********  IF         COND(&COUNT *LE 3) THEN(DO)                              /*087362 MD050114*/
+/**********  DLYJOB     DLY(60)                                                  /*087362 MD050114*/
+/**********  GOTO       CMDLBL(RETRY)                                            /*087362 MD050114*/
+/**********  ENDDO                                                               /*087362 MD050114*/
+/**********  ELSE       CMD(DO)                                                  /*087362 MD050114*/
+/**********  GOTO       CMDLBL(ERROR)                                            /*087362 MD050114*/
+/**********  ENDDO                                                               /*087362 MD050114*/
+/**********  ENDDO                                                               /*CCB009 MD050114*/
 /*/COPY WNCPYSRC,LEC0701014                                          */
-BYPASS:                                                               /*087362*/
+/*****BYPASS:******************************************************/             /*087362 MD050114*/
 /*/COPY WNCPYSRC,LEC0701007                                          */
                                                                       /*087362*/
 /*  Retrieve System Date and Time - required to extract journal       /*E40242*/
@@ -502,9 +513,9 @@ BYPASS:                                                               /*087362*/
                           CMTSCOPE(*JOB)                              /*CPK009*/
              MONMSG     MSGID(CPF0000)
  
-             CHGVAR     VAR(&STAT) VALUE('Y')                         /*CCB009*/
+/**********  CHGVAR     VAR(&STAT) VALUE('Y')                      */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)           /*CCB009*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
@@ -758,22 +769,27 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                           SWS(XXXXXX11))
  
 /**/                                                                  /*CCB009*/
-/* If Feature CCB009 is 'on' (close of business journaling),       */ /*CCB009*/
+/**If*Feature*CCB009*is*'on'*(close*of*business*journaling),********/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CCB009 *EQ '       ') THEN(DO)          /*CCB009*/
+/**********  IF         COND(&CCB009 *EQ '       ') THEN(DO)       */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
 /*  Retrieve attributes of current job.                            */ /*CCB009*/
 /**/                                                                  /*CCB009*/
-             RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
-                          NBR(&CCB009NBR)                             /*CCB009*/
+/**********  RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +         */                   /*MD050114*/
+/**********               NBR(&CCB009NBR)                          */            /*CCB009 MD050114*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                  /*MD050114*/
 /**/                                                                  /*CCB009*/
 /*  Retrieve the most recent journal entry sequence number         */ /*CCB009*/
 /*  for the specific job.                                          */ /*CCB009*/
 /**/                                                                  /*CCB009*/
+/**********  RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) + */                /*MD050114*/
+/**********               TOENT(*FIRST) SEARCH(*DESCEND) +         */                   /*MD050114*/
+/**********               JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +  */                   /*MD050114*/
+/**********               RTNSEQNBR(&START)                        */            /*CCB009 MD050114*/
              RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
                           TOENT(*FIRST) SEARCH(*DESCEND) +
-                          JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
-                          RTNSEQNBR(&START)                           /*CCB009*/
+                          JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                          RTNRCV(&SJRNRCVR)                                             /*MD050114*/
 /**/                                                                  /*CCB009*/
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)               /*CCB009*/
              CHGVAR     VAR(&START) VALUE(0)                          /*CCB009*/
@@ -792,53 +808,67 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /*                                                                                          CSC020*/
 /*  Determine starting journal sequence number of current job.                              CSC020*/
 /*                                                                                          CSC020*/
-             SCRTVJCMP  COMP(&CNAM) CSEQ(&CSEQ) FLAG('S') +
-                          JOB(&CCB009JOB) USER(&CCB009USR) +
-                          NUMBER(&CCB009NBR) SEQ(&FINISH)                                 /*CSC020*/
+/**********  SCRTVJCMP  COMP(&CNAM) CSEQ(&CSEQ) FLAG('S') +        */                   /*MD050114*/
+/**********               JOB(&CCB009JOB) USER(&CCB009USR) +       */                   /*MD050114*/
+/**********               NUMBER(&CCB009NBR) SEQ(&FINISH)          */            /*CSC020 MD050114*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)                                                 /*MD050114*/
 /**/                                                                  /*CCB009*/
 /*  Remove journaled changes.                                      */ /*CCB009*/
 /**/                                                                  /*CCB009*/
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                           THEN(DO)                                    /*CCB009*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((FCLTYFM) (FCLTYFN) +      */                   /*MD050114*/
+/**********               (LOAMSDK) (MGOREFPD) (MGOMSGPD) +        */                   /*MD050114*/
+/**********               (CLOANCL) (MGOEXTPD)) FROMENT(&START) +  */                   /*MD050114*/
+/**********               TOENT(&FINISH)                           */            /*183583 MD050114*/
+/**********       (CLOANCL)) FROMENT(&START) TOENT(&FINISH) */ /*CCB009 183583*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*CCB009 MD050114*/
              RMVJRNCHG  JRN(ICJRN) FILE((FCLTYFM) (FCLTYFN) +
                           (LOAMSDK) (MGOREFPD) (MGOMSGPD) +
-                          (CLOANCL) (MGOEXTPD)) FROMENT(&START) +
-                          TOENT(&FINISH)                              /*183583*/
-/**********       (CLOANCL)) FROMENT(&START) TOENT(&FINISH) */ /*CCB009 183583*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
+                          (CLOANCL) (MGOEXTPD))  +
+                          RCVRNG(&SJRNRCVR &FJRNRCVR)  +
+                          FROMENT(&START) TOENT(&FINISH)                                /*MD050114*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                          /*MD050114*/
+
 /*/COPY WNCPYSRC,LEC0701020                                          */
              ENDDO                                                    /*CCB009*/
              IF         COND(&CLE007 *EQ 'Y') THEN(DO)                /*CCB009*/
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                           THEN(DO)                                    /*CCB009*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((LEPXTAA) (LEPXTAB) +      */                   /*MD050114*/
+/**********               (LEPXTAC)) FROMENT(&START) TOENT(&FINISH)*/            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*CCB009 MD050114*/
              RMVJRNCHG  JRN(ICJRN) FILE((LEPXTAA) (LEPXTAB) +
-                          (LEPXTAC)) FROMENT(&START) TOENT(&FINISH)   /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
+                          (LEPXTAC)) +
+                          RCVRNG(&SJRNRCVR &FJRNRCVR) +
+                          FROMENT(&START) TOENT(&FINISH)                                /*MD050114*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                          /*MD050114*/
              ENDDO                                                    /*CCB009*/
              ENDDO                                                    /*CCB009*/
-             ENDDO                                                    /*CCB009*/
-             ELSE       CMD(DO)                                       /*CCB009*/
-/* Recover message and transaction files */
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
+/**********  ELSE       CMD(DO)                                                  /*CCB009 MD050114*/
+/**Recover*message*and*transaction*files**/                                             /*MD050114*/
                                                           /* E29371 */
 /*           RMVJRNCHG  JRN(TEMPJRN) FILE((FCLTYFM) (FCLTYFN) +
                           (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL)) */
 /************RMVJRNCHG  JRN(LETEMPJRN) FILE((FCLTYFM) (FCLTYFN) +
                         (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL))**/ /*CCB009*/
-             RMVJRNCHG  JRN(JLEC0701) FILE((FCLTYFM) (FCLTYFN) +
-                         (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL) +
-                         (MGOEXTPD))                                  /*183583*/
+/**********  RMVJRNCHG  JRN(JLEC0701) FILE((FCLTYFM/ (FCLTYFN) +   */                   /*MD050114*/
+/**********              (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL) + */                 /*MD050114*/
+/**********              (MGOEXTPD))                               */            /*183583 MD050114*/
 /**********      (LOAMSDK) (MGOREFPD) (MGOMSGPD) (CLOANCL)) */ /*CCB009 183583*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-/*/COPY WNCPYSRC,LEC0701021                                          */
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*MD050114*/
+/*/COPY*WNCPYSRC,LEC0701021*******************************************/                 /*MD050114*/
                                                           /* E29371 */
-             IF         COND(&CLE007 *EQ 'Y') THEN(DO)                /*CLE007*/
+/**********  IF         COND(&CLE007 *EQ 'Y') THEN(DO)             */            /*CLE007 MD050114*/
 /************RMVJRNCHG  JRN(LETEMPJRN) FILE((LEPXTAA) (LEPXTAB) +
                           (LEPXTAC))*********************/ /*CLE007*/ /*CCB009*/
-             RMVJRNCHG  JRN(JLEC0701) FILE((LEPXTAA) (LEPXTAB) +
-                          (LEPXTAC))                                  /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CLE007*/
-             ENDDO                                                    /*CLE007*/
-             ENDDO                                                    /*CCB009*/
+/**********  RMVJRNCHG  JRN(JLEC0701) FILE((LEPXTAA) (LEPXTAB) +                        /*MD050114*/
+/**********               (LEPXTAC))                                             /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                           /*CLE007 MD050114*/
+/**********  ENDDO                                                               /*CLE007 MD050114*/
+/**********  ENDDO                                                               /*CCB009 MD050114*/
 /*/COPY WNCPYSRC,LEC0701009                                          */
  
 END:         ENDCMTCTL
@@ -855,31 +885,31 @@ END:         ENDCMTCTL
  
                                                           /* E29371 */
 /**/                                                                  /*CCB009*/
-/* If Feature CCB009 is NOT 'on' (close of business journaling),   */ /*CCB009*/
+/**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/**********  IF         COND(&CCB009 *NE '       ') THEN(DO)                     /*CCB009 MD050114*/
 /*           ENDJRNPF   FILE(*ALL) JRN(&JLIB/TEMPJRN)      */
 /************ENDJRNPF   FILE(*ALL) JRN(&JLIB/LETEMPJRN)    */         /*CCB009*/
-             ENDJRNPF   FILE(*ALL) JRN(&JLIB/JLEC0701)
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**********  ENDJRNPF   FILE(*ALL) JRN(&JLIB/JLEC0701)             */                   /*MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*MD050114*/
                                                           /* E29371 */
-             ENDDO                                                    /*CCB009*/
+/**********  ENDDO                                                 */            /*CCB009 MD050114*/
              CHGJOB     INQMSGRPY(*DFT)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
                                                           /* E29371 */
 /*           DLTJRN     JRN(&JLIB/TEMPJRN)                 */
 /************DLTJRN     JRN(&JLIB/LETEMPJRN)               */         /*CCB009*/
-             DLTJRN     JRN(&JLIB/JLEC0701)                           /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**********  DLTJRN     JRN(&JLIB/JLEC0701)                        */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*MD050114*/
 /*           DLTJRNRCV  JRNRCV(&JLIB/TEMPRCV)              */
 /************DLTJRNRCV  JRNRCV(&JLIB/LETEMPRCV)            */         /*CCB009*/
-             DLTJRNRCV  JRNRCV(&JLIB/JRLEC0701)                       /*CCB009*/
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**********  DLTJRNRCV  JRNRCV(&JLIB/JRLEC0701)                    */            /*CCB009 MD050114*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*MD050114*/
                                                           /* E29371 */
-                 CHGVAR     VAR(&STAT) VALUE('N')                     /*CCB009*/
+/**********      CHGVAR     VAR(&STAT) VALUE('N')                  */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-                 CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)       /*CCB009*/
+/**********      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)    */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
@@ -890,8 +920,10 @@ END:         ENDCMTCTL
              CHGVAR     VAR(&STEXT) VALUE(' ')                                            /*CSC020*/
              CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
                           *CAT &CSEQA)                                                    /*CSC020*/
-             SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
-                          TEXT(&STEXT)                                                    /*CSC020*/
+/**********  SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +      */                   /*MD050114*/
+/**********               TEXT(&STEXT)                             */            /*CSC020 MD050114*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('E') TEXT(&STEXT)                                        /*MD050114*/
              RETURN                                                                       /*CSC020*/
 /**********  ENDPGM           */                                                          /*CLE134*/
 ENDPGM:      ENDPGM                                                                       /*CLE134*/

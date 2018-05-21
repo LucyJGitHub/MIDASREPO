@@ -109,8 +109,8 @@
 /**/                                                                  /*CCB009*/
 /**Declare*variable*CCB009*-*flag*for*switchable*feature************/            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
-             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
-             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+/**********  DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)            */            /*CCB009 MD050114*/
+/**********  DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)           */            /*CCB009 MD050114*/
 /**/                                                                  /*CCB009*/
 /* Declare job name, user and number for remove journal changes    */ /*CCB009*/
 /**/                                                                  /*CCB009*/

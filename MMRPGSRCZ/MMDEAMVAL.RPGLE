@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. AR806147           Date 21May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -80,6 +81,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR806147 - Pass Deal Number to MMVERLYMDT. (Child: AR806148) *
+      *           - Applied for MD-48300.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1017,6 +1020,7 @@
      C                   PARM                    BJSLCD                                       CDL017
      C                   PARM                    DDEMDt                                       CDL017
      C                   PARM                    IGEMDT                                       CDL017
+     C                   PARM                    DDDLNO                                     AR806147
                                                                                               CDL017
      C     MSG1          IFNE      *BLANK                                                     CDL017
      C                   ADD       1             Idx                                          CDL017

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. AR806147           Date 21May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -85,6 +86,11 @@
       *                 CAP002  *CREATE    Date 22Sep97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
+      *  AR806147 - Value date of any deal amendment must be less     *
+      *             than the Early Maturity date if deal has a live   *
+      *             Early Maturity deal amendment. (Child: AR806148)  *
+      *           - Applied for MD-48300.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -1752,11 +1758,21 @@ E2   C                   ENDDO
      C                   GOTO      CHKKEYEND
      C/COPY WNCPYSRC,MMDEAMIC06
      C                   END
+      *                                                                                     AR806147
+      ** Check for EM deal amendment.                                                       AR806147
+      ** Value date must be =  or < than the early maturity date                            AR806147
+      *                                                                                     AR806147
+     C                   MOVE      DDDLNO        KeyDealNo                                  AR806147
+     C                   MOVE      'EM'          KeyAmdTyp         2                        AR806147
+     C     @DMKY3        CHAIN     MMDEAML3                           65                    AR806147
      C*
      C** Value date must be = or < than maturity date if maturity date
      C** is present
      C     @MDAYN        IFNE      0
      C     @VDYNO        ANDGE     @MDAYN
+     C     HNEMDT        ORNE      0                                                        AR806147
+     C     @VDYNO        ANDGE     HNEMDT                                                   AR806147
+     C     *IN65         ANDEQ     '0'                                                      AR806147
      C                   MOVE      'N'           OKVDAT
      C                   ADD       1             Ix
      C                   MOVEL     'DDVDAT'      FldNameArr(Ix)

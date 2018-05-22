@@ -24,17 +24,29 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR806147A          Date 21May18               *
+      *  Prev Amend No. AR806147           Date 21May18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG3735            Date 20Jul04               *
       *                 CDL017 *Create     Date 03Feb04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR806147A - Add validation so that an EM amendment with value*
+      *              date = early maturity date can be authorised.    *
+      *              (Child: AR806148)                                *
+      *            - Applied for MD-48300.                            *
+      *  AR806147 - Do not allow Early Maturity date to be less than  *
+      *             the Value Date of any existing deal amendment     *
+      *             for that deal or less than the Next Interest      *
+      *             Payment date. Patterned from MMLDNIAMD.           *
+      *             (Child: AR806148)                                 *
+      *            - Applied for MD-48300.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG3735- Allow entry of a deal amendment with early maturity *
@@ -43,6 +55,15 @@
       *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
       *                                                               *
       *****************************************************************
+      ** +--------------------------------------+                                           AR806147
+      ** ¦ F-specs                              ¦                                           AR806147
+      ** ¦ =======                              ¦                                           AR806147
+      ** +--------------------------------------+                                           AR806147
+      *****************************************************************                     AR806147
+      *                                                                                     AR806147
+     FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)                                     AR806147
+      *                                                                                     AR806147
+     FMMLVDMLL  IF   E           K DISK    INFSR(*PSSR)                                     AR806147
  
       *****************************************************************
       ** +--------------------------------------+
@@ -107,6 +128,13 @@
      D RUNDAT          DS
      D  Rundate                8     10P 0
      D  MBIN                  13     13
+                                                                                            AR806147
+      ** Data structure for date in, to change format.                                      AR806147
+     D                 DS                                                                   AR806147
+     D  DateIn2                1      8  0                                                  AR806147
+     D  @@YY                   1      4  0                                                  AR806147
+     D  @@MM                   5      6  0                                                  AR806147
+     D  @@DD                   7      8  0                                                  AR806147
  
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
@@ -175,6 +203,9 @@
       ** Holiday indicator
      D ZIND            S              1A
  
+      ** Deal Amendment Value Date in Midas Dayno. format                                   AR806147
+     D DeamValDat      S              5P 0                                                  AR806147
+      *                                                                                     AR806147
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -262,6 +293,79 @@
      C                   EVAL      ErrorFound = 'Y'
      C                   MOVEL     'MMM0325'     Msgid1
      C                   ENDIF
+      *                                                                                     AR806147
+      ** Check if the Early Maturity date is before the Next                                AR806147
+      ** Interest Payment date - this is an error                                           AR806147
+      *                                                                                     AR806147
+     C                   MOVE      DDDLNO        DealNum           6 0                      AR806147
+     C     DealNum       CHAIN     MMDEALLL                           65                    AR806147
+      *                                                                                     AR806147
+     C     *IN65         IFEQ      '0'                                                      AR806147
+     C     W1EMDate      ANDLE     HKNIPD                                                   AR806147
+     C                   EVAL      ErrorFound = 'Y'                                         AR806147
+     C                   MOVEL     'MMM4010'     Msgid1                                     AR806147
+     C                   ENDIF                                                              AR806147
+      *                                                                                     AR806147
+      ** Access the deal amendments file for the last amendment                             AR806147
+      ** to the deal being processed.                                                       AR806147
+      *                                                                                     AR806147
+     C                   Z-ADD     0             DeamValDat                                 AR806147
+      *                                                                                     AR806147
+      ** Set value for key of file to be greater than value required.                       AR806147
+      *                                                                                     AR806147
+     C     @DEAMK        KLIST                                                              AR806147
+     C                   KFLD                    @DEAMN            6 0                      AR806147
+     C                   KFLD                    @VDYY             4 0                      AR806147
+     C                   KFLD                    @VDMM             2 0                      AR806147
+     C                   KFLD                    @VDDD             2 0                      AR806147
+     C                   KFLD                    @DEAMS            3 0                      AR806147
+      *                                                                                     AR806147
+     C                   MOVE      HKDN38        @DEAMN                                     AR806147
+     C                   MOVE      '9999'        @VDYY                                      AR806147
+     C                   MOVE      '99'          @VDMM                                      AR806147
+     C                   MOVE      '99'          @VDDD                                      AR806147
+     C                   MOVE      '999'         @DEAMS                                     AR806147
+      *                                                                                     AR806147
+     C     @DEAMK        SETGT     MMLVDMLL                                                 AR806147
+      *                                                                                     AR806147
+      ** Read the previous record on file.  (Should be the latest deal                      AR806147
+      ** amendment.)                                                                        AR806147
+      *                                                                                     AR806147
+     C                   READP     MMLVDMLL                               65                AR806147
+     C     *IN65         IFEQ      '0'                                                      AR806147
+     C     HNDA38        ANDEQ     HKDN38                                                   AR806147
+     C                   Z-ADD     HNVDYY        @YEAR                                      AR806147
+     C                   Z-ADD     HNVDMM        @MNTH                                      AR806147
+     C                   Z-ADD     HNVDDD        @DAY                                       AR806147
+      *                                                                                     AR806147
+     C     @DATE         IFEQ      0                                                        AR806147
+     C                   Z-ADD     0             DeamValDat                                 AR806147
+     C                   ELSE                                                               AR806147
+                                                                                            AR806147
+     C                   Z-ADD     @DATE         DateIn2                                    AR806147
+     C                   CALLB     'ZA0770'                                                 AR806147
+     C                   PARM                    RetCodeOut       10                        AR806147
+     C                   PARM                    DateIn2                                    AR806147
+     C                   PARM                    BJDFIN                                     AR806147
+     C                   PARM                    DateOut           6 0                      AR806147
+     C                   MOVE      DateOut       @DAT              6 0                      AR806147
+      *                                                                                     AR806147
+     C                   CALLB     'ZA0270'                                                 AR806147
+     C                   PARM                    @DAT                                       AR806147
+     C                   PARM                    BJDFIN                                     AR806147
+     C                   PARM                    @RTCDE            1                        AR806147
+     C                   PARM                    DeamValDat                                 AR806147
+     C                   ENDIF                                                              AR806147
+     C                   ENDIF                                                              AR806147
+      *                                                                                     AR806147
+      ** If the new maturity date is not later than the value date,                         AR806147
+      ** it is an error.                                                                    AR806147
+      *                                                                                     AR806147
+     C     W1EMDate      IFLE      DeamValDat                                               AR806147
+     C     HNMTYP        ANDNE     'EM'                                                    AR806147A
+     C                   EVAL      ErrorFound = 'Y'                                         AR806147
+     C                   MOVEL     'MMM0136'     Msgid1                                     AR806147
+     C                   ENDIF                                                              AR806147
  
      C                   ENDIF
  
@@ -385,6 +489,7 @@
      C                   PARM                    BJSLCD
      C                   PARM                    DDEMDT
      C                   PARM                    IGEMDT
+     C                   PARM                    DDDLNO            6                        AR806147
  
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT

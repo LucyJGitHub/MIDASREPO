@@ -15,16 +15,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049836           Date 08Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL025  *CREATE    Date 07Nov04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049836 - In multiple settlements screen, F6 will now cause *
+      *             validate to occur; not just ENTER key.            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL025 - FX Netting Payment Generation                       *
@@ -64,24 +67,24 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFX0925DF  CF   E             WORKSTN SFILE(FX0925S1:WkSRRN1)
       ** Splitting  Details Screen
- 
+
      FSDFNMSL0  IF   E           K DISK    INFSR(*PSSR)
       **FX Netting Multiple Settlements File
- 
+
      FFXNETMPD  IF   E           K DISK    INFSR(*PSSR)
       ** DL Confirmed nets master file
- 
+
      FFXNETSPD  UF A E           K DISK    INFSR(*PSSR)
       ** FX Confirmed split nets master file
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -93,44 +96,44 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------
       ** Indicator Array
      D Indicators      DS                  Based(IndicatorP)
@@ -142,29 +145,29 @@
      D  SFleEnd               96     96
      D  SFleClr               97     97
      D  RollUp                98     98
- 
+
       ** Pointer for the indicator Array
      D IndicatorP      S               *   Inz(%Addr(*In))
- 
+
       ** Split Amount work array
      D WSAmt           S              1A   DIM(%Size(#1SAmt)) ASCEND
- 
+
       **---------------------------------------------------------
- 
+
       ** Externally described DS for bank details
      D SDBANK        E DS                  ExtName(SDBANKPD)
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  ExtName(RUNDAT) DtaAra(RUNDAT)
       *
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  ExtName(DSFDY)
- 
+
       ** DSs  for call to SD2420
      D Parm2         E DS                  ExtName(SETLIAB)
      D Parm3         E DS                  ExtName(SETLIAZ)
      D Parm4         E DS                  ExtName(SDSETLPD)
- 
+
       ** Current Selection Fields
      D PParms1       E DS                  ExtName(FXNETMPD)
      D PParms2       E DS                  ExtName(FXNTIPPD)
@@ -184,7 +187,7 @@
      D  PPCy2                         3A
      D  PPC2N                        14A
      D  PNAmt                        20A
- 
+
      D  PCust                              Like(LCust)
      D  PRETP                         1A
      D  PCHIM                         1A
@@ -194,29 +197,29 @@
      D  PMBIN                         1A
      D  PNBDP                         1S 0
      D  PDBUY                        15S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry Parameters Used
- 
+
       ** Parameters
      D PRetCode        S              7A
      D PSeqn           S              4A
      D PDlNo           S              6A
      D PCHGDAT         S              8P 0
- 
+
       ** Index for arrays of error message ids
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
       ** Parameters for ZA0350
      D PMsgFile        S             10A   Inz('DRSMM')
      D PMsgId          S             10A
      D PMsgData        S             45A
- 
+
       ** Parameter used for ZALIGN and ZFRPED
      D ZField          S             15P 0
      D ZFieldA         S             16A
@@ -226,8 +229,8 @@
      D ZOut22          S             22A
      D ZOut25          S             25A
      D ZAlignOk        S              1A
- 
- 
+
+
      D FirstPass       S              1A
      D PageFull        S               N   Inz(*Off)
      D KeyFlag         S              1A
@@ -241,12 +244,12 @@
      D WSeq            S              3A
      D WPage           S              3S 0
      D WLine           S              3S 0
- 
+
      D KNCcy           S                   Like(LCyCd)
      D KCust           S                   Like(LCust)
      D KSeqn           S                   Like(LSeqn)
      D KNetR           S                   Like(AMNETR)
- 
+
      D WLRcdNum        S              5  0
      D WkSRRN1         S              5  0
      D WkCnt           S              5  0
@@ -255,10 +258,10 @@
      D WTotNet         S             15S 2
      D X               S              3S 0
      D Y               S              3S 0
- 
+
      D PRtcd           S              7A
      D POptn           S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -273,7 +276,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set screen Fields from passed parameters
      C                   Eval      #1Actn =  PActn
      C                   Move      PVDat         #1VDat
@@ -293,12 +296,12 @@
      C                   If        PPInd = 'Y'
      C                   Eval      *In31 = *On
      C                   EndIf
- 
+
       ** Build Sub-file
      C                   Exsr      SrBldSfl
      C                   Eval      #1SFRN = 1
      C                   Eval      WRSfl = 'N'
- 
+
       ** Display Screen
      C                   DoW       WScrn = '1'
       * Rebuild Subfile ?
@@ -307,17 +310,17 @@
      C                   Exsr      SrbldSfl
      C                   Eval      WRSfl = 'N'
      C                   EndIf
- 
+
      C                   Exsr      SrDspScn
      C                   EndDo
- 
+
      C                   If        WScrn = 'T'
       ** Return to calling program
      C                   If        PRetCode = *Blanks
      C                   EndIf
      C                   Eval      *InLR = *On
      C                   Return
- 
+
      C                   EndIf
       *****************************************************************
       /EJECT
@@ -327,10 +330,10 @@
       *                                                               *
       *****************************************************************
      C     SrBldSfl      BEGSR
- 
+
       ** If first time in
      C                   If        FirstPass = 'Y'
- 
+
       ** Clear subfile
      C                   Eval      SFleClr = *ON
      C                   Write     FX0925C1
@@ -341,12 +344,12 @@
      C                   Eval      SFleEnd = *OFF
      C                   Eval      WTotNet = *Zeros
      C                   Eval      WSplRec = *Zeros
- 
+
       ** Set file pointer on key displayed on screen.
      C                   Eval      KNetR = PNetR
      C     KNetR         Setll     FXNETSPD
      C                   EndIf
- 
+
       ** Protect fields if enquiry mode
      C                   If        PActn = 'E'
      C                   Eval      *In70 = *On
@@ -355,52 +358,52 @@
      C                   Eval      *In70 = *Off
      C                   Eval      *In71 = *Off
      C                   EndIf
- 
+
       ** Reset Error indicators
      C                   MoveA     '0000'        *In(60)
- 
+
       ** Set on ROLLUP indicator to drive initial loop.
      C                   Eval      RollUp = *ON
- 
+
       ** Initialise count of records written to subfile page.
       ** Initialise subfile relative record number.
      C                   Eval      WkCnt = 0
      C                   Eval      WkSRRN1 = WLRcdNum
- 
+
       ** Read a Valid Transaction
      C     KNetR         ReadE     FXNETSD0
- 
+
       ** Read records from the file into the subfile until a page has
       ** been filled or there are no more records.
       ** Repeat the process until either the end of file, ROLLUP
       ** has not been entered or F3 is input.
- 
+
       ** For each record read, write it to the subfile.
       ** Do this until the subfile page is full.
      C                   DoW       Not %Eof(FXNETSPD)
- 
+
       ** Clear Subfile fields
      C                   Clear                   FX0925S1
      C                   Eval      SFleNxtChg = *Off
- 
+
       ** Increment the subfile record no. and records written fields.
      C                   Eval      WkCnt = WkCnt + 1
      C                   Eval      WkSRRN1 = WkSRRN1 + 1
- 
+
       ** Format transaction fields for output
      C                   Eval      WTotNet = WTotNet + ASDBuy
      C                   Eval      WSplRec = WSplRec + 1
      C                   Exsr      SrFmtDet
      C                   Eval      SFleNxtChg = *On
- 
+
       ** Write details to the subfile.
      C                   Eval      #1SFRN = WkSRRN1
      C                   Write     FX0925S1
- 
+
       ** Read next record in file FXNETSD0
      C     KNetR         ReadE     FXNETSD0
      C                   EndDo
- 
+
       ** Fill remainder with blank records
      C                   If        WkCnt > 0
      C     WkCnt         Div       8             WkScrn
@@ -413,44 +416,44 @@
      C                   Else
      C                   Eval      WkLines = 8
      C                   EndIf
- 
+
      C                   DoW       WkCnt < WkLines
- 
+
       ** Clear Subfile fields
      C                   Clear                   FX0925S1
      C                   Eval      SFleNxtChg = *Off
- 
+
       ** Increment the subfile record no. and records written fields.
      C                   Eval      WkCnt = WkCnt + 1
      C                   Eval      WkSRRN1 = WkSRRN1 + 1
- 
- 
+
+
       * Protect amend Flag
      C                   If        PActn = 'E'
      C                   Eval      *In71 = *On
      C                   EndIf
- 
+
      C                   If        WkSRRN1 = 1
       ** No Records to Display
      C                   Eval      MsgIdArr(1) = 'FXM6000'
      C                   EndIf
- 
+
       ** Write details to the subfile.
      C                   Eval      #1SFRN = WkSRRN1
      C                   Write     FX0925S1
- 
+
      C                   EndDo
- 
+
       ** Set the record pointer to the previous record retrieved, using
       ** READPE if not yet end of file
      C                   Eval      SfleEnd = True
- 
+
       ** Save last relative record number to workfield to be use when rollup
       ** is pressed
      C                   Eval      WLRcdNum = WkSRRN1
      C                   Eval      NoData2Dsp = False
      C                   Eval      *In71 = *Off
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -460,19 +463,19 @@
       *                                                               *
       *****************************************************************
      C     SrDspScn      BEGSR
- 
+
       ** Format 'Differences' and set display
      C                   Eval      WSetErr = *Off
- 
+
      C                   If        WTotNet > 0 and WTotNet <> PDBuy
      C                   Eval      WSetErr = *On
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6009'
      C                   EndIf
- 
+
       ** Send message to subfile if any.
      C                   Exsr      SRSndMsg
- 
+
       ** Write the screen footer to the screen.
       ** Write and Read the subfile control record to the screen to display
       ** and read the subfile.
@@ -480,10 +483,10 @@
      C                   Eval      SflActive = True
      C                   Write     FX0925C2
      C                   Exfmt     FX0925C1
- 
+
       ** Perform message subfile clear and message data clear
      C                   Exsr      SRClrMsg
- 
+
       ** Select processing type
      C                   Select
       ** F3 Pressed
@@ -491,23 +494,31 @@
      C                   Eval      PRetCode = *Blanks
      C                   Eval      PRetCode = '03'
      C                   Eval      WScrn = 'T'
- 
+
       ** F12 Pressed
      C                   When      *INKL = *On
      C                   Eval      PRetCode  = *Blanks
      C                   Eval      PMCMDP  = '  '
      C                   Eval      WScrn = 'T'
- 
+
       ** F6 Pressed (only valid with no settlement errors)
-     C                   When      *INKF = *On and WSetErr = *Off and
+     C**********         When      *INKF = *On and WSetErr = *Off and                       MD049836
+     C                   When      *INKF = *On and                                          MD049836
      C                             PActn <> 'E'
+     C* Validation will be done when F6 is pressed.                                         MD049836
+     C                   Exsr      SRValScn                                                 MD049836
+     C                   If        WError = *Off                                            MD049836
+     C                   Exsr      SRPrcScn                                                 MD049836
+     C                   If        WTotNet = 0 or WTotNet = PDBuy                           MD049836
      C                   Exsr      SrUpdFle
      C                   If        WSetErr = *Off
      C                   Eval      PRetCode  = *Blanks
      C                   Eval      PRetCode = '06'
      C                   Eval      WScrn = 'T'
      C                   EndIf
- 
+     C                   EndIf                                                              MD049836
+     C                   EndIf                                                              MD049836
+
       ** RollUp pressed
      C                   When      RollUp = True
      C                   If        PActn <> 'E'
@@ -519,17 +530,17 @@
      C                   Eval      PageFull = False
      C                   EndIf
      C                   EndIf
- 
+
      C                   Other
      C                   Exsr      SRValScn
- 
+
       ** No Errors process selctions
      C                   If        WError = *Off
      C                   Exsr      SRPrcScn
      C                   EndIf
- 
+
      C                   EndSl
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -539,12 +550,12 @@
       *                                                               *
       *****************************************************************
      C     SRValScn      BEGSR
- 
+
      C                   Eval      WScrn = '1'
      C                   Eval      W1stRec = 'N'
      C                   Eval      WError  = *Off
      C                   Eval      WTotNet  = *Zeros
- 
+
       ** Read subfile
      C                   ReadC     FX0925S1
      C                   DoW       Not %Eof
@@ -571,7 +582,7 @@
      C                   Eval      *In61 = *On
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6001'
- 
+
       * Format for screen display
      C                   Else
      C                   Move      ZFieldA       #PDBUY
@@ -582,12 +593,12 @@
      C                   Parm      'L'           ZECode
      C                   Parm                    ZOut22
      C                   Parm                    ZOut25
- 
+
      C                   Movel     ZOut22        #1SAMT
      C                   Movel     ZOut22        #PSAMT
      C                   EndIf
      C                   EndIf
- 
+
       ** Split Amount must be greater than 0
      C                   If        #PDBuy = *Zeros and #1SAMT <> *Blanks
      C                   Eval      WError  = *On
@@ -595,7 +606,7 @@
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6002'
      C                   EndIf
- 
+
       ** Validate Sequence
      C                   If        #1SEQN  <> *Blanks
       ** Sequence selection request ?
@@ -616,7 +627,7 @@
      C                   Eval      #1SEQN = PSeqn
      C                   EndIf
      C                   EndIf
- 
+
       ** Search not requested
      C                   If        *In99 = *Off
      C                   Eval      ZFieldA = *Blanks
@@ -633,11 +644,11 @@
      C                   Eval      *In62 = *On
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6004'
- 
+
       * Format for screen display
      C                   Else
      C                   Move      ZFieldA       #1SEQN
- 
+
       ** Validate Sequence Number entered
      C                   Eval      KNCcy = #1NCcy
      C                   Eval      KCust = PCust
@@ -652,7 +663,7 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndIf
       ** Validate Amount/Sequence Combination
      C                   If        (#1SAMT = *Blanks and #1SEQN <> *Blanks)
@@ -661,14 +672,14 @@
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6006'
      C                   EndIf
- 
+
      C                   If        (#1SAMT <> *Blanks and #1SEQN = *Blanks)
      C                   Eval      WError  = *On
      C                   Eval      *In62 = *On
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6007'
      C                   EndIf
- 
+
       ** Validate '*'
      C                   If        #1AMND  <> '*' and #1AMND <> ' '
      C                   Eval      WError  = *On
@@ -676,27 +687,27 @@
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM6008'
      C                   EndIf
- 
+
      C                   Eval      SFleNxtChg = *On
      C                   UpDate    FX0925S1
- 
+
       ** Page Full ?
      C     WkSRRN1       Div       8             WPage
      C                   MvR                     WLine
      C                   If        #1SAMT <> *Blanks and Wline = 0
      C                   Eval      PageFull = True
      C                   EndIf
- 
+
      C                   If        #1SAMT = *Blanks and Wline = 0
      C                   Eval      PageFull = False
      C                   EndIf
- 
+
       ** Read subfile
      C                   ReadC     FX0925S1
      C                   EndDo
- 
+
      C                   Eval      SFleNxtChg = *Off
- 
+
      C     EndValS1      ENDSR
       *****************************************************************
       /EJECT
@@ -706,42 +717,42 @@
       *                                                               *
       *****************************************************************
      C     SRPrcScn      BEGSR
- 
+
      C                   Eval      WScrn = '1'
      C                   Eval      W1stRec = 'N'
      C                   Eval      WError  = *Off
- 
+
       ** Read subfile
      C                   ReadC     FX0925S1
      C                   DoW       Not %Eof
- 
+
      C                   Select
       ** Is record to be Added
      C                   When      #1SAMT <> *Blanks and #1SEQN <> *Blanks and
      C                             #DBUY = *Zeros and #PSEQN = *Blanks
      C                   Eval      WSplRec = WSplRec + 1
      C                   Exsr      SRAddRec
- 
+
       ** Is record to be Deleted
      C                   When      #1SAMT = *Blanks and #1SEQN = *Blanks and
      C                             #DBUY <> *Zeros and #PSEQN <> *Blanks
      C                   Eval      WSplRec = WSplRec - 1
      C                   Exsr      SRDelRec
- 
+
       ** Is record to be Changed
      C                   When      #DBUY <> #PDBUY or #1SEQN <> #PSEQN
      C                   Exsr      SRChgRec
- 
+
      C                   Other
      C                   EndSl
- 
+
       ** Validate '*'
      C                   If        #1AMND  = '*'
      C                   Eval      PSeqn = #1SEQN
      C                   Exsr      SRExtSet
      C                   Eval      #1AMND = *Blanks
      C                   EndIf
- 
+
      C                   Eval      WTotNet = WTotNet + #DBuy
      C                   Eval      #PSEQN = #1SEQN
      C                   Eval      SFleNxtChg = *On
@@ -749,7 +760,7 @@
       ** Read subfile
      C                   ReadC     FX0925S1
      C                   EndDo
- 
+
      C     EndPrcS1      ENDSR
       *****************************************************************
       /EJECT
@@ -759,7 +770,7 @@
       *                                                               *
       *****************************************************************
      C     SRAddRec      BEGSR
- 
+
       ** Get existing 'Parent' Details
      C     PNetR         Chain     FXNETMPD
       ** Error if not found
@@ -790,7 +801,7 @@
      C                   Eval      #DBUY  = #PDBUY
      C                   Move      #1SEQN        #PSEQN
      C                   Move      #1SEQN        #SQNO
- 
+
       ** Retrieve settlement Instructions
      C                   Eval      KNCcy = #1NCcy
      C                   Eval      KCust = PCust
@@ -812,7 +823,7 @@
      C                   If        PMBIN = 'Y'
      C                   Eval      #ONOB = LORBR
      C                   EndIf
- 
+
      C                   Move      LRONO         #OURN
       *  Receive Ordering Bank
      C                   Move      LROBN         #OBNK
@@ -822,7 +833,7 @@
      C                   Eval      #IBNK = LRIBN
      C                   Eval      #IBNA = LRIBL
      C                   Eval      #CVMR = *Blanks
- 
+
       **  Treat Pay instructions
      C                   Else
      C                   Move      LPSTY         #SETM
@@ -833,7 +844,7 @@
      C                   Move      LPOBN         #OBNK
       **  Pay Ordering Customer
      C                   Move      LPOCS         #ORDC
- 
+
      C                   Eval      #CVMR = LCVMR
      C                   Eval      #IBNK = LPIBN
      C                   Eval      #IBNA = LPIBA
@@ -846,14 +857,14 @@
       **  Beneficiary
      C                   Eval      #BENN = LBYNB
      C                   Eval      #BENA = LBACL
- 
+
      C                   Eval      #DTP1 = LDPY1
      C                   Eval      #DTP2 = LDPY2
      C                   Eval      #DTP3 = LDPY3
      C                   Eval      #DTP4 = LDPY4
- 
+
      C                   Eval      #DCHG = LDECG
- 
+
      C                   Eval      #BTB1 = LBBI1
      C                   Eval      #BTB2 = LBBI2
      C                   Eval      #BTB3 = LBBI3
@@ -861,10 +872,10 @@
      C                   Eval      #BTB5 = LBBI5
      C                   Eval      #BTB6 = LBBI6
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
- 
+
      C     EndAddS1      ENDSR
       *****************************************************************
       /EJECT
@@ -874,19 +885,19 @@
       *                                                               *
       *****************************************************************
      C     SRChgRec      BEGSR
- 
+
       * If Sequence changed get new instructions
      C                   Select
       * Change in sequence
      C                   When      #1SEQN <> #PSEQN
      C                   Exsr      SRAddRec
- 
+
       * Change in Amount
      C                   When      #PDBUY <> #DBUY
      C                   Eval      #DBUY = #PDBUY
- 
+
      C                   EndSl
- 
+
      C     EndChgS1      ENDSR
       *****************************************************************
       /EJECT
@@ -896,10 +907,10 @@
       *                                                               *
       *****************************************************************
      C     SRDelRec      BEGSR
- 
+
       ** Clear Subfile fields
      C                   Clear                   FX0925S1
- 
+
      C     EndDelS1      ENDSR
       *****************************************************************
       /EJECT
@@ -909,7 +920,7 @@
       *                                                               *
       *****************************************************************
      C     SRClrMsg      BEGSR
- 
+
      C                   Clear                   MsgIdArr
      C                   Clear                   MsgDtaArr
      C                   Clear                   FldNameArr
@@ -918,13 +929,13 @@
      C                   Clear                   WFldNamArr
      C                   Eval      Idx = 0
      C                   Eval      WIdx = 0
- 
+
       ** Clear message subfile.
      C                   Call      'ZA0250'
- 
+
       ** Reset error indicators
      C                   MoveA     '0'           *IN(31)
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -936,7 +947,7 @@
       *                                                               *
       *****************************************************************
      C     SrFmtDet      BEGSR
- 
+
       ** Netting settlement details
      C                   If        ASBSIN = 'S'
      C                   Eval      Zfield = 0 - ASDBUY
@@ -950,10 +961,10 @@
      C                   Parm      'L'           ZECode
      C                   Parm                    ZOut22
      C                   Parm                    ZOut25
- 
+
      C                   Movel     ZOut22        #1SAMT
      C                   Movel     ZOut22        #PSAMT
- 
+
      C                   Move      ASSQNO        #1SEQN
      C                   Move      ASSQNO        #PSEQN
      C                   Eval      #PDBUY = ASDBUY
@@ -1001,7 +1012,7 @@
      C                   Eval      #BTB4  = ASBTB4
      C                   Eval      #BTB5  = ASBTB5
      C                   Eval      #BTB6  = ASBTB6
- 
+
      C                   ENDSR
       ******************************************************************
       /EJECT
@@ -1011,7 +1022,7 @@
       *                                                               *
       *****************************************************************
      C     SRExtSet      BEGSR
- 
+
      C                   Clear                   Parm2
      C                   Clear                   Parm3
      C                   Clear                   Parm4
@@ -1022,7 +1033,7 @@
      C                   Eval      PMCHIM = PCHIM
      C                   Eval      PMRETS = PRETS
      C                   Move      PPCYA         PMPCYA
- 
+
       *  Treat Receive Instructions
      C                   If        #BSIN = 'B'
      C                   Eval      PMPRCV = 'N'
@@ -1033,7 +1044,7 @@
      C                   Eval      PMROBR = #ONOB
      C                   EndIf
      C                   Eval      PMRONS = #OURN
- 
+
       *  Receive Ordering Bank
      C                   Movel     #OBNK         PMROBN
      C                   Movel     #OBNK         PAROBN
@@ -1055,7 +1066,7 @@
      C                   Eval      PMPOBR = #ONOB
      C                   EndIf
      C                   Eval      PMPONS = #OURN
- 
+
       *  Pay Ordering Bank
      C                   Movel     #OBNK         PMPOBN
      C                   Movel     #OBNK         PAPOBN
@@ -1087,7 +1098,7 @@
      C                   Eval      PMDTP4 = #DTP4
       *
      C                   Eval      PMDCHG = #DCHG
- 
+
      C                   Eval      PMBTB1 = #BTB1
      C                   Eval      PMBTB2 = #BTB2
      C                   Eval      PMBTB3 = #BTB3
@@ -1095,7 +1106,7 @@
      C                   Eval      PMBTB5 = #BTB5
      C                   Eval      PMBTB6 = #BTB6
      C                   EndIf
- 
+
      C                   Eval      PMDTRC = #VALD
      C                   Eval      PMDTPY = #VALD
      C                   Eval      PMRCCY = #CCYD
@@ -1137,7 +1148,7 @@
      C                   If        #SETM = 05 and PMBIN = 'Y'
      C                   Eval      #ONOB = PMROBR
      C                   EndIf
- 
+
      C                   Eval      #OURN = PMRONS
      C                   Movel     PMROBN        #OBNK
      C                   Movel     PAROBN        #OBNK
@@ -1146,13 +1157,13 @@
      C                   Movel     PMRIBN        #IBNK
      C                   Movel     PARIBN        #IBNK
      C                   Eval      #IBNA = PMRIBA
- 
+
      C                   Else
      C                   Eval      #SETM = PMPSTM
      C                   If        #SETM = 05 and PMBIN = 'Y'
      C                   Eval      #ONOB = PMPOBR
      C                   EndIf
- 
+
      C                   Eval      #OURN = PMPONS
      C                   Movel     PMPOBN        #OBNK
      C                   Movel     PAPOBN        #OBNK
@@ -1183,24 +1194,24 @@
      C                   Eval      #BTB5 = PMBTB5
      C                   Eval      #BTB6 = PMBTB6
      C                   EndIf
- 
+
      C                   Eval      #CCYD = PMRCCY
      C                   Eval      #CCYD = PMPCCY
      C                   Eval      #BRCA = PMBRCA
      C                   Eval      #CVMR = PMCVMR
- 
+
      C                   If        PMErCd <> *Blanks
      C                   Eval      #SErr = 'Y'
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM1041'
- 
+
      C                   Else
      C                   Eval      #SErr = ' '
      C                   Eval      Idx = Idx + 1
      C                   Eval      MsgIdArr(Idx) = 'FXM5001'
      C                   EndIf
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1211,7 +1222,7 @@
       *                                                               *
       *****************************************************************
      C     SrUpdFle      BEGSR
- 
+
       ** Check all records valid
      C                   ReadC     FX0925S1
      C                   DoW       Not %Eof
@@ -1225,24 +1236,24 @@
      C                   UpDate    FX0925S1
      C                   Leave
      C                   EndIf
- 
+
      C                   Eval      SFleNxtChg = *On
      C                   UpDate    FX0925S1
- 
+
      C                   ReadC     FX0925S1
      C                   EndDo
- 
+
      C                   If        WSetErr = *Off
       ** Delete previous instructions
      C     KNetR         Delete    FXNETSPD
      C                   Dow       %Found
      C     KNetR         Delete    FXNETSPD
      C                   EndDo
- 
+
       ** Read subfile
      C                   ReadC     FX0925S1
      C                   DoW       Not %Eof
- 
+
      C                   If        #1SAMT <> *Blanks
      C                   Eval      ASNETR = #NETR
      C                   Eval      ASNTNO = #NTNO
@@ -1288,7 +1299,7 @@
      C                   Eval      ASBTB4 = #BTB4
      C                   Eval      ASBTB5 = #BTB5
      C                   Eval      ASBTB6 = #BTB6
- 
+
      C                   Movel     PChgDat       ASDTCH
      C                   Time                    ASCHTI
      C                   Eval      ASCHTY = 'A'
@@ -1297,12 +1308,12 @@
       ** Write Record
      C                   Write     FXNETSD0
      C                   EndIf
- 
+
      C                   ReadC     FX0925S1
      C                   EndDo
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1312,7 +1323,7 @@
       *                                                               *
       *****************************************************************
      C     SRSndMsg      BEGSR
- 
+
       ** Send message to subfile
      C                   Eval      Idx = 1
      C                   DoW       MsgIdArr(Idx) <> *Blanks
@@ -1322,7 +1333,7 @@
      C                   Parm      *Blanks       PMsgData
      C                   Eval      Idx = Idx + 1
      C                   EndDo
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1332,31 +1343,31 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Entry Parameters
      C     *ENTRY        PList
      C                   Parm                    PRetCode                       Return Code
      C                   Parm                    PParms3                    0138
      C                   Parm                    PChgDat                    0138
- 
+
       ** Key List for SDFNMSL0
      C     KSDFNMS       KList
      C                   Kfld                    KNCcy                          Currency Code
      C                   Kfld                    KCust                          Customer Code
      C                   Kfld                    KSeqn                          Customer Code
- 
+
       ** Key List for FXNETSPD
      C     KFXNETS       KList
      C                   Kfld                    KNetR                          Currency Code
      C                   Kfld                    KSeqn                          Customer Code
- 
+
       ** Standing Data:
       ** Access bank details.
      C                   Call      'AOBANKR0'
      C                   Parm      *BLANKS       PRtcd
      C                   Parm      '*FIRST '     POptn
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
       ** Database error
      C                   If        PRtcd <> *BLANK
      C     *Lock         In        LDA
@@ -1366,20 +1377,20 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Initialize program name
      C                   Eval      DBPGM = 'FX0925'
- 
+
       ** Move workstation ID to screen field.
      C                   Eval      #1WID = PsJobName
      C                   Eval      #1USER = PsUser
- 
+
      C                   Eval      *IN94 = *ON
      C                   Eval      #2PGMQ = '*'
- 
+
      C                   Eval      FirstPass = 'Y'
      C                   Eval      WScrn = '1'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1394,22 +1405,22 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   Dump
- 
+
      C                   Eval      *INU7 = *ON
      C                   Eval      *INU8 = *ON
      C                   Eval      *INLR = *ON
- 
+
      C                   If        RunBefore <> 'Y'
      C                   Eval      RunBefore = 'Y'
- 
+
       ** Load RUNDAT
      C                   In        RUNDAT
- 
+
       ** Load the APDUMP fields
      C     *Lock         In        APDUMP                               99
- 
+
       ** If there is an error in reading the APDUMP data area, it
       ** probably doesn't exist, so call the procedure which creates it
       ** and try again.
@@ -1417,19 +1428,19 @@
      C                   Clear                   PSSRRetCde
      C                   Call      'APCCRTQTO'
      C                   Parm                    PSSRRetCde       10
- 
+
      C     *Lock         In        APDUMP
      C                   EndIF
- 
+
      C                   Eval      ARErrMod = PSProcMod
      C                   Out       APDUMP
      C                   Call      'DBERRCTL'
      C                   EndIf
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2004

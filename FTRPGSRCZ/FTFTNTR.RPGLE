@@ -83,7 +83,7 @@
      D AuthData      E DS                  EXTNAME(FTNAUTPD)                                 CFT163
      D                                     PREFIX(N)                                         CFT163
       ** FTNT Authorisation                                                                  CFT163
-
+                                                                                             CFT163
       **-----------------------------------------------------------------------
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036821           Date 15Dec15               *
+      *  Last Amend No. MD049636           Date 13Mar18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036821           Date 15Dec15               *
       *                 MD035869           Date 24Nov15               *
       *                 MD026243           Date 19Aug14               *
       *                 MD024430           Date 20Jan14               *
@@ -45,6 +46,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD049636 - New Narrative codes in 1-50 interval              *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD036821 - Filter in the Narrative Codes Maintenance is      *
       *             misaligned (Recompile)                            *
@@ -110,6 +112,8 @@
      F                                              KCOMIT                                    CSD031
      FGPNARRL1IF  E           K        DISK                                                   CSD031
      F            SDNARRD0                          KRENAMESDNARD3                            CSD031
+     FACKEYL4 IF  E           K        DISK                                                 MD049636
+     FSEACKL2 IF  E           K        DISK                                                 MD049636
      E* Description     : Copyright notice for inclusion in all programs
      E*
      E********************************************************************
@@ -713,12 +717,12 @@
      C           WUSUC     IFEQ 'Y'                        *IF
       * CASE: PGM.*Program mode is *CHANGE
      C           W0PMD     IFEQ 'CHG'                      *IF
-      * CASE: RCD.Narrative Code is between 1 & 50
-     C           #1NVCD    IFGE '01'                       *IF
-     C           #1NVCD    ANDLE'50'
+      **CASE:*RCD.Narrative*Code*is*between*1*&*50                                          MD049636
+     C********** #1NVCD    IFGE '01'                       *IF                              MD049636
+     C********** #1NVCD    ANDLE'50'                                                        MD049636
      C                     MOVEL'N'       WUDELA           Deletion Allowe
      C                     MOVEL'N'       WUAMAL           Amend allowed
-     C                     END                             *FI
+     C**********           END                             *FI                              MD049636
       * 00/Copy member SD0080MC01 - Narrative Codes  *
      C/COPY WNCPYSRC,SD0080MC01
      C                     END                             *FI
@@ -1135,11 +1139,30 @@ RFM  C**********           ENDIF                                                
       *                                                                                       CSD031
      C                     ENDIF                                                              CSD031
       *                                                                                       CSD031
+      *                                                                                     MD049636
+      ** If delete request and set up complete is OFF                                       MD049636
+      ** validate all narrative code                                                        MD049636
+     C           WUSUC     IFEQ 'N'                                                         MD049636
+     C           #1SEL     IFEQ 'D'                                                         MD049636
+     C           #1NVCD    CHAINACKEYL4              90                                     MD049636
+     C           #1NVCD    CHAINSEACKL2              91                                     MD049636
+     C           *IN90     IFEQ '0'                                                         MD049636
+     C           *IN91     OREQ '0'                                                         MD049636
+     C                     MOVEL'ASM0165' ZAMSID                                            MD049636
+     C                     EXSR ZASNMS                                                      MD049636
+     C                     MOVE *ON       *IN98                                             MD049636
+     C                     MOVE *ON       *IN32                                             MD049636
+     C                     GOTO SKIP1                                                       MD049636
+     C                     ENDIF                                                            MD049636
+     C                     ENDIF                                                            MD049636
+     C                     ENDIF                                                            MD049636
+      *                                                                                     MD049636
       * If delete request, bypass validation
      C           #1SEL     IFEQ 'D'
      C           CSD044    ANDEQ'N'                                                           CSD031
      C                     GOTO DCEXIT
      C                     END
+     C           SKIP1     TAG                                                              MD049636
       * Validate subfile record
      C                     EXSR DEV1RC
       * If SFLRCD invalid, note the fact

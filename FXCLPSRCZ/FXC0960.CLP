@@ -235,14 +235,14 @@
 /* Call CB0150 to update restart indicator */
 
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
-/* Set U1 to 1 for actual posting in FX0960                                               MD048795*/
+/* Set U1 to 1 for actual posting in FX0960 */                                          /*MD048795*/
              CHGJOB     SWS(1XXXXXXX)                                                   /*MD048795*/
              CALL       PGM(FX0960)
 
 /* Successful completion - delete journal & receiver   */
 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
-/* Set U1 back to 0 if no errors occurred                                                 MD048795*/
+/* Set U1 back to 0 if no errors occurred */                                            /*MD048795*/
                 CHGJOB     SWS(0XXXXXXX)                                                /*MD048795*/
 /* Call CB0150 to update restart indicator */
 

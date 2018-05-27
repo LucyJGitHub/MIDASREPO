@@ -621,18 +621,24 @@
 
       * When CFT163 enhancement is installed                                                  CFT163
      C                   IF        CFT163 = 'Y'                                               CFT163
-                                                                                              CFT163
+      *                                                                                       CFT163
      C     NAUP1         IFNE      *BLANKS                                                    CFT163
      C                   MOVE      NAUP1         NVAUP1                                       CFT163
      C                   MOVE      NAUP2         NVAUP2                                       CFT163
+      *                                                                                       CFT163
+     C     NVAUP2        IFNE      *BLANKS                                                    CFT163
+     C                   EVAL      NVAUIN = 'Y'                                               CFT163
+     C                   ENDIF                                                                CFT163
+      *                                                                                       CFT163
      C                   ELSE                                                                 CFT163
      C                   MOVE      NAUP2         NVAUP1                                       CFT163
      C                   MOVE      *BLANKS       NVAUP2                                       CFT163
-     C                   ENDIF                                                                CFT163
-                                                                                              CFT163
+      *                                                                                       CFT163
       * (4-eyes) If NVAUP1 is not blank, change NVAUIN to Y.                                  CFT163
      C     NVAUP1        IFNE      *BLANKS                                                    CFT163
      C                   EVAL      NVAUIN = 'Y'                                               CFT163
+     C                   ENDIF                                                                CFT163
+      *                                                                                       CFT163
      C                   ENDIF                                                                CFT163
                                                                                               CFT163
      C                   ENDIF                                                                CFT163

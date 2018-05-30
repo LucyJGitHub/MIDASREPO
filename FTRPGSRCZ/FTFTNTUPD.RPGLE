@@ -839,18 +839,6 @@
      C                   EVAL      CHTP = CHCHTP
      C                   ENDIF
 
-      ** When CFT163 Enhancement is installed                                                 CFT163
-      * Reset of field AUP1 only if CFT163 and A_NVAUIN not equal to 'Y'                      CFT163
-      *                                                                                       CFT163
-     C     CFT163        IFNE      'Y'                                                        CFT163
-     C     A_NVAUIN      ANDNE     'Y'                                                        CFT163
-      *                                                                                       CFT163
-      ** Reset authorizing profile                                                            CFT163
-      *                                                                                       CFT163
-     C                   MOVE      *Blanks       AUP1                                         CFT163
-                                                                                              CFT163
-     C                   ENDIF                                                                CFT163
-                                                                                              CFT163
       ** Call watch list checking engine program
      C                   IF        WATCH = 'Y'
      C                   EXSR      SRWTCH
@@ -871,6 +859,19 @@
      C                   EVAL      NtranDS6 = ValidDS6                                      MD034756
      C                   Z-ADD     A_NVSWSN      SWSN                                       MD034756
      C                   EVAL      NtranDS7 = ValidDS7                                      MD034756
+      *                                                                                       CFT163
+      ** When CFT163 Enhancement is installed                                                 CFT163
+      * Reset of field AUP1 only if CFT163 and A_NVAUIN not equal to 'Y'                      CFT163
+      *                                                                                       CFT163
+     C     CFT163        IFNE      'Y'                                                        CFT163
+     C     A_NVAUIN      ANDNE     'Y'                                                        CFT163
+      *                                                                                       CFT163
+      ** Reset authorizing profile                                                            CFT163
+      *                                                                                       CFT163
+     C                   MOVE      *Blanks       AUP1                                         CFT163
+                                                                                              CFT163
+     C                   ENDIF                                                                CFT163
+                                                                                              CFT163
      C                   UPDATE    NTRANDDF
 
       ** Process shadow post

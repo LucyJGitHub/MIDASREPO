@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. MD050870           Date 31May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050870 - Blank Profit Center doesn't default when amending *
+      *             an FXDL transaction when CLE051 is switched Off   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  MD000091 - Event Codes Substitution                          *
@@ -94,12 +97,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FPMPORTPD  IF   E           K DISK    INFSR(*PSSR)
      FSDCGRPL2  IF   E           K DISK    INFSR(*PSSR)
      FSDCPTTL1  IF   E           K DISK    INFSR(*PSSR)
      F/COPY WNCPYSRC,FXH00104
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -118,60 +121,60 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of transaction types
      D @TT             S              2    DIM(40)
- 
- 
+
+
      D*RelDealDts      DS           100                                                       248269
      D RelDealDts      DS           113                                                       248269
       ** Related Deal Details (when deal is option takedown or swap.
@@ -179,26 +182,26 @@
      D**RelDCNO*              40     45  0                                                    CSD027
      D  RelDCNO               40     45A                                                      CSD027
      D  RelDCSN               46     55
- 
+
                                                                                 CAP050
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP050
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP050
- 
+
       ** External data structure for customer details file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for pm customer details file
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
- 
+
       ** External data structure for book codes file
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
- 
+
       ** External data structure for profit centre details file
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                 CPB001
@@ -211,7 +214,7 @@
                                                                                               CTI004
      D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                  CTI004
       **  TI ICD FIle                                                                         CTI004
- 
+
      D I@PARM          DS           256
      D  I#PORS                 1      1
      D  I#R997                 2      5
@@ -220,31 +223,31 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
- 
+
      D O@PARM          DS           256
      D  O#BOOK                 1      2
      D  O#PTFR                 3      6
      D  O#BICN                 7     12
      D  O#CRNM                13     22
      D  O#ACOF                23     24
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Customer number
      D*F3DCNO***       S              6S 0                                                    CSD027
      D F3DCNO          S              6A                                                      CSD027
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -264,16 +267,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       * CUSTV - CUSTOMER VALIDATION
       *
@@ -437,12 +440,12 @@
       *
      C     CDL002        IFEQ      'Y'
      C     DDCustOK      ANDEQ     'Y'
- 
+
      C/COPY WNCPYSRC,FXH00201
      C     DDNBUY        IFEQ      'Y'
      C     DDNSEL        OREQ      'Y'
      C/COPY WNCPYSRC,FXH00105
- 
+
       ** If part of Netting Group check Netting group is on file.
      C     BBNTGP        IFNE      *BLANK
      C     @NGKEY        KLIST
@@ -490,7 +493,7 @@
      C                   MOVEL     'DDCUST'      FldNamXAr(Idx)
      C                   MOVEL     'FXM5011'     MsgIdXAr(Idx)
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,FXH00106
      C                   ENDIF
      C                   ENDIF
@@ -844,7 +847,10 @@
       *
      C     DDACTN        IFEQ      'I'
      C     DDPRFC        ANDEQ     *BLANKS
-     C     BKPCDU        ANDEQ     'Y'
+     C     DDACTN        OREQ      'A'                                                      MD050870
+     C     DDPRFC        ANDEQ     *BLANKS                                                  MD050870
+     C*****BKPCDU        ANDEQ     'Y'                                                      MD050870
+     C     BKPCDU        IFEQ      'Y'                                                      MD050870
      C     DDCustOK      ANDEQ     'Y'                                                        179732
      C                   MOVE      *BLANKS       TRTP                           184685
      C                   MOVEL     DDDLTP        TRTP              5
@@ -893,6 +899,7 @@
      C                   MOVEL     'FXM4001'     MsgIdXAr(Idx)
      C                   END
      C                   END                                                    DDACTN IFEQ 'I'
+     C                   ENDIF                                                              MD050870
       *                                                                                       CTI004
       ** If FX generated from TI, take Profit Centre from TI ICD.                             CTI004
       *                                                                                       CTI004
@@ -937,7 +944,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -1073,9 +1080,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

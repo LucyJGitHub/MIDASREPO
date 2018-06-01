@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD051164           Date 01Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051164 - Profit Centre Defaulting should also happen       *
+      *             during amendment.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -226,11 +229,17 @@
       *
       ** If the profit centre field is blank set to a default only if
       ** the Profit Centre Defaults Used flag is set to 'Y'.
-      ** This could only happen on an Insert.
+      ***This could only happen on an Insert.***********************************************MD051164
+      ** This could happen on Insert or Amend                                               MD051164
       *
-     C                   IF        DDACTN = 'I' and
+   	 C**********         IF        DDACTN = 'I' and                                         MD051164
+     C                   IF        (DDACTN = 'I' and                                        MD051164
      C                             DDPRFC = *Blanks and
-     C                             BKPCDU = 'Y'
+     C**********                   BKPCDU = 'Y'                                             MD051164
+     C                             BKPCDU = 'Y')  OR                                        MD051164
+     C                             (DDACTN = 'A' and                                        MD051164
+     C                             DDPRFC = *Blanks and                                     MD051164
+     C                             BKPCDU = 'Y')                                            MD051164
       *
       ** Determine parameters to be passed
       *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP208             Date 06Dec10               *
+      *  Last Amend No. MD050863           Date 05Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050863 - Validation of CAC003 on profit center is set to   *
+      *             'not equal to Y' instead of 'equal to N'          *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP208 - F&O Market Instrument API (Recompile)               *
       *  243913 - Fix for BUG10345 did not take in account Private    *
@@ -74,18 +77,18 @@
       *  CAP004 - APIs Phase 3.                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Field names/numbers table
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FFEXTRV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -97,19 +100,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -117,44 +120,44 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for FF-specific
       ** variables.
      D/COPY FFCPYSRC,DECLAREVAR
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--- Named indicators -------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Map variable names to indicators to allow use of names instead ¦
@@ -171,65 +174,65 @@
      D pIndicator      S               *   INZ(%Addr(*In))
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      D TranIn        E DS                  EXTNAME(FFEXTRPD)
       ** Incoming transaction structure
- 
+
      D ValidTran     E DS                  EXTNAME(FFVTRANPD)
       ** Valid transaction layout
- 
+
      D OKFlagsDS     E DS                  EXTNAME(FFEEXTRPD)
       ** The OK flags for the transaction
- 
+
      D InstTypes     E DS                  EXTNAME(INTYPD) PREFIX(IT)
       ** Instrument types
- 
+
      D MarketCont    E DS                  EXTNAME(MKCTLD) PREFIX(MC)
       ** Market control details (MC=Market Control)
- 
+
      D MarketDet     E DS                  EXTNAME(MARKT) PREFIX(MK)
       ** Market details DS (MK=MarKet)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details ICD
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Branch Details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** Deakub ICD (needed for decimal separator field)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD) PREFIX(T)                        CFF007
       ** Customer Details                                                                     CFF007
                                                                                               CFF007
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  #ACCD1       E                     EXTFLD(QQACCD)                                     CGL029
       ** General Ledger ICD
- 
+
      D CustomerDS    E DS                  EXTNAME(SDCUSTPD)
      D  #DFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** Customer record format
- 
- 
+
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short data structure for Access Programs
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CFF007
       ** Very Long data structure for Access Programs                                         CFF007
                                                                                               CFF007
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** Portfolio Management ICD
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Midas modules flags
- 
+
      D SDFODA        E DS                  EXTNAME(SDFODAPD)
      D  #ACCD2       E                     EXTFLD(QQACCD)                                     CGL029
       ** Futures and Options ICD
- 
+
      D ZMUSER        E DS            17    DTAARA(ZMUSER) EXTNAME(ZMUSER)
       ** ZMUSER data area layout
- 
+
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(FFETEXPD)                    CAP004
       * FF Extension data (Exchange Traded) - File (D/B) format                 CAP004
@@ -243,43 +246,43 @@
                                                                                               CSC011
       ** Data structure for data area SDSTAT                                                  CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** 13,0S and 1,0S field for passing to FFVSTRKPR
      D Zero13S         S             13S 0 INZ(0)
      D Zero1S          S              1S 0 INZ(0)
- 
+
       ** The current trading date
      D CTDATE          S                   LIKE(BJRDNB)
- 
+
       ** The start of the historical data period
      D STHDP           S                   LIKE(BJRDNB)
- 
+
       ** Flag to indicate that no broker was entered (so customer is
       ** mandatory)
      D NoBroker        S              1A
- 
+
       ** Transaction type and subtype: dummy fields for passing to
       ** profit center validation.
      D Type2A          S              2A
      D SubType         S              2A
- 
+
       ** Generic OK flag
      D GenOKFlag       S              1A   INZ('Y')
- 
+
       ** General-purpose array index
      D GI              S              3P 0 INZ(1)
- 
+
       ** Error array index
      D Idx             S              3P 0
- 
+
       ** Response mode
      D RespMode        S              1A
- 
+
       ** CFF007 enhancement                                                                   CFF007
      D CFF007          S              1A                                                      CFF007
                                                                                               CFF007
@@ -287,7 +290,7 @@
      D PPBBFLG         S              1A                                                      CFF007
       ** PB customer indicator - customer                                                     CFF007
      D PPBCFLG         S              1A                                                      CFF007
- 
+
      D PRTCD           S              7                                                       CFF007
      D POPTN           S              7                                                       CFF007
      D PKEY1           S             10                                                       CFF007
@@ -306,22 +309,22 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FFEXTRV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -332,25 +335,25 @@
       ** Get default branch from ZMUSER                                                      BUG6979
      C                   IN        ZMUSER                                                    BUG6979
      C                   UNLOCK    ZMUSER                                                    BUG6979
- 
+
       ** Reset the fields specific to the VAL function
       ** ---------------------------------------------
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   MsgIDArr
      C                   CLEAR                   MsgDtaArr
- 
+
       /COPY WNCPYSRC,FFEXTRV003
- 
+
       ** Call Validation Modules in Sequence
       ** -----------------------------------
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Purchase or sale flag                    |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVPSALIN'
       ** Outputs from called procedure
       ** -----------------------------
@@ -362,29 +365,29 @@
      C                   PARM                    MsgIDXArr
       ** Error message data array
      C                   PARM                    MsgDtaXArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Purchase or sale indicator (1A, from transaction)
      C                   PARM                    STRTY
- 
+
       /COPY WNCPYSRC,FFEXTRV004
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKTRTY = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV005
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Number of contracts                      |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVNOCONT'
       ** Outputs from called procedure
       ** -----------------------------
@@ -396,29 +399,29 @@
      C                   PARM                    MsgIDXArr
       ** Error message data array
      C                   PARM                    MsgDtaXArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Number of contracts (5A, from transaction)
      C                   PARM                    SNUCO
- 
+
       /COPY WNCPYSRC,FFEXTRV006
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKNUCO = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV007
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Market                                   |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVMARKET'
       ** Outputs from called procedure
       ** -----------------------------
@@ -434,20 +437,20 @@
      C                   PARM                    MarketCont
       ** Market centre details (data structure)
      C                   PARM                    MarketDet
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Market centre (2A, from transaction)
      C                   PARM                    SMRKT
       ** Action code (1A, from transaction)
      C                   PARM                    SACTN
- 
+
       /COPY WNCPYSRC,FFEXTRV008
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKMRKT = GenOKFlag
- 
+
       ** If market validated successfully we can use data returned
       ** by the above procedure to determine the current trading date
       ** and historical data period, which are used by later validation
@@ -456,18 +459,18 @@
      C                   EXSR      GetCTDate
      C                   EXSR      GetHistPer
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,FFEXTRV009
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Instrument                               |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVMKTINS'
       ** Outputs from called procedure
       ** -----------------------------
@@ -481,24 +484,24 @@
      C                   PARM                    MsgDtaXArr
       ** The instrument types format (data strucure)
      C                   PARM                    InstTypes
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Instrument type (3A, from transaction
      C                   PARM                    SISTC
       ** Market I.D. (2A, from transaction)
      C                   PARM                    SMRKT
- 
+
       /COPY WNCPYSRC,FFEXTRV010
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKISTC = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV011
- 
+
       ** Fields for Private Banking                                                           CFF007
                                                                                               CFF007
      C     CFF007        IFEQ      'Y'                                                        CFF007
@@ -551,10 +554,10 @@
       ** +------------------------------------------+-----------------------------------------------
       ** | Month and year                           |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVYRMNTH'
       ** Outputs from called procedure
       ** -----------------------------
@@ -570,12 +573,12 @@
      C                   PARM                    MTHN
       ** Numeric (file) version of year number
      C                   PARM                    YRNO
- 
+
       ** Input/output
       ** ------------
       ** OK flags
      C                   PARM                    OKFlagsDS
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Month number (3A, from transaction)
@@ -588,37 +591,37 @@
      C                   PARM                    BJDFIN
       ** The instrument types format (data strucure)
      C                   PARM                    InstTypes
- 
+
       /COPY WNCPYSRC,FFEXTRV012
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
- 
+
       ** (The two OK flags for the above prodedure are set in the
       ** procedure itself, so GenOKFlag, set by the HandleRet SR, can
       ** be ignored.)
- 
+
       ** Now that both the market and the month are validated, we can
       ** retrieve the market details, which are used by later validation.
      C                   IF        OKISTC <> 'N' AND OKMTHN <> 'N'
      C                   EXSR      GetMarket
      C                   ENDIF
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV013
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Put/call indicator                       |
       ** +------------------------------------------+
- 
+
       ** Only validate if instrument was ok, as otherwise ISPT won't be
       ** set up.
      C                   IF        OKISTC <> 'N'
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVPUTCAL'
       ** Outputs from called procedure
       ** -----------------------------
@@ -630,37 +633,37 @@
      C                   PARM                    MsgIDXArr
       ** Error message data array
      C                   PARM                    MsgDtaXArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Put/call indicator (1A, from transaction)
      C                   PARM                    SPCAL
       ** Instrument processing type (1,0S, from INTYPD)
      C                   PARM                    ITISPT
- 
+
       /COPY WNCPYSRC,FFEXTRV014
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKPCAL = GenOKFlag
- 
+
      C                   ENDIF
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV015
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Strike price                             |
       ** +------------------------------------------+
- 
+
       ** Only validate if instrument was ok, as otherwise INTYPD fields
       ** won't be set up.
      C                   IF        OKISTC <> 'N'
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVSTRKPR'
       ** Outputs from called procedure
       ** -----------------------------
@@ -674,7 +677,7 @@
      C                   PARM                    MsgDtaXArr
       ** Numeric (file) version of strike price
      C                   PARM                    STRP
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Strike price (16A, from transaction)
@@ -695,32 +698,32 @@
       ** Delivery currency decimal places (1,0P, from currencies file -
       ** not applicable for exchange-traded transactions)
      C                   PARM                    Zero1S
- 
+
       /COPY WNCPYSRC,FFEXTRV016
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKSTRP = GenOKFlag
- 
+
      C                   ENDIF
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV017
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Contract price                           |
       ** +------------------------------------------+
- 
+
       ** Don't do contract price validation if instrument type or
       ** strike price was not valid
      C                   IF        OKISTC <> 'N'
      C                             AND OKSTRP <> 'N'
- 
+
      C/COPY WNCPYSRC,FFEXTRVC01
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVCONTPR'
       ** Outputs from called procedure
       ** -----------------------------
@@ -740,7 +743,7 @@
      C                   PARM                    MsgDtaWArr
       ** Numeric (file) version of price
      C                   PARM                    COPR
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Contract price (16A)
@@ -757,39 +760,39 @@
      C                   PARM                    InstTypes
       ** OK flags
      C                   PARM                    OKFlagsDS
- 
+
       /COPY WNCPYSRC,FFEXTRV018
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKCOPR = GenOKFlag
- 
+
      C                   ENDIF
       **                 End of "If OKISTC <> 'N'"
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV019
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Broker code                              |
       ** +------------------------------------------+
- 
+
       ** Broker is not amendable (which will be trapped by FFEXTRAMD),
       ** so only validate if action is 'I'; to validate on 'A' can cause
       ** unwanted defaulting.
      C                   IF         SACTN = 'I'
- 
+
       ** Broker is not validated if an asterisk is entered in position 1,
       ** and nothing else.
      C                   IF         NOT(
      C                                  %subst(SBOCO : 1 : 1) = '*'
      C                                  AND %subst(SBOCO : 2 : 9) = *blanks
      C                                 )
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVBROKER'
       ** Outputs from called procedure
       ** -----------------------------
@@ -805,7 +808,7 @@
      C                   PARM                    BOCO
       ** PB customer indicator                                                                CFF007
      C                   PARM                    PPBBFLG                                      CFF007
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Broker I.D. (10A, from transaction)
@@ -816,19 +819,19 @@
      C                   PARM                    ITDBRK
       ** Action Code (1A)                                                                     CSD025
      C                   PARM                    SACTN                                        CSD025
- 
+
       /COPY WNCPYSRC,FFEXTRV020
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKBOCO = GenOKFlag
- 
+
      C                   ENDIF
       **                 (End of IF NOT SBOCO position 1 = '*' and 2-9 blank)
- 
+
      C                   ENDIF
       **                 (End of "If SACTN = 'I'")
- 
+
      C     CFF007        IFEQ      'Y'                                                        CFF007
      C     SACTN         ANDEQ     'A'                                                        CFF007
      C                   CALLB     'AOCUSTR1'                                                 CFF007
@@ -843,16 +846,16 @@
      C                   ENDIF                                                                CFF007
      C                   ENDIF                                                                CFF007
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV021
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Customer code                            |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
       ** This procedure requires a flag to indicate that no broker was
       ** entered (in which case the customer is mandatory)
      C**********         IF        BOCO = 0                                                   CSD027
@@ -861,7 +864,7 @@
      C                   ELSE
      C                   EVAL      NoBroker = 'N'
      C                   ENDIF
- 
+
      C                   CALLB     'FFVCUST'
       ** Outputs from called procedure
       ** -----------------------------
@@ -879,7 +882,7 @@
      C                   PARM                    PPBCFLG                                      CFF007
       ** Customer format (from SDCUSTPD
      C                   PARM                    CustomerDS
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Customer I.D. (10A, from transaction)
@@ -888,24 +891,24 @@
      C                   PARM                    NoBroker
      C                   PARM                    S01457                                       208635
      C                   PARM                    SACTN                                        CSD025
- 
+
       /COPY WNCPYSRC,FFEXTRV022
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKCUSC = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV023
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Book code                                |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVBOOKCD'
       ** Outputs from called procedure
       ** -----------------------------
@@ -917,7 +920,7 @@
      C                   PARM                    MsgIDXArr
       ** Error message data array
      C                   PARM                    MsgDtaXArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Book code (2A, from transaction)
@@ -928,24 +931,24 @@
      C                   PARM                    BXDTBC
       ** Default Customer book (2A, from SDFODAPD)
      C                   PARM                    BXBKCD
- 
+
       /COPY WNCPYSRC,FFEXTRV024
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKBOKC = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV025
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Booking branch                           |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'MMVBKGBRCH'
       ** Return code
      C                   PARM                    ReturnCode
@@ -967,26 +970,26 @@
      C                   PARM                    BRCA
       ** The branch detail format from SDBRCHPD
      C                   PARM                    SDBRCH
- 
+
       /COPY WNCPYSRC,FFEXTRV026
- 
+
       ** Do the return code and error details handling (special one for
       ** nonstandard parameter structure).
      C                   EVAL      FieldName = 'SBRCD'
      C                   EXSR      SpecialRet
      C                   EVAL      OKBRCD = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV027
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Trade date                               |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFVTRDDAT'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1000,7 +1003,7 @@
      C                   PARM                    MsgDtaXArr
       ** Trade date in Midas day number format (5,0P)
      C                   PARM                    TRSD
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Trade date (6A, from transaction)
@@ -1027,17 +1030,17 @@
      C                   PARM                    MarketDet
       ** OK flags
      C                   PARM                    OKFlagsDS
- 
+
       /COPY WNCPYSRC,FFEXTRV028
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKTRSD = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV029
- 
+
       ** Value Date                                                                           CFF007
                                                                                               CFF007
      C     CFF007        IFEQ      'Y'                                                        CFF007
@@ -1072,10 +1075,10 @@
       ** +------------------------------------------+-----------------------------------------------
       ** | To be left open flag                     |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'FFV2BLFOP'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1087,29 +1090,29 @@
      C                   PARM                    MsgIDXArr
       ** Error message data array
      C                   PARM                    MsgDtaXArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** To be left open  indicator (1A, from transaction)
      C                   PARM                    STBLO
- 
+
       /COPY WNCPYSRC,FFEXTRV030
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKTBLO = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV031
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Linked reference                         |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'MMVLINKREF'
       ** Return code
      C                   PARM                    ReturnCode
@@ -1119,26 +1122,26 @@
      C                   PARM                    SLNKR
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
- 
+
       /COPY WNCPYSRC,FFEXTRV032
- 
+
       ** Do the return code and error details handling (special one for
       ** nonstandard parameter structure).
      C                   EVAL      FieldName = 'SLNKR'
      C                   EXSR      SpecialRet
      C                   EVAL      OKLNKR = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV033
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Originating branch                       |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   CALLB     'ZAVORGBRCH'
       ** Return code
      C                   PARM                    ReturnCode
@@ -1158,30 +1161,30 @@
      C                   PARM                    BKOBUV
       ** Response mode (1A, from caller (A=Asynchronous, S=Synchronous))
      C                   PARM                    RespMode
- 
+
       /COPY WNCPYSRC,FFEXTRV034
- 
+
       ** Do the return code and error details handling (special one for
       ** nonstandard parameter structure).
      C                   EVAL      FieldName = 'SORBR'
      C                   EXSR      SpecialRet
      C                   EVAL      OKORBR = GenOKFlag
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV035
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Portfolio reference                      |
       ** +------------------------------------------+
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
       ** Don't call portfolio reference validation if customer was invalid,
       ** as the customer code is required in portfolio reference validation.
      C                   IF        OKCUSC <> 'N'
- 
+
      C                   CALLB     'FFVPORTRF'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1200,7 +1203,7 @@
       ** Warning message data array (<WArrMax> x 45A, returned to caller)
      C                   PARM                    MsgDtaWArr
      C                   PARM                    WPLCS                                      BUG10345
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Portfolio reference (4A)
@@ -1215,32 +1218,33 @@
      C                   PARM                    CUSC
       ** Portfolio management ICD (DS, from SDPORTPD)
      C                   PARM                    SDPORT
- 
+
       /COPY WNCPYSRC,FFEXTRV036
- 
+
       ** Do the return code and error details handling
      C                   EXSR      HandleRet
      C                   EVAL      OKPTFR = GenOKFlag
- 
+
      C                   ENDIF
       **                 End of "If OKCUSC <> 'N'"
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV037
- 
+
       ** +------------------------------------------+-----------------------------------------------
       ** | Profit centre                            |
       ** +------------------------------------------+
- 
+
       ** Only validate when Profit Centre Accounting is off
-     C                   IF        CAC003 = 'N'
- 
+     C**********         IF        CAC003 = 'N'                                             MD050863
+     C                   IF        CAC003 <> 'Y'                                            MD050863
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
       /COPY WNCPYSRC,FFEXTRV038
- 
+
      C                   CALLB     'ZAVPROFITC'
       ** Return code
      C                   PARM                    ReturnCode
@@ -1274,26 +1278,26 @@
      C                   PARM                    OKCUSC
       ** Analytical (Profit-Centre) Accounting module flag
      C                   PARM                    BGN0ST
- 
+
       /COPY WNCPYSRC,FFEXTRV039
- 
+
       ** Do the return code and error details handling (special one for
       ** nonstandard parameter structure).
      C                   EVAL      FieldName = 'SPRFC'
      C                   EXSR      SpecialRet
      C                   EVAL      OKPRFC = GenOKFlag
- 
+
      C                   ENDIF
       **                 (End of "If CAC003 = 'N')
- 
+
       ** -------------------------------------------------------------------------------------------
- 
+
       /COPY WNCPYSRC,FFEXTRV040
- 
+
       ** +-----------------------------------------------+------------------------------------------
       ** | Book and transaction positions profit centres |
       ** +-----------------------------------------------+
- 
+
       ** Only validate when Profit Centre Accounting is on
       ** and various other fields are valid
      C                   IF        CAC003 = 'Y'
@@ -1303,12 +1307,12 @@
      C                             AND OKISTC <> 'N'
      C                             AND OKBOCO <> 'N'
      C                             AND OKCUSC <> 'N'
- 
+
       ** Reset variables updated by each module before each call
      C                   EXSR      ResetErrs
- 
+
      C                   EVAL      SISTT = SMRKT + SISTC
- 
+
      C                   CALLB     'FFVPCAPRFC'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1348,9 +1352,9 @@
      C                   PARM                    BKPCDU
       ** Reconcile trade/book position profit centre
      C                   PARM                    BXTBRC
- 
+
       /COPY WNCPYSRC,FFEXTRV041
- 
+
       ** Do the return code and error details handling.  The two OK flags
       ** are set in the called module, so don't need to do SR/HandlRet;
       ** just append the error codes if necessary.
@@ -1359,10 +1363,10 @@
      C                   IF        ReturnCode <> *blanks
      C                   EXSR      AppendArrs
      C                   ENDIF
- 
+
      C                   ENDIF
       **                 (End of "If CAC003 = 'Y')
- 
+
       ** -------------------------------------------------------------------------------------------
                                                                                 CPL002
       ** +-----------------------------------------------+----------------------CPL002--------------
@@ -1407,25 +1411,25 @@
       **                 (End of  Spot Price Validation)                        CPL002
                                                                                 CPL002
       ** -----------------------------------------------------------------------CPL002--------------
- 
+
       /COPY WNCPYSRC,FFEXTRV042
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
- 
+
      C                   ELSE
      C                   EVAL      ReturnCode = 'Error'
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,FFEXTRV043
- 
- 
+
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FFEXTRV044
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1434,32 +1438,32 @@
       *              are not set up within the validation.            *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupValid    BEGSR
- 
+
       ** --- Fields straight from the transaction --------------------------------------------------
- 
+
       ** Transaction reference
      C                   MOVE      STNBR         TNBR
- 
+
       ** Put/call indicator
      C                   EVAL      PCAL = SPCAL
- 
+
       ** Transaction type (purchase or sale)
      C                   EVAL      TRTY = STRTY
- 
+
       ** Number of contracts
      C                   MOVE      SNUCO         NUCO
- 
+
       ** Instrument type is market concatenated with instrument
      C                   EVAL      ISTT = SMRKT + SISTC
- 
+
       ** Transaction narrative
      C                   EVAL      TNAR = STNAR
- 
+
       ** Instrument currency
      C                   EVAL      ISCY = ITISCY
- 
+
       ** Portfolio reference
       ** If screen Portfolio Reference is the Non-Portfolio value, default
       ** in the file equivalent of this
@@ -1475,40 +1479,40 @@
      C                   ELSE                                                               BUG10345
      C                   EVAL      PTFR = *BLANK                                            BUG10345
      C                   ENDIF                                                              BUG10345
- 
+
       ** Book code
      C                   EVAL      BOKC = SBOKC
- 
+
       ** Originating branch
      C                   EVAL      BRCA = SBRCD
- 
+
       ** To be left open indicator
      C                   EVAL      TBLO = STBLO
- 
+
       ** Linked reference number
      C                   MOVE      SLNKR         LNKR
- 
+
       ** Originating branch
      C                   EVAL      ORBR = SORBR
- 
+
       ** Profit centre
      C                   EVAL      PRFC = SPRFC
- 
+
       ** Book positions profit centre
      C                   EVAL      BPRC = SBPRC
- 
+
       ** Transactions position profit centre
      C                   EVAL      TPRC = STPRC
- 
+
      C     CFF007        IFEQ      'Y'                                                        CFF007
      C     BGN4ST        ANDEQ     'Y'                                                        CFF007
      C                   MOVE      SCOVE         COVE                                         CFF007
      C                   MOVE      SHETR         HETR                                         CFF007
      C                   MOVE      SBLUP         BLUP                                         CFF007
      C                   ENDIF                                                                CFF007
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1517,9 +1521,9 @@
       *              the general error and warning arrays.            *
       *                                                               *
       *****************************************************************
- 
+
      C     AppendArrs    BEGSR
- 
+
      C                   CALLB     'APAPNDARRS'
       ** Outputs from called procedure
       ** -----------------------------
@@ -1541,7 +1545,7 @@
      C                   PARM                    WMsgIDArr
       ** Warning message data array (<ArrayMax> x 45A)
      C                   PARM                    WMsgDtaArr
- 
+
       ** Inputs to called procedure
       ** --------------------------
       ** Field name array (<ErrArrMax> x 10A)
@@ -1556,9 +1560,9 @@
      C                   PARM                    MsgIDWArr
       ** Warning message data array (<WArrMax> x 45A)
      C                   PARM                    MsgDtaWArr
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1567,30 +1571,30 @@
       *             each called procedure                             *
       *                                                               *
       *****************************************************************
- 
+
      C     HandleRet     BEGSR
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   RESET                   GenOKFlag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    GenOKFlag
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       ** If the OK flag is blank, set it to 'Y'; this shouldn't normally
       ** happen, but is a fallback.
      C                   IF        GenOKFlag = ' '
      C                   EVAL      GenOKFlag = 'Y'
      C                   ENDIF
- 
+
       ** If errors or warnings found, append error and warning details
       ** from this module to the overall error and warning arrays.
      C                   IF        ReturnCode <> *blanks
      C                   EXSR      AppendArrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1600,40 +1604,40 @@
       *              structures.                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SpecialRet    BEGSR
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   RESET                   GenOKFlag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    GenOKFlag
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       ** If the OK flag is blank, set it to 'Y'; this shouldn't normally
       ** happen, but is a fallback.
      C                   IF        GenOKFlag = ' '
      C                   EVAL      GenOKFlag = 'Y'
      C                   ENDIF
- 
+
       ** If errors or warnings found, append error and warning details
       ** from this module to the overall error and warning arrays.
      C                   IF        ReturnCode <> *blanks
- 
+
       ** Initialise the general-purpose array index
      C                   RESET                   GI
- 
+
       ** Put the field name passed into this subroutine, and the message
       ** ID returned from the most recently-called procedure, into the
       ** appropriate elements of the field-level error arrays.
      C                   EVAL      FldNamXArr(GI) = FieldName
      C                   EVAL      MsgIDXArr(GI) = #MsgID
- 
+
      C                   EXSR      AppendArrs
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1641,9 +1645,9 @@
       * ResetErrs - Reset or clear all error-related fields           *
       *                                                               *
       *****************************************************************
- 
+
      C     ResetErrs     BEGSR
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line resets the fields related to error
       ** handling: ReturnCode, ErrorFound, FldNamXArr, MsgIDXArr,
@@ -1652,9 +1656,9 @@
       ** It therefore requires FVAL_ARRAY and STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_RESET
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1662,9 +1666,9 @@
       * GetMarket - Get the market details                            *
       *                                                               *
       *****************************************************************
- 
+
      C     GetMarket     BEGSR
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FFGETMKT'
       ** Parameters returned from called module
@@ -1673,21 +1677,21 @@
      C                   PARM                    ReturnCode
       ** Market centre data structure
      C                   PARM                    MarketDet
- 
+
       ** Parameters sent to called module
       ** --------------------------------
       ** Month number (2,0S)
      C                   PARM                    MTHN
       ** Instrument type (5A)
      C                   PARM                    ITISTT
- 
+
       ** If the called module returned a database error, end in error
      C                   IF        ReturnCode = 'DBError'
      C                   EXSR      *pssr
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1695,9 +1699,9 @@
       * GetCTDate - Determine the current trading date                *
       *                                                               *
       *****************************************************************
- 
+
      C     GetCTDate     BEGSR
- 
+
       ** Set up the current trading date
       ** -------------------------------
       ** MCBUSD is from MKCTL and BJRDNB is from SDBANKPD
@@ -1715,11 +1719,11 @@
      C                   ELSE
      C                   EVAL      CTDATE = MCBUSD
      C                   ENDIF
- 
- 
- 
+
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1727,17 +1731,17 @@
       * GetHistPer - Determine start of the historical data period    *
       *                                                               *
       *****************************************************************
- 
+
      C     GetHistPer    BEGSR
- 
+
       ** Get the start of the Historical data period
       ** -------------------------------------------
       ** CTDATE is determined in SR/GetCTDate; BXHSPR is from the F & O
       ** ICD file, SDFODAPD.
      C                   EVAL      STHDP = CTDATE - BXHSPR
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1749,9 +1753,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Outputs
       ** -------
@@ -1787,7 +1791,7 @@
      C                   PARM                    PPBBFLG                                      CFF007
       ** PB customer indicator - customer                                                     CFF007
      C                   PARM                    PPBCFLG                                      CFF007
- 
+
       ** Inputs
       ** ------
       ** Response mode (1A), from source system common header
@@ -1811,7 +1815,7 @@
       ** CFF007 enhancement                                                                   CFF007
      C                   PARM                    CFF007                                       CFF007
      C                   PARM                    S01457            1                          208635
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY determines whether the Profit-Centre Accounting
       ** feature is on.  CAC003 is set to 'Y' if CAC003 is on and the
@@ -1848,19 +1852,19 @@
      C                   EVAL      CSC011 = 'N'                                               CSC011
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FFEXTRV045
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

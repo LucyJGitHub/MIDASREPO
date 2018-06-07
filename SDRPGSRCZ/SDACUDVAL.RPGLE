@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022651           Date 10Oct13               *
+      *  Last Amend No. MD044093           Date 18Apr17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022651           Date 10Oct13               *
       *                 CLE134             Date 01Aug12               *
       *                 263285             Date 15Jan10               *
       *                 CER059             Date 19Jul10               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044093 - The Country of TIN is already defined for this    *
+      *             customer                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022651 - Impossible to amend additional customer details   *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -516,6 +519,7 @@
       ** Other parms
      C                   PARM                    DDTINO
      C     ACIDTP        PARM                    DDIDTP
+     C                   PARM                    DDIDNO                                     MD044093
  
       ** Outputs
       ** Error fields/message IDs/message data (arrays) from/to caller

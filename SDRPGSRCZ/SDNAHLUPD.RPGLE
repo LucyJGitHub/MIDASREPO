@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033947           Date 28Apr15               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036311           Date 01Nov15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD033947           Date 28Apr15               *
       *                 MD029836           Date 22Aug14               *
       *                 MD027473           Date 11Jun14               *
       *                 MD027115           Date 22May14               *
@@ -37,6 +41,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ (Recompile)                                *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036311 - Database error on existing Customer and Non-Acct  *
+      *             Holder                                            *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033947 - Database Error occurred when amending US Indicia  *
       *             details of Non-account Holder                     *
@@ -67,6 +76,9 @@
       ** Midas SD Non-A/C Holders Details Master File
      FSDNAHOL0  UF A E           K DISK    COMMIT
  
+      ** Midas SD Non-A/C Holders Details Master File - CRS                                   CGL157
+     FSDCRNHL0  UF A E           K DISK    COMMIT                                             CGL157
+                                                                                              CGL157
       ** Midas SD Standing Data Controls index
      FSDFCTLL0  UF A E           K DISK    COMMIT
                                                                                               CGL132
@@ -78,6 +90,9 @@
                                                                                             MD027115
       ** US Indicia Comment History                                                         MD027115
      FSDJACCL7  IF A E           K DISK                                                     MD027115
+                                                                                              CGL157
+      * Midas SD CRS Details File                                                             CGL157
+     FSDCRSNL1  UF A E           K DISK    COMMIT                                             CGL157
  
       *****************************************************************
       ** +--------------------------------------+
@@ -134,6 +149,14 @@
      D SDVFTNH       E DS                  EXTNAME(SDVFTNHPD)                                 CGL132
      D                                     PREFIX(A_)                                         CGL132
  
+      ** CRS Non-Acct Holder Details File                                                     CGL157
+     D SDVCRNH       E DS                  EXTNAME(SDVCRNHPD)                                 CGL157
+     D                                     PREFIX(A_)                                         CGL157
+                                                                                              CGL157
+      ** Externally desc'd DS for valid CRS detail                                            CGL157
+     D SDVCRSN       E DS                  EXTNAME(SDVCRSNPD)                                 CGL157
+     D                                     PREFIX(D_)                                         CGL157
+
       ** Error indicators
      D SDENAHL       E DS                  Extname(SDENAHLPD)
  
@@ -146,6 +169,12 @@
      D NAHODF2       E DS                  EXTNAME(SDNAHOPD)                                  CGL132
      D                                     PREFIX(N_)                                         CGL132
  
+      ** CRS Non-Account Holder Detail file                                                   CGL157
+     D SDCRNH        E DS                  Extname(SDCRNHPD)                                  CGL157
+                                                                                              CGL157
+      **  Transaction Details File                                                            CGL157
+     D SDCRSN        E DS                  EXTNAME(SDCRSNPD)                                  CGL157
+                                                                                              CGL157
       ** DS for Bank details
      D SDBANK        E DS                  Extname(SDBANKPD)
  
@@ -177,6 +206,10 @@
      D CuFaFilFmt    E DS                  EXTNAME(SDFTNHPD)                                  CGL132
      D                                     PREFIX(C_)                                         CGL132
                                                                                               CGL132
+      ** CRS Non-Account Holder Details File Format                                           CGL157
+     D CuCrhFlFmt    E DS                  EXTNAME(SDCRNHPD)                                  CGL157
+     D                                     PREFIX(C_)                                         CGL157
+                                                                                              CGL157
      D CuFoFilFmt      DS                                                                     CGL132
      D  WCDESC                 1     50                                                       CGL132
      D  WPDESC                51    100                                                       CGL132
@@ -196,6 +229,9 @@
      D DummyMsgID      S                   Like(#MsgID)
      D DummyMsgF       S             10A
      D MsgSndRtn       S             10
+     D PCrsdF          S            222A   DIM(30)                                            CGL177
+     D PCrsdX          S            222A   DIM(30)                                            CGL177
+     D PCrsdZ          S            222A                                                      CGL177
  
       ** Outward parameters
       ** RCD : Midas SD Deleted records file retrieval
@@ -319,6 +355,10 @@
      D KSEQN           S              3S 0                                                    CGL132
      D AVSEQN          S              3S 0                                                    CGL132
      D WWTMST          S             26Z                                                      CGL132
+     D CGL157          S              1A                                                      CGL157
+     D KNAHO           S             10A                                                      CGL157
+     D KCTRY           S              2A                                                      CGL157
+     D X               S              2S 0                                                    CGL157
  
       ** Fields defined for Calling SDNAHLLOG
  
@@ -522,6 +562,9 @@ als  C                   PARM                    @In36
      C                   PARM                    ChkNahlFmt
      C                   PARM                    CuFaFilFmt                                   CGL132
      C                   PARM                    CuFoFilFmt                                   CGL132
+     C                   PARM                    CuCrhFlFmt                                   CGL157
+      ** CRS Country Details                                                                  CGL157
+     C                   PARM                    PCrsdX                                       CGL157
      C                   PARM      *BLANK        OkActn
      C                   PARM                    OkNaho
      C                   PARM      *BLANK        FldNameArr
@@ -723,11 +766,131 @@ als  C                   PARM                    @In36
      C**********         EVAL      NHSTCD = A_NASTCD                                 CER054 BUG26384
      C                   EVAL      NHRLAF = A_NARLAF                                          CER054
      C                   ENDIF                                                                CER054
+                                                                                              CGL157
+     C                   EVAL      NHEFF1 = A_NAEFF1                                          CGL157
+     C                   EVAL      NHEXP1 = A_NAEXP1                                          CGL157
+     C                   EVAL      NHEFF2 = A_NAEFF2                                          CGL157
+     C                   EVAL      NHEXP2 = A_NAEXP2                                          CGL157
+     C                   EVAL      NHEFF3 = A_NAEFF3                                          CGL157
+     C                   EVAL      NHEXP3 = A_NAEXP3                                          CGL157
+     C                   EVAL      NHEFF4 = A_NAEFF4                                          CGL157
+     C                   EVAL      NHEXP4 = A_NAEXP4                                          CGL157
+     C                   EVAL      NHEFF5 = A_NAEFF5                                          CGL157
+     C                   EVAL      NHEXP5 = A_NAEXP5                                          CGL157
+     C                   EVAL      NHTIN6 = A_NATIN6                                          CGL157
+     C                   EVAL      NHCTN6 = A_NACTN6                                          CGL157
+     C                   EVAL      NHEFF6 = A_NAEFF6                                          CGL157
+     C                   EVAL      NHEXP6 = A_NAEXP6                                          CGL157
+     C                   EVAL      NHTIN7 = A_NATIN7                                          CGL157
+     C                   EVAL      NHCTN7 = A_NACTN7                                          CGL157
+     C                   EVAL      NHEFF7 = A_NAEFF7                                          CGL157
+     C                   EVAL      NHEXP7 = A_NAEXP7                                          CGL157
+     C                   EVAL      NHTIN8 = A_NATIN8                                          CGL157
+     C                   EVAL      NHCTN8 = A_NACTN8                                          CGL157
+     C                   EVAL      NHEFF8 = A_NAEFF8                                          CGL157
+     C                   EVAL      NHEXP8 = A_NAEXP8                                          CGL157
+     C                   EVAL      NHTIN9 = A_NATIN9                                          CGL157
+     C                   EVAL      NHCTN9 = A_NACTN9                                          CGL157
+     C                   EVAL      NHEFF9 = A_NAEFF9                                          CGL157
+     C                   EVAL      NHEXP9 = A_NAEXP9                                          CGL157
+     C                   EVAL      NHTIN0 = A_NATIN0                                          CGL157
+     C                   EVAL      NHCTN0 = A_NACTN0                                          CGL157
+     C                   EVAL      NHEFF0 = A_NAEFF0                                          CGL157
+     C                   EVAL      NHEXP0 = A_NAEXP0                                          CGL157
+     C                   EVAL      NHMCT1 = A_NAMCT1                                          CGL157
+     C                   EVAL      NHMCT2 = A_NAMCT2                                          CGL157
+     C                   EVAL      NHMCT3 = A_NAMCT3                                          CGL157
+     C                   EVAL      NHMCT4 = A_NAMCT4                                          CGL157
+     C                   EVAL      NHMCT5 = A_NAMCT5                                          CGL157
+     C                   EVAL      NHPCT1 = A_NAPCT1                                          CGL157
+     C                   EVAL      NHPCT2 = A_NAPCT2                                          CGL157
+     C                   EVAL      NHPCT3 = A_NAPCT3                                          CGL157
+     C                   EVAL      NHPCT4 = A_NAPCT4                                          CGL157
+     C                   EVAL      NHPCT5 = A_NAPCT5                                          CGL157
  
       ** Write New Non-A/C Holder
  
      C                   WRITE     SDNAHOD0
-                                                                                              CGL132
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   CLEAR                   SDCRNH                                       CGL157
+                                                                                              CGL157
+     C                   EVAL      NRNAHO = A_NANAHO                                          CGL157
+     C                   EVAL      NRTYPE = A_NVTYPE                                          CGL157
+     C                   EVAL      NRSTYP = A_NVSTYP                                          CGL157
+     C                   EVAL      NRHVAL = A_NVHVAL                                          CGL157
+     C                   EVAL      NREXMP = A_NVEXMP                                          CGL157
+     C                   EVAL      NREXMR = A_NVEXMR                                          CGL157
+     C                   EVAL      NREXMD = A_NVEXMD                                          CGL157
+     C                   EVAL      NREXMT = A_NVEXMT                                          CGL157
+     C                   EVAL      NREXMU = A_NVEXMU                                          CGL157
+     C                   EVAL      NRINFO = A_NVINFO                                          CGL157
+     C                   EVAL      NREXMG = A_NVEXMG                                          CGL157
+     C                   EVAL      NREXMI = A_NVEXMI                                          CGL157
+     C                   EVAL      NRCHTP = 'I'                                               CGL157
+     C                   EVAL      NRLCDT = BJRDNB                                            CGL157
+     C                   EVAL      NRLUSR = A_NALUSR                                          CGL157
+                                                                                              CGL157
+      ** Write new Transaction Detail                                                         CGL157
+                                                                                              CGL157
+     C                   WRITE     SDCRNHD0                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C                   DOW       X < 31                                                     CGL157
+     C                   IF        %SUBST(PCrsdF(X):3:1) <> '*'                               CGL177
+     C                   EVAL      SDVCRSN =  PCrsdF(X)                                       CGL157
+     C                   EVAL      PCrsdZ = PCrsdF(X)                                         CGL157
+     C                   IF        D_RVCTRY <> *Blanks                                        CGL157
+     C                   EVAL      CNNAHO = A_NANAHO                                          CGL157
+     C                   EVAL      CNCTRY = D_RVCTRY                                          CGL157
+     C                   EVAL      CNREPT = D_RVREPT                                          CGL157
+     C                   EVAL      CNREPR = D_RVREPR                                          CGL157
+     C                   IF        %SUBST(PCrsdZ:142:3) = *Blanks                             CGL157
+     C                   EVAL      CNREPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVREPD      CNREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CNREPM = D_RVREPM                                          CGL157
+     C                   IF        CNREPM = '******'                                          CGL177
+     C                   MOVE      TimeStamp     WTime                                        CGL177
+     C     *HMS0         MOVE      WTime         CNREPM                                       CGL177
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      CNREPU = D_RVREPU                                          CGL157
+     C                   EVAL      CNEVE1 = D_RVEVE1                                          CGL157
+     C                   EVAL      CNEVS1 = D_RVEVS1                                          CGL157
+     C                   EVAL      CNEVE2 = D_RVEVE2                                          CGL157
+     C                   EVAL      CNEVS2 = D_RVEVS2                                          CGL157
+     C                   EVAL      CNEVE3 = D_RVEVE3                                          CGL157
+     C                   EVAL      CNEVS3 = D_RVEVS3                                          CGL157
+     C                   EVAL      CNEVE4 = D_RVEVE4                                          CGL157
+     C                   EVAL      CNEVS4 = D_RVEVS4                                          CGL157
+     C                   EVAL      CNEVE5 = D_RVEVE5                                          CGL157
+     C                   EVAL      CNEVS5 = D_RVEVS5                                          CGL157
+     C                   EVAL      CNTINN = D_RVTINN                                          CGL157
+     C                   EVAL      CNCODO = D_RVCODO                                          CGL157
+     C                   EVAL      CNJACM = D_RVJACM                                          CGL157
+     C                   EVAL      CNMAIL = D_RVMAIL                                          CGL157
+     C                   EVAL      CNPHON = D_RVPHON                                          CGL157
+     C                   EVAL      CNRPAY = D_RVRPAY                                          CGL157
+     C                   EVAL      CNTINS = D_RVTINS                                          CGL177
+     C                   IF        %SUBST(PCrsdZ:211:3) = *Blanks                             CGL157
+     C                   EVAL      CNEFFD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVEFFD      CNEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        %SUBST(PCrsdZ:214:3) = *Blanks                             CGL157
+     C                   EVAL      CNEXPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVEXPD      CNEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   WRITE     SDCRSND0                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   CLEAR                   SDFTNH                                       CGL132
      C                   EVAL      FNNAHO = NHNAHO                                            CGL132
@@ -1069,6 +1232,47 @@ als  C                   PARM                    @In36
      C**********         EVAL      NHREPA = ' '                                               232543
      C                   EVAL      NHFRNT = A_NAFRNT                                          232543
      C                   EVAL      NHREPA = A_NAREPA                                          232543
+                                                                                              CGL157
+     C                   EVAL      NHEFF1 = A_NAEFF1                                          CGL157
+     C                   EVAL      NHEXP1 = A_NAEXP1                                          CGL157
+     C                   EVAL      NHEFF2 = A_NAEFF2                                          CGL157
+     C                   EVAL      NHEXP2 = A_NAEXP2                                          CGL157
+     C                   EVAL      NHEFF3 = A_NAEFF3                                          CGL157
+     C                   EVAL      NHEXP3 = A_NAEXP3                                          CGL157
+     C                   EVAL      NHEFF4 = A_NAEFF4                                          CGL157
+     C                   EVAL      NHEXP4 = A_NAEXP4                                          CGL157
+     C                   EVAL      NHEFF5 = A_NAEFF5                                          CGL157
+     C                   EVAL      NHEXP5 = A_NAEXP5                                          CGL157
+     C                   EVAL      NHTIN6 = A_NATIN6                                          CGL157
+     C                   EVAL      NHCTN6 = A_NACTN6                                          CGL157
+     C                   EVAL      NHEFF6 = A_NAEFF6                                          CGL157
+     C                   EVAL      NHEXP6 = A_NAEXP6                                          CGL157
+     C                   EVAL      NHTIN7 = A_NATIN7                                          CGL157
+     C                   EVAL      NHCTN7 = A_NACTN7                                          CGL157
+     C                   EVAL      NHEFF7 = A_NAEFF7                                          CGL157
+     C                   EVAL      NHEXP7 = A_NAEXP7                                          CGL157
+     C                   EVAL      NHTIN8 = A_NATIN8                                          CGL157
+     C                   EVAL      NHCTN8 = A_NACTN8                                          CGL157
+     C                   EVAL      NHEFF8 = A_NAEFF8                                          CGL157
+     C                   EVAL      NHEXP8 = A_NAEXP8                                          CGL157
+     C                   EVAL      NHTIN9 = A_NATIN9                                          CGL157
+     C                   EVAL      NHCTN9 = A_NACTN9                                          CGL157
+     C                   EVAL      NHEFF9 = A_NAEFF9                                          CGL157
+     C                   EVAL      NHEXP9 = A_NAEXP9                                          CGL157
+     C                   EVAL      NHTIN0 = A_NATIN0                                          CGL157
+     C                   EVAL      NHCTN0 = A_NACTN0                                          CGL157
+     C                   EVAL      NHEFF0 = A_NAEFF0                                          CGL157
+     C                   EVAL      NHEXP0 = A_NAEXP0                                          CGL157
+     C                   EVAL      NHMCT1 = A_NAMCT1                                          CGL157
+     C                   EVAL      NHMCT2 = A_NAMCT2                                          CGL157
+     C                   EVAL      NHMCT3 = A_NAMCT3                                          CGL157
+     C                   EVAL      NHMCT4 = A_NAMCT4                                          CGL157
+     C                   EVAL      NHMCT5 = A_NAMCT5                                          CGL157
+     C                   EVAL      NHPCT1 = A_NAPCT1                                          CGL157
+     C                   EVAL      NHPCT2 = A_NAPCT2                                          CGL157
+     C                   EVAL      NHPCT3 = A_NAPCT3                                          CGL157
+     C                   EVAL      NHPCT4 = A_NAPCT4                                          CGL157
+     C                   EVAL      NHPCT5 = A_NAPCT5                                          CGL157
  
       ** Timestamp
  
@@ -1088,6 +1292,105 @@ als  C                   PARM                    @In36
       ** Update Record
  
      C                   UPDATE    SDNAHOD0
+      ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     A_NANAHO      CHAIN     SDCRNHL0                             99                    CGL157
+                                                                                              CGL157
+      ** Initialize Transaction Detail                                                        CGL157
+                                                                                              CGL157
+     C                   CLEAR                   SDCRNH                                       CGL157
+                                                                                              CGL157
+     C                   EVAL      NRNAHO = A_NANAHO                                          CGL157
+     C                   EVAL      NRTYPE = A_NVTYPE                                          CGL157
+     C                   EVAL      NRSTYP = A_NVSTYP                                          CGL157
+     C                   EVAL      NRHVAL = A_NVHVAL                                          CGL157
+     C                   EVAL      NREXMP = A_NVEXMP                                          CGL157
+     C                   EVAL      NREXMR = A_NVEXMR                                          CGL157
+     C                   EVAL      NREXMD = A_NVEXMD                                          CGL157
+     C                   EVAL      NREXMT = A_NVEXMT                                          CGL157
+     C                   EVAL      NREXMU = A_NVEXMU                                          CGL157
+     C                   EVAL      NRINFO = A_NVINFO                                          CGL157
+     C                   EVAL      NREXMG = A_NVEXMG                                          CGL157
+     C                   EVAL      NREXMI = A_NVEXMI                                          CGL157
+     C                   EVAL      NRCHTP = 'A'                                               CGL157
+     C                   EVAL      NRLCDT = BJRDNB                                            CGL157
+     C                   EVAL      NRLUSR = PSUSER                                            CGL157
+                                                                                              CGL157
+     C                   IF        NOT %FOUND(SDCRNHL0)                                     MD036311
+      ** Write Record                                                                       MD036311
+     C                   WRITE     SDCRNHD0                                                 MD036311
+     C                   ELSE                                                               MD036311
+      ** Update Record                                                                        CGL157
+     C                   UPDATE    SDCRNHD0                                                   CGL157
+     C                   ENDIF                                                              MD036311
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     A_NANAHO      SETLL     SDCRSNL1                                                   CGL157
+     C     A_NANAHO      READE     SDCRSNL1                                                   CGL157
+     C                   DOW       %FOUND(SDCRSNL1)                                           CGL157
+     C                             AND A_NANAHO = CNNAHO                                      CGL157
+     C                   DELETE    SDCRSND0                                                   CGL157
+     C                   CLEAR                   SDCRSN                                       CGL157
+     C     A_NANAHO      READE     SDCRSNL1                                                   CGL157
+     C                   ENDDO                                                                CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C                   DOW       X < 31                                                     CGL157
+     C                   IF        %SUBST(PCrsdF(X):3:1) <> '*'                               CGL177
+     C                   EVAL      SDVCRSN = PCrsdF(X)                                        CGL157
+     C                   EVAL      PCrsdZ = PCrsdF(X)                                         CGL157
+     C                   IF        D_RVCTRY <> *Blanks                                        CGL157
+     C                   EVAL      CNNAHO = A_NANAHO                                          CGL157
+     C                   EVAL      CNCTRY = D_RVCTRY                                          CGL157
+     C                   EVAL      CNREPT = D_RVREPT                                          CGL157
+     C                   EVAL      CNREPR = D_RVREPR                                          CGL157
+     C                   IF        %SUBST(PCrsdZ:142:3) = *Blanks                             CGL157
+     C                   EVAL      CNREPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVREPD      CNREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CNREPM = D_RVREPM                                          CGL157
+     C                   IF        CNREPM = '******'                                          CGL177
+     C                   MOVE      TimeStamp     WTime                                        CGL177
+     C     *HMS0         MOVE      WTime         CNREPM                                       CGL177
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      CNREPU = D_RVREPU                                          CGL157
+     C                   EVAL      CNEVE1 = D_RVEVE1                                          CGL157
+     C                   EVAL      CNEVS1 = D_RVEVS1                                          CGL157
+     C                   EVAL      CNEVE2 = D_RVEVE2                                          CGL157
+     C                   EVAL      CNEVS2 = D_RVEVS2                                          CGL157
+     C                   EVAL      CNEVE3 = D_RVEVE3                                          CGL157
+     C                   EVAL      CNEVS3 = D_RVEVS3                                          CGL157
+     C                   EVAL      CNEVE4 = D_RVEVE4                                          CGL157
+     C                   EVAL      CNEVS4 = D_RVEVS4                                          CGL157
+     C                   EVAL      CNEVE5 = D_RVEVE5                                          CGL157
+     C                   EVAL      CNEVS5 = D_RVEVS5                                          CGL157
+     C                   EVAL      CNTINN = D_RVTINN                                          CGL157
+     C                   EVAL      CNCODO = D_RVCODO                                          CGL157
+     C                   EVAL      CNJACM = D_RVJACM                                          CGL157
+     C                   EVAL      CNMAIL = D_RVMAIL                                          CGL157
+     C                   EVAL      CNPHON = D_RVPHON                                          CGL157
+     C                   EVAL      CNRPAY = D_RVRPAY                                          CGL157
+     C                   EVAL      CNTINS = D_RVTINS                                          CGL177
+     C                   IF        %SUBST(PCrsdZ:211:3) = *Blanks                             CGL157
+     C                   EVAL      CNEFFD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVEFFD      CNEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        %SUBST(PCrsdZ:214:3) = *Blanks                             CGL157
+     C                   EVAL      CNEXPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_RVEXPD      CNEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   WRITE     SDCRSND0                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
                                                                                               CGL132
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   CLEAR                   SDFTNH                                       CGL132
@@ -1641,6 +1944,26 @@ als  C                   PARM                    @In36
       ** Update Record
  
      C                   UPDATE    SDNAHOD0
+                                                                                              CGL157
+      ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     A_NANAHO      CHAIN     SDCRNHL0                             99                    CGL157
+                                                                                              CGL157
+      ** Database error                                                                       CGL157
+     C                   IF        NOT %FOUND(SDCRNHL0)                                       CGL157
+     C                   EVAL      DBKEY  = A_NANAHO                                          CGL157
+     C                   EVAL      DBFILE = 'SDCRNHPD'                                        CGL157
+     C                   EVAL      DBASE  =  903                                              CGL157
+     C                   EXSR      SRErr                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      NRLCDT = BJRDNB                                            CGL157
+     C                   EVAL      NRCHTP = 'D'                                               CGL157
+     C                   EVAL      NRLUSR = PSUSER                                            CGL157
+                                                                                              CGL157
+     C                   UPDATE    SDCRNHD0                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
                                                                                               CGL132
      C                   IF        CGL132 = 'Y'                                               CGL132
                                                                                               CGL132
@@ -1765,6 +2088,8 @@ als  C                   PARM                    @In36
      C                   PARM                    @@RTCD
      C                   PARM                    SDVNAHL
      C                   PARM                    SDVFTNH                                      CGL132
+     C                   PARM                    SDVCRNH                                      CGL157
+     C                   PARM                    PCrsdF                                       CGL157
  
       ** Access Bank Details
  
@@ -1807,6 +2132,28 @@ als  C                   PARM                    @In36
      C                   IN        SDSTAT
      C                   IN        SC24X7
      C                   ENDIF
+                                                                                              CGL157
+      ** Check if enhancement CGL157 is on                                                    CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRtCd                                        CGL157
+     C                   PARM      '*VERIFY'     POptn                                        CGL157
+     C                   PARM      'CGL157'      PSARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRtCd <> *BLANKS AND                                       CGL157
+     C                             PRtCd <> '*NRF   '                                         CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL157
+     C                   EVAL      DBASE  = 903                                               CGL157
+     C                   EXSR      SRERR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        PRtCd = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   ENDIF                                                                CGL157
                                                                                               CGL132
       ** Check if CGL132 is installed                                                         CGL132
                                                                                               CGL132

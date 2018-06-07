@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044440           Date 01Mar17               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044440           Date 01Mar17               *
       *                 MD042966           Date 20Dec16               *
       *                 MD036489           Date 11Nov15               *
       *                 MD036460           Date 05Nov15               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044440 - Authority Holder System Value not updated upon    *
       *             Customer Insert                                   *
@@ -420,6 +422,36 @@
      C                   EVAL      DDIDSV = 'N'                                             MD036356
      C                   ENDIF                                                              MD036356
                                                                                             MD036356
+      ** FATCA Details                                                                        CGL157
+      ** Check Mailing Country                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDMAIL = *BLANKS                                           CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5CTR1:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5CTR1 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = E5CTR1                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5CTR2:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5CTR2 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = E5CTR2                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5CTR3:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5CTR3 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = E5CTR3                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5CTR4:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5CTR4 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = E5CTR4                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5CTR5:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5CTR5 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = E5CTR5                                            CGL157
+                                                                                              CGL157
+     C                   ENDSL                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
       ** FATCA Details
  
      C                   IF        %LOOKUP(DDMAIL:CtryCodeArr) <> 0
@@ -462,6 +494,33 @@
      C                   EVAL      DDGCSV = 'N'                                             MD036356
      C                   ENDIF                                                              MD036356
                                                                                             MD036356
+     C                   IF        DDPHON = *BLANKS                                           CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5PHN1:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5PHN1 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHON = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5PHN2:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5PHN2 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHON = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5PHN3:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5PHN3 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHON = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5PHN4:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5PHN4 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHON = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(E5PHN5:CtryCodeArr) <> 0                           CGL157
+     C                             AND E5PHN5 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHON = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   ENDSL                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
       ** Check Telephone Number
      C                   IF        DDPHON = 'Y'
      C                             AND DDTESV <> 'Y'

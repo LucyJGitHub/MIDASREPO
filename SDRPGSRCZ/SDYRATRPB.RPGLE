@@ -15,18 +15,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAS008             Date 16Jun04               *
+      *                 CAS008             Date 16Jun04               *
       *                 208179             Date 05Aug02               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CAS001  *CREATE    Date 23Nov01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CAS008 - IAS 39 Enhancements (Recompile)                     *
       *  208179 - 24x7 Midas Availability                             *
@@ -549,12 +552,14 @@
      C                   PARM      'SDIYRAT1PD'  PInvFile1
      C                   PARM      'SDIYRAT2PD'  PInvFile2
      C                   PARM      '         '   PInvFile3
+     C                   PARM      '         '   PInvFile4        10                        MD041294
  
       ** Invalid File Data
  
      C                   PARM      InvYR1        PInvFDta1
      C                   PARM      InvYR2        PInvFDta2
      C                   PARM      *BLANKS       PInvFDta3
+     C                   PARM      *BLANKS       PInvFDta4      4000                        MD041294
  
       ** Outputs
       ** Function Keys

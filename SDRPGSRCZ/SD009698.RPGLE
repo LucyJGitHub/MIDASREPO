@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026854           Date 29May14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026854           Date 29May14               *
       *                 CGL132             Date 01May13               *
       *                 MD026193           Date 07Apr14               *
       *                 CSD092   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
@@ -53,6 +55,10 @@
      D PELEC           S              1A                                                      CGL132
      D PCmd            S             16A   Inz('CLRPFM GPFLDDSPD')                          MD026193
      D PCmd_Len        S             15  5                                                  MD026193
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
  
      D/COPY ZACPYSRC,STD_D_SPEC
  
@@ -94,6 +100,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
  
      C                   READ      SDCUSTPD
  

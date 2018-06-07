@@ -15,12 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CLE031             Date 26Apr05               *
+      *                 CLE031             Date 26Apr05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
       *                 BUG2603            Date 12May04               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
@@ -576,11 +579,13 @@
      C                   PARM      'IRICACFPD'   PInvFile1
      C                   PARM      'APIDSETPD'   PInvFile2
      C                   PARM                    PInvFile3
+     C                   PARM      *Blanks       PInvFile4        10                 MD041294
  
       ** Invalid file data
      C                   PARM      InvTr         PInvFDta1
      C                   PARM      InvTrSetIn    PInvFDta2
      C                   PARM                    PInvFDta3
+     C                   PARM      *Blanks       PInvFDta4      4000                 MD041294
  
       ** Outputs
       ** Function Keys

@@ -15,15 +15,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP183  *CREATE    Date 05Jan06               *
+      *                 CAP183  *CREATE    Date 05Jan06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP183 - Conversion of Market Prices Input into modular      *
       *           structure to use APIs.                              *
@@ -433,11 +436,13 @@
      C                   PARM      'FFIMPRIPD'   InvFile1         10
      C                   PARM      '         '   InvFile2         10
      C                   PARM      '         '   InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
  
       ** Invalid file data
      C                   PARM      InvFF         InvFDta1       4000
      C                   PARM      *BLANKS       InvFDta2       4000
      C                   PARM      *BLANKS       InvFDta3       5000
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
  
       ** Outputs
  

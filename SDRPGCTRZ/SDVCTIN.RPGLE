@@ -17,11 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -95,7 +97,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       ** Country of TIN
-     D CtxArr          S              2    DIM(5)
+     D***CtxArr*         S              2    DIM(5)                                           CGL157
+     D CtxArr          S              2    DIM(10)                                            CGL157
  
       ** External DS for Country Details
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
@@ -116,16 +119,31 @@
      D DDTIN3          S             25
      D DDTIN4          S             25
      D DDTIN5          S             25
+     D DDTIN6          S             25                                                       CGL157
+     D DDTIN7          S             25                                                       CGL157
+     D DDTIN8          S             25                                                       CGL157
+     D DDTIN9          S             25                                                       CGL157
+     D DDTIN0          S             25                                                       CGL157
      D DDCOLC          S              2
      D DDCTIN2         S              2
      D DDCTIN3         S              2
      D DDCTIN4         S              2
      D DDCTIN5         S              2
+     D DDCTIN6         S              2                                                       CGL157
+     D DDCTIN7         S              2                                                       CGL157
+     D DDCTIN8         S              2                                                       CGL157
+     D DDCTIN9         S              2                                                       CGL157
+     D DDCTIN0         S              2                                                       CGL157
      D DDOKCOLC        S              1
      D DDOKCTIN2       S              1
      D DDOKCTIN3       S              1
      D DDOKCTIN4       S              1
      D DDOKCTIN5       S              1
+     D DDOKCTIN6       S              1                                                       CGL157
+     D DDOKCTIN7       S              1                                                       CGL157
+     D DDOKCTIN8       S              1                                                       CGL157
+     D DDOKCTIN9       S              1                                                       CGL157
+     D DDOKCTIN0       S              1                                                       CGL157
      D Z               S              3P 0
      D PRTCD           S              7
      D POPTN           S              7
@@ -161,6 +179,11 @@
      C                             DDOKCTIN3 = 'N' OR
      C                             DDOKCTIN4 = 'N' OR
      C                             DDOKCTIN5 = 'N' OR
+     C                             DDOKCTIN6 = 'N' OR                                         CGL157
+     C                             DDOKCTIN7 = 'N' OR                                         CGL157
+     C                             DDOKCTIN8 = 'N' OR                                         CGL157
+     C                             DDOKCTIN9 = 'N' OR                                         CGL157
+     C                             DDOKCTIN0 = 'N' OR                                         CGL157
      C                             DDOKCOLC  = 'N'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
@@ -182,12 +205,18 @@
      C                   EVAL      CtxArr(3) = DDCTIN3
      C                   EVAL      CtxArr(4) = DDCTIN4
      C                   EVAL      CtxArr(5) = DDCTIN5
+     C                   EVAL      CtxArr(6) = DDCTIN6                                        CGL157
+     C                   EVAL      CtxArr(7) = DDCTIN7                                        CGL157
+     C                   EVAL      CtxArr(8) = DDCTIN8                                        CGL157
+     C                   EVAL      CtxArr(9) = DDCTIN9                                        CGL157
+     C                   EVAL      CtxArr(10) = DDCTIN0                                       CGL157
  
      C                   EVAL      Z = 1
      C     *BLANKS       LOOKUP    CtxArr(Z)                              28
  
      C                   IF        *IN28 = *ON
-     C     Z             DOWLT     5
+     C*****Z****         DOWLT     5                                                          CGL157
+     C     Z             DOWLT     11                                                         CGL157
      C                   ADD       1             Z
      C                   IF        CtxArr(Z) <> *BLANKS
      C                   EVAL      DDOKCOLC = 'N'
@@ -195,6 +224,11 @@
      C                   EVAL      DDOKCTIN3 = 'N'
      C                   EVAL      DDOKCTIN4 = 'N'
      C                   EVAL      DDOKCTIN5 = 'N'
+     C                   EVAL      DDOKCTIN6 = 'N'                                            CGL157
+     C                   EVAL      DDOKCTIN7 = 'N'                                            CGL157
+     C                   EVAL      DDOKCTIN8 = 'N'                                            CGL157
+     C                   EVAL      DDOKCTIN9 = 'N'                                            CGL157
+     C                   EVAL      DDOKCTIN0 = 'N'                                            CGL157
      C                   ADD       1             Idx
      C                   MOVEL     'DDCTIN2'     FldNamXAr(Idx)
      C                   MOVEL     'USS0288'     MsgIDXAr(Idx)
@@ -240,6 +274,51 @@
      C                   MOVEL     'USS0293'     MsgIDXAr(Idx)
      C                   GOTO      ENDVAL
      C                   ENDIF
+                                                                                              CGL157
+     C                   IF        DDCTIN6 <> *BLANKS AND                                     CGL157
+     C                             DDTIN6 = *BLANKS                                           CGL157
+     C                   EVAL      DDOKCTIN6 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN6'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0293'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN7 <> *BLANKS AND                                     CGL157
+     C                             DDTIN7 = *BLANKS                                           CGL157
+     C                   EVAL      DDOKCTIN7 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN7'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0293'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN8 <> *BLANKS AND                                     CGL157
+     C                             DDTIN8 = *BLANKS                                           CGL157
+     C                   EVAL      DDOKCTIN8 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN8'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0293'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN9 <> *BLANKS AND                                     CGL157
+     C                             DDTIN9 = *BLANKS                                           CGL157
+     C                   EVAL      DDOKCTIN9 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN9'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0293'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN0 <> *BLANKS AND                                     CGL157
+     C                             DDTIN0 = *BLANKS                                           CGL157
+     C                   EVAL      DDOKCTIN0 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN0'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0293'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
  
       ** Countries of TIN must be unique and a valid country code
      C                   IF        DDCOLC <> *BLANKS
@@ -337,6 +416,17 @@
      C                   ENDIF
  
      C                   IF        DDCTIN5 <> *BLANKS
+     C                   EVAL      Z = 6                                                      CGL157
+     C     DDCTIN5       LOOKUP    CtxArr(Z)                              28                  CGL157
+                                                                                              CGL157
+     C                   IF        *IN28 = *ON                                                CGL157
+     C                   EVAL      DDOKCTIN5 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN5'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0295'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+
      C                   EVAL      PKEY1 = DDCTIN5
      C                   EXSR      SRVCTRY
  
@@ -351,6 +441,131 @@
      C                   ENDIF
  
      C                   ENDIF
+                                                                                              CGL157
+     C                   IF        DDCTIN6 <> *BLANKS                                         CGL157
+     C                   EVAL      Z = 7                                                      CGL157
+     C     DDCTIN6       LOOKUP    CtxArr(Z)                              28                  CGL157
+                                                                                              CGL157
+     C                   IF        *IN28 = *ON                                                CGL157
+     C                   EVAL      DDOKCTIN6 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN6'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0295'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PKEY1 = DDCTIN6                                            CGL157
+     C                   EXSR      SRVCTRY                                                    CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *Blanks                                           CGL157
+     C                   EVAL      DDOKCTIN6 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN6'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0296'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCTIN6 = A4CNCD                                           CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN7 <> *BLANKS                                         CGL157
+     C                   EVAL      Z = 8                                                      CGL157
+     C     DDCTIN7       LOOKUP    CtxArr(Z)                              28                  CGL157
+                                                                                              CGL157
+     C                   IF        *IN28 = *ON                                                CGL157
+     C                   EVAL      DDOKCTIN7 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN7'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0295'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PKEY1 = DDCTIN7                                            CGL157
+     C                   EXSR      SRVCTRY                                                    CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *Blanks                                           CGL157
+     C                   EVAL      DDOKCTIN7 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN7'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0296'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCTIN7 = A4CNCD                                           CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN8 <> *BLANKS                                         CGL157
+     C                   EVAL      Z = 9                                                      CGL157
+     C     DDCTIN8       LOOKUP    CtxArr(Z)                              28                  CGL157
+                                                                                              CGL157
+     C                   IF        *IN28 = *ON                                                CGL157
+     C                   EVAL      DDOKCTIN8 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN8'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0295'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PKEY1 = DDCTIN8                                            CGL157
+     C                   EXSR      SRVCTRY                                                    CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *Blanks                                           CGL157
+     C                   EVAL      DDOKCTIN8 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN8'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0296'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCTIN8 = A4CNCD                                           CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN9 <> *BLANKS                                         CGL157
+     C                   EVAL      Z = 10                                                     CGL157
+     C     DDCTIN9       LOOKUP    CtxArr(Z)                              28                  CGL157
+                                                                                              CGL157
+     C                   IF        *IN28 = *ON                                                CGL157
+     C                   EVAL      DDOKCTIN9 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN9'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0295'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PKEY1 = DDCTIN9                                            CGL157
+     C                   EXSR      SRVCTRY                                                    CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *Blanks                                           CGL157
+     C                   EVAL      DDOKCTIN9 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN9'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0296'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCTIN9 = A4CNCD                                           CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDCTIN0 <> *BLANKS                                         CGL157
+                                                                                              CGL157
+     C                   EVAL      PKEY1 = DDCTIN0                                            CGL157
+     C                   EXSR      SRVCTRY                                                    CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *Blanks                                           CGL157
+     C                   EVAL      DDOKCTIN0 = 'N'                                            CGL157
+     C                   ADD       1             Idx                                          CGL157
+     C                   MOVEL     'DDCTIN0'     FldNamXAr(Idx)                               CGL157
+     C                   MOVEL     'USS0296'     MsgIDXAr(Idx)                                CGL157
+     C                   GOTO      ENDVAL                                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCTIN0 = A4CNCD                                           CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
  
      C     ENDVAL        ENDSR
       *****************************************************************
@@ -392,6 +607,16 @@
      C                   PARM                    DDTIN4
       ** TIN5
      C                   PARM                    DDTIN5
+                                                                                              CGL157
+     C                   PARM                    DDTIN6                                       CGL157
+      ** TIN3                                                                                 CGL157
+     C                   PARM                    DDTIN7                                       CGL157
+      ** TIN4                                                                                 CGL157
+     C                   PARM                    DDTIN8                                       CGL157
+      ** TIN5                                                                                 CGL157
+     C                   PARM                    DDTIN9                                       CGL157
+      ** TIN5                                                                                 CGL157
+     C                   PARM                    DDTIN0                                       CGL157
       ** Country of Domicile
      C                   PARM                    DDCOLC
       ** Country of TIN 2
@@ -402,6 +627,16 @@
      C                   PARM                    DDCTIN4
       ** Country of TIN 5
      C                   PARM                    DDCTIN5
+      ** Country of TIN 2                                                                     CGL157
+     C                   PARM                    DDCTIN6                                      CGL157
+      ** Country of TIN 3                                                                     CGL157
+     C                   PARM                    DDCTIN7                                      CGL157
+      ** Country of TIN 4                                                                     CGL157
+     C                   PARM                    DDCTIN8                                      CGL157
+      ** Country of TIN 5                                                                     CGL157
+     C                   PARM                    DDCTIN9                                      CGL157
+      ** Country of TIN 5                                                                     CGL157
+     C                   PARM                    DDCTIN0                                      CGL157
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
@@ -417,6 +652,16 @@
      C                   PARM                    DDOKCTIN4
       ** Country of TIN 5 - OK
      C                   PARM                    DDOKCTIN5
+      ** Country of TIN 2 - OK                                                                CGL157
+     C                   PARM                    DDOKCTIN6                                    CGL157
+      ** Country of TIN 3 - OK                                                                CGL157
+     C                   PARM                    DDOKCTIN7                                    CGL157
+      ** Country of TIN 4 - OK                                                                CGL157
+     C                   PARM                    DDOKCTIN8                                    CGL157
+      ** Country of TIN 5 - OK                                                                CGL157
+     C                   PARM                    DDOKCTIN9                                    CGL157
+      ** Country of TIN 5 - OK                                                                CGL157
+     C                   PARM                    DDOKCTIN0                                    CGL157
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

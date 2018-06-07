@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD CRS Normal Accounts Tool')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000315 - CRS Normal Customer/NAH Accounts Tool       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CGL177   *CREATE   Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+             DCL        VAR(&MOD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
+
+/* Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+
+             SNDMSG     MSG('SDC000315 - CRS Normal Customer/NAH Classification +
+                          Tool') TOMSGQ(MRUNQ)
+
+             RTVJOBA    JOB(&JOBID)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAPD)
+             MONMSG     MSGID(CPF0000)
+
+             CPYF       FROMFILE(SDCRNAPD) TOFILE(QTEMP/SDCRNAPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+             CLRPFM     FILE(QTEMP/SDCRNAPD)
+
+             CRTDUPOBJ  OBJ(SDCRNAL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)
+             MONMSG     MSGID(CPF2135)
+
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRNAL0)
+             MONMSG     MSGID(CPF2130 CPD2104)
+
+             DLTF       FILE(&DMLIB/&JOBID)
+
+/* Call the tool */
+             CALL       PGM(SD000318) PARM(&MOD)
+
+             GOTO       CMDLBL(END)
+
+ERROR:
+             SNDMSG     MSG('CRS Normal Customer/NAH Accounts Classfn Tool Ended +
+                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+
+END:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAPD)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

@@ -15,15 +15,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAS009  *CREATE    Date 04May04               *
+      *                 CAS009  *CREATE    Date 04May04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
       *                                                               *
@@ -543,12 +546,14 @@
      C                   PARM      'DLIDLFEPD'   PInvFile1
      C                   PARM      *BLANKS       PInvFile2
      C                   PARM      *BLANKS       PInvFile3
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
  
       ** Invalid File Data
  
      C                   PARM      InvDF         PInvFDta1
      C                   PARM      *BLANKS       PInvFDta2
      C                   PARM      *BLANKS       PInvFDta3
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
  
       ** Outputs
       ** Function Keys

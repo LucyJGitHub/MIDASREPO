@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD028364           Date 11Jul14               *
+      *  Last Amend No. MD050383           Date 18Apr18               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD028364           Date 11Jul14               *
       *                 MD026506           Date 29May14               *
       *                 MD026752           Date 19May14               *
       *                 MD026537           Date 28Apr14               *
@@ -43,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050383 - Phone Number Country highlights an error even the *
+      *             fields are not mandatory for input in NAHO        *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD028364 - Family Name and First Name overlapped by the new  *
       *             upper-shifted fields. (Recompile)                 *
@@ -395,6 +400,17 @@
      C     OKCTIN5       COMP      'N'                                    83                  CGL132
      C*****OKCRDT        COMP      'N'                                    85         CGL132 MD026537
      C     OKCRDT        COMP      'N'                                    55                MD026537
+     C     OKMCT1        COMP      'N'                                    40                  CGL157
+     C     OKMCT2        COMP      'N'                                    61                  CGL157
+     C     OKMCT3        COMP      'N'                                    62                  CGL157
+     C     OKMCT4        COMP      'N'                                    63                  CGL157
+     C     OKMCT5        COMP      'N'                                    64                  CGL157
+     C     OKPCT1        COMP      'N'                                    65                  CGL157
+     C     OKPCT2        COMP      'N'                                    66                  CGL157
+     C     OKPCT3        COMP      'N'                                    67                  CGL157
+     C     OKPCT4        COMP      'N'                                    68                  CGL157
+     C*****OKPCT5        COMP      'N'                                    69                  CGL157
+     C     OKPCT5        COMP      'N'                                    89                MD050383
  
      C**********         IF        DDCRDT <> *BLANKS                                 CGL132 MD026506
      C                   EVAL      *IN60 = *OFF                                             MD026506

@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. MD041313           Date 16Sep16               *
+      *  Prev Amend No. MD040876           Date 26Aug16               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 AR1043440          Date 11Oct12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24746           Date 02Jul09               *
@@ -32,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041313 - US Indicia System Values are not populated        *
+      *  MD040876 - CRS MQ                                            *
+      *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -60,9 +66,28 @@
      F                                     Rename(SDVNAHLD0:SDVNAHLD1)
      FSDVFTNHL0 UF   E           K DISK                                                       CGL132
      F                                     COMMIT                                             CGL132
+     FSDVFTNHL1 UF   E           K DISK                                                     MD040876
+     F                                     Rename(SDVFTNHD0:SDVFTNHD1)                      MD040876
+     F                                     COMMIT                                           MD040876
+     FSDVCRNHL0 UF   E           K DISK                                                     MD040876
+     F                                     COMMIT                                           MD040876
+     FSDVCRNHL1 UF   E           K DISK                                                     MD040876
+     F                                     Rename(SDVCRNHD0:SDVCRNHD1)                      MD040876
+     F                                     COMMIT                                           MD040876
+     FSDVCRSNL0 UF   E           K DISK                                                     MD040876
+     F                                     COMMIT                                           MD040876
+     FSDVCRSNL1 UF   E           K DISK                                                     MD040876
+     F                                     Rename(SDVCRSND0:SDVCRSND1)                      MD040876
+     F                                     COMMIT                                           MD040876
  
      FSDVENAHLPDO    E             Disk
      F                                     Rename(SDVNAHLD0:SDVNAHLERR)
+     FSDVEFTNHPDO    E             Disk                                                     MD040876
+     F                                     Rename(SDVFTNHD0:SDVFTNHERR)                     MD040876
+     FSDVECRNHPDO    E             Disk                                                     MD040876
+     F                                     Rename(SDVCRNHD0:SDVCRNHERR)                     MD040876
+     FSDVECRSNPDO    E             Disk                                                     MD040876
+     F                                     Rename(SDVCRSND0:SDVCRSNERR)                     MD040876
  
       *****************************************************************
       ** +--------------------------------------+
@@ -112,6 +137,8 @@
       **  Externally Described Data Structure for Valid Non-A/C Holder
      D SDVNAH        E DS                  Extname(SDVNAHLPD)
      D SDVFATCA      E DS                  Extname(SDVFTNHPD)                                 CGL132
+     D SDVCRNH       E DS                  Extname(SDVCRNHPD)                               MD040876
+     D SDVCRSN       E DS                  Extname(SDVCRSNPD)                               MD040876
  
      D SDNAHLUPC       DS             1    Dtaara(SDNAHLUPC)
  
@@ -122,6 +149,14 @@
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  Extname(DSFDY)
  
+      ** Override Database Table                                                            MD041313
+     D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                          MD041313
+     D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                          MD041313
+     D ##OV3           S             50    DIM(1) CTDATA PERRCD(1)                          MD041313
+     D ##OV4           S             50    DIM(1) CTDATA PERRCD(1)                          MD041313
+                                                                                            MD041313
+
+     D PCrsdF          S            222A   DIM(30)                                          MD040876
      D Object          S             10A   Inz('SDNAHLUPC')
      D LockObj         S             10A   Inz('SDNAHLLCK')
      D Lib             S             10A   Inz('*LIBL')
@@ -163,6 +198,16 @@
      D CGL031          S              1A                                                   AR1043440
      D CGL032          S              1A                                                   AR1043440
      D CGL132          S              1A                                                      CGL132
+     D CGL157          S              1A                                                    MD040876
+     D X               S              2S 0                                                  MD040876
+     D PReturn         S              7A                                                    MD041313
+     D PTranID         S             10A                                                    MD041313
+     D PSource         S              1A                                                    MD041313
+     D PClass          S              5A   INZ(*BLANKS)                                     MD041313
+     D PRepType        S              1A                                                    MD041313
+     D PMode           S              1A                                                    MD041313
+     D WMsgLen         S             15P 5 INZ(50)                                          MD041313
+     D WTimestamp      S             26A                                                      CGL157
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -248,6 +293,22 @@
      C     NANAHO        CHAIN     SDVFTNHL0                          99                      CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C     NANAHO        CHAIN     SDVCRNHL0                          99                    MD040876
+                                                                                            MD040876
+     C                   EVAL      X = 1                                                    MD040876
+     C                   CLEAR                   PCrsdF                                     MD040876
+     C     NANAHO        SETLL     SDVCRSNL0                                                MD040876
+     C     NANAHO        READE     SDVCRSNL0                                                MD040876
+     C                   DOW       NOT %EOF(SDVCRSNL0)                                      MD040876
+     C                             AND NANAHO = RVNAHO                                      MD040876
+     C                             AND X < 31                                               MD040876
+     C                   EVAL      PCrsdF(X) = SDVCRSN                                      MD040876
+     C                   EVAL      X = X + 1                                                MD040876
+     C     NANAHO        READE     SDVCRSNL0                                                MD040876
+     C                   ENDDO                                                              MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
      C     *IN99         DOWEQ     '0'
  
       ** Load the API dump data area with as many fields from the message
@@ -265,6 +326,8 @@
      C                   PARM      *BLANK        @@RTCD
      C                   PARM                    SDVNAH
      C                   PARM                    SDVFATCA                                     CGL132
+     C                   PARM                    SDVCRNH                                    MD040876
+     C                   PARM                    PCrsdF                                     MD040876
  
       ** Commit updates if no error
  
@@ -275,8 +338,56 @@
      C                   ELSE
  
      C                   DELETE    SDVNAHLD0
+                                                                                            MD040876
+     C                   IF        CGL132 = 'Y'                                             MD040876
+     C     NANAHO        CHAIN     SDVFTNHL0                                                MD040876
+     C                   IF        %FOUND(SDVFTNHL0)                                        MD040876
      C                   DELETE    SDVFTNHD0                                                  CGL132
+     C                   ENDIF                                                              MD040876
+     C                   ENDIF                                                              MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C     NANAHO        CHAIN     SDVCRNHL0                          99                    MD041313
+     C                   IF        %FOUND(SDVCRNHL0)                                        MD041313
+     C                   DELETE    SDVCRNHD0                                                MD040876
+     C     NANAHO        SETLL     SDVCRSNL0                                                MD040876
+     C     NANAHO        READE     SDVCRSNL0                                                MD040876
+     C                   DOW       NOT %EOF(SDVCRSNL0)                                      MD040876
+     C                             AND NANAHO = RVNAHO                                      MD040876
+     C                   DELETE    SDVCRSND0                                                MD040876
+     C     NANAHO        READE     SDVCRSNL0                                                MD040876
+     C                   ENDDO                                                              MD040876
+     C                   ENDIF                                                              MD041313
+     C                   ENDIF                                                              MD040876
      C                   COMMIT
+     C                   IF        @@RTCD = *BLANKS                                         MD041313
+     C                             AND CGL132 ='Y'                                          MD041313
+                                                                                            MD041313
+     C                   CALL      'QCMDEXC'                                                MD041313
+     C                   PARM                    ##OV1                                      MD041313
+     C                   PARM                    WMsgLen                                    MD041313
+                                                                                            MD041313
+     C                   CALL      'QCMDEXC'                                                MD041313
+     C                   PARM                    ##OV3                                      MD041313
+     C                   PARM                    WMsgLen                                    MD041313
+                                                                                            MD041313
+     C                   CALL      'SD000732'                                               MD041313
+     C                   PARM      *BLANKS       PReturn                                    MD041313
+     C                   PARM      NANAHO        PTranID                                    MD041313
+     C                   PARM      'N'           PSource                                    MD041313
+     C                   PARM                    PClass                                     MD041313
+     C                   PARM                    PClass                                     MD041313
+     C                   PARM      ' '           PRepType                                   MD041313
+     C                   PARM      'A'           PMode                                      MD041313
+                                                                                            MD041313
+     C                   CALL      'QCMDEXC'                                                MD041313
+     C                   PARM                    ##OV2                                      MD041313
+     C                   PARM                    WMsgLen                                    MD041313
+                                                                                            MD041313
+     C                   CALL      'QCMDEXC'                                                MD041313
+     C                   PARM                    ##OV4                                      MD041313
+     C                   PARM                    WMsgLen                                    MD041313
+                                                                                            MD041313
+     C                   ENDIF                                                              MD041313
                                                                                            AR1043440
      C                   IF        CGL031 = 'Y' AND                                        AR1043440
      C                             CGL032 = 'Y'                                            AR1043440
@@ -307,6 +418,28 @@
  
      C                   WRITE     SDVNAHLERR
      C                   DELETE    SDVNAHLD1
+     C                   IF        CGL132 = 'Y'                                             MD040876
+     C                   MOVE      @Timestamp    WTimestamp                                   CGL157
+     C     WKeyNahoL1    CHAIN     SDVFTNHL1                          89                    MD040876
+                                                                                            MD040876
+     C                   WRITE     SDVFTNHERR                                               MD040876
+     C                   DELETE    SDVFTNHD1                                                MD040876
+     C                   ENDIF                                                              MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C     @KeyNahoL1    CHAIN     SDVCRNHL1                          89                    MD040876
+                                                                                            MD040876
+     C                   WRITE     SDVCRNHERR                                               MD040876
+     C                   DELETE    SDVCRNHD1                                                MD040876
+                                                                                            MD040876
+     C     @KeyNahoL1    SETLL     SDVCRSNL1                                                MD040876
+     C     @KeyNahoL1    READE     SDVCRSNL1                                                MD040876
+     C                   DOW       %FOUND(SDVCRSNL1)                                        MD040876
+     C                             AND NANAHO = RVNAHO                                      MD040876
+     C                   WRITE     SDVCRSNERR                                               MD040876
+     C                   DELETE    SDVCRSND1                                                MD040876
+     C     @KeyNahoL1    READE     SDVCRSNL1                                                MD040876
+     C                   ENDDO                                                              MD040876
+     C                   ENDIF                                                              MD040876
  
       ** Send message to system operator
  
@@ -354,6 +487,10 @@
      C     @KeyNahoL1    KLIST
      C                   KFLD                    @CuNaho
      C                   KFLD                    @Timestamp
+                                                                                              CGL157
+     C     WKeyNahoL1    KLIST                                                                CGL157
+     C                   KFLD                    @CuNaho                                      CGL157
+     C                   KFLD                    WTimestamp                                   CGL157
  
       ** Check if an existing DBU_NAHL job is active in the subsystem.
  
@@ -464,6 +601,21 @@
      C                   MOVEL     'N'           CGL132                                       CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+      ** Access SAR details file to determine if CGL157                                     MD040876
+      ** CRS is installed                                                                   MD040876
+                                                                                            MD040876
+     C                   CALLB     'AOSARDR0'                                               MD040876
+     C                   PARM      *BLANKS       @RTCD                                      MD040876
+     C                   PARM      '*VERIFY'     @OPTN                                      MD040876
+     C                   PARM      'CGL157'      @SARD                                      MD040876
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD040876
+      *                                                                                     MD040876
+     C     @RTCD         IFEQ      *BLANK                                                   MD040876
+     C                   MOVEL     'Y'           CGL157                                     MD040876
+     C                   ELSE                                                               MD040876
+     C                   MOVEL     'N'           CGL157                                     MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -491,3 +643,11 @@
       /EJECT
 **  CPY@
 (c) Finastra International Limited 2004
+** ##OV1
+OVRDBF FILE(SDNAHOL0) TOFILE(SDNAHOL0) SHARE(*NO)
+** ##OV2
+DLTOVR FILE(SDNAHOL0)
+** ##OV3
+OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)
+** ##OV4
+DLTOVR FILE(SDFTNHL0)

@@ -15,8 +15,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044368           Date 28Feb17               *
+      *  Last Amend No. MD045308           Date 18Apr17               *
+      *  Prev Amend No. MD045261           Date 12Apr17               *
+      *                 MD045251           Date 12Apr17               *
+      *                 MD045220           Date 11Apr17               *
+      *                 MD045210           Date 07Apr17               *
+      *                 MD045184           Date 07Apr17               *
+      *                 CGL185             Date 13Mar17               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD044368           Date 28Feb17               *
       *                 MD044000           Date 06Feb17               *
       *                 MD043973           Date 03Feb17               *
       *                 MD043144           Date 19Dec16               *
@@ -25,6 +32,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045308 - XML Account closed value is incorrect             *
+      *  MD045261 - Misplaced Payment in FATCA XML                    *
+      *  MD045251 - Misplaced <ftc:AccountHolder> tag                 *
+      *  MD045220 - <ftc:AccountsClosed> tag not available in the     *
+      *             XML file                                          *
+      *  MD045210 - DocRefID format is incorrect for FATCA XML from   *
+      *             Correct, Amend, Void actions                      *
+      *  MD045184 - Birthdate is populated in FATCA Report for        *
+      *             Organization Substantial US Owner                 *
+      *  CGL185 - FATCA XML 2.0                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044368 - Certain Joint Account Members are not reporting   *
       *             Joint Account Assets                              *
@@ -194,6 +211,9 @@
       ** Midas GL Report Management Includes Excludes
      FGLRMIEPD  UF A E           K DISK    INFSR(*PSSR)
  
+      ** Midas GL Report Management                                                           CGL185
+     FGLCAPAL1  UF A E           K DISK    INFSR(*PSSR)                                       CGL185
+                                                                                              CGL185
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -221,6 +241,7 @@
      D SysVal1         C                   'FATCAHighValueCcy'
      D SysVal2         C                   'FATCAReportVersion'
      D SysVal3         C                   'FATCALowValDepAcc'
+     D SysVal4         C                   'FATCAFilerCategory'                               CGL185
      D WsSysVal1       C                   'FATCACountryofTax'
  
       ** +--------------------------------------+
@@ -684,9 +705,14 @@
      D KJano           S             10A
      D XCust           S              6A
      D SCust           S              6A
+     D WFAGIIN         S             25A                                                      CGL185
  
      D PKEY1           S             10A
      D WNUM3           S              3S 0                                                  MD043144
+     D PFilCat         S              8A                                                      CGL185
+     D pos             S              3S 0                                                    CGL185
+     D WFatca          S              8A                                                      CGL185
+     D WLoop           S              1A                                                      CGL185
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -924,6 +950,9 @@
       *****************************************************************
      C     SRReportFI    BEGSR
  
+     C                   EVAL      WFAGIIN = *BLANKS                                        MD045210
+     C                   EVAL      WFAGIIN = FAGIIN                                         MD045210
+     C                                                                                      MD045210
      C                   IF        PRpDocRef <> *BLANKS
      C                             AND (PActn = 'C'
      C                             OR PActn = 'A')
@@ -980,6 +1009,48 @@
      C                                    + '/' + %TRIM(E5CITY)
      C                   ENDIF
      C                   EXSR      SRWrite
+                                                                                              CGL185
+     C                   EVAL      KGroupNm = 'FATCA'                                         CGL185
+     C                   EVAL      KElemNm  = 'ReportingFI'                                   CGL185
+     C                   EXSR      SRGetGrpLevl                                               CGL185
+     C                   EVAL      MGELMT = 'FilerCategory'                                   CGL185
+                                                                                              CGL185
+      ** Retrieve Filer Category                                                              CGL185
+     C                   EVAL      WLoop = 'Y'                                                CGL185
+     C                   EVAL      WFatca = *Blanks                                           CGL185
+     C                   EVAL      pos = %SCAN('FATCA':SVAL4)                                 CGL185
+     C                   IF        pos = 0                                                    CGL185
+     C                   EVAL      WLoop = 'N'                                                CGL185
+     C                   ENDIF                                                                CGL185
+     C                   EVAL      WFatca = %SUBST(SVAL4:pos:8)                               CGL185
+     C                   EVAL      pos = pos + 8                                              CGL185
+                                                                                              CGL185
+     C                   DOW       WLoop = 'Y'                                                CGL185
+                                                                                              CGL185
+     C                   IF        %SUBST(SVAL4:pos:5) = '     '                              CGL185
+     C                   EVAL      WFatca = *Blanks                                           CGL185
+     C                   EVAL      WLoop = 'N'                                                CGL185
+     C                   ELSE                                                                 CGL185
+                                                                                              CGL185
+      ** Save Filer Category                                                                  CGL185
+     C                   IF        %SUBST(SVAL4:pos:5) = 'FATCA'                              CGL185
+     C                   EVAL      WFatca = %SUBST(SVAL4:pos:8)                               CGL185
+     C                   EVAL      pos = pos + 8                                              CGL185
+     C                   ELSE                                                                 CGL185
+                                                                                              CGL185
+      ** Check if branch is found                                                             CGL185
+     C                   IF        %SUBST(SVAL4:pos:3) = PBrcd                                CGL185
+     C                   EVAL      WLoop = 'N'                                                CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
+     C                   EVAL      pos = pos + 3                                              CGL185
+     C                   ENDIF                                                                CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
+     C                   ENDDO                                                                CGL185
+                                                                                              CGL185
+     C                   EVAL      MGDATA = WFatca                                            CGL185
+     C                   EXSR      SRWrite                                                    CGL185
  
      C                   EVAL      KGroupNm = 'ReportingFI'
      C                   EVAL      KElemNm  = 'DocSpec'
@@ -998,11 +1069,17 @@
      C                   EVAL      MGDATA = %TRIM(WBRIntCust)
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = PRpDocRef
+     C                   IF        PRpDocRef <> *BLANKS                                       CGL185
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
+     C                   ENDIF                                                                CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   ELSE
      C                   EVAL      KMsgNo = PMsId
@@ -1032,11 +1109,13 @@
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                             AND WRtype = 'DRAFT VOID'
      C                             AND PActn = 'V'
      C                             AND PRpDocRef <> *BLANKS
      C                   EVAL      MGDATA = PRpDocRef
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
      C                   ENDSL
  
      C                   EXSR      SRWrite
@@ -1140,6 +1219,8 @@
      C                   EVAL      IxPayment = 3000
      C                   ENDIF
  
+     C                   IF        (WReportInd = 'Y'                                        MD045261
+     C                             OR WReportJnt = 'Y')                                     MD045261
      C                   SELECT
      C                   WHEN      WPrevRepIn = 'Y'
      C                   EXSR      SRCompPaymt
@@ -1149,6 +1230,7 @@
      C                             OR WReportJnt = 'Y'
      C                   EXSR      SRCompPaymt
      C                   ENDSL
+     C                   ENDIF                                                              MD045261
  
      C     PBrcd         READE     GLRMEXL0
  
@@ -1266,6 +1348,8 @@
      C                   EVAL      IxPayment = 3000
      C                   ENDIF
  
+     C                   IF        (WReportInd = 'Y'                                        MD045261
+     C                             OR WReportJnt = 'Y')                                     MD045261
      C                   SELECT
      C                   WHEN      WPrevRepIn = 'Y'
      C                   EXSR      SRCompPaymt
@@ -1275,6 +1359,7 @@
      C                             OR WReportJnt = 'Y'
      C                   EXSR      SRCompPaymt
      C                   ENDSL
+     C                   ENDIF                                                              MD045261
  
      C     KBrAcno1      READE     GLRMEXL0
      C                   ENDDO
@@ -1462,6 +1547,8 @@
      C                   EVAL      IxPayment = 3000
      C                   ENDIF
  
+     C                   IF        (WReportInd = 'Y'                                        MD045261
+     C                             OR WReportJnt = 'Y')                                     MD045261
      C                   SELECT
      C                   WHEN      WPrevRepIn = 'Y'
      C                   EXSR      SRCompPaymt
@@ -1471,6 +1558,7 @@
      C                             OR WReportJnt = 'Y'
      C                   EXSR      SRCompPaymt
      C                   ENDSL
+     C                   ENDIF                                                              MD045261
  
      C     KBrCust0      READE     GLRMEXL0
      C                   ENDDO
@@ -1750,11 +1838,17 @@
      C                   EVAL      MGDATA = %TRIM(EXACNO)
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = WCorrDocRef
+     C                   IF        WCorrDocRef <> *BLANKS                                     CGL185
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
+     C                   ENDIF                                                                CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      MGCUST = EXCUSD
      C                   EVAL      MGACNO = EXACNO
@@ -1767,6 +1861,12 @@
      C                   EVAL      MGELMT = 'AccountNumber'
      C                   EVAL      MGDATA = EXACNO
      C                   EXSR      SRWrite
+                                                                                              CGL185
+     C                   EXSR      SRAcctClose                                                CGL185
+                                                                                            MD045251
+     C                   EVAL      KGroupNm = 'ReportingGroup'                              MD045251
+     C                   EVAL      KElemNm  = MGTPMT                                        MD045251
+     C                   EXSR      SRGetGrpLevl                                             MD045251
  
      C                   EVAL      MGELMT = 'AcctHolder'
      C                   EVAL      MGDATA = EXCUSD
@@ -1857,11 +1957,17 @@
      C                   EVAL      MGDATA = %TRIM(EXACNO)
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = WCorrDocRef
+     C                   IF        WCorrDocRef <> *BLANKS                                     CGL185
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
+     C                   ENDIF                                                                CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      KGroupNm = 'ReportingGroup'
      C                   EVAL      KElemNm  = 'AccountReport'
@@ -1871,6 +1977,12 @@
      C                   EVAL      MGDATA = EXACNO
      C                   EXSR      SRWrite
  
+                                                                                              CGL185
+     C                   EXSR      SRAcctClose                                                CGL185
+                                                                                            MD045251
+     C                   EVAL      KGroupNm = 'ReportingGroup'                              MD045251
+     C                   EVAL      KElemNm  = 'AccountReport'                               MD045251
+     C                   EXSR      SRGetGrpLevl                                             MD045251
      C                   IF        EXACTY = 'CUST'
  
       ** Get Customer Details of the Joint Account Member
@@ -2349,11 +2461,13 @@
       ** Report Detail
      C                   EVAL      MGELMT = D4_MGELMT
      C                   EVAL      MGDATA = D4_MGDATA
+     C                   EVAL      MGDAT2 = D4_MGDAT2                                       MD045210
      C                   SELECT
      C                   WHEN      MGELMT = 'DocRefId'
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                             AND D4_MGACNO <> *BLANKS
      C                   EVAL      Iz = %SCAN('.':PMsid)
@@ -2795,6 +2909,7 @@
      C                   DOW       NOT %EOF(GLRMDTL4)
  
      C                   EVAL      MGELMT = D4_MGELMT
+     C                   EVAL      MGDAT2 = D4_MGDAT2                                       MD045210
      C                   SELECT
      C                   WHEN      MGELMT = 'DocTypeIndic'
      C                   EVAL      MGDATA = WDoctyp
@@ -2803,15 +2918,16 @@
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = AAcDocRf(Ix)
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   OTHER
      C                   EVAL      MGDATA = D4_MGDATA
      C                   ENDSL
      C                   EVAL      MGTPMT = D4_MGTPMT
      C                   EVAL      MGSEQU = D4_MGSEQU
      C                   EVAL      MGSEQ2 = D4_MGSEQ2
-     C                   EVAL      MGDAT2 = D4_MGDAT2
      C                   EVAL      MGCUST = D4_MGCUST
      C                   EVAL      MGACHO = D4_MGACHO
      C                   EVAL      MGMTYP = D4_MGMTYP
@@ -2904,6 +3020,7 @@
      C                   IF        WVoid = 'Y'
      C                   EVAL      MGELMT = D1_MGELMT
      C                   EVAL      MGDATA = D1_MGDATA
+     C                   EVAL      MGDAT2 = D1_MGDAT2                                       MD045210
      C                   SELECT
      C                   WHEN      MGELMT = 'DocTypeIndic'
      C                   EVAL      MGDATA = WDoctyp
@@ -2911,8 +3028,10 @@
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = APoolDocRf(Iy)
+     C                   EVAL      MGDAT2 = WFAGIIN                                         MD045210
      C                   ENDSL
      C                   EVAL      MGTPMT = D1_MGTPMT
      C                   EVAL      MGSEQU = D1_MGSEQU
@@ -3455,11 +3574,17 @@
      C                   EVAL      MGDATA = %TRIM(WPoolDocRef)
      C                                      + '.' + WMsgAcSq + WMsgDtyp
      C                                      + WMsgActn
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
  
      C                   EVAL      MGELMT = 'CorrDocRefId'
      C                   EVAL      MGDATA = WPoolCorDrf
+     C                   IF        WPoolCorDrf <> *BLANKS                                     CGL185
+     C                   EVAL      MGDAT2 = WFAGIIN                                           CGL185
+     C                   ENDIF                                                                CGL185
      C                   EXSR      SRWrite
+     C                   EVAL      MGDAT2 = *BLANKS                                           CGL185
      C                   ENDIF
  
      C                   ENDSR
@@ -3536,6 +3661,7 @@
      C                   EXSR      SRFTCSDet
      C                   EXSR      SRWrCusDetail
  
+     C                   IF        FACSTY = 'P'                                             MD045184
      C                   EVAL      KGroupNm = 'SubstantialOwner'
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
@@ -3548,6 +3674,7 @@
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
      C                   EXSR      SRWrite
+     C                   ENDIF                                                              MD045184
  
      C                   ELSE
  
@@ -3569,6 +3696,7 @@
      C                   EXSR      SRFTNHDet
      C                   EXSR      SRWrNahDetail
  
+     C                   IF        FNNHTY = 'P'                                             MD045184
      C                   EVAL      KGroupNm = 'SubstantialOwner'
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
@@ -3582,6 +3710,7 @@
      C                   EVAL      MGDATA = *BLANKS
      C                   MOVEL     NHDBTH        MGDATA
      C                   EXSR      SRWrite
+     C                   ENDIF                                                              MD045184
      C                   ENDIF
  
      C     XCust         READE     SDJACCL0
@@ -3647,6 +3776,7 @@
      C                   EXSR      SRFTCSDet                                                MD043144
      C                   EXSR      SRWrCusDetail                                            MD043144
                                                                                             MD043144
+     C                   IF        FACSTY = 'P'                                             MD045184
      C                   EVAL      KGroupNm = 'SubstantialOwner'                            MD043144
      C                   EVAL      KElemNm  = 'BirthInfo'                                   MD043144
      C                   EXSR      SRGetGrpLevl                                             MD043144
@@ -3659,6 +3789,7 @@
      C                   EVAL      MGELMT = 'BirthDate'                                     MD043144
      C                   EVAL      MGDATA = E5DBTH                                          MD043144
      C                   EXSR      SRWrite                                                  MD043144
+     C                   ENDIF                                                              MD045184
                                                                                             MD043144
      C                   ELSE                                                               MD043144
       *                                                                                     MD043144
@@ -3682,6 +3813,7 @@
      C                   EXSR      SRFTNHDet                                                MD043144
      C                   EXSR      SRWrNahDetail                                            MD043144
                                                                                             MD043144
+     C                   IF        FNNHTY = 'P'                                             MD045184
      C                   EVAL      KGroupNm = 'SubstantialOwner'                            MD043144
      C                   EVAL      KElemNm  = 'BirthInfo'                                   MD043144
      C                   EXSR      SRGetGrpLevl                                             MD043144
@@ -3695,6 +3827,7 @@
      C                   EVAL      MGDATA = *BLANKS                                         MD043144
      C                   MOVEL     NHDBTH        MGDATA                                     MD043144
      C                   EXSR      SRWrite                                                  MD043144
+     C                   ENDIF                                                              MD045184
      C                   ENDIF                                                              MD043144
                                                                                             MD043144
      C                   ENDIF                                                              MD043144
@@ -5673,6 +5806,8 @@
       *****************************************************************
      C     SRChkLowDep   BEGSR
  
+      ** If system value is zero, no need to check for if Acct is Low Dep                     CGL185
+     C                   IF        WSValLowDep <> 0                                           CGL185
       ** Check if MM Deals transactions or Retail Account
      C                   MOVEL     EXTTYP        WDLType
      C                   IF        WDLType = 'TD'
@@ -5714,6 +5849,18 @@
      C                   EVAL      WLowDepAcc = 'Y'
      C                   ENDIF
      C                   ENDIF
+     C                   ELSE                                                                 CGL185
+     C                   IF        EXBALN >= 0                                                CGL185
+     C                             AND EXACSQ <> 0                                            CGL185
+     C                             OR EXBALN <= 0                                             CGL185
+     C                             AND EXACSQ = 0                                             CGL185
+     C     EXACNO        CHAIN     GLCAPAL1                                                   CGL185
+     C                   IF        NOT %FOUND (GLCAPAL1)                                      CGL185
+      ** If no income/payment, flag as lowdep so that it will not be reported                 CGL185
+     C                   EVAL      WLowDepAcc = 'Y'                                           CGL185
+     C                   ENDIF                                                                CGL185
+     C                   ENDIF                                                                CGL185
+     C                   ENDIF                                                                CGL185
  
      C                   ENDSR
       *****************************************************************
@@ -6149,7 +6296,8 @@
      C                   PARM                    SVal2
      C                   PARM      SysVal3       SValK3
      C                   PARM                    SVal3
-     C                   PARM                    SValK4
+     C**********         PARM                    SValK4                                       CGL185
+     C                   PARM      SysVal4       SValK4                                       CGL185
      C                   PARM                    SVal4
      C                   PARM                    SValK5
      C                   PARM                    SVal5
@@ -6703,6 +6851,15 @@
      C                   ENDIF
      C                   ENDIF
  
+     C                   IF        WkCSTY = 'F'                                               CGL185
+     C                             AND WkCSST = 'NP'                                          CGL185
+     C                             AND (WkINFC = 'Y' OR WkINFC = 'A')                         CGL185
+     C                             AND (WkRPTT = 'C' OR WkRPTT = 'N')                         CGL185
+     C                             AND WkEXEM <> 'Y'                                          CGL185
+                                                                                              CGL185
+     C                   EVAL      WJHasSubOwnr = 'Y'                                         CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
      C                   IF        WkCSTY = 'F'
      C                             AND WkCSST = 'OW'
      C                             AND (WJHasIndicia = 'Y'
@@ -6711,6 +6868,21 @@
      C                             AND WkCSST = 'PA'
      C                             AND (WJHasIndicia = 'Y'
      C                             OR  WkREPT = 'Y')
+     C                             OR WkCSTY = 'F'                                            CGL185
+     C                             AND WkCSST = 'OW'                                          CGL185
+     C                             AND WJHasIndicia = 'Y'                                     CGL185
+     C                             AND (WkINFC = 'Y' OR WkINFC = 'A')                         CGL185
+     C                             AND (WkRPTT = 'C' OR WkRPTT = 'N')                         CGL185
+     C                             AND (WkHVAC = 'H' OR WkHVAC = 'M')                         CGL185
+     C                             AND WkEXEM <> 'Y'                                          CGL185
+                                                                                              CGL185
+     C                             OR WkCSTY = 'N'                                            CGL185
+     C                             AND WkCSST = 'PA'                                          CGL185
+     C                             AND (WkINFC = 'Y' OR WkINFC = 'A')                         CGL185
+     C                             AND (WkRPTT = 'C' OR WkRPTT = 'N')                         CGL185
+     C                             AND (WkHVAC = 'H' OR WkHVAC = 'M')                         CGL185
+     C                             AND WkEXEM <> 'Y'                                          CGL185
+                                                                                              CGL185
      C                   IF        JCCUST <> *BLANKS                                        MD043144
      C                             OR WCuahFlg = 'C'                                        MD043144
      C                   EVAL      PSub6 = PSub10                                           MD043144
@@ -6777,6 +6949,14 @@
      C                   EVAL      WJHasSubOwnr = 'Y'
      C                   ENDIF
      C                   ENDIF
+     C                   IF        WkCSTY = 'F'                                               CGL185
+     C                             AND WkCSST = 'NP'                                          CGL185
+     C                             AND (WkRPTT = 'C' OR WkRPTT = 'N')                         CGL185
+     C                             AND (WkINFC = 'Y' OR WkINFC = 'A')                         CGL185
+     C                             AND WkEXEM <> 'Y'                                          CGL185
+     C                   EVAL      WJHasSubOwnr = 'Y'                                         CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
      C*****JCCUST        READE     SDJACCL1                                                 MD043144
      C     PSub6         READE     SDJACCL1                                                 MD043144
      C                   ENDDO
@@ -6868,6 +7048,14 @@
      C                   EVAL      WJHasSubOwnr = 'Y'                                       MD043144
      C                   ENDIF                                                              MD043144
      C                   ENDIF                                                              MD043144
+     C                   IF        WkCSTY = 'F'                                               CGL185
+     C                             AND WkCSST = 'NP'                                          CGL185
+     C                             AND (WkRPTT = 'C' OR WkRPTT = 'N')                         CGL185
+     C                             AND (WkINFC = 'Y' OR WkINFC = 'A')                         CGL185
+     C                             AND WkEXEM <> 'Y'                                          CGL185
+     C                   EVAL      WJHasSubOwnr = 'Y'                                         CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
      C                   ENDIF                                                              MD043144
      C                   ENDIF                                                              MD043144
      C     PSub6         READE     SDCUAHL1                                                 MD043144
@@ -6956,6 +7144,38 @@
      C                   ENDIF
  
      C                   ENDSR
+                                                                                              CGL185
+      *****************************************************************                       CGL185
+      /EJECT                                                                                  CGL185
+      *****************************************************************                       CGL185
+      *                                                               *                       CGL185
+      * SRAcctClose - Subroutine to check if account will be          *                       CGL185
+      *               reported as account closed                      *                       CGL185
+      *                                                               *                       CGL185
+      *****************************************************************                       CGL185
+                                                                                              CGL185
+     C     SRAcctClose   BEGSR                                                                CGL185
+                                                                                              CGL185
+     C                   EVAL      MGELMT = 'AccountClosed'                                 MD045220
+     C                   EVAL      MGDATA = 'false'                                         MD045220
+     C                   IF        EXTTYP = 'FDMAT'                                         MD045308
+     C                             OR EXTTYP = 'FRMAT'                                      MD045308
+     C                             OR EXTTYP = 'LEMAT'                                      MD045308
+     C                             OR EXTTYP = 'MMMAT'                                      MD045308
+     C                             OR EXTTYP = 'RECLD'                                      MD045308
+     C                             OR EXTTYP = 'RFMAT'                                      MD045308
+     C                             OR EXTTYP = 'RPMAT'                                      MD045308
+     C                             OR EXTTYP = 'RSMAT'                                      MD045308
+     C                             OR EXTTYP = 'RXMAT'                                      MD045308
+     C                             OR EXTTYP = 'SEMVD'                                      MD045308
+     C                   IF        EXBALN <> 0                                              MD045308
+     C                   EVAL      MGDATA = 'true'                                          MD045220
+     C                   ENDIF                                                                CGL185
+     C                   ENDIF                                                                CGL185
+     C                   EXSR      SRWrite                                                  MD045220
+                                                                                              CGL185
+     C                   ENDSR                                                                CGL185
+                                                                                              CGL185
       *****************************************************************
       /EJECT
       *****************************************************************

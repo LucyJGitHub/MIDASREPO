@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 261516             Date 15Aug09               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 261516             Date 15Aug09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  261516 - Front office Transaction ID and Associated Front    *
       *           Office Transaction ID is getting swapped when       *
@@ -688,12 +691,14 @@
      C                   PARM      'ABIFUNDPD'   PInvFile1
      C                   PARM      *Blanks       PInvFile2
      C                   PARM      *Blanks       PInvFile3
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
  
       ** Invalid file data
  
      C                   PARM      InvTr         PInvFDta1
      C                   PARM      *Blanks       PInvFDta2
      C                   PARM      *Blanks       PInvFDta3
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
  
       ** Outputs
       ** =======

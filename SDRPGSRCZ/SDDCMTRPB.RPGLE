@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD093  *CREATE    Date 01Apr13               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD093  *CREATE    Date 01Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD093 - Document Management                                 *
       *                                                               *
@@ -539,9 +542,11 @@
      C                   PARM      'SDIDCMTPD'   PInvFile1
      C                   PARM      *Blanks       PInvFile2
      C                   PARM      *Blanks       PInvFile3
+     C                   PARM      *Blanks       PInvFile4        10                        MD041294
      C                   PARM      InvTr         PInvFDta1
      C                   PARM      *Blanks       PInvFDta2
      C                   PARM      *Blanks       PInvFDta3
+     C                   PARM      *Blanks       PInvFDta4      4000                        MD041294
  
       * Output Parameters :
  

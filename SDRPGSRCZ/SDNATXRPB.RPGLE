@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER048 - German Features - Taxes (Recompile)                 *
@@ -545,9 +548,11 @@
      C                   PARM      'SDINATXPD'   PInvFile1
      C                   PARM      *Blanks       PInvFile2
      C                   PARM      *Blanks       PInvFile3
+     C                   PARM      *Blanks       PInvFile4        10                        MD041294
      C                   PARM      InvTr         PInvFDta1
      C                   PARM      *Blanks       PInvFDta2
      C                   PARM      *Blanks       PInvFDta3
+     C                   PARM      *Blanks       PInvFDta4      4000                        MD041294
  
       * Output Parameters :
  

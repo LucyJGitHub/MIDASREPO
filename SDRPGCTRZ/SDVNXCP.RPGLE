@@ -11,8 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042697           Date 22Nov16               *
+      *  Last Amend No. MD040734           Date 23Aug16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036459           Date 06Nov15               *
+      *                 MD036356           Date 02Nov15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD033804           Date 23Mar15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD042697           Date 22Nov16               *
       *                 CGL154             Date 13Oct14               *
       *                 MD033660           Date 16Mar15               *
       *                 MD033414           Date 28Feb15               *
@@ -23,6 +29,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040734 - CRS Exception other than Due Diligence is still   *
+      *             displayed                                         *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036459 - Exception 1 on insert                             *
+      *  MD036356 - Multiple NAHO FATCA fields does not default values*
+      *             from Main NAHO/CRS Details                        *
+      *  CGL157 - CRS Reporting                                       *
+      *  MD033804 - Database error encountered when a non-account     *
+      *             holder is included for FATCA reporting            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042697 - Newly insert NAHO is not reflected                *
       *  CGL154 - FATCA Reporting (Recompile)                         *
@@ -130,6 +145,25 @@
                                                                                             MD033414
       ** External DS for SAR Details                                                        MD033414
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD033414
+                                                                                              CGL157
+      ** CRS Valid Customer Details Screen 1                                                  CGL157
+     D SDVCRNS1      E DS                  EXTNAME(SDVCRNHPD)                                 CGL157
+                                                                                              CGL157
+      ** CRS Valid Customer Details Screen 2                                                  CGL157
+     D SDVCRNS2      E DS                  EXTNAME(SDVCRSNPD)                                 CGL157
+                                                                                              CGL157
+      ** Transaction Details in screen format                                                 CGL157
+     D CurCrnhDets   E DS                  EXTNAME(SDCRNSPD)                                  CGL157
+     D PrvCrsdDets   E DS                  EXTNAME(SDCRNSPD)                                  CGL157
+     D                                     PREFIX(P_)                                         CGL157
+                                                                                              CGL157
+      ** SDCRDDPD CRS Transaction Details in Screen Format                                    CGL157
+     D CrsdDet       E DS                  EXTNAME(SDCRDDPD)                                  CGL157
+                                                                                              CGL157
+      ** External DS for Bank Details                                                         CGL157
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  CGL157
+     D                                     PREFIX(L_)                                         CGL157
+                                                                                              CGL157
  
      D CustIndOverDS   DS
      D  JFAHMOV
@@ -184,6 +218,37 @@
      D  JFNTESV
      D  JFNTXSV
  
+     D PCRSDT          DS                                                                     CGL157
+     D  DDCTRY                 1      2                                                       CGL157
+     D  DDPREP                 3      3                                                       CGL157
+     D  DDREPT                 4      4                                                       CGL157
+     D  DDREPU                 5     14                                                       CGL157
+     D  DDREPD                15     20                                                       CGL157
+     D  DDREPM                21     26                                                       CGL157
+     D  DDREP1                27     90                                                       CGL157
+     D  DDREP2                91    154                                                       CGL157
+     D  DDEVD1               155    156                                                       CGL157
+     D  DDEVS1               157    159                                                       CGL157
+     D  DDEVD2               160    161                                                       CGL157
+     D  DDEVS2               162    164                                                       CGL157
+     D  DDEVD3               165    166                                                       CGL157
+     D  DDEVS3               167    169                                                       CGL157
+     D  DDEVD4               170    171                                                       CGL157
+     D  DDEVS4               172    174                                                       CGL157
+     D  DDEVD5               175    176                                                       CGL157
+     D  DDEVS5               177    179                                                       CGL157
+     D  DDTINN               180    204                                                       CGL157
+     D  DDEFFD               205    210                                                       CGL157
+     D  DDEXPD               211    216                                                       CGL157
+     D  DDCODOC              217    217                                                       CGL157
+     D  DDJACMC              218    218                                                       CGL157
+     D  DDMAILC              219    219                                                       CGL157
+     D  DDPHONC              220    220                                                       CGL157
+     D  DDRPAYC              221    221                                                       CGL157
+     D  DDPEP1               222    285                                                       CGL157
+     D  DDPEP2               286    349                                                       CGL157
+     D  DDCRSA               350    350                                                       CGL157
+     D  DDTINS               351    351                                                       CGL177
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -249,6 +314,25 @@
      D WSvalDlgMedEnt  S              6A                                                    MD033414
      D WSvalDlgHiEnt   S              6A                                                    MD033414
      D WDlgDt          S              5  0                                                  MD033414
+     D WCRSEftStrtDte  S              6A                                                      CGL157
+     D WCRSDlgMedInd   S              6A                                                      CGL157
+     D WCRSDlgHiInd    S              6A                                                      CGL157
+     D WCRSDlgMedEnt   S              6A                                                      CGL157
+     D WCRSDlgHiEnt    S              6A                                                      CGL157
+     D WCRSDlgNewAC    S              2  0                                                    CGL157
+     D WCRSForTINMan   S              1A                                                      CGL157
+     D WCRSLocTINMan   S              1A                                                      CGL157
+     D PCrsdS          S            351A   DIM(30)                                            CGL177
+     D X               S              2S 0                                                    CGL157
+     D PFeature        S              3A                                                      CGL157
+     D NCRSDlgMedInd   S              5  0                                                    CGL177
+     D NCRSDlgHiInd    S              5  0                                                    CGL177
+     D NCRSDlgMedEnt   S              5  0                                                    CGL177
+     D NCRSDlgHiEnt    S              5  0                                                    CGL177
+     D LowVal1         S              5  0                                                    CGL177
+     D LowVal2         S              5  0                                                    CGL177
+     D LowestVal       S              5  0                                                    CGL177
+      ** ^Flag to determine if FATCA or CRS                                                   CGL157
       ** Define work field Work File Date                                                   MD033414
      D PIDate          S              6A                                                    MD033414
      D PODate          S              5  0                                                  MD033414
@@ -283,6 +367,16 @@
  
      C                   EXSR      SRSVAL
  
+      ** Access System Values for CRS                                                         CGL157
+                                                                                              CGL157
+     C                   IF        PFeature = 'CRS'                                           CGL157
+                                                                                              CGL157
+      ** Do NOT Validate if the CRS Customer type is 'F' (FI)                                 CGL157
+      ** or CRS Exempt is equal to 'Y' (Yes)                                                  CGL157
+                                                                                              CGL157
+     C                   EXSR      SRSVAL2                                                    CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
       ** FATCA Exception Reporting for Non-Account Holders
      C                   EXSR      SrExcpNAHO
  
@@ -310,46 +404,100 @@
      C                   MOVE      *BLANKS       WExcpRptArr
  
       ** FATCA classification and US indicia are consistent
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHClass
+     C                   ENDIF                                                                CGL157
  
       ** new Customer or Non-account holder is subject to reporting
       ** but no US tax number is defined
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHRepTxN
+     C                   ENDIF                                                                CGL157
  
       ** new Customer or non-account holder is subject to reporting
       ** but no US tax number and/or date and place of birth is defined
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHRepBrth
+     C                   ENDIF                                                                CGL157
  
       ** Expiry days for a new customer or non-acocunt holder has passed
       ** and the classification is still the default value for new
       ** customer or non-account holder
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHExpCls
+     C                   ENDIF                                                                CGL157
  
       ** FATCA customer type is defined but no FATCA customer subtype
       ** defined
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHSubtyp
+     C                   ENDIF                                                                CGL157
  
       ** Customer is flagged as a participating FFI but the GIIN number
       ** information is missing
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHGIINno
+     C                   ENDIF                                                                CGL157
  
       ** Customer is flagged as a participating FFI but the GIIN
       ** verification date is blank
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHGIINDt
+     C                   ENDIF                                                                CGL157
  
       ** FATCA inoformation is flagged as 'complete' but customer
       ** or non-account holder has still one of the default statuses
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHComplt
+     C                   ENDIF                                                                CGL157
  
       ** Due diligence period is expired but FATCA information                              MD033414
       ** complete flag still set to 'No'                                                    MD033414
                                                                                             MD033414
      C                   IF        CGL154 = 'Y'                                             MD033414
                                                                                             MD033414
+     C                   IF        PFeature = 'FTC'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
      C                   EXSR      SrNHDlgnce                                               MD033414
+     C                   ENDIF                                                                CGL157
                                                                                             MD033414
      C                   ENDIF                                                              MD033414
                                                                                             MD033414
+      ** CRS New Customer or Non-account holder is subject to reporting                       CGL157
+      ** but no TIN is defined                                                                CGL157
+     C                   IF        PFeature = 'CRS'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
+     C                   EXSR      SrNewSubTIN                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** CRS Existing Customer or Non-account holder is subject to reporting                  CGL157
+      ** but no TIN is defined                                                                CGL157
+     C                   IF        PFeature = 'CRS'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
+     C                   EXSR      SrExtSubTIN                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** CRS customer type is defined as NFE, but no CRS customer sub-type defined.           CGL157
+     C                   IF        PFeature = 'CRS'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
+     C                   EXSR      SrCRSTypeNFE                                               CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** CRS Due Diligence period has expired but the CRS Information Complete Flag           CGL157
+      ** is still set to 'No' or 'Blank'                                                      CGL157
+     C                   IF        PFeature = 'CRS'                                           CGL157
+     C                             OR PFeature = 'ALL'                                        CGL157
+     C                   EXSR      SrCRSDueDlg                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
      C                   MOVEA     WExcpRptArr   DFEXID
      C                   EVAL      DFEXMA = 'N'
      C                   IF        DFEXID <> *BLANKS
@@ -840,6 +988,430 @@
      C                   ENDSR                                                              MD033414
       *****************************************************************                     MD033414
       /EJECT                                                                                MD033414
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SrNewSubTIN - CRS New Customer Subject to Reporting          *                       CGL157
+      *                but no Tax Identification Number               *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrNewSubTIN   BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDEXMP <> 'Y'                                            MD040734
+     C                             AND DDTYPE <> 'F'                                        MD040734
+     C                   EVAL      ZDATEA = WCRSEftStrtDte                                    CGL157
+     C                   EXSR      ZDATE1                                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      PInDate = NACRDT                                           CGL157
+     C                   EXSR      SRDate10                                                   CGL157
+                                                                                              CGL157
+      ** Retrieve data set per PCrsdS record (max 30) for Subject to Reporting                CGL157
+     C                   EVAL      X = 1                                                      CGL157
+                                                                                              CGL157
+     C                   DOW       X < 31                                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      PCRSDT = PCrsdS(X)                                         CGL157
+                                                                                              CGL157
+     C                   IF        DDCTRY <> *Blanks                                          CGL157
+                                                                                              CGL157
+      ** If New Customer is Subject to Reporting but No TIN defined                           CGL157
+                                                                                              CGL157
+     C                   IF        (DDREPT = 'Y'                                              CGL157
+     C                             AND DDTINN = *BLANKS                                       CGL157
+     C                             AND PMDate >= ZDAYNO)                                      CGL157
+                                                                                              CGL157
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory     CGL157
+                                                                                              CGL157
+      ** If CRS Country is Local Country                                                      CGL157
+     C                   IF        L_BJCNCD = DDCTRY                                          CGL157
+                                                                                              CGL157
+     C                   IF        (DDCRSA = 'Y' OR                                           CGL157
+     C                             WCRSLocTINMan = 'Y')                                       CGL157
+     C                   EVAL      WArrCnt = WArrCnt +1                                       CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0630'                                CGL157
+     C                   LEAVE                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ELSE                                                                 CGL157
+      ** If CRS Country is Foreign Country                                                    CGL157
+     C                   IF        (DDCRSA = 'Y' OR                                           CGL157
+     C                             WCRSForTINMan = 'Y')                                       CGL157
+     C                   EVAL      WArrCnt = WArrCnt +1                                       CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0630'                                CGL157
+     C                   LEAVE                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+                                                                                              CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                              MD040734
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SrExtSubTIN - CRS Existing Customer Subject to Reporting     *                       CGL157
+      *                but no Tax Identification Number               *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrExtSubTIN   BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDEXMP <> 'Y'                                            MD040734
+     C                             AND DDTYPE <> 'F'                                        MD040734
+     C                   EVAL      ZDATEA = WCRSEftStrtDte                                    CGL157
+     C                   EXSR      ZDATE1                                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      PInDate = NACRDT                                           CGL157
+     C                   EXSR      SRDate10                                                   CGL157
+                                                                                              CGL157
+      ** Retrieve data set per PCrsdS record (max 30) for Subject to Reporting                CGL157
+     C                   EVAL      X = 1                                                      CGL157
+                                                                                              CGL157
+     C                   DOW       X < 31                                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      PCRSDT = PCrsdS(X)                                         CGL157
+                                                                                              CGL157
+     C                   IF        DDCTRY <> *Blanks                                          CGL157
+                                                                                              CGL157
+      ** If Existing Customer Subject to Reporting but No TIN defined                         CGL157
+                                                                                              CGL157
+     C                   IF        (DDREPT = 'Y'                                              CGL157
+     C                             AND DDTINN = *BLANKS                                       CGL157
+     C                             AND PMDate < ZDAYNO)                                       CGL157
+                                                                                              CGL157
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory     CGL157
+                                                                                              CGL157
+      ** If CRS Country is Local Country                                                      CGL157
+     C                   IF        L_BJCNCD = DDCTRY                                          CGL157
+                                                                                              CGL157
+     C                   IF        (DDCRSA = 'Y' OR                                           CGL157
+     C                             WCRSLocTINMan = 'Y')                                       CGL157
+     C                   EVAL      WArrCnt = WArrCnt +1                                       CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0631'                                CGL157
+     C                   LEAVE                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ELSE                                                                 CGL157
+      ** If CRS Country is Foreign Country                                                    CGL157
+     C                   IF        (DDCRSA = 'Y' OR                                           CGL157
+     C                             WCRSForTINMan = 'Y')                                       CGL157
+     C                   EVAL      WArrCnt = WArrCnt +1                                       CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0631'                                CGL157
+     C                   LEAVE                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+                                                                                              CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                              MD040734
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SrCRSTypeNFE - CRS NAHL type is defined as NFE, but no       *                       CGL157
+      *                 CRS NAHL sub-type defined.                    *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrCRSTypeNFE  BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDEXMP <> 'Y'                                            MD040734
+      ** CRS type is defined as NFE, but no CRS sub-type defined                              CGL157
+                                                                                              CGL157
+     C                   IF        (DDTYPE = 'N' AND                                          CGL157
+     C                             DDSTYP = 'UN')                                             CGL157
+     C                             OR (DDTYPE = 'N' AND                                       CGL157
+     C                             DDSTYP = *BLANKS)                                          CGL157
+     C                   EVAL      WArrCnt = WArrCnt +1                                       CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'P'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0632'                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                              MD040734
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SrCRSDueDlg - CRS Due Diligence period has expired but the   *                       CGL157
+      *                CRS Info Complete Flag is still set to         *                       CGL157
+      *                'No' or 'Blank'                                *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrCRSDueDlg   BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** CRS Due Diligence period has expired but the CRS Info Complete Flag                  CGL157
+      ** is still set to 'No' or 'Blank'                                                      CGL157
+                                                                                              CGL157
+     C                   EVAL      PIDate = *ZERO                                             CGL157
+     C                   EVAL      PODate = *ZERO                                             CGL157
+                                                                                              CGL157
+     C                   EVAL      PIDate = WCRSEftStrtDte                                    CGL157
+     C                   EXSR      SRMdasDay                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      PInDate = NACRDT                                           CGL157
+     C                   EXSR      SRDate10                                                   CGL157
+                                                                                              CGL157
+      ** New CRS NAHL                                                                         CGL157
+                                                                                              CGL157
+     C                   IF        PMDate >= PODate                                           CGL157
+                                                                                              CGL157
+     C                   EVAL      WDlgDt = PMDate + WCRSDlgNewAC                             CGL157
+     C                   IF        WDlgDt <= WRUND AND                                        CGL157
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL157
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WIx = WIx + 1                                              CGL157
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXMI    '                              CGL157
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL177
+     C                   ELSE                                                                 CGL177
+                                                                                              CGL177
+      ** Existing CRS Non-Account Holder (Created before CRS Effective Date)                  CGL177
+                                                                                              CGL177
+     C                   EXSR      SrCRSDlgDte                                                CGL177
+                                                                                              CGL177
+     C                   SELECT                                                               CGL177
+      ** CRS Existing A/C - Individual/Blank or Individual/N                                  CGL177
+     C                   WHEN      DDTYPE = 'P' AND DDHVAL = ' '                              CGL177
+     C                             OR DDTYPE = 'P' AND DDHVAL = 'N'                           CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Blank or Entity/N                                          CGL177
+     C                   WHEN      DDTYPE <> 'P' AND DDHVAL = ' '                             CGL177
+     C                             OR DDTYPE <> 'P' AND DDHVAL = 'N'                          CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/Medium or Individual/Low                               CGL177
+     C                   WHEN      DDTYPE = 'P' AND DDHVAL = 'M'                              CGL177
+     C                             OR DDTYPE = 'P' AND DDHVAL = 'L'                           CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedInd PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/High                                                   CGL177
+     C                   WHEN      DDTYPE = 'P' AND DDHVAL = 'H'                              CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiInd  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Medium  or Entity/Low                                      CGL177
+     C                   WHEN      DDTYPE <> 'P' AND DDHVAL = 'M'                             CGL177
+     C                             OR DDTYPE <> 'P' AND DDHVAL = 'L'                          CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedEnt PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/High                                                       CGL177
+     C                   WHEN      DDTYPE <> 'P' AND DDHVAL = 'H'                             CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiEnt  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             DDINFO <> 'Y' AND DDINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WIx = WIx + 1                                              CGL177
+     C                   EVAL      WFldNmXAr(WIx) = 'DDEXID    '                              CGL177
+     C                   EVAL      WMsgIdXAr(WIx)  = 'USS0633'                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDSL                                                                CGL177
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL177
+      *                                                               *                       CGL177
+      *  SrCRSDlgDte - CRS Due Diligence date comparison for CRS High *                       CGL177
+      *                Value 'Blank' or 'N', check against earliest   *                       CGL177
+      *                defined Due Diligence date                     *                       CGL177
+      *                                                               *                       CGL177
+      *****************************************************************                       CGL177
+     C     SrCRSDlgDte   BEGSR                                                                CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence period prep for earliest date comparison                           CGL177
+     C                   EVAL      PIDate = *ZERO                                             CGL177
+     C                   EVAL      PODate = *ZERO                                             CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedInd PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgMedInd = PODate                                     CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiInd  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgHiInd = PODate                                      CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedEnt PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgMedEnt = PODate                                     CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiEnt  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgHiEnt = PODate                                      CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence earliest date comparison                                           CGL177
+     C                   IF        NCRSDlgMedInd > NCRSDlgHiInd                               CGL177
+     C                   EVAL      LowVal1 = NCRSDlgHiInd                                     CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowVal1 = NCRSDlgMedInd                                    CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        NCRSDlgMedEnt > NCRSDlgHiEnt                               CGL177
+     C                   EVAL      LowVal2 = NCRSDlgHiEnt                                     CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowVal2 = NCRSDlgMedEnt                                    CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence earliest date                                                      CGL177
+     C                   IF        LowVal1 > LowVal2                                          CGL177
+     C                   EVAL      LowestVal = LowVal2                                        CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowestVal = LowVal1                                        CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDSR                                                                CGL177
+      *****************************************************************                       CGL177
+      /EJECT                                                                                  CGL177
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SRSVAL2 - Access System Values for CRS                       *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SRSVAL2       BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      POP01 = 'CRSEffectStartDate'                               CGL157
+     C                   EVAL      POP02 = 'CRSDiligenceHiEnt'                                CGL157
+     C                   EVAL      POP03 = 'CRSDiligenceHiInd'                                CGL157
+     C                   EVAL      POP04 = 'CRSDiligenceMedEnt'                               CGL157
+     C                   EVAL      POP05 = 'CRSDiligenceMedInd'                               CGL157
+     C                   EVAL      POP06 = 'CRSDiligenceNewA/C'                               CGL157
+     C                   EVAL      POP07 = 'CRSForTINMandatory'                               CGL157
+     C                   EVAL      POP08 = 'CRSLocalTINMandatory'                             CGL157
+                                                                                              CGL157
+     C                   CALL      'AOSVALR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRtcd                                        CGL157
+     C                   PARM                    POP01                                        CGL157
+     C                   PARM                    PVL01                                        CGL157
+     C                   PARM                    POP02                                        CGL157
+     C                   PARM                    PVL02                                        CGL157
+     C                   PARM                    POP03                                        CGL157
+     C                   PARM                    PVL03                                        CGL157
+     C                   PARM                    POP04                                        CGL157
+     C                   PARM                    PVL04                                        CGL157
+     C                   PARM                    POP05                                        CGL157
+     C                   PARM                    PVL05                                        CGL157
+     C                   PARM                    POP06                                        CGL157
+     C                   PARM                    PVL06                                        CGL157
+     C                   PARM                    POP07                                        CGL157
+     C                   PARM                    PVL07                                        CGL157
+     C                   PARM                    POP08                                        CGL157
+     C                   PARM                    PVL08                                        CGL157
+     C                   PARM                    POP09                                        CGL157
+     C                   PARM                    PVL09                                        CGL157
+     C                   PARM                    POP10                                        CGL157
+     C                   PARM                    PVL10                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      WCRSEftStrtDte = PVL01                                     CGL157
+     C                   EVAL      WCRSDlgHiEnt = PVL02                                       CGL177
+     C                   EVAL      WCRSDlgHiInd = PVL03                                       CGL157
+     C                   EVAL      WCRSDlgMedEnt = PVL04                                      CGL157
+     C                   EVAL      WCRSDlgMedInd = PVL05                                      CGL177
+     C                   MOVEL     PVL06         WCRSDlgNewAC                                 CGL157
+     C                   EVAL      WCRSForTINMan = PVL07                                      CGL157
+     C                   EVAL      WCRSLocTINMan = PVL08                                      CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
       *****************************************************************                     MD033414
       *                                                               *                     MD033414
       *  SRMdasDay - Convert Diligence 6A Dates to Midas Day No.      *                     MD033414
@@ -961,6 +1533,7 @@
      C                   DOU       WOvrOff > WIndCnt
      C                             OR  WOvrOff = 0
      C                             OR WHasIndicia = 'Y'
+     C                             OR WOvrOff = 12                                          MD033804
  
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
@@ -1008,6 +1581,7 @@
      C                   DOU       WOvrOff = 0 OR
      C                             WOvrOff > WIndCnt
      C                             OR WHasIndicia = 'Y'
+     C                             OR WOvrOff = 12                                          MD033804
  
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
@@ -1056,6 +1630,10 @@
      C                   PARM                    BJRDNB            5 0
      C                   PARM                    BJDFIN            1                        MD026997
      C                   PARM                    PHasIndicia                                MD042697
+     C                   PARM                    CurCrnhDets                                  CGL157
+     C                   PARM                    PCrsdS                                       CGL157
+     C                   PARM                    SDVCRNS2                                     CGL157
+     C                   PARM                    PFeature                                     CGL157
  
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNmXAr
@@ -1094,6 +1672,22 @@
                                                                                             MD033414
      C                   ENDIF                                                              MD033414
  
+      ** Access Bank Details                                                                  CGL157
+                                                                                              CGL157
+     C                   CALL      'AOBANKR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRtcd                                        CGL157
+     C                   PARM      '*FIRST  '    POptn                                        CGL157
+     C     SDBANK        PARM      SDBANK        DSFDY                                        CGL157
+                                                                                              CGL157
+      ** Database Error                                                                       CGL157
+                                                                                              CGL157
+     C                   IF        PRtcd <> *BLANK                                            CGL157
+     C                   EVAL      DBKEY = POptn                                              CGL157
+     C                   EVAL      DBFILE = 'SDBANKPD'                                        CGL157
+     C                   EVAL      DBASE = 900                                                CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
      C                   ENDSR
       *****************************************************************
       /EJECT

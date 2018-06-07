@@ -23,15 +23,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE039  *CREATE    Date 04Mar03               *
+      *                 CSE039  *CREATE    Date 04Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Automatic Settlement of Trades                      *
       *                                                               *
@@ -565,10 +568,12 @@
      C                   PARM      'SEIMVTSPD'   InvFile1         10
      C                   PARM      *Blanks       InvFile2         10
      C                   PARM      *Blanks       InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       ** Invalid file data
      C                   PARM      InvSEMVTS     InvFDta1       4000
      C                   PARM      *Blanks       InvFDta2       4000
      C                   PARM      *Blanks       InvFDta3       4000
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ** OUTPUT PARAMETERS
       ** Function Keys

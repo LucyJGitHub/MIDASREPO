@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CLE042 - Extended Loan Sub Type (Recompile)                  *
@@ -465,11 +468,13 @@
      C                   PARM      'LEIFCIPPD'   InvFile1         10
      C                   PARM                    InvFile2         10
      C                   PARM                    InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       *
       ***  Invalid file data
      C                   PARM      InvTr         InvFDta1       4000
      C                   PARM                    InvFDta2       4000
      C                   PARM                    InvFDta3       4000
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ***  Outputs
       *

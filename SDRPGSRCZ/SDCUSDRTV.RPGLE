@@ -30,8 +30,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042652           Date 06Feb17               *
+      *  Last Amend No. MD041527           Date 22Sep16               *
+      *  Prev Amend No. MD041337           Date 16Sep16               *
+      *                 MD039670           Date 26Jul16               *
+      *                 CGL177             Date 11Jan16               *
+      *                 MD035388           Date 20Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD042652           Date 06Feb17               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 CER070             Date 03Dec14               *
@@ -137,6 +143,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041527 - Customer cannot be amended after deleting         *
+      *             Additional Customer Details                       *
+      *  MD041337 - Customer cannot be enquired after deleting        *
+      *             Additional Customer Details                       *
+      *  MD039670 - FATCA Housekeeping program                        *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD033588 - FATCA Screen order rework                         *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042652 - FFC0800 FAILED IN COB                             *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -390,6 +404,11 @@
      FSDCUSXL1  IF   E           K DISK    INFSR(*PSSR)                                       CGL132
      F                                     RENAME(SDCUSTX0:SDCUSTX1)                          CGL132
                                                                                               CGL132
+      ** Midas SD CRS Customer Details Retrieval                                              CGL157
+     FSDCRSHL1  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
+                                                                                              CGL157
+      * Midas SD CRS Details File                                                             CGL157
+     FSDCRSDL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
                                                                                               CSD031
       ** Customer Details Acceptance - Retrieve Index                                         CSD031
      F***SDACSTL1  IF   E           K DISK    INFSR(*PSSR)                           CSD031 BUG13525
@@ -578,6 +597,12 @@
       ** Data Structure for SAR Details                                                       CSD021
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD021
                                                                                               CSD012
+      ** External DS for CRS Details                                                          CGL157
+     D SDVCRSD       E DS                  EXTNAME(SDVCRSDPD)                                 CGL157
+                                                                                              CGL157
+      ** External DS for Country of Tax Codes                                                 CGL157
+     D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                  CGL157
+                                                                                              CGL157
      D***@KEY***         DS            20                                              CSD012 CGL029
      D @KEY            DS            26                                                       CGL029
      D @DDCUSN                 1      6                                                       CSD012
@@ -607,6 +632,11 @@
      D  AHPCNT                24     26                                                     MD026780
      D TranInCCTX1   E DS                  EXTNAME (SDCCTXPD)                                 CER059
      D                                     PREFIX(TX:2)                                       CER059
+                                                                                              CGL157
+      ** Transaction Details in File Format                                                   CGL157
+     D CrsdFilFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+     D PCrsdF          S            219A   DIM(30)                                            CGL177
+                                                                                              CGL157
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -655,12 +685,18 @@
      D ULX004          S              1A    inz('N')                                          CSD079
      D ULX609          S              1A    inz('N')                                          CSD079
      D ULX043          S              1A    inz('N')                                          CSD079
+     D CGL157          S              1A    INZ('N')                                          CGL157
                                                                                               CSD079
      D PMODE           S              1                                                       CSD079
      D CDL018          S              1                                                       CSD079
                                                                                               CSD079
      D CDL025          S              1A    inz('N')                                       AR1086546
                                                                                            AR1086546
+     D X               S              2S 0                                                    CGL157
+     D WCNCD           S              2A                                                      CGL157
+     D WCOLC           S              2A                                                      CGL157
+     D @PCTRT          S              2A                                                      CGL157
+     D @PCTRR          S              2A                                                      CGL157
      D @WCDS1          DS           200
      D   WDS1000               1    200
      D   WDS1001               1      1
@@ -1305,6 +1341,10 @@
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   EXSR      RTVFTC                                                     CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EXSR      RTVCRS                                                     CGL157
+     C                   ENDIF                                                                CGL157
                                                                                            AR1086546
       ** Retrieve Currency/Time of Netting Details                                         AR1086546
                                                                                            AR1086546
@@ -1636,6 +1676,9 @@
                                                                                               CGL132
       **  If record not found - ERROR                                                         CGL132
                                                                                               CGL132
+     C     DDACTN        IFNE      'D'                                                      MD039670
+     C     DDACTN        ANDNE     'E'                                                      MD041337
+     C     DDACTN        ANDNE     'A'                                                      MD041527
      C     *IN45         IFEQ      '1'                                                        CGL132
      C                   MOVEL     'N'           OKCUST                                       CGL132
      C                   ADD       1             Ix                                           CGL132
@@ -1713,6 +1756,7 @@
      C                   EVAL      FAUTIN = WWTINO                                            CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+     C                   ENDIF                                                              MD039670
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C                   ENDSR                                                                CGL132
@@ -3902,6 +3946,8 @@
      C                   CLEAR                   CuTIFilFmt                                  BUG3362
      C                   CLEAR                   CuFaFilFmt                                   CGL132
      C                   CLEAR                   CuXCFilFmt                                   CGL132
+     C                   CLEAR                   CrsdFilFmt                                   CGL157
+     C                   CLEAR                   PCrsdF                                       CGL157
      C                   CLEAR                   CumiFilFmt                                   CSD079
      C                   CLEAR                   CuadFilFmt                                   CSD079
      C                   CLEAR                   SfeeFilFmt                                   CSD079
@@ -4265,6 +4311,68 @@
      C                   EVAL      TranInCCTX = CCTXArrDS                                     CER059
                                                                                               CER059
      C                   ENDSR                                                                CER059
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  RTVCRS - Retrieve CRS Customer Details                       *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     RTVCRS        BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Retrieve CRS Customer Details if CGL157 is ON                                        CGL157
+                                                                                              CGL157
+     C     DDCUSN        CHAIN     SDCRSHL1                           96                    MD036311
+     C     *IN96         IFEQ      '0'                                                        CGL157
+     C     DDACTN        ANDEQ     'I'                                                        CGL157
+     C                   MOVEL     'N'           OKCUST                                       CGL157
+     C                   ADD       1             Ix                                           CGL157
+     C                   MOVEL     'DDCUSN'      FldNameArr(Ix)                               CGL157
+     C                   MOVEL     'USR0542'     MsgIdArr(Ix)                                 CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C     DDCUSN        SETLL     SDCRSDL0                                                   CGL157
+     C     DDCUSN        READE     SDCRSDL0                                                   CGL157
+     C                   DOW       NOT %EOF(SDCRSDL0)                                         CGL157
+     C                             AND DDCUSN = CDCUST                                        CGL157
+     C                             AND X < 31                                                 CGL157
+     C                   EVAL      CVCTRY = CDCTRY                                            CGL157
+     C                   EVAL      CVREPT = CDREPT                                            CGL157
+     C                   EVAL      CVREPR = CDREPR                                            CGL157
+     C                   EVAL      CVREPD = CDREPD                                            CGL157
+     C                   EVAL      CVREPM = CDREPM                                            CGL157
+     C                   EVAL      CVREPU = CDREPU                                            CGL157
+     C                   EVAL      CVEVE1 = CDEVE1                                            CGL157
+     C                   EVAL      CVEVS1 = CDEVS1                                            CGL157
+     C                   EVAL      CVEVE2 = CDEVE2                                            CGL157
+     C                   EVAL      CVEVS2 = CDEVS2                                            CGL157
+     C                   EVAL      CVEVE3 = CDEVE3                                            CGL157
+     C                   EVAL      CVEVS3 = CDEVS3                                            CGL157
+     C                   EVAL      CVEVE4 = CDEVE4                                            CGL157
+     C                   EVAL      CVEVS4 = CDEVS4                                            CGL157
+     C                   EVAL      CVEVE5 = CDEVE5                                            CGL157
+     C                   EVAL      CVEVS5 = CDEVS5                                            CGL157
+     C                   EVAL      CVTINN = CDTINN                                            CGL157
+     C                   EVAL      CVEFFD = CDEFFD                                            CGL157
+     C                   EVAL      CVEXPD = CDEXPD                                            CGL157
+     C                   EVAL      CVCODO = CDCODO                                            CGL157
+     C                   EVAL      CVJACM = CDJACM                                            CGL157
+     C                   EVAL      CVMAIL = CDMAIL                                            CGL157
+     C                   EVAL      CVPHON = CDPHON                                            CGL157
+     C                   EVAL      CVRPAY = CDRPAY                                            CGL157
+     C                   EVAL      CVTINS = CDTINS                                            CGL177
+                                                                                              CGL157
+     C                   IF        CDCTRY = BBCOLC                                            CGL157
+     C                   EVAL      CVCODO = 'Y'                                               CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PCrsdF(X) = SDVCRSD                                        CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C     DDCUSN        READE     SDCRSDL0                                                   CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079
       *****************************************************************                       CSD079
@@ -4600,6 +4708,8 @@
      C                   PARM                    CuSW13                                       CFT050
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                   CGL132
+     C                   PARM                    CrsdFilFmt                                   CGL157
+     C                   PARM                    PCrsdF                                       CGL157
      C                   PARM                    CumiFilFmt                                   CSD079
      C                   PARM                    CuadFilFmt                                   CSD079
      C                   PARM                    SfeeFilFmt                                   CSD079
@@ -5164,6 +5274,29 @@
      C                   ELSE                                                                 CSW207
      C                   EVAL      CSW207 = 'N'                                               CSW207
      C                   ENDIF                                                                CSW207
+                                                                                              CGL157
+      ** Check if enhancement CGL157 is on                                                    CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       @RTCD                                        CGL157
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL157
+     C                   PARM      'CGL157'      PSARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        @RTCD <> *BLANKS AND                                       CGL157
+     C                             @RTCD <> '*NRF   '                                         CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL157
+     C                   EVAL      DBASE  = 923                                               CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        @RTCD = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
                                                                                               CGL132
       ** Check if enhancement CGL132 is on                                                    CGL132
                                                                                               CGL132

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -598,6 +601,7 @@
      C                   PARM      'FTIIPAYPD'   InvFile1         10
      C                   PARM                    InvFile2         10
      C                   PARM                    InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       *
       ** Invalid file data
      C***********        PARM      InvTr         InvFDta1       2000            CFT014
@@ -606,6 +610,7 @@
      C                   PARM      InvTr         InvFDta1       4000            CFT014
      C                   PARM                    InvFDta2       4000            CFT014
      C                   PARM                    InvFDta3       4000            CFT014
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ** OUTPUT
       ** ======

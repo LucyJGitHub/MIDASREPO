@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -34,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -514,12 +517,14 @@
      C                   PARM      'LEIMAPYPD'   InvFile1         10
      C                   PARM      'APIDSETPD'   InvFile2         10
      C                   PARM                    InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       *
       ***  Invalid file data
      C                   PARM      InvTr         InvFDta1       4000
      C                   PARM      InvTrSetIn    InvFDta2       4000
      C**********         PARM                    InvFDta3       4000                          246702
      C                   PARM                    InvFDta3       5000                          246702
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ***  Outputs
       *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043149           Date 15Dec16               *
+      *  Last Amend No. CGL185             Date 15Dec16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043149           Date 15Dec16               *
       *                 MD043135           Date 15Dec16               *
       *                 MD043079           Date 08Dec16               *
       *                 MD043064           Date 08Dec16               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL185 - FATCA XML 2.0                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043149 - When the same account holder is void two times,   *
       *             it appears twice also in the generated Draft Void *
@@ -1243,6 +1245,7 @@
      C                   EVAL      DsAcno = WxACNO
      C                   EVAL      DsAcEnd = %TRIM(MGDATA)
      C                   EVAL      DsDataKey = %TRIM(MGDATA)
+     C                   EVAL      D5BRTD = *BLANKS                                         CGL185
  
      C                   WHEN      MGELMT = 'TIN'
      C                   EVAL      WkDataTIN = MGDATA

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026854           Date 29May14               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026854           Date 29May14               *
       *                 MD026666           Date 22May14               *
       *                 CGL132             Date 01May13               *
       *                 MD026193           Date 07Apr14               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026854 - Alternative country of citizenship is missing in  *
       *             history of customer information                   *
@@ -84,6 +86,8 @@
      C                   EVAL      FileNameArr(4) = 'SDJACCPD'                                CGL132
      C                   EVAL      FileNameArr(5) = 'SDCUAHPD'                                CGL132
      C                   EVAL      FileNameArr(6) = 'SDCUSTXC'                              MD026854
+     C                   EVAL      FileNameArr(7) = 'SDCRSHPD'                                CGL157
+     C                   EVAL      FileNameArr(8) = 'SDCRSDPD'                                CGL157
      C**********         EVAL      FileNameArr(3) = 'SDJACCPD'                       MD026193 CGL132
      C**********         EVAL      FileNameArr(4) = 'SDCUAHPD'                       MD026193 CGL132
      C**********         EVAL      FileNameArr(3) = 'SDFTCSPD'                              MD026193

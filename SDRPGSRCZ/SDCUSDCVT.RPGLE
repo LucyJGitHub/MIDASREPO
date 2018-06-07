@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD035388           Date 20Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 CER070             Date 25Nov14               *
       *                 CSW214             Date 25Nov14               *
@@ -63,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD033588 - FATCA Screen order rework                         *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER071 - BAIS - Legal Form field                             *
@@ -174,6 +180,9 @@
       * Customer Ex - File Format                                                             CGL132
      D CuXcFilFmt    E DS                  EXTNAME(SDCUSTXC)                                  CGL132
                                                                                               CGL132
+      ** SDCRSHPD Transaction Details in File Format                                          CGL157
+     D CrsdFilFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+                                                                                              CGL157
       * Base Rate Tax details - File Format
      D BrTxFilFmt    E DS                  EXTNAME(SDCBRTPD)
  
@@ -238,6 +247,17 @@
       ** FATCA Customer Details in file format                                                CGL132
      D CrFaFilFmt    E DS                  EXTNAME(SDFTCSPD)                                  CGL132
                                                                                               CGL132
+      ** SDCRSSPD Transaction Details in Screen Format                                        CGL157
+     D CrsdDets      E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D                                     PREFIX(A_)                                         CGL157
+                                                                                              CGL157
+                                                                                              CGL157
+      ** SDVCRSDPD CRS Transaction Details in File Format                                     CGL157
+     D TranCrsd      E DS                  EXTNAME(SDVCRSDPD)                                 CGL157
+                                                                                              CGL157
+      ** External DS for Country of Tax Codes                                                 CGL157
+     D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                  CGL157
+                                                                                              CGL157
       ** Marketing Information                                                                CSD079
      D TranInCumi    E DS                  EXTNAME (SDCUMIPD)                                 CSD079
      D A9_DDACTN     E                     EXTFLD(DDACTN)                                     CSD079
@@ -348,6 +368,68 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
  
+     D PCrsdF          S            219A   DIM(30)                                            CGL177
+     D PCrsdS          S            223A   DIM(30)                                            CGL177
+     D WCNCD           S              2A                                                      CGL157
+     D WCOLC           S              2A                                                      CGL157
+     D @PCTRT          S              2A                                                      CGL157
+     D @PCTRR          S              2A                                                      CGL157
+     D CGL157          S              1A                                                      CGL157
+     D X               S              2S 0                                                    CGL157
+     D Y               S              2S 0                                                    CGL157
+                                                                                              CGL157
+     D PCRSDT          DS                                                                     CGL157
+     D  DDCTRY                 1      2                                                       CGL157
+     D  DDREPQ                 3      3                                                       CGL157
+     D  DDREPU                 4     13                                                       CGL157
+     D  DDREPD                14     19                                                       CGL157
+     D  DDREPM                20     25                                                       CGL157
+     D  DDREP1                26     89                                                       CGL157
+     D  DDREP2                90    153                                                       CGL157
+     D  DDEVD1               154    155                                                       CGL157
+     D  DDEVS1               156    158                                                       CGL157
+     D  DDEVD2               159    160                                                       CGL157
+     D  DDEVS2               161    163                                                       CGL157
+     D  DDEVD3               164    165                                                       CGL157
+     D  DDEVS3               166    168                                                       CGL157
+     D  DDEVD4               169    170                                                       CGL157
+     D  DDEVS4               171    173                                                       CGL157
+     D  DDEVD5               174    175                                                       CGL157
+     D  DDEVS5               176    178                                                       CGL157
+     D  DDTINN               179    203                                                       CGL157
+     D  DDEFFD               204    209                                                       CGL157
+     D  DDEXPD               210    215                                                       CGL157
+     D  DDCODO               216    216                                                       CGL157
+     D  DDJACM               217    217                                                       CGL157
+     D  DDMAIQ               218    218                                                       CGL157
+     D  DDPHOQ               219    219                                                       CGL157
+     D  DDRPAY               220    220                                                       CGL157
+     D  DDCRSA               221    221                                                       CGL157
+     D  DDTINS               222    222                                                       CGL157
+     D  DDAUHO               223    223                                                       CGL157
+                                                                                              CGL177
+     D CrFoFilFmt      DS                                                                   MD035388
+     D  WCDESC                 1     50                                                     MD035388
+     D  WPDESC                51    100                                                     MD035388
+     D  WWBRTH               101    105                                                     MD035388
+     D  WWCBTH               106    107                                                     MD035388
+     D  WWBTHT               108    142                                                     MD035388
+     D  WWCNCZ               143    144                                                     MD035388
+     D  WWCDOM               145    146                                                     MD035388
+     D  WWACCZ               147    148                                                     MD035388
+     D  WWUTIN               149    173                                                     MD035388
+                                                                                            MD035388
+     D CuFOTH          DS                                                                   MD035388
+     D  WCDESC1                1     50                                                     MD035388
+     D  WPDESC1               51    100                                                     MD035388
+     D  WNBRTH               101    106                                                     MD035388
+     D  WWCBTH1              107    108                                                     MD035388
+     D  WWBTHT1              109    143                                                     MD035388
+     D  WWCNCZ1              144    145                                                     MD035388
+     D  WWCDOM1              146    147                                                     MD035388
+     D  WWACCZ1              148    149                                                     MD035388
+     D  WWUTIN2              150    174                                                     MD035388
+                                                                                            MD035388
      D CGP001          S              1A                                                      CGP001
                                                                                               CGP001
      D CFX001          S              1                                                       CFX001
@@ -425,6 +507,11 @@
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   EXSR      SCN_FATC                                                   CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Set CRS Customer Details if CGL157 is ON                                             CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EXSR      SRCRSScn                                                   CGL157
+     C                   ENDIF                                                                CGL157
       *
       ** SET BASE RATE TAX SCREEN FIELDS
       *
@@ -2670,8 +2757,355 @@
      C                   EVAL      DDTNC4 = E5TNC4                                            CGL132
      C                   EVAL      DDTIN5 = E5TIN5                                            CGL132
      C                   EVAL      DDTNC5 = E5TNC5                                            CGL132
- 
-     C                   ENDSR                                                                CSD079
+                                                                                              CGL157
+      ** Effective Date 1                                                                     CGL157
+     C                   IF        E5EFF1 = *ZERO                                             CGL157
+     C                   EVAL      DDEFF1 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EFF1                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFF1 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFF1                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Expiry Date 1                                                                        CGL157
+     C                   IF        E5EXP1 = *ZERO                                             CGL157
+     C                   EVAL      DDEXP1 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EXP1                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXP1 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXP1                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Effective Date 2                                                                     CGL157
+     C                   IF        E5EFF2 = *ZERO                                             CGL157
+     C                   EVAL      DDEFF2 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EFF2                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFF2 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFF2                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Expiry Date 2                                                                        CGL157
+     C                   IF        E5EXP2 = *ZERO                                             CGL157
+     C                   EVAL      DDEXP2 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EXP2                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXP2 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXP2                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Effective Date 3                                                                     CGL157
+     C                   IF        E5EFF3 = *ZERO                                             CGL157
+     C                   EVAL      DDEFF3 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EFF3                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFF3 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFF3                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Expiry Date 3                                                                        CGL157
+     C                   IF        E5EXP3 = *ZERO                                             CGL157
+     C                   EVAL      DDEXP3 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EXP3                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXP3 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXP3                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Effective Date 4                                                                     CGL157
+     C                   IF        E5EFF4 = *ZERO                                             CGL157
+     C                   EVAL      DDEFF4 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EFF4                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFF4 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFF4                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Expiry Date 4                                                                        CGL157
+     C                   IF        E5EXP4 = *ZERO                                             CGL157
+     C                   EVAL      DDEXP4 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EXP4                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXP4 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXP4                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Effective Date 5                                                                     CGL157
+     C                   IF        E5EFF5 = *ZERO                                             CGL157
+     C                   EVAL      DDEFF5 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EFF5                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFF5 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFF5                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Expiry Date 5                                                                        CGL157
+     C                   IF        E5EXP5 = *ZERO                                             CGL157
+     C                   EVAL      DDEXP5 = *BLANKS                                           CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      ZDAYNO = E5EXP5                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXP5 = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXP5                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   CLEAR                   PCrsdS                                       CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C                   DOW       X < 31                                                     CGL157
+     C                   EVAL      PCRSDT = *Blanks                                           CGL157
+     C                   EVAL      TranCrsd = PCrsdF(X)                                       CGL157
+     C                   IF        CVCTRY <> *Blanks                                          CGL157
+     C                   EVAL      DDCTRY = CVCTRY                                            CGL157
+     C                   EVAL      DDREPQ = CVREPT                                            CGL157
+     C                   EVAL      DDREP1 = CVREPR                                            CGL157
+     C                   MOVE      CVREPR        DDREP2                                       CGL157
+                                                                                              CGL157
+     C                   EVAL      DDREPD = *BLANKS                                           CGL157
+     C                   IF        CVREPD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVREPD                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDREPD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDREPM = CVREPM                                            CGL157
+     C                   EVAL      DDREPU = CVREPU                                            CGL157
+     C                   EVAL      DDEVD1 = CVEVE1                                            CGL157
+     C                   MOVE      CVEVS1        DDEVS1                                       CGL157
+     C                   EVAL      DDEVD2 = CVEVE2                                            CGL157
+     C                   MOVE      CVEVS2        DDEVS2                                       CGL157
+     C                   EVAL      DDEVD3 = CVEVE3                                            CGL157
+     C                   MOVE      CVEVS3        DDEVS3                                       CGL157
+     C                   EVAL      DDEVD4 = CVEVE4                                            CGL157
+     C                   MOVE      CVEVS4        DDEVS4                                       CGL157
+     C                   EVAL      DDEVD5 = CVEVE5                                            CGL157
+     C                   MOVE      CVEVS5        DDEVS5                                       CGL157
+     C                   EVAL      DDTINN = CVTINN                                            CGL157
+     C                   EVAL      DDCODO = CVCODO                                            CGL157
+     C                   EVAL      DDJACM = CVJACM                                            CGL157
+     C                   EVAL      DDMAIQ = CVMAIL                                            CGL157
+     C                   EVAL      DDPHOQ = CVPHON                                            CGL157
+     C                   EVAL      DDRPAY = CVRPAY                                            CGL157
+     C                   EVAL      DDTINS = CVTINS                                            CGL177
+     C                   EVAL      DDAUHO = CVAUHO                                            CGL177
+                                                                                              CGL157
+      ** Get CRS agreement                                                                    CGL157
+     C                   EVAL      WCNCD = DDCTRY                                             CGL157
+     C                   EVAL      WCOLC = BBCOLC                                             CGL157
+                                                                                              CGL157
+     C                   CALL      'AOCTTXR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*KEY   '     POPTN                                        CGL157
+     C                   PARM      WCNCD         @PCTRT                                       CGL157
+     C                   PARM      WCOLC         @PCTRR                                       CGL157
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD = '*NRF   '                                          CGL157
+     C                   EVAL      WCOLC = *BLANK                                             CGL157
+     C                   CALL      'AOCTTXR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*KEY   '     POPTN                                        CGL157
+     C                   PARM      WCNCD         @PCTRT                                       CGL157
+     C                   PARM      WCOLC         @PCTRR                                       CGL157
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD = *BLANK                                             CGL157
+     C                   EVAL      DDCRSA = EWCRSA                                            CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCRSA = *Blanks                                           CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCRSA = EWCRSA                                            CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDEFFD = *BLANKS                                           CGL157
+     C                   IF        CVEFFD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVEFFD                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEFFD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDEXPD = *BLANKS                                           CGL157
+     C                   IF        CVEXPD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVEXPD                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      DDEXPD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      PCrsdS(X) = PCrsdT                                         CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
+      ** Mailing Countries                                                                    CGL157
+     C                   EVAL      DDCTR1 = E5CTR1                                            CGL157
+     C                   EVAL      DDCTR2 = E5CTR2                                            CGL157
+     C                   EVAL      DDCTR3 = E5CTR3                                            CGL157
+     C                   EVAL      DDCTR4 = E5CTR4                                            CGL157
+     C                   EVAL      DDCTR5 = E5CTR5                                            CGL157
+                                                                                              CGL157
+      ** Phone Number Countries                                                               CGL157
+     C                   EVAL      DDPHN1 = E5PHN1                                            CGL157
+     C                   EVAL      DDPHN2 = E5PHN2                                            CGL157
+     C                   EVAL      DDPHN3 = E5PHN3                                            CGL157
+     C                   EVAL      DDPHN4 = E5PHN4                                            CGL157
+     C                   EVAL      DDPHN5 = E5PHN5                                            CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      * SRCRSScn - Set CRS Screen Fields                              *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+     C     SRCRSScn      BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** CRS Customer Details if CGL157 is ON                                                 CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      A_DDCUSN = DDCUST                                        MD035388
+     C                   EVAL      A_DDTYPE = CRTYPE                                          CGL157
+     C                   EVAL      A_DDSTYP = CRSTYP                                          CGL157
+     C                   EVAL      A_DDHVAL = CRHVAL                                          CGL157
+     C                   EVAL      A_DDEXMP = CREXMP                                          CGL157
+      ** Exemption date                                                                       CGL157
+     C                   IF        CREXMD <> 0                                                CGL157
+     C                   EVAL      ZDAYNO = CREXMD                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      A_DDEXMF = *BLANKS                                         CGL157
+     C                   MOVEL     ZDATE         A_DDEXMF                                     CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      *BLANKS       A_DDEXMF                                     CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Exemption time                                                                       CGL157
+     C                   EVAL      WFTMST = CREXMT                                            CGL157
+     C                   EVAL      A_DDEXMT = *BLANKS                                         CGL157
+     C                   IF        WFTMST <> *BLANKS                                          CGL157
+     C                   EVAL      A_DDEXMT = WWHH + ':' + WWMM +                             CGL157
+     C                                      ':' + WWSS                                        CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      A_DDEXMU = CREXMU                                          CGL157
+                                                                                              CGL157
+      ** CRS Info Complete Flag                                                               CGL157
+     C                   EVAL      A_DDINFO = CRINFO                                          CGL157
+                                                                                              CGL157
+      ** CRS Exception Management                                                             CGL157
+     C                   EVAL      A_DDEXMG = CREXMG                                          CGL157
+                                                                                              CGL157
+      ** CRS Exception Management ID                                                          CGL157
+     C                   EVAL      A_DDEXMI = CREXMI                                          CGL157
+                                                                                              CGL157
+     C                   EVAL      A_DDEXM1 = %SUBST(CREXMR:1:64)                             CGL157
+     C                   EVAL      A_DDEXM2 = %SUBST(CREXMR:65:64)                            CGL157
+     C                   EVAL      A_DDEXM3 = %SUBST(CREXMR:129:64)                           CGL157
+     C                   EVAL      A_DDEXM4 = %SUBST(CREXMR:193:64)                           CGL157
+                                                                                              CGL157
+      ** CRS Country Details                                                                  CGL157
+     C                   CLEAR                   PCrsdS                                       CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C                   DOW       X < 31                                                     CGL157
+     C                   EVAL      PCRSDT = *Blanks                                           CGL157
+     C                   EVAL      TranCrsd = PCrsdF(X)                                       CGL157
+     C                   IF        CVCTRY <> *Blanks                                          CGL157
+     C                   EVAL      DDCTRY = CVCTRY                                            CGL157
+     C                   EVAL      DDREPT = CVREPT                                            CGL157
+     C                   EVAL      DDREP1 = CVREPR                                            CGL157
+     C                   MOVE      CVREPR        DDREP2                                       CGL157
+                                                                                              CGL157
+     C                   EVAL      DDREPD = *BLANKS                                           CGL157
+     C                   IF        CVREPD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVREPD                                            CGL157
+     C                   EXSR      ZDate2                                                     CGL157
+     C                   EVAL      DDREPD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDREPM = CVREPM                                            CGL157
+     C                   EVAL      DDREPU = CVREPU                                            CGL157
+     C                   EVAL      DDEVD1 = CVEVE1                                            CGL157
+     C                   MOVE      CVEVS1        DDEVS1                                       CGL157
+     C                   EVAL      DDEVD2 = CVEVE2                                            CGL157
+     C                   MOVE      CVEVS2        DDEVS2                                       CGL157
+     C                   EVAL      DDEVD3 = CVEVE3                                            CGL157
+     C                   MOVE      CVEVS3        DDEVS3                                       CGL157
+     C                   EVAL      DDEVD4 = CVEVE4                                            CGL157
+     C                   MOVE      CVEVS4        DDEVS4                                       CGL157
+     C                   EVAL      DDEVD5 = CVEVE5                                            CGL157
+     C                   MOVE      CVEVS5        DDEVS5                                       CGL157
+     C                   EVAL      DDTINN = CVTINN                                            CGL157
+     C                   EVAL      DDCODO = CVCODO                                            CGL157
+     C                   EVAL      DDJACM = CVJACM                                            CGL157
+     C                   EVAL      DDMAIL = CVMAIL                                            CGL157
+     C                   EVAL      DDPHON = CVPHON                                            CGL157
+     C                   EVAL      DDRPAY = CVRPAY                                            CGL157
+     C                   EVAL      DDTINS = CVTINS                                            CGL177
+                                                                                              CGL157
+      ** Get CRS agreement                                                                    CGL157
+     C                   EVAL      WCNCD = DDCTRY                                             CGL157
+     C                   EVAL      WCOLC = BBCOLC                                             CGL157
+                                                                                              CGL157
+     C                   CALL      'AOCTTXR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*KEY   '     POPTN                                        CGL157
+     C                   PARM      WCNCD         @PCTRT                                       CGL157
+     C                   PARM      WCOLC         @PCTRR                                       CGL157
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD = '*NRF   '                                          CGL157
+     C                   EVAL      WCOLC = *BLANK                                             CGL157
+     C                   CALL      'AOCTTXR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*KEY   '     POPTN                                        CGL157
+     C                   PARM      WCNCD         @PCTRT                                       CGL157
+     C                   PARM      WCOLC         @PCTRR                                       CGL157
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD = *BLANK                                             CGL157
+     C                   EVAL      DDCRSA = EWCRSA                                            CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCRSA = *Blanks                                           CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      DDCRSA = EWCRSA                                            CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDEFFD = *BLANKS                                           CGL157
+     C                   IF        CVEFFD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVEFFD                                            CGL157
+     C                   EXSR      ZDate2                                                     CGL157
+     C                   EVAL      DDEFFD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      DDEXPD = *BLANKS                                           CGL157
+     C                   IF        CVEXPD <> *ZERO                                            CGL157
+     C                   EVAL      ZDAYNO = CVEXPD                                            CGL157
+     C                   EXSR      ZDate2                                                     CGL157
+     C                   EVAL      DDEXPD = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         DDEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      PCrsdS(X) = PCrsdT                                         CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
                                                                                               CSD079
       *****************************************************************                       CSD079
       /EJECT                                                                                  CSD079
@@ -2694,14 +3128,6 @@
       ** Numbered A/c Indicator                                                               CSD079
                                                                                               CSD079
      C                   EVAL      DDNAIN = E6NAIN                                            CSD079
-                                                                                              CSD079
-      ** Settlement Branch                                                                    CSD079
-                                                                                              CSD079
-     C                   EVAL      DDSBCH = E6SBCH                                            CSD079
-                                                                                              CSD079
-      ** Settlement Currency                                                                  CSD079
-                                                                                              CSD079
-     C                   EVAL      DDSCCY = E6SCCY                                            CSD079
                                                                                               CSD079
       ** Profit Centre                                                                        CSD079
                                                                                               CSD079
@@ -3814,6 +4240,10 @@
      C                   PARM                    CrSwFilFmt                                   CSW207
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CrFaFilFmt                                   CGL132
+      ** SDCRSDPD Transaction Details File Format                                             CGL157
+     C                   PARM                    CrsdFilFmt                                   CGL157
+                                                                                              CGL157
+     C                   PARM                    PCrsdF                                       CGL157
       ** Switchable features                                                                  CLE025
      C                   PARM                    CLE025                                       CLE025
      C                   PARM                    CFX001                                       CFX001
@@ -3846,6 +4276,11 @@
      C**********         PARM                    CuSW13                              CFT050 MD022463
      C                   PARM                    CuCUXC                                       CGL132
      C                   PARM                    CuFATC                                       CGL132
+      ** SDCRSSPD Transaction Details Screen Format                                           CGL157
+     C                   PARM                    CrsdDets                                     CGL157
+                                                                                              CGL157
+     C                   PARM                    PCrsdS                                       CGL157
+                                                                                              CGL157
      C/COPY WNCPYSRC,SDCUSDNC02
  
       *
@@ -4275,6 +4710,21 @@
      C                   ELSE                                                                 CGL132
      C                   MOVEL     'N'           CGL132                                       CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Check if CGL157 is switched on                                                       CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       @RTCD                                        CGL157
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL157
+     C                   PARM      'CGL157'      @SARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C     @RTCD         IFEQ      *BLANK                                                     CGL157
+     C                   MOVEL     'Y'           CGL157                                       CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVEL     'N'           CGL157                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
       ** Check if Portfolio Management Enhancement is on                                      CSD079
                                                                                               CSD079
      C     BGPFMG        IFEQ      'Y'                                                        CSD079

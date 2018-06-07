@@ -11,8 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042697           Date 22Nov16               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036460           Date 05Nov15               *
+      *                 MD036380           Date 03Nov15               *
+      *                 MD036356           Date 02Nov15               *
+      *                 MD035388           Date 20Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD042697           Date 22Nov16               *
       *                 MD036356           Date 02Nov15               *
       *                 MD033414           Date 28Feb15               *
       *                 MD030158           Date 05Sep14               *
@@ -34,7 +41,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ (Recompile)                                *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036460 - FATCA US Indicia update enhancements              *
+      *  MD036380 - FATCA Information Complete Flag cannot be set     *
+      *             to yes even if all TIN details are defined        *
       *  MD046248 - Finastra Rebranding                               *
+      *  MD033588 - FATCA Screen order rework                         *
+      *  CGL157 - CRS Reporting                                       *
       *  MD042697 - Newly insert NAHO is not reflected                *
       *  MD036356 - Multiple NAHO FATCA fields does not default values*
       *             from Main NAHO/CRS Details                        *
@@ -170,6 +184,13 @@
  
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
+                                                                                              CGL157
+      ** CRS Transaction Details in screen format                                             CGL157
+     D CurCrshDets   E DS                  EXTNAME(SDCRNSPD)                                MD035388
+     D                                     PREFIX(C_)                                         CGL157
+                                                                                              CGL157
+      ** External DS for CRS Details                                                          CGL157
+     D ValidCusD     E DS                  EXTNAME(SDVCRSNPD)                               MD036356
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -221,6 +242,9 @@
      D PVL01           S            200A   INZ(*BLANKS)                                     MD027454
      D POP02           S             20A   INZ(*BLANKS)                                     MD027454
      D PVL02           S            200A   INZ(*BLANKS)                                     MD027454
+                                                                                              CGL157
+     D PFeature        S              3A   INZ('FTC')                                         CGL157
+     D PCrsdS          S            351A   DIM(30)                                            CGL177
      D PHasIndicia     S              1A   INZ('N')                                         MD036356
      D PAINSF          S              1A                                                    MD036460
                                                                                             MD027454
@@ -801,6 +825,8 @@
  
       ***Action*Code***************************************************            MD035388 MD042697
      C**********         PARM                    DDACTI                            MD035388 MD042697
+      ** Action Code                                                                        MD035388
+     C                   PARM                    DDACTI                                     MD035388
                                                                                             MD035388
       ** High Value Account (Original)
      C                   PARM                    P_DDHVAC
@@ -808,6 +834,8 @@
       ** High Value Account
      C                   PARM                    DDHVAC            1
  
+     C                   PARM                    C_DDHVAL                                   MD035388
+                                                                                            MD035388
       ** OUTPUTS
  
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -1109,6 +1137,10 @@
      C                   PARM                    BJRDNB
      C                   PARM                    BJDFIN                                     MD026997
      C                   PARM                    PHasIndicia                                MD036356
+     C                   PARM                    CurCrshDets                                MD035388
+     C                   PARM                    PCrsdS                                     MD035388
+     C                   PARM                    ValidCusD                                  MD035388
+     C                   PARM                    PFeature                                   MD035388
  
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
@@ -1235,6 +1267,7 @@
      C                   PARM                    P_CRDT            8                        MD026550
      C                   PARM                    WCLAFlag          1                        MD027561
      C                   PARM                    PAINSF                                     MD042697
+     C                   PARM                    CurCrshDets                                MD035388
  
       ** OUTPUTS
  

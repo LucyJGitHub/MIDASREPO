@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. MD040639           Date 22Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 AR740749           Date 25May11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22580           Date 02Feb09               *
@@ -33,6 +35,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040639 - Hats compatibility issue (Recompile)              *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -160,6 +164,8 @@
  
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  Extname(DSFDY)
+      ** External DS for SAR Details                                                          CGL177
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL177
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -209,6 +215,9 @@
      D X               S              3  0
      D @rrn            S              5  0
      D #FldNameArr     S            200
+     D PRTCD           S              7                                                       CGL177
+     D POPTN           S              7                                                       CGL177
+     D PSARD           S              6                                                       CGL177
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -490,6 +499,10 @@
      C                   WHEN      *INKN = *ON                                                CGL132
      C                   MOVEL     *ON           @INKN             1                          CGL132
      C                   RETURN                                                               CGL132
+                                                                                              CGL177
+     C                   WHEN      *INKQ = *ON                                                CGL177
+     C                   MOVEL     *ON           @INKQ             1                          CGL177
+     C                   RETURN                                                               CGL177
  
      C                   ENDSL
  
@@ -702,6 +715,10 @@
      C                   WHEN      *INKN = *ON                                                CGL132
      C                   MOVEL     *ON           @INKN             1                          CGL132
      C                   RETURN                                                               CGL132
+                                                                                              CGL177
+     C                   WHEN      *INKQ = *ON                                                CGL177
+     C                   MOVEL     *ON           @INKQ                                        CGL177
+     C                   RETURN                                                               CGL177
  
      C                   ENDSL
  
@@ -1105,6 +1122,7 @@
      C                   PARM                    @INKC
      C                   PARM                    @INKI
      C                   PARM                    @INKN                                        CGL132
+     C                   PARM                    @INKQ                                        CGL177
  
       ** Initialize program name
  
@@ -1133,6 +1151,27 @@
      C                   MOVEL     @OPTN         Dbkey
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                              CGL177
+      ** Access SAR details to check if CGL157 is installed                                   CGL177
+                                                                                              CGL177
+     C                   EVAL      *IN82 = *OFF                                               CGL177
+     C                   CALLB     'AOSARDR0'                                                 CGL177
+     C                   PARM      *BLANKS       PRTCD                                        CGL177
+     C                   PARM      '*VERIFY'     POPTN                                        CGL177
+     C                   PARM      'CGL157'      PSARD                                        CGL177
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL177
+                                                                                              CGL177
+     C     PRTCD         IFNE      *BLANKS                                                    CGL177
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL177
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CGL177
+     C                   MOVEL     '905'         DBASE                                        CGL177
+     C                   MOVEL     @SARD         DBKEY                                        CGL177
+     C                   EXSR      *PSSR                                                      CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C     PRTCD         IFEQ      *BLANKS                                                    CGL177
+     C                   EVAL      *IN82 = *ON                                                CGL177
+     C                   ENDIF                                                                CGL177
  
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP

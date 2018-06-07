@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042407           Date 07Nov16               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042407           Date 07Nov16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD034317           Date 17Jul15               *
       *                 LLN022A            Date 03Jun15               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042407 - Creation Date field is missing when CGL132 is     *
       *             switched off ; reversed MD034317 fix              *

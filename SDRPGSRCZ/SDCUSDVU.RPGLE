@@ -32,8 +32,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050345           Date 04Apr18               *
+      *  Prev Amend No. MD050052           Date 16Mar18               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041996           Date 12Oct16               *
       *                 MD045238           Date 24Apr17               *
       *                 MD042966           Date 20Dec16               *
@@ -139,6 +142,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050345 - Data under CRS Country Details are not aligned to *
+      *             their corresponding columns                       *
+      *  MD050052 - Serious Midas Error is encountered during CUSD    *
+      *  CGL157 - CRS Reporting                                       *
       *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041996 - Incorrect mapping for FX Netting                  *
@@ -399,6 +406,9 @@
      D CUAHArrDS       DS                                                                     CER059
      D***CUAHArr                      22A   DIM(50)                                    CER059 CGL132
      D  CUAHArr                      26A   DIM(50)                                            CGL132
+                                                                                              CGL157
+     D PCrsdSDS        DS                                                                     CGL157
+     D  PCrsdS                      223A   DIM(30)                                            CGL157
                                                                                               CER059
      D CCTXArrDS       DS                                                                     CER059
      D  CCTXArr                      51A   DIM(50)                                            CER059
@@ -485,6 +495,12 @@
      D                                     PREFIX(XC)                                         CGL132
      D TranInFTCR    E DS                  EXTNAME (SDFTCRPD)                                 CGL132
      D                                     PREFIX(FS)                                         CGL132
+     D TranInCRSS    E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D                                     PREFIX(CR)                                         CGL157
+     D TranInCRDD    E DS                  EXTNAME(SDCRDDPD)                                  CGL157
+     D                                     PREFIX(CR)                                         CGL157
+     D TransCRSD     E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D                                     PREFIX(CS)                                         CGL157
  
       * Valid Customer layout
      D ValidCusd     E DS                  EXTNAME(SDVCUSDPD)
@@ -559,6 +575,11 @@
       ** Valid FATCA Customer Details layout                                                  CGL132
      D ValidFtcs     E DS                  EXTNAME (SDVFTCSPD)                                CGL132
      D                                     PREFIX (V_)                                        CGL132
+                                                                                              CGL157
+      ** Valid CRS Customer Details layout                                                    CGL157
+     D ValidCRSH     E DS                  EXTNAME (SDVCRSHPD)                                CGL157
+     D                                     PREFIX (V_)                                        CGL157
+     D ValidCRSD       S            219A   DIM(30)                                            CGL157
                                                                                               CSD079
       ** Valid Currency/Time of Netting Details file                                       AR1086546
      D ValidCtnm     E DS                  EXTNAME (SDVCTNMPD)                             AR1086546
@@ -629,6 +650,10 @@
                                                                                               CGL132
      D CuFaFilFmt    E DS                  EXTNAME(SDFTCSPD)                                  CGL132
       ** (Current) Risk weighted assets in file Format                                        CGL132
+                                                                                              CGL157
+      ** Transaction Details in File Format                                                   CGL157
+     D CuCrFilFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+     D CuCdFilFmt      S            219A   DIM(30)                                            CGL157
  
       * (Current) Customer in Screen Format - Primary Details
      D CurCuPrim     E DS                  EXTNAME(SDCUPRPD)
@@ -677,6 +702,10 @@
      D                                     PREFIX (Y@)                                        CGL132
      D CurCuFTCR     E DS                  EXTNAME (SDFTCRPD)                                 CGL132
      D                                     PREFIX (Z@)                                        CGL132
+     D CurCuCRSH     E DS                  EXTNAME (SDCRSSPD)                                 CGL157
+     D                                     PREFIX (W@)                                        CGL157
+     D CurCuCRSD     E DS                  EXTNAME (SDCRDDPD)                                 CGL157
+     D                                     PREFIX (W@)                                        CGL157
                                                                                               CSD079
       ** (Current) Customer in Screen Format - Service Fees                                   CSD079
      D CurCuSfee     E DS                  EXTNAME (SDSFEEPD)                                 CSD079
@@ -781,6 +810,8 @@
      D FileBoE       E DS                  EXTNAME (BYCUSTX0)                               AR316373
      D  LCUSTX       E                     EXTFLD(LCUST)                                    MD034876
       *                                                                                     AR316373
+     D OKCRSHDets    E DS                  EXTNAME(SDECRSHPD)                                 CGL157
+     D OKCRSCtry     E DS                  EXTNAME(SDECRSDPD)                                 CGL157
      D OKCuBoE       E DS                  EXTNAME (SDECUSDPE)                              AR316373
      D OKCuCtnm      E DS                  EXTNAME (SDECTNMPD)                             AR1086546
      D T_DDACTNOK    E                     EXTFLD(DDACTNOK)                                AR1086546
@@ -843,6 +874,7 @@
      D  TransCUXC                          LIKE(SDCUXC)                                       CGL132
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(ExtData)                                    MD044880
+     D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -850,11 +882,21 @@
      D TransInEx4      DS          9999                                                       CSW213
      D  TransCUAH                          LIKE(TranInCUAH)                                   CSW213
      D  TransCCTX                          LIKE(TranInCCTX)                                   CSW213
+     D**Filler110                   110                                              CGL157 MD050345
+     D  TransCRSD1                 6039                                                       CGL157
+                                                                                              CGL157
+     D TransInEx5      DS          9999                                                       CGL157
+     D  TransCRSD2                  621                                                       CGL157
      D SDSW13        E DS                  EXTNAME(SDSW13PD)                                  CSW213
      D**********                           PREFIX(S13)                               CSW213 MD022463
      D  S13DDBRCD    E                     EXTFLD(DDBRCD)                                   MD022463
      D SDCUXC        E DS                  EXTNAME(SDCUXCPD)                                  CGL132
      D SDFTCR        E DS                  EXTNAME(SDFTCRPD)                                  CGL132
+     D SDCRSS        E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D  CCDDACTI     E                     EXTFLD(DDACTI)                                     CGL157
+     D  CCDDCUSN     E                     EXTFLD(DDCUSN)                                     CGL157
+     D  CCDDSTYP     E                     EXTFLD(DDSTYP)                                     CGL157
+     D SDCRDD        E DS                  EXTNAME(SDCRDDPD)                                  CGL157
       ** Customer dtls Bank directory details                                                 CSW213
      D/COPY WNCPYSRC,SDH00575
                                                                                               CSD079
@@ -959,6 +1001,8 @@
      D RepCupm         S              1A   inz('N')                                           CSD079
      D RepTicd         S              1A   inz('N')                                           CSD079
      D RepCurx         S              1A   inz('N')                                           CSD079
+     D RepCrsh         S              1A   inz('N')                                           CGL157
+     D RepCrsd         S              1A   inz('N')                                           CGL157
  
      D DBerrUpd        C                   CONST('DB error in CUSD API update')
                                                                                               222373
@@ -1038,14 +1082,20 @@
      D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
-     D FillerBufEx2    S           5915A                                                    MD044880
+     D***FillerBufEx2    S           5915A                                           MD044880 CGL157
+     D FillerBufEx2    S           5591A                                                      CGL157
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
      D FillerBufEx4    S           6039A                                                    MD044880
      D TranInCtnm1     S              8A                                                    MD041996
      D TranInCtnm2     S            110A                                                    MD041996
+     D FillerBufEx5    S           9999A                                                      CGL157
      D PPCOLC          S              2A                                                    MD026693
+     D CuCdFil         S            219A   DIM(30)                                            CGL157
+     D PCrsdF          S            219A   DIM(30)                                            CGL157
+     D CGL157          S              1A                                                      CGL157
+     D DFCTRY          S              2A                                                      CGL157
       ** +--------------------------------------+
                                                                                             MD026519
      D PReturn         S              7A                                                    MD026519
@@ -1152,6 +1202,8 @@
      C                   EVAL      TranInCUXC = TransCUXC                                     CGL132
      C                   EVAL      TranInFTCR = TransFTCR                                     CGL132
      C                   EVAL      ExtData    = TransCUEX                                   MD044880
+     C                   EVAL      TranInCRSS = TransCRSS                                     CGL157
+     C                   EVAL      TranInCRDD = TransCRSD1 + TransCRSD2                       CGL157
  
       * Reset variables gradually updated
  
@@ -1302,6 +1354,14 @@
      C                   If        *in99                                                      CSD079
      C                   Eval      RepCurx = 'Y'                                              CSD079
      C                   EndIf                                                                CSD079
+     C     GHSUBS        SCAN      TranInCrss                             99                  CGL157
+     C                   IF        *IN99 = '1'                                                CGL157
+     C                   EVAL      RepCrsh = 'Y'                                              CGL157
+     C                   ENDIF                                                                CGL157
+     C     GHSUBS        SCAN      TranInCrdd                             99                  CGL157
+     C                   IF        *IN99 = '1'                                                CGL157
+     C                   EVAL      RepCrsd = 'Y'                                              CGL157
+     C                   ENDIF                                                                CGL157
      C                   EndIf                                                                CSD079
  
       ** If any of the flags set above is true, do the data
@@ -1319,6 +1379,7 @@
      C                              RepCusf = 'Y' OR RepCufx = 'Y' OR                         CSD079
      C                              RepRwan = 'Y' OR RepCufo = 'Y' OR                         CSD079
      C                              RepCupm = 'Y' OR RepTicd = 'Y' OR                         CSD079
+     C                              RepCrsh = 'Y' OR RepCrsd = 'Y' OR                         CGL157
      C                              RepCufd = 'Y' OR RepCurx = 'Y' )                          CSD079
      C                   EXSR      DtaSubs                                                    CSD079
      C                   endif                                                                CSD079
@@ -1438,6 +1499,7 @@
      C                                       + TranInCUXC                                     CGL132
      C                                       + TranInFTCR                                     CGL132
      C                                       + ExtData                                      MD044880
+     C                                       + TranInCRSS                                     CGL157
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -1446,7 +1508,10 @@
      C                                       + TranInCCTX                                     CSW213
      C                                       + TranInCtnm2                                  MD041996
      C**********                             + ExtData                             AR316373 MD044880
-     C                                       + FillerBufEx4                                   CSW213
+     C                                       + TransCRSD1                                     CGL157
+     C**********                             + FillerBufEx4                            CSW213 CGL157
+     C                   EVAL      BufferEx5 = TransCRSD2                                     CGL157
+     C                                       + ExtData                                        CGL157
      C                   ENDIF                                                               BUG4742
  
      C/COPY WNCPYSRC,SDH00574
@@ -1540,6 +1605,8 @@
      C                   PARM                    SDSW13                                       CSW213
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                   CGL132
+     C                   PARM                    CuCrFilFmt                                   CGL157
+     C                   PARM                    CuCdFilFmt                                   CGL157
      C                   PARM                    CumiFilFmt                                   CSD079
      C                   PARM                    CuadFilFmt                                   CSD079
      C                   PARM                    SfeeFilFmt                                   CSD079
@@ -1626,6 +1693,8 @@
      C                   MOVE      CuibfFilFmt   ValidCulx1                                 BUG13595
      C                   MOVEL     CuXcFilFmt    ValidCuXc                                    CGL132
      C                   MOVEL     CuFaFilFmt    ValidFTCS                                    CGL132
+     C                   MOVEL     CuCrFilFmt    ValidCRSH                                    CGL157
+     C                   MOVEL     CuCdFilFmt    ValidCRSD                                    CGL157
  
       * For Amends, convert the Customer to screen format
  
@@ -1658,6 +1727,8 @@
      C                   PARM                    ValidSwft                                    CSW207
      C                   PARM                    ValidCuXc                                    CGL132
      C                   PARM                    ValidFTCS                                    CGL132
+     C                   PARM                    ValidCRSH                                    CGL157
+     C                   PARM                    ValidCRSD                                    CGL157
                                                                                              BUG5082
       ** Switchable features                                                                 BUG5082
                                                                                              BUG5082
@@ -1692,6 +1763,8 @@
      C                   PARM                    CurCuCtnm                                 AR1086546
      C                   PARM                    CurCuCUXC                                    CGL132
      C                   PARM                    CurCuFTCR                                    CGL132
+     C                   PARM                    CurCuCRSH                                    CGL157
+     C                   PARM                    CurCuCRSD                                    CGL157
  
       ** Customer Details
  
@@ -1885,7 +1958,9 @@
      C     S01425        IFEQ      'Y'                                                        CER059
      C                   EXSR      ValdCuACU3                                                 CER059
      C                   EXSR      ValdCuACU4                                                 CER059
+     C                   IF        CGL157 = 'N'                                               CGL157
      C                   EXSR      ValdCuACU5                                                 CGL132
+     C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CER059
                                                                                               CSD079
       ** If error in validation, fail this input                                              CSD079
@@ -2244,6 +2319,24 @@
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   EVAL      PCrsdSDS = TranInCRDD                                      CGL157
+     C                   EXSR      ValdCuCRSD                                                 CGL157
+                                                                                              CGL157
+     C     Idx           IFNE      0                                                          CGL157
+     C                   GOTO      EValidTr                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EXSR      ValdCuCRSH                                                 CGL157
+                                                                                              CGL157
+     C     Idx           IFNE      0                                                          CGL157
+     C                   GOTO      EValidTr                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
  
      C/COPY WNCPYSRC,SDCUSDVU01
  
@@ -2693,6 +2786,8 @@
      C                   PARM                    SwftFilFmt                                   CSW207
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                   CGL132
+     C                   PARM                    CuCrFilFmt                                   CGL157
+     C                   PARM                    CuCdFilFmt                                   CGL157
       *                                                                                       CSD079
       ** Switchable features                                                                  CSD079
       *                                                                                       CSD079
@@ -2726,6 +2821,8 @@
      C                   PARM                    CurCuCtnm                                 AR1086546
      C                   PARM                    CurCuCUXC                                    CGL132
      C                   PARM                    CurCuFTCR                                    CGL132
+     C                   PARM                    CurCuCRSH                                    CGL157
+     C                   PARM                    CurCuCRSD                                    CGL157
  
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
@@ -3225,6 +3322,56 @@
      C                   PARM      CurCuCurx     CurData                                      CSD079
      C                   MOVEL     IncDATA       TranInCurx                                   CSD079
      C                   ENDIF                                                                CSD079
+                                                                                              CGL157
+     C                   IF        RepCrsh = 'Y'                                              CGL157
+                                                                                              CGL157
+     C                   CLEAR                   IncData                                      CGL157
+     C                   CLEAR                   CurData                                      CGL157
+     C                   RESET                   ReturnCode                                   CGL157
+     C                   CALLB     'APDTASUBS'                                                CGL157
+                                                                                              CGL157
+      ** Return Code                                                                          CGL157
+                                                                                              CGL157
+     C                   PARM                    ReturnCode                                   CGL157
+                                                                                              CGL157
+      ** Substitution character                                                               CGL157
+                                                                                              CGL157
+     C                   PARM                    GHSUBS                                       CGL157
+                                                                                              CGL157
+      ** Incoming Data                                                                        CGL157
+                                                                                              CGL157
+     C                   PARM      TranInCrss    IncData                                      CGL157
+                                                                                              CGL157
+      ** Current Data                                                                         CGL157
+                                                                                              CGL157
+     C                   PARM      CurCuCrsh     CurData                                      CGL157
+     C                   MOVEL     IncDATA       TranInCrss                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        RepCrsd = 'Y'                                              CGL157
+                                                                                              CGL157
+     C                   CLEAR                   IncData                                      CGL157
+     C                   CLEAR                   CurData                                      CGL157
+     C                   RESET                   ReturnCode                                   CGL157
+     C                   CALLB     'APDTASUBS'                                                CGL157
+                                                                                              CGL157
+      ** Return Code                                                                          CGL157
+                                                                                              CGL157
+     C                   PARM                    ReturnCode                                   CGL157
+                                                                                              CGL157
+      ** Substitution character                                                               CGL157
+                                                                                              CGL157
+     C                   PARM                    GHSUBS                                       CGL157
+                                                                                              CGL157
+      ** Incoming Data                                                                        CGL157
+                                                                                              CGL157
+     C                   PARM      TranInCrdd    IncData                                      CGL157
+                                                                                              CGL157
+      ** Current Data                                                                         CGL157
+                                                                                              CGL157
+     C                   PARM      CurCuCrsd     CurData                                      CGL157
+     C                   MOVEL     IncDATA       TranInCrdd                                   CGL157
+     C                   ENDIF                                                                CGL157
      C                   endif                                                                CSD079
  
      C                   endsr
@@ -3467,6 +3614,8 @@
      C                   CLEAR                   CurCuCtnm                                 AR1086546
      C                   CLEAR                   CurCuCUXC                                    CGL132
      C                   CLEAR                   CurCuFTCR                                    CGL132
+     C                   CLEAR                   CurCuCRSH                                    CGL157
+     C                   CLEAR                   CurCuCRSD                                    CGL157
  
      C                   MOVE      *ALL'Y'       OKCuPrim
      C                   MOVE      *ALL'Y'       OKCuSeco
@@ -3494,6 +3643,8 @@
      C                   MOVE      *ALL'Y'       OKCuCtnm                                  AR1086546
      C                   MOVE      *ALL'Y'       OKCuCuxc                                     CGL132
      C                   MOVE      *ALL'Y'       OKCuFtcs                                     CGL132
+     C                   MOVE      *ALL'Y'       OKCRSHDets                                   CGL157
+     C                   MOVE      *ALL'Y'       OKCRSCtry                                    CGL157
  
      C                   CLEAR                   ValidCusd
      C                   CLEAR                   ValidCuBr
@@ -3513,6 +3664,8 @@
      C                   CLEAR                   ValidCtnm                                 AR1086546
      C                   CLEAR                   ValidCuXc                                    CGL132
      C                   CLEAR                   ValidFTCS                                    CGL132
+     C                   CLEAR                   ValidCRSH                                    CGL157
+     C                   CLEAR                   ValidCRSD                                    CGL157
  
       * Reset packed fields of Private Banking Details                                      BUG14161
      C                   Z-ADD     0             V_PBPBST                                   BUG14161
@@ -4249,6 +4402,8 @@
      C                   PARM                    ValidCulx1                                   CSD079
      C                   PARM                    ValidCtnm                                 AR1086546
      C                   PARM                    ValidFTCS                                    CGL132
+     C                   PARM                    ValidCRSH                                    CGL157
+     C                   PARM                    PCrsdF                                       CGL157
       * Base Rate Auth req                                                                    222373
      C                   PARM                    AUTHRQ            1                          222373
       * Authorisation Mode                                                                    222373
@@ -5689,6 +5844,7 @@
      C                   PARM                    ValidCuxc                                  MD026497
      C                   PARM                    PAPARM                                     MD042692
      C                   PARM                    V_CUAHArr                                  MD045238
+     C                   PARM                    CurCuCRSH                                    CGL157
                                                                                               CGL132
       ** OUTPUTS                                                                              CGL132
       ** FATCA Customer Details OK inds                                                       CGL132
@@ -5722,6 +5878,103 @@
                                                                                               CGL132
      C                   ENDSR                                                                CGL132
                                                                                               CGL132
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      * ValdCuCRSD - Validate CRS Country Details                     *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     ValdCuCRSD    BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   CALL      'SDCRSDDFT'                                                CGL157
+     C                   PARM                    V_CUCOLC                                     CGL157
+     C                   PARM      DDCUSN        DDCUST                                       CGL157
+     C                   PARM                    TranInCUAD                                   CGL157
+     C                   PARM                    TranInCUAH                                   CGL157
+     C                   PARM                    PCrsdS                                       CGL157
+     C                   PARM                    PCrsdF                                       CGL157
+                                                                                              CGL157
+      **                                                                                      CGL157
+     C                   CALLB     'SDCRSD3VL'                                                CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Mode                                                                                 CGL157
+     C                   PARM      *Blanks       RespMode                                     CGL157
+     C                   PARM      DDCUSN        DDCUST                                       CGL157
+                                                                                              CGL157
+      ** CRS Country Transaction Details                                                      CGL157
+     C                   PARM                    PCrsdS                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Transaction Details OK inds                                                          CGL157
+     C                   PARM                    OKCRSCtry                                    CGL157
+                                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNameArr                                   CGL157
+     C                   PARM                    MsgIDArr                                     CGL157
+     C                   PARM                    MsgDtaArr                                    CGL157
+                                                                                              CGL157
+      ** Array index (3P0) from/to caller                                                     CGL157
+     C                   PARM                    Idx                                          CGL157
+                                                                                              CGL157
+     C                   PARM                    WFldNamArr                                   CGL157
+     C                   PARM                    WMsgIDArr                                    CGL157
+     C                   PARM                    WMsgDtaArr                                   CGL157
+     C                   PARM                    WIdx                                         CGL157
+                                                                                              CGL157
+      ** Valid Transaction details layout (DS) from/to caller                                 CGL157
+     C                   PARM                    PCrsdF                                       CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      * ValdCuCRSH - Validate CRS Customer Details                    *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     ValdCuCRSH    BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDCRSD1VL'                                                CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Response mode                                                                        CGL157
+     C                   PARM      *Blanks       RespMode                                     CGL157
+                                                                                              CGL157
+      ** Transaction Details                                                                  CGL157
+     C                   PARM                    TranInCRSS                                   CGL157
+     C                   PARM                    CurCuCRSH                                    CGL157
+      ** Valid ACUD Transaction details layout (DS)                                           CGL157
+     C                   PARM                    ValidCuad                                    CGL157
+      ** CRS Country Transaction Details                                                      CGL157
+     C                   PARM                    PCrsdS                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Transaction Details OK inds                                                          CGL157
+     C                   PARM                    OKCRSHDets                                   CGL157
+                                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNameArr                                   CGL157
+     C                   PARM                    MsgIDArr                                     CGL157
+     C                   PARM                    MsgDtaArr                                    CGL157
+                                                                                              CGL157
+      ** Array index (3P0) from/to caller                                                     CGL157
+     C                   PARM                    Idx                                          CGL157
+                                                                                              CGL157
+     C                   PARM                    WFldNamArr                                   CGL157
+     C                   PARM                    WMsgIDArr                                    CGL157
+     C                   PARM                    WMsgDtaArr                                   CGL157
+     C                   PARM                    WIdx                                         CGL157
+                                                                                              CGL157
+      ** Valid Transaction details layout (DS) from/to caller                                 CGL157
+     C                   PARM                    ValidCRSH                                    CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157                                                                                         
       *****************************************************************                       CSD079
       /EJECT                                                                               AR1086546
       *****************************************************************                    AR1086546
@@ -5874,6 +6127,7 @@
      C                   PARM                    TransInEx2                                   CSW213
      C                   PARM                    TransInEx3                                   CSW213
      C                   PARM                    TransInEx4                                   CSW213
+     C                   PARM                    TransInEx5                                   CGL157
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -5887,6 +6141,7 @@
      C                   PARM                    BufferEx2      9999                          CSW213
      C                   PARM                    BufferEx3      9999                          CSW213
      C                   PARM                    BufferEx4      9999                          CSW213
+     C                   PARM                    BufferEx5      9999                          CGL157
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    AAuth             1                        BUG22143
@@ -6650,6 +6905,26 @@
      C                   EVAL      CGL132 = 'N'                                               CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+      ** Check if CGL157 is installed                                                         CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*VERIFY'     POPTN                                        CGL157
+     C                   PARM      'CGL157'      PSARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL157
+     C                   EVAL      DBASE  = 928                                               CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   ENDIF                                                                CGL157
                                                                                             MD026519
       ** Check if CGL133 is switched on                                                     MD026519
                                                                                             MD026519

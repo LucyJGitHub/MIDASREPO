@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000306 - Midas SD CRS Indicia Search Tool Prompt         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CGL177  *CREATE    Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Determine full DPLIB library name */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+             SNDPGMMSG  MSG('SDC000306 - Midas SD CRS Indicia Search and Update +
+                          Tool') TOMSGQ(MRUNQ)
+
+             CHGJOB     SWS(00000000)
+
+/** Create data area LDA */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             CLRPFM     (SDCDBKPD)
+             MONMSG     MSGID(CPF2105)
+             CLRPFM     (SDCNBKPD)
+             MONMSG     MSGID(CPF2105)
+
+             CPYF       FROMFILE(SDCRSDPD) TOFILE(&DPLIB/SDCDBKPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDCRSNPD) TOFILE(&DPLIB/SDCNBKPD) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+/** Call Prompt Program */
+             CALL       PGM(SD000306)
+             RCLACTGRP  ACTGRP(SD000306)
+
+             DLCOBJ     OBJ((SDCRSDPD *FILE *EXCL) (SDCRSNPD *FILE *EXCL))
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+
+                CPYF       FROMFILE(SDCDBKPD) TOFILE(SDCRSDPD) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(SDCNBKPD) TOFILE(SDCRSNPD) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000306 Midas SD CRS Indicia Search Tool ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             GOTO       CMDLBL(END)
+
+ ALLOCFAIL:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000306 Midas SD CRS Indicia Search Tool ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             GOTO       CMDLBL(END)
+
+END:
+             ENDPGM

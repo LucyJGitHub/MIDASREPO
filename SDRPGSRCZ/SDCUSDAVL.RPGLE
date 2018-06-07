@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD050052           Date 16Mar18               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *                 MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 MD021510           Date 09Aug13               *
       *                 CLE134             Date 01Aug12               *
@@ -26,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050052 - Serious Midas Error is encountered during CUSD    *
+      *  CGL157 - CRS Reporting                                       *
+      *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -162,12 +168,18 @@
  
       ** Work fields
      D I               S              3P 0
+     D W               S              2S 0                                                    CGL157
      D RespMode        S              1A
      D DDCUSN          S              6A
      D DDBNBI          S              1A                                                    AR739736
      D CGL032          S              1A
      D CLE134          S              1A                                                      CLE134
      D CSW207          S              1A                                                    BUG14992
+     D DDOKCTR1        S              1A                                                      CGL157
+     D DDOKCTR2        S              1A                                                      CGL157
+     D DDOKCTR3        S              1A                                                      CGL157
+     D DDOKCTR4        S              1A                                                      CGL157
+     D DDOKCTR5        S              1A                                                      CGL157
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -316,6 +328,9 @@
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                             BUG14992
      C                   EXSR      SRVCISCD                                                 BUG14992
      C                   ENDIF                                                              BUG14992
+                                                                                              CGL157
+     C                   EXSR      SrMail                                                     CGL157
+     C                   EXSR      SrPhone                                                    CGL157
  
      C                   RETURN
  
@@ -475,6 +490,9 @@
       ** Identification Type
  
      C                   PARM                    DDIDTP
+                                                                                            MD050052
+      ** Identity number                                                                    MD050052
+     C                   PARM                    DDIDNO                                     MD050052
  
       ** Outputs
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -1154,6 +1172,114 @@
      C                   EXSR      UPDATERRS                                                BUG14992
                                                                                             BUG14992
      C                   ENDSR                                                              BUG14992
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+     C/EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      ** SrMail - Validate Mailing Country                            *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrMail        BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Reset variables updated by each module                                               CGL157
+                                                                                              CGL157
+     C                   EXSR      RESETERRS                                                  CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDVCTRYD'                                                 CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Return Code                                                                          CGL157
+     C                   PARM                    RetCodeIn                                    CGL157
+                                                                                              CGL157
+      ** Other parms                                                                          CGL157
+      ** Mailing Countries                                                                    CGL157
+     C     ADCTR1        PARM                    DDCTR1                                       CGL157
+     C     ADCTR2        PARM                    DDCTR2                                       CGL157
+     C     ADCTR3        PARM                    DDCTR3                                       CGL157
+     C     ADCTR4        PARM                    DDCTR4                                       CGL157
+     C     ADCTR5        PARM                    DDCTR5                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNamXAr                                    CGL157
+     C                   PARM                    MsgIDXAr                                     CGL157
+     C                   PARM                    MsgDtaXAr                                    CGL157
+                                                                                              CGL157
+      ** Mailing Country Codes - OK                                                           CGL157
+     C                   PARM                    DDOKCTR1                                     CGL157
+     C                   PARM                    DDOKCTR2                                     CGL157
+     C                   PARM                    DDOKCTR3                                     CGL157
+     C                   PARM                    DDOKCTR4                                     CGL157
+     C                   PARM                    DDOKCTR5                                     CGL157
+                                                                                              CGL157
+      * Update error info with that returned from the validation module                       CGL157
+                                                                                              CGL157
+     C                   EXSR      UPDATERRS                                                  CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+     C/EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      ** SrPhone - Validate Phone Country                             *                       CGL157
+      *****************************************************************                       CGL157
+     C     SrPhone       BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Reset variables updated by each module                                               CGL157
+                                                                                              CGL157
+     C                   EXSR      RESETERRS                                                  CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDVCTRYD'                                                 CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Return Code                                                                          CGL157
+     C                   PARM                    RetCodeIn                                    CGL157
+                                                                                              CGL157
+      ** Other parms                                                                          CGL157
+      ** Phone Countries                                                                      CGL157
+     C     ADPHN1        PARM                    DDPHN1                                       CGL157
+     C     ADPHN2        PARM                    DDPHN2                                       CGL157
+     C     ADPHN3        PARM                    DDPHN3                                       CGL157
+     C     ADPHN4        PARM                    DDPHN4                                       CGL157
+     C     ADPHN5        PARM                    DDPHN5                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNamXAr                                    CGL157
+     C                   PARM                    MsgIDXAr                                     CGL157
+     C                   PARM                    MsgDtaXAr                                    CGL157
+                                                                                              CGL157
+      ** Phone Country Codes - OK                                                             CGL157
+     C                   PARM                    DDOKCTR1                                     CGL157
+     C                   PARM                    DDOKCTR2                                     CGL157
+     C                   PARM                    DDOKCTR3                                     CGL157
+     C                   PARM                    DDOKCTR4                                     CGL157
+     C                   PARM                    DDOKCTR5                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      W = 1                                                      CGL157
+                                                                                              CGL157
+     C                   DOW       FldNamXAr(W) <> *Blanks                                    CGL157
+     C                   IF        FldNamXAr(W) = 'DDCTR1'                                    CGL157
+     C                   EVAL      FldNamXAr(W) = 'DDPHN1'                                    CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        FldNamXAr(W) = 'DDCTR2'                                    CGL157
+     C                   EVAL      FldNamXAr(W) = 'DDPHN2'                                    CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        FldNamXAr(W) = 'DDCTR3'                                    CGL157
+     C                   EVAL      FldNamXAr(W) = 'DDPHN3'                                    CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        FldNamXAr(W) = 'DDCTR4'                                    CGL157
+     C                   EVAL      FldNamXAr(W) = 'DDPHN4'                                    CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        FldNamXAr(W) = 'DDCTR5'                                    CGL157
+     C                   EVAL      FldNamXAr(W) = 'DDPHN5'                                    CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      W = W + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+      * Update error info with that returned from the validation module                       CGL157
+                                                                                              CGL157
+     C                   EXSR      UPDATERRS                                                  CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
       *****************************************************************
      C/EJECT
       *****************************************************************                       CLE134

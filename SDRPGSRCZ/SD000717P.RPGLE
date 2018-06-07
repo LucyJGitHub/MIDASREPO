@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD027545           Date 01Aug14               *
       *                 MD027439           Date 18Jun14               *
       *                 MD024592           Date 28Jan14               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027545 - Previous FATCA Classification Description is      *
@@ -147,6 +149,9 @@
       ** Midas FATCA Classification Code
      D SDFATC        E DS                  EXTNAME(SDFATCPD)
  
+      ** Midas FATCA Non-Account Holder                                                     MD039670
+     D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
+                                                                                            MD039670
       ** SPOOL Information Data Structure for ZSFILE
      D SPOOL           DS
      D  SFILE                 83     92
@@ -207,6 +212,7 @@
      D POPTN           S              7
      D PDCCD           S              2
      D PCTRY           S              2
+     D PKEY1           S             10                                                     MD039670
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -285,6 +291,21 @@
  
      C                   READ      SDFTNHL1                               14
      C                   IF        NOT %EOF (SDFTNHL1)
+                                                                                            MD039670
+     C                   EVAL      PKEY1 = FNNAHO                                           MD039670
+     C                   IF        PKEY1 <> *BLANKS                                         MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *BLANKS       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    PKEY1                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHL1                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
      C                   EVAL      WNahoCtr = WNahoCtr + 1
  
       ** Opens printer file once/on first NAHO reading including the header.

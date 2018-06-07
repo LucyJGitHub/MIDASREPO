@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027577           Date 17Jun14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027577           Date 17Jun14               *
       *                 MD027295           Date 24May14               *
       *                 MD026599           Date 28May14               *
       *                 MD026848           Date 12May14               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2 (Recompile)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027577 - History of customer information purge issue       *
       *  MD027295 - SDC009697 COB component run too long              *

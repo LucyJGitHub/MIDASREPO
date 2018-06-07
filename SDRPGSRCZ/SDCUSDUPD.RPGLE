@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045218           Date 17Apr17               *
+      *  Last Amend No. MD041429           Date 22Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD045218           Date 17Apr17               *
       *                 MD043029           Date 05Dec16               *
       *                 MD042407           Date 08Nov16               *
       *                 MD038401B          Date 05Oct16               *
@@ -133,6 +136,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041429 - History of Customer Information does not reflect  *
+      *             US Indicia Changed upon Insert and Miscellaneous  *
+      *             Change to log Additional Customer Details upon    *
+      *             Insert and Amend.                                 *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045218 - Account Review is not displayed in listview       *
       *  MD043029 - Serious Midas Error encountered during            *
@@ -445,6 +454,17 @@
                                                                                             MD027115
      FSDJACCL4  IF   E           K DISK    INFSR(SRERR)                                     MD027115
      F                                                                                      MD027115
+                                                                                              CGL157
+      ** Midas SD CRS Customer Details File                                                   CGL157
+     FSDCRSHL0  UF A E           K DISK    COMMIT                                             CGL157
+                                                                                              CGL157
+      * Midas SD CRS Details File                                                             CGL157
+     FSDCRSDL1  UF A E           K DISK    COMMIT                                             CGL157
+                                                                                              CGL177
+      * Midas SD CRS Details File                                                             CGL177
+     FSDCRSDL3  UF A E           K DISK    COMMIT                                             CGL177
+     F                                     RENAME(SDCRSDD0:SDCRSDD1)                          CGL177
+     F                                     PREFIX(D_)                                         CGL177
                                                                                             MD026499
      F/COPY WNCPYSRC,SDCUSDDF01
       *****************************************************************
@@ -581,6 +601,28 @@
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID CUSTOMER - EXT                        CGL132
      D SDVCUXC       E DS                  EXTNAME(SDVCUXCPD)                                 CGL132
      D                                     PREFIX(A_)                                         CGL132
+                                                                                              CGL157
+      ** Externally desc'd DS for valid CRS detail                                            CGL157
+     D SDVCRSD       E DS                  EXTNAME(SDVCRSDPD)                                 CGL157
+     D                                     PREFIX(D_)                                         CGL157
+                                                                                              CGL157
+      ** Externally desc'd DS for valid transactions Detail                                   CGL157
+     D SDVCRSH       E DS                  EXTNAME(SDVCRSHPD)                                 CGL157
+     D                                     PREFIX(C_)                                         CGL157
+     D SDCRSDA       E DS                  EXTNAME(SDCRSDPD)                                  CGL177
+     D                                     PREFIX(D_)                                         CGL177
+     D SDCRSDB       E DS                  EXTNAME(SDCRSDPD)                                  CGL177
+     D                                     PREFIX(E_)                                         CGL177
+                                                                                              CGL157
+      **  Transaction Details File                                                            CGL157
+     D SDCRSH        E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+                                                                                              CGL157
+      **  Transaction Details File                                                            CGL157
+     D SDCRSD        E DS                  EXTNAME(SDCRSDPD)                                  CGL157
+                                                                                              CGL157
+      ** Current CRS Transaction Detail in File Format                                        CGL157
+     D CrCrsFlFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+     D                                     PREFIX(C_)                                         CGL157
       *                                                                                       CSW207
       **  Externally descrived data structure for valid customer extension                    CSW207
       *                                                                                       CSW207
@@ -628,6 +670,9 @@
                                                                                               CGL132
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CGL132
                                                                                               CGL132
+      ** Transaction Details in File Format                                                   CGL157
+     D CrsdFilFmt    E DS                  EXTNAME(SDCRSHPD)                                  CGL157
+     D                                     PREFIX(A_)                                         CGL157
       **  BASE RATE TAX DETAILS FILE
      D SDCBRTF       E DS                  EXTNAME(SDCBRTPD)
  
@@ -1040,6 +1085,8 @@
      D KSEQN           S              3S 0                                                    CGL132
      D AVSEQN          S              3S 0                                                    CGL132
      D WWTMST          S             26Z                                                      CGL132
+     D XBefCRSD        S           5000A                                                    MD041429
+     D XAftCRSD        S           5000A                                                    MD041429
                                                                                               CSC011
       ** Fields defined for Enhancement CSC011                                                CSC011
                                                                                               CSC011
@@ -1199,6 +1246,10 @@
      D PAftCUAH        S           5000A                                                      CSD092
      D PBefCUXC        S           5000A                                                    MD026854
      D PAftCUXC        S           5000A                                                    MD026854
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
      D PACRV           S              1A                                                      CSD092
      D PELEC           S              1A                                                      CGL132
      D WTime           S               T                                                      CGL132
@@ -1208,6 +1259,13 @@
      D CTI006          S              1A                                                    MD030956
      D PCommitCUSD     S              1A                                                    MD043029
      D PCommitNAHL     S              1A                                                    MD043029
+     D PCrsdF          S            219A   DIM(30)                                            CGL177
+     D PCrsdX          S            219A   DIM(30)                                            CGL177
+     D PCrsdZ          S            219A                                                      CGL177
+     D CGL157          S              1A                                                      CGL157
+     D KCTRY           S              2A                                                      CGL157
+     D X               S              2S 0                                                    CGL157
+     D A               S              4S 0                                                    CGL177
  
       /EJECT
      C*****************************************************************
@@ -2279,6 +2337,8 @@
      C**********         PARM                    CuFaFilFmt                         CGL132 MD038401B
      C                   PARM                    CrXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                MD038401B
+     C                   PARM                    CrsdFilFmt                                   CGL157
+     C                   PARM                    PCrsdX                                       CGL157
                                                                                               CSD079
       ** (Current) Customer Marketing Information in file format                              CSD079
                                                                                               CSD079
@@ -2480,6 +2540,8 @@
      C                   PARM                    SDVSW13                                   MD038401B
      C                   PARM                    CrXcFilFmt                                MD038401B
      C                   PARM                    CuFaFilFmt                                MD038401B
+     C                   PARM                    CrsdFilFmt                                   CGL157
+     C                   PARM                    PCrsdF                                       CGL157
                                                                                               CSD079
       ** (Current) Customer Marketing Information in file format                              CSD079
                                                                                               CSD079
@@ -2895,6 +2957,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
@@ -3199,6 +3265,7 @@
      C                   EVAL      PAftFTCS = SDFTCS                                        MD026957
      C                   EVAL      PAftCUXC = SDCUXC                                        MD026957
      C                   IF        S01425 <> 'Y' OR CSD079 <> 'Y'                           MD026957
+     C                   IF        CGL157 = 'N'                                               CGL157
      C                   CALL      'SD009696'                                                 CGL132
      C                   PARM      FACUST        PCUST                                        CGL132
      C                   PARM      *BLANKS       PBefCUST                                     CGL132
@@ -3215,6 +3282,11 @@
      C                   PARM      SDCUXC        PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CGL132
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C                   ENDIF                                                                CGL157
      C                   ENDIF                                                              MD026957
                                                                                               CGL132
      C                   IF        CGL132 = 'Y' AND                                           CGL132
@@ -3285,6 +3357,217 @@
      C                   ENDIF                                                             MD026499A
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
+                                                                                              CGL157
+     C                   EVAL      PBefCRSH = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSH = *BLANKS                                         CGL177
+     C                   IF        CGL157 = 'Y'                                               CGL157
+                                                                                              CGL157
+      ** Write new Transaction Detail                                                         CGL177
+                                                                                              CGL177
+     C                   EVAL      CRCUST = BBCUST                                            CGL177
+     C                   EVAL      CRTYPE = C_CVTYPE                                          CGL177
+     C                   EVAL      CRSTYP = C_CVSTYP                                          CGL177
+     C                   EVAL      CRHVAL = C_CVHVAL                                          CGL177
+     C                   EVAL      CREXMP = C_CVEXMP                                          CGL177
+     C                   EVAL      CREXMR = C_CVEXMR                                          CGL177
+     C                   EVAL      CREXMD = C_CVEXMD                                          CGL177
+     C                   EVAL      CREXMT = C_CVEXMT                                          CGL177
+     C                   EVAL      CREXMU = C_CVEXMU                                          CGL177
+     C                   EVAL      CRINFO = C_CVINFO                                          CGL177
+     C                   EVAL      CREXMG = C_CVEXMG                                          CGL177
+     C                   EVAL      CREXMI = C_CVEXMI                                          CGL177
+     C                   EVAL      CRLDAT = BJRDNB                                            CGL177
+     C                   EVAL      CRLCTP = 'I'                                               CGL177
+     C                   WRITE     SDCRSHD0                                                   CGL157
+     C                   EVAL      PAftCRSH = SDCRSH                                          CGL177
+                                                                                              CGL177
+      ** CRS Country Details                                                                  CGL177
+     C                   EVAL      A = 1                                                      CGL177
+     C                   EVAL      X = 1                                                      CGL157
+     C                   DOW       X < 31                                                     CGL157
+     C                   EVAL      SDVCRSD =  PCrsdF(X)                                       CGL157
+     C                   EVAL      PCrsdZ = PCrsdF(X)                                         CGL157
+     C                   IF        D_CVCTRY <> *Blanks                                        CGL157
+     C                   EVAL      KCUST = BBCUST                                             CGL177
+     C                   EVAL      KCTRY = D_CVCTRY                                           CGL177
+     C     KCRSD         CHAIN     SDCRSDL1                                                   CGL177
+     C                   EVAL      SDCRSDB = SDCRSD                                           CGL177
+     C                   EVAL      CDCUST = BBCUST                                            CGL157
+     C                   EVAL      CDCTRY = D_CVCTRY                                          CGL157
+     C                   EVAL      CDREPT = D_CVREPT                                          CGL157
+     C                   EVAL      CDREPR = D_CVREPR                                          CGL157
+                                                                                            MD036375
+      ** Look for the US Country and use the TIN if provided                                MD036375
+     C                   IF        CGL132 = 'Y' AND                                         MD036375
+     C                             CGL133 = 'N'                                             MD036375
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD036375
+                                                                                            MD036375
+      ** Database error                                                                     MD036375
+     C                   IF        NOT %FOUND(SDFTCSL0)                                     MD036375
+     C                   EVAL      DBKEY  = BBCUST                                          MD036375
+     C                   EVAL      DBFILE = 'SDFTCSPD'                                      MD036375
+     C                   EVAL      DBASE  =  801                                            MD036375
+     C                   EXSR      SRErr                                                    MD036375
+     C                   ENDIF                                                              MD036375
+                                                                                            MD036375
+     C                   EVAL      WCTAX = SVal1                                            MD036375
+                                                                                            MD036375
+     C                   IF        BBCOLC = WCTAX                                           MD036375
+     C                   EVAL      FAUTIN = E5TINO                                          MD036375
+     C                   UPDATE    SDFTCSD0                                                 MD036375
+     C                   ELSE                                                               MD036457
+     C                   IF        D_CVCTRY = WCTAX                                         MD036457
+     C                   EVAL      FAUTIN = D_CVTINN                                        MD036457
+     C                   UPDATE    SDFTCSD0                                                 MD036457
+     C                   ENDIF                                                              MD036457
+     C                   ENDIF                                                              MD036457
+     C                   ENDIF                                                              MD036375
+                                                                                            MD036375
+     C                   IF        %SUBST(PCrsdZ:138:3) = *Blanks                             CGL157
+     C                   EVAL      CDREPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVREPD      CDREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CDREPM = D_CVREPM                                          CGL157
+     C                   IF        CDREPM = '******'                                          CGL177
+     C                   MOVE      E5TMST        WTime                                        CGL177
+     C     *HMS0         MOVE      WTime         CDREPM                                       CGL177
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      CDREPU = D_CVREPU                                          CGL157
+     C                   EVAL      CDEVE1 = D_CVEVE1                                          CGL157
+     C                   EVAL      CDEVS1 = D_CVEVS1                                          CGL157
+     C                   EVAL      CDEVE2 = D_CVEVE2                                          CGL157
+     C                   EVAL      CDEVS2 = D_CVEVS2                                          CGL157
+     C                   EVAL      CDEVE3 = D_CVEVE3                                          CGL157
+     C                   EVAL      CDEVS3 = D_CVEVS3                                          CGL157
+     C                   EVAL      CDEVE4 = D_CVEVE4                                          CGL157
+     C                   EVAL      CDEVS4 = D_CVEVS4                                          CGL157
+     C                   EVAL      CDEVE5 = D_CVEVE5                                          CGL157
+     C                   EVAL      CDEVS5 = D_CVEVS5                                          CGL157
+     C                   EVAL      CDTINN = D_CVTINN                                          CGL157
+     C                   EVAL      CDCODO = D_CVCODO                                          CGL157
+     C                   EVAL      CDJACM = D_CVJACM                                          CGL157
+     C                   EVAL      CDMAIL = D_CVMAIL                                          CGL157
+     C                   EVAL      CDPHON = D_CVPHON                                          CGL157
+     C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
+     C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
+     C                   EVAL      CDEFFD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVEFFD      CDEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        %SUBST(PCrsdZ:210:3) = *Blanks                             CGL157
+     C                   EVAL      CDEXPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVEXPD      CDEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        %FOUND(SDCRSDL1)                                           CGL177
+     C                   IF        %SUBST(PCrsdZ:3:1) <> '*'                                  CGL177
+     C                   EVAL      %SUBST(PBefCRSD:A:219) = SDCRSDB                           CGL177
+     C                   EVAL      %SUBST(PAftCRSD:A:219) = SDCRSD                            CGL177
+     C                   EVAL      A = A + 229                                                CGL177
+     C                   UPDATE    SDCRSDD0                                                   CGL177
+     C                   ELSE                                                                 CGL177
+     C                   DELETE    SDCRSDD0                                                   CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ELSE                                                                 CGL177
+     C                   IF        %SUBST(PCrsdZ:3:1) <> '*'                                  CGL177
+     C                   EVAL      %SUBST(PBefCRSD:A:219) = *Blanks                           CGL177
+     C                   EVAL      %SUBST(PAftCRSD:A:219) = SDCRSD                            CGL177
+     C                   EVAL      A = A + 229                                                CGL177
+     C                   WRITE     SDCRSDD0                                                   CGL157
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL177
+     C                   IF        CSD092 = 'Y'                                               CGL177
+     C                             AND NOT(S01425 = 'Y' AND CSD079 = 'Y')                     CGL177
+     C                   IF        CGL132 = 'Y'                                               CGL177
+     C                   EVAL      PBefFTCS = SDFTCS2                                         CGL177
+     C                   EVAL      PAftFTCS = SDFTCS                                          CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      PBefFTCS = *BLANKS                                         CGL177
+     C                   EVAL      PAftFTCS = *BLANKS                                         CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        CGL157 = 'N'                                               CGL177
+     C                   EVAL      PBefCRSH = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSH = *BLANKS                                         CGL177
+     C                   EVAL      PBefCRSD = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSD = *BLANKS                                         CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                            MD041429
+      ** Separate call of History of Customer Info program                                  MD041429
+      ** for CRS Header (Miscellaneous Change)                                              MD041429
+                                                                                            MD041429
+     C                   IF        CGL132 = 'Y'                                               CGL157
+     C                   CALL      'SD009696'                                                 CGL177
+     C                   PARM      BBCUST        PCUST                                        CGL177
+     C                   PARM      *BLANKS       PBefCUST                                     CGL177
+     C                   PARM      CUSTDF        PAftCUST                                     CGL177
+     C                   PARM      *BLANKS       PBefACUS                                     CGL177
+     C                   PARM      *BLANKS       PAftACUS                                     CGL177
+     C                   PARM                    PBefFTCS                                     CGL177
+     C                   PARM                    PAftFTCS                                     CGL177
+     C                   PARM      *BLANKS       PBefJACC                                     CGL177
+     C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL177
+     C                   PARM      *BLANKS       PAftCUXC                                     CGL177
+     C                   PARM      *BLANKS       PACRV                                        CGL177
+     C                   PARM      *BLANKS       PELEC                                        CGL177
+     C                   PARM                    PBefCRSH                                     CGL177
+     C                   PARM                    PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       XBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       XAftCRSD                                     CGL177
+                                                                                              CGL177
+     C                   ELSE                                                                 CGL177
+                                                                                              CGL177
+     C                   CALL      'SD009696'                                                 CGL177
+     C                   PARM      BBCUST        PCUST                                        CGL177
+     C                   PARM      *BLANKS       PBefCUST                                     CGL177
+     C                   PARM      CUSTDF        PAftCUST                                     CGL177
+     C                   PARM      *BLANKS       PBefACUS                                     CGL177
+     C                   PARM      *BLANKS       PAftACUS                                     CGL177
+     C                   PARM      *BLANKS       PBefFTCS                                     CGL177
+     C                   PARM      *BLANKS       PAftFTCS                                     CGL177
+     C                   PARM      *BLANKS       PBefJACC                                     CGL177
+     C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL177
+     C                   PARM      *BLANKS       PAftCUXC                                     CGL177
+     C                   PARM      *BLANKS       PACRV                                        CGL177
+     C                   PARM      *BLANKS       PELEC                                        CGL177
+     C                   PARM                    PBefCRSH                                     CGL177
+     C                   PARM                    PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       XBefCRSD                                   MD041429
+     C                   PARM      *BLANKS       XAftCRSD                                   MD041429
+     C                   ENDIF                                                              MD041429
+                                                                                            MD041429
+      ** and CRS Details (CRS Indicia Change)                                               MD041429
+                                                                                            MD041429
+     C                   CALL      'SD009696'                                               MD041429
+     C                   PARM      BBCUST        PCUST                                      MD041429
+     C                   PARM      *BLANKS       PBefCUST                                   MD041429
+     C                   PARM      *BLANKS       PAftCUST                                   MD041429
+     C                   PARM      *BLANKS       PBefACUS                                   MD041429
+     C                   PARM      *BLANKS       PAftACUS                                   MD041429
+     C                   PARM      *BLANKS       PBefFTCS                                   MD041429
+     C                   PARM      *BLANKS       PAftFTCS                                   MD041429
+     C                   PARM      *BLANKS       PBefJACC                                   MD041429
+     C                   PARM      *BLANKS       PAftJACC                                   MD041429
+     C                   PARM      *BLANKS       PBefCUXC                                   MD041429
+     C                   PARM      *BLANKS       PAftCUXC                                   MD041429
+     C                   PARM      *BLANKS       PACRV                                      MD041429
+     C                   PARM      *BLANKS       PELEC                                      MD041429
+     C                   PARM      *BLANKS       PBefCRSH                                   MD041429
+     C                   PARM      *BLANKS       PAftCRSH                                   MD041429
+     C                   PARM                    PBefCRSD                                   MD041429
+     C                   PARM                    PAftCRSD                                   MD041429
+     C                   ENDIF                                                              MD041429
+                                                                                            MD041429
  
       * Update CLINTCB - Client Details  *
      C                   CALL      'SDCLINT'
@@ -3884,6 +4167,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
@@ -4483,6 +4770,10 @@
      C                   PARM      SDCUXC        PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CGL132
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
@@ -4553,6 +4844,202 @@
                                                                                             MD026499
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     A_CUCUST      CHAIN     SDCRSHL0                             99                    CGL157
+     C                   EVAL      PBefCRSH = SDCRSH                                          CGL177
+                                                                                              CGL157
+      ** Initialize Transaction Detail                                                        CGL157
+                                                                                              CGL157
+     C                   CLEAR                   SDCRSH                                       CGL157
+                                                                                              CGL157
+     C                   EVAL      CRCUST = BBCUST                                            CGL157
+     C                   EVAL      CRTYPE = C_CVTYPE                                          CGL157
+     C                   EVAL      CRSTYP = C_CVSTYP                                          CGL157
+     C                   EVAL      CRHVAL = C_CVHVAL                                          CGL157
+     C                   EVAL      CREXMP = C_CVEXMP                                          CGL157
+     C                   EVAL      CREXMR = C_CVEXMR                                          CGL157
+     C                   EVAL      CREXMD = C_CVEXMD                                          CGL157
+     C                   EVAL      CREXMT = C_CVEXMT                                          CGL157
+     C                   EVAL      CREXMU = C_CVEXMU                                          CGL157
+     C                   EVAL      CRINFO = C_CVINFO                                          CGL157
+     C                   EVAL      CREXMG = C_CVEXMG                                          CGL157
+     C                   EVAL      CREXMI = C_CVEXMI                                          CGL157
+     C                   EVAL      PAftCRSH = SDCRSH                                          CGL177
+     C                                                                                        CGL157
+     C                   UPDATE    SDCRSHD0                                                   CGL157
+                                                                                              CGL157
+      ** Update CRS Country Details                                                           CGL157
+     C                   EVAL      A = 1                                                      CGL177
+     C                   EVAL      X = 1                                                      CGL157
+     C                   EVAL      PBefCRSD = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSD = *BLANKS                                         CGL177
+     C                   DOW       X < 31                                                     CGL157
+     C                   EVAL      SDVCRSD = PCrsdF(X)                                        CGL157
+     C                   EVAL      PCrsdZ = PCrsdF(X)                                         CGL157
+     C                   IF        D_CVCTRY <> *Blanks                                        CGL157
+     C                   EVAL      KCUST = BBCUST                                             CGL177
+     C                   EVAL      KCTRY = D_CVCTRY                                           CGL177
+     C     KCRSD         CHAIN     SDCRSDL1                                                   CGL177
+     C                   EVAL      SDCRSDB = SDCRSD                                           CGL177
+     C                   EVAL      CDCUST = BBCUST                                            CGL157
+     C                   EVAL      CDCTRY = D_CVCTRY                                          CGL157
+     C                   EVAL      CDREPT = D_CVREPT                                          CGL157
+     C                   EVAL      CDREPR = D_CVREPR                                          CGL157
+                                                                                            MD036375
+      ** Look for the US Country and use the TIN if provided                                MD036375
+     C                   IF        CGL132 = 'Y' AND                                         MD036375
+     C                             CGL133 = 'N'                                             MD036375
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD036375
+                                                                                            MD036375
+      ** Database error                                                                     MD036375
+     C                   IF        NOT %FOUND(SDFTCSL0)                                     MD036375
+     C                   EVAL      DBKEY  = BBCUST                                          MD036375
+     C                   EVAL      DBFILE = 'SDFTCSPD'                                      MD036375
+     C                   EVAL      DBASE  =  801                                            MD036375
+     C                   EXSR      SRErr                                                    MD036375
+     C                   ENDIF                                                              MD036375
+                                                                                            MD036375
+     C                   EVAL      WCTAX = SVal1                                            MD036375
+                                                                                            MD036375
+     C                   IF        BBCOLC = WCTAX                                           MD036375
+     C                   EVAL      FAUTIN = E5TINO                                          MD036375
+     C                   UPDATE    SDFTCSD0                                                 MD036375
+     C                   ELSE                                                               MD036457
+     C                   IF        D_CVCTRY = WCTAX                                         MD036457
+     C                   EVAL      FAUTIN = D_CVTINN                                        MD036457
+     C                   UPDATE    SDFTCSD0                                                 MD036457
+     C                   ENDIF                                                              MD036457
+     C                   ENDIF                                                              MD036457
+     C                   ENDIF                                                              MD036375
+                                                                                            MD036375
+     C                   IF        %SUBST(PCrsdZ:138:3) = *Blanks                             CGL157
+     C                   EVAL      CDREPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVREPD      CDREPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CDREPM = D_CVREPM                                          CGL157
+     C                   IF        CDREPM = '******'                                          CGL177
+     C                   MOVE      E5TMST        WTime                                        CGL177
+     C     *HMS0         MOVE      WTime         CDREPM                                       CGL177
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      CDREPU = D_CVREPU                                          CGL157
+     C                   EVAL      CDEVE1 = D_CVEVE1                                          CGL157
+     C                   EVAL      CDEVS1 = D_CVEVS1                                          CGL157
+     C                   EVAL      CDEVE2 = D_CVEVE2                                          CGL157
+     C                   EVAL      CDEVS2 = D_CVEVS2                                          CGL157
+     C                   EVAL      CDEVE3 = D_CVEVE3                                          CGL157
+     C                   EVAL      CDEVS3 = D_CVEVS3                                          CGL157
+     C                   EVAL      CDEVE4 = D_CVEVE4                                          CGL157
+     C                   EVAL      CDEVS4 = D_CVEVS4                                          CGL157
+     C                   EVAL      CDEVE5 = D_CVEVE5                                          CGL157
+     C                   EVAL      CDEVS5 = D_CVEVS5                                          CGL157
+     C                   EVAL      CDTINN = D_CVTINN                                          CGL157
+     C                   EVAL      CDCODO = D_CVCODO                                          CGL157
+     C                   EVAL      CDJACM = D_CVJACM                                          CGL157
+     C                   EVAL      CDMAIL = D_CVMAIL                                          CGL157
+     C                   EVAL      CDPHON = D_CVPHON                                          CGL157
+     C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
+     C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
+     C                   EVAL      CDEFFD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVEFFD      CDEFFD                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        %SUBST(PCrsdZ:210:3) = *Blanks                             CGL157
+     C                   EVAL      CDEXPD = *Zero                                             CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVE      D_CVEXPD      CDEXPD                                       CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        %FOUND(SDCRSDL1)                                           CGL177
+     C                   IF        %SUBST(PCrsdZ:3:1) <> '*'                                  CGL177
+     C                   EVAL      %SUBST(PBefCRSD:A:219) = SDCRSDB                           CGL177
+     C                   EVAL      %SUBST(PAftCRSD:A:219) = SDCRSD                            CGL177
+     C                   EVAL      A = A + 229                                                CGL177
+     C                   UPDATE    SDCRSDD0                                                   CGL177
+     C                   ELSE                                                                 CGL177
+     C                   DELETE    SDCRSDD0                                                   CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ELSE                                                                 CGL177
+     C                   IF        %SUBST(PCrsdZ:3:1) <> '*'                                  CGL177
+     C                   EVAL      %SUBST(PBefCRSD:A:219) = *Blanks                           CGL177
+     C                   EVAL      %SUBST(PAftCRSD:A:219) = SDCRSD                            CGL177
+     C                   EVAL      A = A + 229                                                CGL177
+     C                   WRITE     SDCRSDD0                                                   CGL157
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        CSD092 = 'Y'                                               CGL177
+     C                   IF        CGL132 = 'Y'                                               CGL177
+     C                   EVAL      PBefFTCS = SDFTCS2                                         CGL177
+     C                   EVAL      PAftFTCS = SDFTCS                                          CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      PBefFTCS = *BLANKS                                         CGL177
+     C                   EVAL      PAftFTCS = *BLANKS                                         CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        CGL157 = 'N'                                               CGL177
+     C                   EVAL      PBefCRSH = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSH = *BLANKS                                         CGL177
+     C                   EVAL      PBefCRSD = *BLANKS                                         CGL177
+     C                   EVAL      PAftCRSD = *BLANKS                                         CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                            MD041429
+      ** Separate call of History of Customer Info program                                  MD041429
+      ** for CRS Header (Miscellaneous Change)                                              MD041429
+                                                                                            MD041429
+     C                   IF        CGL132 = 'Y'                                             MD041429
+     C                   CALL      'SD009696'                                               MD041429
+     C                   PARM      BBCUST        PCUST                                      MD041429
+     C                   PARM      *BLANKS       PBefCUST                                   MD041429
+     C                   PARM      CUSTDF        PAftCUST                                   MD041429
+     C                   PARM      *Blanks       PBefACUS                                   MD041429
+     C                   PARM      *Blanks       PAftACUS                                   MD041429
+     C                   PARM                    PBefFTCS                                   MD041429
+     C                   PARM                    PAftFTCS                                   MD041429
+     C                   PARM      *BLANKS       PBefJACC                                   MD041429
+     C                   PARM      *BLANKS       PAftJACC                                   MD041429
+     C                   PARM      *BLANKS       PBefCUAH                                   MD041429
+     C                   PARM      *BLANKS       PAftCUAH                                   MD041429
+     C                   PARM      *BLANKS       PBefCUXC                                   MD041429
+     C                   PARM      *BLANKS       PAftCUXC                                   MD041429
+     C                   PARM      *BLANKS       PACRV                                      MD041429
+     C                   PARM      *BLANKS       PELEC                                      MD041429
+     C                   PARM                    PBefCRSH                                   MD041429
+     C                   PARM                    PAftCRSH                                   MD041429
+     C                   PARM                    PBefCRSD                                   MD041429
+     C                   PARM                    PAftCRSD                                   MD041429
+                                                                                            MD041429
+     C                   ELSE                                                               MD041429
+                                                                                            MD041429
+     C                   CALL      'SD009696'                                               MD041429
+     C                   PARM      BBCUST        PCUST                                      MD041429
+     C                   PARM      *BLANKS       PBefCUST                                   MD041429
+     C                   PARM      CUSTDF        PAftCUST                                   MD041429
+     C                   PARM      *BLANKS       PBefACUS                                   MD041429
+     C                   PARM      *BLANKS       PAftACUS                                   MD041429
+     C                   PARM      *BLANKS       PBefFTCS                                   MD041429
+     C                   PARM      *BLANKS       PAftFTCS                                   MD041429
+     C                   PARM      *BLANKS       PBefJACC                                   MD041429
+     C                   PARM      *BLANKS       PAftJACC                                   MD041429
+     C                   PARM      *BLANKS       PBefCUAH                                   MD041429
+     C                   PARM      *BLANKS       PAftCUAH                                   MD041429
+     C                   PARM      *BLANKS       PBefCUXC                                   MD041429
+     C                   PARM      *BLANKS       PAftCUXC                                   MD041429
+     C                   PARM      *BLANKS       PACRV                                      MD041429
+     C                   PARM      *BLANKS       PELEC                                      MD041429
+     C                   PARM                    PBefCRSH                                   MD041429
+     C                   PARM                    PAftCRSH                                   MD041429
+     C                   PARM                    PBefCRSD                                   MD041429
+     C                   PARM                    PAftCRSD                                   MD041429
+     C                   ENDIF                                                              MD041429
+                                                                                            MD041429
+     C                   ENDIF                                                                CGL157
  
  
       * Update CLINTCB - Client Details  *
@@ -4757,9 +5244,44 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD026957
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     A_CUCUST      CHAIN     SDCRSHL0                             99                    CGL157
+     C                   EVAL      PBefCRSH = SDCRSH                                          CGL177
+                                                                                              CGL157
+     C                   EVAL      CRLDAT = BJRDNB                                            CGL157
+     C                   EVAL      CRLCTP = 'D'                                               CGL157
+     C                   EVAL      PAftCRSH = SDCRSH                                          CGL177
+                                                                                              CGL157
+     C                   UPDATE    SDCRSHD0                                                   CGL157
+                                                                                              CGL157
+     C                   CALL      'SD009696'                                                 CGL157
+     C                   PARM      E5CUST        PCUST                                        CGL157
+     C                   PARM      *BLANKS       PBefCUST                                     CGL157
+     C                   PARM      *BLANKS       PAftCUST                                     CGL157
+     C                   PARM      B_CUADF       PBefACUS                                     CGL157
+     C                   PARM      CUSTDF        PAftACUS                                     CGL157
+     C                   PARM                    PBefFTCS                                     CGL157
+     C                   PARM                    PAftFTCS                                     CGL157
+     C                   PARM      *BLANKS       PBefJACC                                     CGL157
+     C                   PARM      *BLANKS       PAftJACC                                     CGL157
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL157
+     C                   PARM      *BLANKS       PAftCUXC                                     CGL157
+     C                   PARM      *BLANKS       PACRV                                        CGL157
+     C                   PARM      *BLANKS       PELEC                                        CGL157
+     C                   PARM                    PBefCRSH                                     CGL157
+     C                   PARM                    PAftCRSH                                     CGL157
+     C                   PARM      *BLANKS       XBefCRSD                                     CGL157
+     C                   PARM      *BLANKS       XAftCRSD                                     CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
  
       * USER: Processing after Data update
      C                   MOVEL     CUSTDF        WUDELR
@@ -5006,6 +5528,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
      C                   ENDIF                                                                CSD092
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                               CSW207
@@ -5085,6 +5611,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CGL132
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                               CSW207
@@ -6307,6 +6837,9 @@
      C**********         PARM                    SDVFTCS                             CGL132 MD026755
      C                   PARM                    SDVCTNM                                   AR1086546
      C                   PARM                    SDVFTCS                                    MD026755
+      ** Externally described DS for CRS valid Transaction Detail                             CGL157
+     C                   PARM                    SDVCRSH                                      CGL157
+     C                   PARM                    PCrsdF                                       CGL157
       * Base Rate Auth req                                                                    CSD012
      C                   PARM                    AUTHRQ            1                          CSD012
       * Authorisation Mode                                                                    CSD012
@@ -6331,6 +6864,10 @@
      C                   KFLD                    KCUST                                        CGL132
      C                   KFLD                    KSCDT                                        CGL132
      C                   KFLD                    KSEQN                                        CGL132
+                                                                                              CGL157
+     C     KCRSD         KLIST                                                                CGL157
+     C                   KFLD                    KCUST                                        CGL157
+     C                   KFLD                    KCTRY                                        CGL157
                                                                                               CSD079
       ** Get Rundate - Rundate                                                                CSD079
                                                                                               CSD079
@@ -6534,6 +7071,31 @@
      C                   IF        PRtCd = *BLANKS                                            CGL132
      C                   EVAL      CGL133 = 'Y'                                               CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Check if CGL157 is installed                                                         CGL157
+                                                                                              CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRtCd                                        CGL157
+     C                   PARM      '*VERIFY'     POptn                                        CGL157
+     C                   PARM      'CGL157'      PSard                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+      ** Database error                                                                       CGL157
+                                                                                              CGL157
+     C                   IF        (Prtcd <> *BLANKS) and                                     CGL157
+     C                             (Prtcd <> '*NRF   ')                                       CGL157
+     C                   EVAL      DBKEY = 'CGL157'                                           CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBASE = 918                                                CGL157
+     C                   EXSR      SRERR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        PRtCd = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
                                                                                               CSD015
      C                   IN        SDSTAT                                                     CSD015
                                                                                               CSD021
@@ -7952,6 +8514,33 @@
      C                   EVAL      E5TNC4 = A_ADTNC4                                          CGL132
      C                   EVAL      E5TIN5 = A_ADTIN5                                          CGL132
      C                   EVAL      E5TNC5 = A_ADTNC5                                          CGL132
+                                                                                              CGL157
+      ** Effective / Expiry Dates 1 - 10                                                      CGL157
+     C                   EVAL      E5EFF1 = A_ADEFF1                                          CGL157
+     C                   EVAL      E5EXP1 = A_ADEXP1                                          CGL157
+     C                   EVAL      E5EFF2 = A_ADEFF2                                          CGL157
+     C                   EVAL      E5EXP2 = A_ADEXP2                                          CGL157
+     C                   EVAL      E5EFF3 = A_ADEFF3                                          CGL157
+     C                   EVAL      E5EXP3 = A_ADEXP3                                          CGL157
+     C                   EVAL      E5EFF4 = A_ADEFF4                                          CGL157
+     C                   EVAL      E5EXP4 = A_ADEXP4                                          CGL157
+     C                   EVAL      E5EFF5 = A_ADEFF5                                          CGL157
+     C                   EVAL      E5EXP5 = A_ADEXP5                                          CGL157
+                                                                                              CGL157
+      ** Update the Additional field details for CGL157                                       CGL157
+      ** Mailing Countries                                                                    CGL157
+     C                   EVAL      E5CTR1 = A_ADCTR1                                          CGL157
+     C                   EVAL      E5CTR2 = A_ADCTR2                                          CGL157
+     C                   EVAL      E5CTR3 = A_ADCTR3                                          CGL157
+     C                   EVAL      E5CTR4 = A_ADCTR4                                          CGL157
+     C                   EVAL      E5CTR5 = A_ADCTR5                                          CGL157
+      ** Phone Number Countries                                                               CGL157
+     C                   EVAL      E5PHN1 = A_ADPHN1                                          CGL157
+     C                   EVAL      E5PHN2 = A_ADPHN2                                          CGL157
+     C                   EVAL      E5PHN3 = A_ADPHN3                                          CGL157
+     C                   EVAL      E5PHN4 = A_ADPHN4                                          CGL157
+     C                   EVAL      E5PHN5 = A_ADPHN5                                          CGL157
+                                                                                              CGL157
       *                                                                                       CLE134
      C                   IF        CLE134 = 'Y'                                               CLE134
      C                   EVAL      E5PDCU = A_ADPDCU                                          CLE134
@@ -7996,6 +8585,28 @@
      C                   WRITE     @ACUSL0                                                    CSD079
                                                                                               CSD092
      C                   IF        CSD092 = 'Y'                                               CSD092
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   CALL      'SD009696'                                                 CGL157
+     C                   PARM      E5CUST        PCUST                                        CGL157
+     C                   PARM      *BLANKS       PBefCUST                                     CGL157
+     C                   PARM      CUSTDF        PAftCUST                                     CGL157
+     C                   PARM      *BLANKS       PBefACUS                                     CGL157
+     C                   PARM      CUADF         PAftACUS                                     CGL157
+     C                   PARM      *BLANKS       PBefFTCS                                     CGL157
+     C                   PARM                    PAftFTCS                                     CGL157
+     C                   PARM      *BLANKS       PBefJACC                                     CGL157
+     C                   PARM      *BLANKS       PAftJACC                                     CGL157
+     C                   PARM      *BLANKS       PBefCUAH                                     CGL157
+     C                   PARM      *BLANKS       PAftCUAH                                     CGL157
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL157
+     C                   PARM                    PAftCUXC                                     CGL157
+     C                   PARM      *BLANKS       PACRV                                        CGL157
+     C                   PARM      *BLANKS       PELEC                                        CGL157
+     C                   PARM                    PBefCRSH                                     CGL157
+     C                   PARM                    PAftCRSH                                     CGL157
+     C                   PARM                    PBefCRSD                                     CGL157
+     C                   PARM                    PAftCRSD                                     CGL157
+     C                   ELSE                                                                 CGL157
      C                   CALL      'SD009696'                                                 CSD092
      C                   PARM      E5CUST        PCUST                                        CSD092
      C                   PARM      *BLANKS       PBefCUST                                     CSD092
@@ -8014,6 +8625,11 @@
      C                   PARM                    PAftCUXC                                   MD026957
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CSD092
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
@@ -8090,6 +8706,10 @@
      C                   PARM                    PAftCUXC                                   MD026957
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
                                                                                               CSD079
      C                   ENDIF                                                                CSD079
@@ -8119,6 +8739,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
                                                                                               CSD079
       ** USER: Processing after Delete                                                        CSD079

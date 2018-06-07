@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 AR745942           Date 13Apr11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24402           Date 17Jun09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -70,6 +72,11 @@
       ** SD Non-A/c Holders by Country of Tax
      FSDNHTXL1  IF   E           K DISK    INFSR(*PSSR)
  
+      ** SD Non-A/c Holders by Country of Tax                                                 CGL177
+     FSDCRSNL2  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
+     FSDCRSNL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
+     F                                     RENAME(SDCRSND0:SDCRSND1)                          CGL177
+                                                                                              CGL177
       ** Control file retrieval index
      FSDFCTLL1  IF   E           K DISK    INFSR(*PSSR)
                                                                                               CER054
@@ -177,6 +184,10 @@
      D CGL031          S              1    INZ(' ')                                           CSW207
      D CGL032          S              1    INZ(' ')                                           CSW207
      D PrivBank        S              1    INZ(' ')                                           CSW207
+     D CGL157          S              1A                                                      CGL177
+     D CRSCTR          S              5  0                                                    CGL177
+     D KDNAHO          S             10                                                       CGL177
+     D KDCTRY          S              2                                                       CGL177
       *                                                                                       CER047
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
@@ -530,6 +541,123 @@
      C                   EVAL      RCTIN4 = NHCTN4                                            CGL132
      C                   EVAL      RCTIN5 = NHCTN5                                            CGL132
                                                                                               CGL132
+     C                   IF        CGL157 = 'N'                                               CGL177
+      ** TIN 6-10                                                                             CGL177
+     C                   EVAL      RTIN6 = NHTIN6                                             CGL177
+     C                   EVAL      RTIN7 = NHTIN7                                             CGL177
+     C                   EVAL      RTIN8 = NHTIN8                                             CGL177
+     C                   EVAL      RTIN8 = NHTIN9                                             CGL177
+     C                   EVAL      RTIN0 = NHTIN0                                             CGL177
+      ** Country of TIN 6-10                                                                  CGL177
+     C                   EVAL      RCTIN6 = NHCTN6                                            CGL177
+     C                   EVAL      RCTIN7 = NHCTN7                                            CGL177
+     C                   EVAL      RCTIN8 = NHCTN8                                            CGL177
+     C                   EVAL      RCTIN9 = NHCTN9                                            CGL177
+     C                   EVAL      RCTIN0 = NHCTN0                                            CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Additional TINs when CRS is ON, initialize fields                                    CGL177
+     C                   IF        CGL157 = 'Y'                                               CGL177
+      *                                                                                       CGL177
+     C                   EVAL      CRSCTR = *ZERO                                             CGL177
+      ** TIN                                                                                  CGL177
+     C                   EVAL      RTIN2 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN3 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN4 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN5 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN6 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN7 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN8 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN9 = *BLANKS                                            CGL177
+     C                   EVAL      RTIN0 = *BLANKS                                            CGL177
+      ** Country of TIN                                                                       CGL177
+     C                   EVAL      RCTIN = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN2 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN3 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN4 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN5 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN6 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN7 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN8 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN9 = *BLANKS                                           CGL177
+     C                   EVAL      RCTIN0 = *BLANKS                                           CGL177
+      *                                                                                       CGL177
+     C                   EVAL      KDNAHO = *BLANKS                                           CGL177
+     C                   EVAL      KDCTRY = *BLANKS                                           CGL177
+     C                   EVAL      KDNAHO = NHNAHO                                            CGL177
+     C                   EVAL      KDCTRY = NHCOLC                                            CGL177
+     C     KCRSN         KLIST                                                                CGL177
+     C                   KFLD                    KDNAHO                                       CGL177
+     C                   KFLD                    KDCTRY                                       CGL177
+      *                                                                                       CGL177
+     C     KCRSN         CHAIN     SDCRSNL0                           03                      CGL177
+     C                   IF        %FOUND(SDCRSNL0)                                           CGL177
+     C                   EVAL      RTIN  = *BLANKS                                            CGL177
+     C                   EVAL      RTIN  = CNTINN                                             CGL177
+     C                   EVAL      RCTIN = CNCTRY                                             CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Read through CRS NAHO Country Detail File - Detail                                   CGL177
+     C     NHNAHO        SETLL     SDCRSND0                                                   CGL177
+     C     NHNAHO        READE     SDCRSND0                                                   CGL177
+      *                                                                                       CGL177
+     C                   DOW       NOT %EOF (SDCRSNL2)                                        CGL177
+     C                             AND CRSCTR <= 9                                            CGL177
+     C                             AND NHNAHO = CNNAHO                                        CGL177
+      *                                                                                       CGL177
+     C                   IF        NHCOLC <> CNCTRY                                           CGL177
+     C                   EVAL      CRSCTR = CRSCTR + 1                                        CGL177
+      *                                                                                       CGL177
+     C                   SELECT                                                               CGL177
+     C                   WHEN      CRSCTR = 1                                                 CGL177
+     C                   EVAL      RTIN2 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN2 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 2                                                 CGL177
+     C                   EVAL      RTIN3 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN3 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 3                                                 CGL177
+     C                   EVAL      RTIN4 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN4 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 4                                                 CGL177
+     C                   EVAL      RTIN5 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN5 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 5                                                 CGL177
+     C                   EVAL      RTIN6 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN6 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 6                                                 CGL177
+     C                   EVAL      RTIN7 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN7 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 7                                                 CGL177
+     C                   EVAL      RTIN8 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN8 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 8                                                 CGL177
+     C                   EVAL      RTIN9 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN9 = CNCTRY                                            CGL177
+     C                   WHEN      CRSCTR = 9                                                 CGL177
+     C                   EVAL      RTIN0 = CNTINN                                             CGL177
+     C                   EVAL      RCTIN0 = CNCTRY                                            CGL177
+     C                   ENDSL                                                                CGL177
+      *                                                                                       CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+     C     NHNAHO        READE     SDCRSND0                                                   CGL177
+     C                   ENDDO                                                                CGL177
+      *                                                                                       CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Mailing Country 1-5                                                                  CGL177
+     C                   EVAL      R2CTR1 = NHMCT1                                            CGL177
+     C                   EVAL      R2CTR2 = NHMCT2                                            CGL177
+     C                   EVAL      R2CTR3 = NHMCT3                                            CGL177
+     C                   EVAL      R2CTR4 = NHMCT4                                            CGL177
+     C                   EVAL      R2CTR5 = NHMCT5                                            CGL177
+      ** Phone Number Country 1-5                                                             CGL177
+     C                   EVAL      R2PHN1 = NHPCT1                                            CGL177
+     C                   EVAL      R2PHN2 = NHPCT2                                            CGL177
+     C                   EVAL      R2PHN3 = NHPCT3                                            CGL177
+     C                   EVAL      R2PHN4 = NHPCT4                                            CGL177
+     C                   EVAL      R2PHN5 = NHPCT5                                            CGL177
+     C                                                                                        CGL177
      C                   EVAL      WDateDD = %SubSt(NHCRDT:7:2)                               CGL132
      C                   EVAL      WDateMM = %SubSt(NHCRDT:5:2)                               CGL132
      C                   EVAL      WDateYY = %SubSt(NHCRDT:3:2)                               CGL132
@@ -942,6 +1070,28 @@
      C                   EVAL      *IN36 = *OFF                                               CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
+                                                                                              CGL177
+      ** Check if enhancement CGL157 (CRS Reporting) is on                                    CGL177
+                                                                                              CGL177
+     C                   CALLB     'AOSARDR0'                                                 CGL177
+     C                   PARM      *BLANKS       PRtCd                                        CGL177
+     C                   PARM      '*VERIFY'     POptn                                        CGL177
+     C                   PARM      'CGL157'      PSARD                                        CGL177
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL177
+                                                                                              CGL177
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  CGL177
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL177
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL177
+     C                   EVAL      DBASE  = 4                                                 CGL177
+     C                   EXSR      *PSSR                                                      CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+     C                   IF        PRTCD = *BLANKS                                            CGL177
+     C                   EVAL      CGL157 = 'Y'                                               CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      CGL157 = 'N'                                               CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
  
       ** Ensure Detail Spool File recorded by RCF.
  

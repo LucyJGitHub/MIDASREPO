@@ -13,8 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033960           Date 29Jun15               *
+      *  Last Amend No. MD036195           Date 20Oct15               *
+      *  Prev Amend No. MD036194           Date 16Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD033960           Date 29Jun15               *
       *                 AR808125           Date 03Aug11               *
       *                 AR795958           Date 29Jun11               *
       *                 AR795965           Date 27Jun11               *
@@ -48,6 +51,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036195- Effective Date input is not retained               *
+      *  MD036194 - Incorrect Error Message is displayed for setting  *
+      *             invalid CRS Agreement input                       *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033960 - Allow 'Y' as Default Tax Status for CER069.       *
       *  AR808125 - Allow '?' in third tax account code               *
@@ -340,6 +347,15 @@
      D P2PADD          S              1                                                       236137
      D P2TIST          S              1                                                       236137
                                                                                               236137
+     D P2CRSA          S              1                                                       CGL157
+     D P2FRYR          S              4                                                       CGL157
+     D P2EFDT          S              6                                                       CGL157
+     D P2RPDT          S              4                                                       CGL157
+     D WFRYRN          S              4  0                                                    CGL157
+     D WWEFDT          S              5P 0                                                    CGL157
+     D CGL157          S              1                                                       CGL157
+     D WWRTN           S              1                                                       CGL157
+                                                                                              CGL157
      D WKIPIN          S              1
      D WFNAM           S             10
      D WCTRT           S              1
@@ -357,6 +373,10 @@
      D WTXBSA          S              6
      D WVEDT1          S              5  0
      D WVEDT2          S              5  0
+     D WVEFDT          S              5P 0                                                    CGL157
+     D WWDAYN          S              5P 0                                                    CGL157
+     D WWDATE          S              8S 0                                                    CGL157
+     D WWFRYR          S              4S 0                                                    CGL157
      D WWTACN          S              6  0
      D WWTACA          S              6
      D W0NLR           S              1
@@ -1164,6 +1184,19 @@
      C                   EVAL      *IN92 = *OFF                                               CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      #2CRSA = EWCRSA                                            CGL157
+     C                   EVAL      #2FRYR = EWFRYR                                            CGL157
+     C                   EVAL      #2RPDT = EWRPDT                                            CGL157
+     C                   IF        EWEFDT <> 0                                                CGL157
+     C                   EVAL      ZDAYNO = EWEFDT                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      #2EFDT = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         #2EFDT                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
      C                   EVAL      W2RSF = 'N'
       ** Reset field error indicators.                                                        236137
      C                   MOVEA     '000000000000'*IN(43)
@@ -1228,6 +1261,8 @@
      C                   MOVEA     '00000000'    *IN(47)
      C                   MOVEA     '0000'        *IN(56)                                      236137
      C                   MOVEA     '00'          *IN(64)                                      236137
+     C                   MOVEA     '000'         *IN(67)                                      CGL157
+     C                   MOVEA     '0'           *IN(72)                                      CGL157
      C                   IF        CER048 = 'Y'                                               CER048
      C                   MOVEA     '000000'      *IN(14)                                      CER048
      C                   MOVEA     '00000'       *IN(20)                                      CER048
@@ -1365,6 +1400,12 @@
      C                   EVAL      #2TTAM = *BLANKS                                           CER054
      C                   EVAL      #2TTAC = *BLANKS                                           CER054
      C                   EVAL      #2TEDT = *BLANKS                                           CER054
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      #2CRSA = *BLANKS                                           CGL157
+     C                   EVAL      #2FRYR = *BLANKS                                           CGL157
+     C                   EVAL      #2RPDT = *BLANKS                                           CGL157
+     C                   EVAL      #2EFDT = *BLANKS                                           CGL157
+     C                   ENDIF                                                                CGL157
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1962,7 +2003,8 @@
      C                   ENDIF                                                                236137
      C                   IF        #2TIST <> 'N' and #2TIST <> 'Y'                            236137
      C                   EVAL      *IN40 = *ON                                                236137
-     C                   EVAL      *IN65 = *ON                                                236137
+     C**********         EVAL      *IN65 = *ON                                         236137 CGL157
+     C                   EVAL      *IN68 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              236137
      C                   EVAL      PZMsgID = 'USR4908'                                        236137
      C                   EXSR      SRZasnms                                                   236137
@@ -2700,6 +2742,113 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   IF        #2CRSA <> 'Y'                                              CGL157
+     C                             AND #2CRSA <> 'N'                                          CGL157
+     C                             AND #2CRSA <> ' '                                          CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN67 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0600'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      WWEFDT = *Zero                                             CGL157
+     C                   IF        #2EFDT = *BLANKS                                           CGL157
+     C                             AND #2CRSA = 'Y'                                           CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN68 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0601'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ELSE                                                                 CGL157
+     C                   IF        #2EFDT <> *BLANKS                                          CGL157
+     C                   MOVE      #2EFDT        WDATEN                                       CGL157
+     C                   MOVE      WDATEN        WDATEA                                       CGL157
+     C                   TESTN                   #2EFDT               85                      CGL157
+     C                   CALLB     'ZDATE1'                                                   CGL157
+     C                   PARM                    WDATEA                                       CGL157
+     C                   PARM                    ZDAYNO                                       CGL157
+     C                   PARM                    BJDFIN                                       CGL157
+     C                   PARM                    ErrorFlag                                    CGL157
+     C                   IF        ErrorFlag = 'Y' or                                         CGL157
+     C                             *IN85 = *OFF                                               CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN68 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0602'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ELSE                                                                 CGL157
+     C                   Z-ADD     ZDAYNO        WWEFDT                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        #2FRYR = *BLANKS                                           CGL157
+     C                             AND #2CRSA = 'Y'                                           CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN69 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0603'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ELSE                                                                 CGL157
+     C                   IF        #2FRYR <> *BLANKS                                          CGL157
+     C                   MOVE      #2FRYR        WFRYRN                                       CGL157
+     C                   TESTN                   #2FRYR               85                      CGL157
+     C                   IF        *IN85 = *OFF                                               CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN69 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0604'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ELSE                                                                 CGL157
+     C                   IF        *IN68 = *OFF                                               CGl157
+     C                   CALLB     'ZDATE9'                                                   CGL157
+     C                   PARM      WWEFDT        WWDAYN                                       CGL157
+     C                   PARM                    WWDATE                                       CGL157
+     C                   PARM                    WWRTN                                        CGL157
+     C                   MOVEL     WWDATE        WWFRYR                                       CGL157
+     C                   IF        WFRYRN < WWFRYR                                            CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN69 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0605'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        #2RPDT = *BLANKS                                           CGL157
+     C                             AND #2CRSA = 'Y'                                           CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN72 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0606'                                        CGL157
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ELSE                                                                 CGL157
+     C                   IF        #2RPDT <> *BLANKS                                          CGL157
+     C                   MOVEL     #2RPDT        WDATEA                                       CGL157
+     C                   MOVE      '00'          WDATEA                                       CGL157
+     C                   TESTN                   #2RPDT               85                      CGL157
+     C                   CALLB     'ZDATE1'                                                   CGL157
+     C                   PARM                    WDATEA                                       CGL157
+     C                   PARM                    ZDAYNO                                       CGL157
+     C                   PARM                    BJDFIN                                       CGL157
+     C                   PARM                    ErrorFlag         1                          CGL157
+     C                   IF        ErrorFlag = 'Y' or                                         CGL157
+     C                             *IN85 = *OFF                                               CGL157
+     C                   EVAL      *IN40 = *ON                                                CGL157
+     C                   EVAL      *IN72 = *ON                                                CGL157
+     C                   EVAL      W#EROR2 = 'Y'                                              CGL157
+     C                   EVAL      PZMsgID = 'USS0615'                                      MD036194
+     C                   EXSR      SRZasnms                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2709,26 +2858,26 @@
       *                                                               *
       *****************************************************************
      C     SRAddReq      BEGSR
- 
+
      C                   EVAL      #1CTRR = *BLANKS
      C                   EVAL      #1CTRT = *BLANKS
- 
+
      C                   DOW       *IN03 = *OFF and *IN12 = *OFF
      C                             and W1RSF = 'N'
      C                   WRITE     SD000780C2
      C                   WRITE     SD000780F1
      C                   EXFMT     SD000780D1
- 
+
       ** Clear messages from program message queue
       ** and reset work fields
- 
+
      C                   CALL      'ZA0250'
      C                   EVAL      W#EROR = *BLANKS
      C                   MOVEA     '000'         *IN(40)
- 
+
       ** If Exit not pressed, validate Input Screen 1 fields first
       ** before displaying the second Input screen
- 
+
      C                   IF        *IN03 = *OFF and *IN12 = *OFF
  
       ** Country of Tax is mandatory
@@ -3119,6 +3268,12 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      EWCRSA = #2CRSA                                            CGL157
+     C                   EVAL      EWFRYR = #2FRYR                                            CGL157
+     C                   EVAL      EWRPDT = #2RPDT                                            CGL157
+     C                   Z-ADD     WWEFDT        EWEFDT                                     MD036195
+     C                   ENDIF                                                                CGL157
  
       ** Check for duplicate primary key
  
@@ -3311,6 +3466,17 @@
      C                   ENDIF                                                                CER054
      C                   ENDIF                                                                CER054
      C                   ENDIF                                                                CER048
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      #2CRSA = EWCRSA                                            CGL157
+     C                   EVAL      #2FRYR = EWFRYR                                            CGL157
+     C                   EVAL      #2RPDT = EWRPDT                                            CGL157
+     C                   IF        EWEFDT <> 0                                                CGL157
+     C                   EVAL      ZDAYNO = EWEFDT                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      #2EFDT = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         #2EFDT                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
       ** Put original contents aside in case of Refresh action
      C                   EVAL      P2TXS1 = #2TXS1
@@ -3351,6 +3517,17 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
       *                                                                                       CER048
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      #2CRSA = EWCRSA                                            CGL157
+     C                   EVAL      #2FRYR = EWFRYR                                            CGL157
+     C                   EVAL      #2RPDT = EWRPDT                                            CGL157
+     C                   IF        EWEFDT <> 0                                                CGL157
+     C                   EVAL      ZDAYNO = EWEFDT                                            CGL157
+     C                   EXSR      ZDATE2                                                     CGL157
+     C                   EVAL      #2EFDT = *BLANKS                                           CGL157
+     C                   MOVEL     ZDATE         #2EFDT                                       CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
      C                   ENDIF
  
       ** Country of Tax should exist from Country File
@@ -3468,6 +3645,12 @@
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      EWCRSA = #2CRSA                                            CGL157
+     C                   EVAL      EWFRYR = #2FRYR                                            CGL157
+     C                   EVAL      EWRPDT = #2RPDT                                            CGL157
+     C                   Z-ADD     WWEFDT        EWEFDT                                       CGL157
+     C                   ENDIF                                                                CGL157
      C                   EVAL      EWCHTP = 'A'
      C                   Z-ADD     BJRDNB        EWLCDT
      C                   UPDATE    @CTTXL0
@@ -3648,6 +3831,30 @@
      C                   OPEN      SDCTTXL1
      C                   ENDIF
  
+                                                                                              CGL157
+      ** Check if enhancement CGL157 (CRS Reporting) is on                                    CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       PRTCD                                        CGL157
+     C                   PARM      '*VERIFY'     POPTN                                        CGL157
+     C                   PARM      'CGL157'      PSARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL157
+     C                   EVAL      DBASE  = 4                                                 CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+      *                                                                                       CGL157
+     C                   IF        PRTCD = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   EVAL      *IN39 = '0'                                                CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   EVAL      *IN39 = '1'                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
      C                   Z-ADD     14            WSFPG
  
       ** Set to *CHANGE mode

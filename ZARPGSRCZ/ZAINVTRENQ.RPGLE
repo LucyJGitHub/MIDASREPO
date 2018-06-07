@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT039             Date 28Sep12               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT039             Date 28Sep12               *
       *                 CER059             Date 19Jul10               *
       *                 CER034A            Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
       *           Amendment done to accommodate longer data           *
@@ -175,6 +178,11 @@
      D @3InpBuffPos    S             10I 0 DIM(FieldArrSize)
      D @3FldLength     S             10I 0 DIM(FieldArrSize)
      D @3DESC          S             30A   DIM(FieldArrSize)
+                                                                                            MD041294
+     D @4RPGN          S             10A   DIM(FieldArrSize)                                MD041294
+     D @4InpBuffPos    S             10I 0 DIM(FieldArrSize)                                MD041294
+     D @4FldLength     S             10I 0 DIM(FieldArrSize)                                MD041294
+     D @4DESC          S             30A   DIM(FieldArrSize)                                MD041294
  
      D ALLFD           DS
      D  DDFD01                 1     30
@@ -211,6 +219,8 @@
  
       **   Timestamp
      D DDTMESTP        S             26Z
+     D WTemp           S             10A                                                    MD041294
+     D X               S              2S 0                                                  MD041294
       **   Timestamp
      D                 DS
      D D@TMESTP                1     26A
@@ -439,6 +449,16 @@
      C                   MOVEA     @3DESC        @DESC
      C                   EXSR      FILLARR
      C                   ENDIF
+      *                                                                                     MD041294
+     C     InvFile4      IFNE      *BLANK                                                   MD041294
+     C     WTemp         ANDEQ     *BLANKS                                                  MD041294
+     C                   MOVEL     InvFDta4      InvFDta                                    MD041294
+     C                   MOVEA     @4RPGN        @RPGN                                      MD041294
+     C                   MOVEA     @4InpBuffPos  @InpBuffPos                                MD041294
+     C                   MOVEA     @4FldLength   @FldLength                                 MD041294
+     C                   MOVEA     @4DESC        @DESC                                      MD041294
+     C                   EXSR      FILLARR                                                  MD041294
+     C                   ENDIF                                                              MD041294
       *
       * Store last field number
       *
@@ -571,6 +591,7 @@
      C                   PARM                    InvFile1         10
      C                   PARM                    InvFile2         10
      C                   PARM                    InvFile3         10
+     C                   PARM                    InvFile4         10                        MD041294
  
       * Invalid file data
      C***********        PARM                    InvFDta1       2000            CFT014
@@ -581,6 +602,7 @@
      C                   PARM                    InvFDta2       4000            CFT014
      C**********         PARM                    InvFDta3       4000                   CFT014 209905
      C                   PARM                    InvFDta3       5000                          209905
+     C                   PARM                    InvFDta4       4000                        MD041294
  
       * OUTPUTS
  
@@ -641,6 +663,18 @@
      C                   MOVEA     @FldLength    @3FldLength
      C                   MOVEA     @DESC         @3DESC
      C                   ENDIF
+      *                                                                                     MD041294
+     C                   EVAL      X = %SCAN(' ' :InvFile4)                                 MD041294
+     C                   EVAL      WTemp = %SUBST(InvFile4:X:(10-X))                        MD041294
+     C     WTemp         IFEQ      *BLANKS                                                  MD041294
+     C     InvFile4      ANDNE     *BLANKS                                                  MD041294
+     C                   MOVEL     InvFile4      InvFile                                    MD041294
+     C                   EXSR      GETFILD                                                  MD041294
+     C                   MOVEA     @RPGN         @4RPGN                                     MD041294
+     C                   MOVEA     @InpBuffPos   @4InpBuffPos                               MD041294
+     C                   MOVEA     @FldLength    @4FldLength                                MD041294
+     C                   MOVEA     @DESC         @4DESC                                     MD041294
+     C                   ENDIF                                                              MD041294
       *
       **  Clear screen message queue.
       *

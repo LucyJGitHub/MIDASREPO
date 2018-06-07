@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD035388           Date 20Oct15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033588 - FATCA Screen order rework                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -88,6 +90,13 @@
      C                   MOVE      'Y'           DDCST1OK
      C                   EVAL      DDCSTD = *BLANKS
  
+      ** Default to CRS Details                                                             MD035388
+     C                   IF        DDACTI = 'I'                                             MD035388
+     C                             AND P_DDCSTP = *BLANKS                                   MD035388
+     C                             AND DDCSTP = *BLANKS                                     MD035388
+     C                   EVAL      DDCSTP = C_DDTYPE                                        MD035388
+     C                   ENDIF                                                              MD035388
+                                                                                            MD035388
      C                   IF        DDCSTP <> ' ' AND
      C                             DDCSTP <> 'F' AND
      C                             DDCSTP <> 'N' AND
@@ -146,10 +155,15 @@
       ** Return Code
      C                   PARM                    ReturnCode
  
+     C                   PARM                    DDACTI            1                        MD035388
+                                                                                            MD035388
       ** FATCA Customer Type
      C                   PARM                    DDCSTP            1
      C                   PARM                    DDCSTD           29
  
+     C                   PARM                    P_DDCSTP          1                        MD035388
+     C                   PARM                    C_DDTYPE          1                        MD035388
+                                                                                            MD035388
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr

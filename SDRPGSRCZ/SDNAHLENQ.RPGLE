@@ -14,8 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *  Last Amend No. MD040563           Date 18Aug16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036464           Date 06Nov15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD030174           Date 04Sep14               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD029805           Date 05Sep14               *
       *                 MD029849           Date 12Sep14               *
       *                 MD027658           Date 20Aug14               *
       *                 CGL132             Date 01May13               *
@@ -35,6 +40,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040563 - Database Error encountered when F16(List by CRS   *
+      *             Indicia) is pressed from Non-Account Holder       *
+      *             Enquiry main screen                               *
+      *  CGL177 - CRS Reporting Phase 2 (Recompile)                   *
+      *  MD036464 - CRS Non account holder enquiry                    *
+      *  CGL157 - CRS Reporting                                       *
+      *  MD030174 - Issues on NAHL/NAHE with FATCA                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
       *  MD029849 - Issues on NAHL/NAHE with FATCA                    *
@@ -124,6 +136,10 @@
      D CrFaFilFmt    E DS                  EXTNAME(SDFTNHPD)                                  CGL132
      D                                     PREFIX(C_)                                         CGL132
  
+      ** Current Non-A/C Holder in File Format - CRS details                                  CGL157
+     D CrCrhFlFmt    E DS                  EXTNAME(SDCRNHPD)                                  CGL157
+     D                                     PREFIX(C_)                                         CGL157
+                                                                                              CGL157
       ** Current Non-A/C Holder in Screen Format - Primary Details
  
      D CurNaPrim     E DS                  Extname(SDNAHLPD)
@@ -133,6 +149,10 @@
      D CurCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
      D                                     PREFIX(@)                                          CGL132
  
+      ** Current Non-A/C Holder in Screen Format - CRS Details                                CGL157
+     D CurCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
+     D                                     PREFIX(@)                                          CGL157
+                                                                                              CGL157
       ** New Non-A/C Holder in File Format
  
      D NwNaFilFmt    E DS                  Extname(SDVNAHLPD)
@@ -140,6 +160,9 @@
       ** New Non-A/C Holder in File Format - FATCA Details                                    CGL132
      D NwFaFilFmt    E DS                  EXTNAME(SDVFTNHPD)                                 CGL132
  
+      ** New Non-A/C Holder in File Format - CRS Details                                      CGL157
+     D NwCrhFlFmt    E DS                  EXTNAME(SDVCRNHPD)                                 CGL157
+                                                                                              CGL157
       ** New Non-A/C Holder in Screen Format - Primary Details
  
      D NewNaPrim     E DS                  Extname(SDNAHLPD)
@@ -147,6 +170,9 @@
       ** New Non-A/C Holder in Screen Format - FATCA details                                  CGL132
      D NewCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
  
+      ** New Non-A/C Holder in Screen Format - CRS Details                                    CGL157
+     D NewCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
+                                                                                              CGL157
  
       ** Previous Non-A/C Holder in Screen Format - Primary Details
  
@@ -157,10 +183,20 @@
      D PrvCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
      D                                     PREFIX(@P)                                         CGL132
  
+      ** Previous Customer in Screen Format - CRS Details                                     CGL157
+     D PrvCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
+     D                                     PREFIX(@P)                                         CGL157
+                                                                                              CGL157
       ** Error indicators
  
      D OkNaPrim      E DS                  Extname(SDENAHLPD)
      D OKFATCAdet    E DS                  EXTNAME(SDEFTNHPD)                                 CGL132
+     D OKCRNHdet     E DS                  EXTNAME(SDECRNHPD)                                 CGL157
+     D OKCRSCtry     E DS                  EXTNAME(SDECRSNPD)                               MD036464
+     D PCrsdF          S            221A   DIM(30)                                          MD036464
+     D PCrsdS          S            350A   DIM(30)                                          MD036464
+     D PCrsdB          S            350A   DIM(30)                                          MD036464
+     D DFCTRY          S              2A                                                    MD036464
  
       ** External DS FOR BANK DETAILS
  
@@ -237,6 +273,7 @@
      D Retcd           S              7A                                                      CSD093
      D Option          S              7A                                                      CSD903
      D CSD093          S              1A                                                      CSD093
+     D CGL157          S              1A                                                      CGL157
      D PINMOD          S              1A                                                      CSD093
      D PINAH           S             10A                                                      CSD093
      D PINTYP          S              1A                                                      CSD093
@@ -263,6 +300,7 @@
      D @EINKJ          S              1
      D @EINKX          S              1                                                       CSD093
      D @INKC           S              1
+     D @INKF           S              1                                                       CGL157
      D @INKG           S              1
      D @INKH           S              1
      D @INKJ           S              1
@@ -302,6 +340,13 @@
      D E               S              3  0
      D @SCRN           S              1
      D WFTNH           S              1A                                                    MD027658
+     D PSelect         S              1A                                                    MD036464
+     D WVAL            S              1A                                                    MD036464
+     D WOption         S              1A                                                    MD036464
+     D PCountry        S              2A                                                    MD036464
+     D PCRSDT          S            350A                                                    MD036464
+     D PWarning        S              1A                                                    MD036464
+     D PTinRq          S              1A                                                    MD036464
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -361,6 +406,40 @@
      C                   EXSR      SRCallNATX
      C                   ENDIF                                                                CSD093
      C                   ENDDO
+                                                                                              CGL157
+      ** Do while screen: TIN details screen                                                  CGL157
+     C                   Z-ADD     *ZERO         WIdx_WVAL         3 0                        CGL157
+     C     @SCRN         DOWEQ     'W'                                                        CGL157
+     C                   EXSR      SCRN@W                                                     CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+      ** Do while screen: CRS details screen                                                  CGL157
+     C                   Z-ADD     *ZERO         WIdx_WVAL         3 0                        CGL157
+     C     @SCRN         DOWEQ     '6'                                                        CGL157
+     C                   EXSR      SCRN@6                                                     CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - country details                              MD036464
+     C                   EVAL      PWarning = ' '                                           MD036464
+     C                   Z-ADD     *ZERO         WIdx_ZVAL         3 0                      MD036464
+     C     @SCRN         DOWEQ     'Z'                                                      MD036464
+     C                   EXSR      SCRN@Z                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - browse                                       MD036464
+     C                   MOVE      *Blanks       PCrsdB                                     MD036464
+     C                   MOVEA     PCrsdS        PCrsdB                                     MD036464
+     C                   EVAL      DFCTRY = *Blanks                                         MD036464
+     C                   Z-ADD     *ZERO         WIdx_FVAL         3 0                      MD036464
+     C     @SCRN         DOWEQ     'F'                                                      MD036464
+     C                   EXSR      SCRN@F                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - read                                         MD036464
+     C                   Z-ADD     *ZERO         WIdx_MVAL         3 0                      MD036464
+     C     @SCRN         DOWEQ     'M'                                                      MD036464
+     C                   EXSR      SCRN@M                                                   MD036464
+     C                   ENDDO                                                              MD036464
                                                                                               CGL132
       ** Do while screen: FATCA details screen 1                                              CGL132
      C                   Z-ADD     *ZERO         WIdx_GVAL         3 0                        CGL132
@@ -406,6 +485,18 @@
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
+      *                                                                                     MD040563
+      ** Build browse subfile record                                                        MD040563
+      *                                                                                     MD040563
+     C     @SCRN         IFEQ      '8'                                                      MD040563
+     C                   EXSR      BLDCSBRW                                                 MD040563
+     C                   ENDIF                                                              MD040563
+      *                                                                                     MD040563
+      ** Read next browse subfile record                                                    MD040563
+      *                                                                                     MD040563
+     C     @SCRN         IFEQ      '9'                                                      MD040563
+     C                   EXSR      RDNCSBRW                                                 MD040563
+     C                   ENDIF                                                              MD040563
  
       ** Terminate program
  
@@ -526,11 +617,16 @@
       ** Other go back to subfle screen
  
      C                   OTHER
-     C                   IF        CGL132 = 'Y'                                               CGL132
-     C                   MOVE      'G'           @SCRN                                        CGL132
-     C                   ELSE                                                                 CGL132
-     C                   MOVE      'B'           @SCRN
-     C                   ENDIF                                                                CGL132
+     C**********         IF        CGL132 = 'Y'                                        CGL132 CGL157
+     C**********         MOVE      'G'           @SCRN                                 CGL132 CGL157
+     C**********         ELSE                                                          CGL132 CGL157
+     C**********         MOVE      'B'           @SCRN                                 CGL132 CGL157
+     C**********         ENDIF                                                         CGL132 CGL157
+     C                   IF        CGL157 = 'Y'                                             MD036464
+     C                   MOVE      'F'           @SCRN                                      MD036464
+     C                   ELSE                                                               MD036464
+     C                   MOVE      'W'           @SCRN                                        CGL157
+     C                   ENDIF                                                              MD036464
      C                   ENDSL
                                                                                               CSD093
       ** On F23, go to Document Management, if no errors on this screen                       CSD093
@@ -668,6 +764,7 @@
      C                   PARM      *Off          @INKC
      C                   PARM      *Off          @INKI
      C                   PARM      '0'           @INKN             1                          CGL132
+     C                   PARM      '0'           @INKQ             1                        MD040563
  
       ** If F3 taken in browse, End Program
  
@@ -681,6 +778,12 @@
      C                   MOVEL     'J'           @SCRN                                        CGL132
      C                   GOTO      EndBLDBRW                                                  CGL132
      C                   ENDIF                                                                CGL132
+      **If F16 taken in browse, End Program                                                 MD040563
+     C     @INKQ         IFEQ      '1'                                                      MD040563
+     C                   MOVEL     '8'           @SCRN                                      MD040563
+     C                   GOTO      EndBLDBRW                                                MD040563
+     C                   ENDIF                                                              MD040563
+      *                                                                                     MD040563
  
       ** If error message returned from browse, send it to detail screen
  
@@ -740,6 +843,7 @@
      C                   PARM      *Off          @INKC
      C                   PARM      *Off          @INKI
      C                   PARM      '0'           @INKN             1                          CGL132
+     C                   PARM      '0'           @INKQ                                      MD040563
  
      C                   EVAL      x = 1
  
@@ -787,6 +891,8 @@
      C                   ENDIF
      C                   EXSR      SRSfds@P
  
+     C                   DOW       @SCRN <> 'J'                                               CGL157
+     C                             AND @SCRN <> 'B'                                           CGL157
      C                   Z-ADD     *ZERO         WIdx_PVAL
      C     @SCRN         DOWEQ     'P'
      C                   EXSR      SRScrn@P
@@ -794,6 +900,45 @@
      C**********         EXSR      SRCallNATX                                                 CGL132
      C**********         ENDIF                                                         CSD093 CGL132
      C                   ENDDO
+                                                                                              CGL157
+      ** Do while screen: TIN details                                                         CGL157
+     C                   Z-ADD     *ZERO         WIdx_WVAL                                    CGL157
+     C     @SCRN         DOWEQ     'W'                                                        CGL157
+     C                   EXSR      SCRN@W                                                     CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                            MD036464
+      ** Do while screen: CRS details screen                                                MD036464
+     C                   Z-ADD     *ZERO         WIdx_WVAL         3 0                      MD036464
+     C     @SCRN         DOWEQ     '6'                                                      MD036464
+     C                   EXSR      SCRN@6                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+     C                   EVAL      PWarning = ' '                                           MD036464
+     C                   Z-ADD     *ZERO         WIdx_ZVAL                                  MD036464
+     C     @SCRN         DOWEQ     'Z'                                                      MD036464
+     C                   EXSR      SCRN@Z                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - browse                                       MD036464
+     C                   EVAL      DFCTRY = *Blanks                                         MD036464
+     C                   MOVE      *Blanks       PCrsdB                                     MD036464
+     C                   MOVEA     PCrsdS        PCrsdB                                     MD036464
+     C                   Z-ADD     *ZERO         WIdx_FVAL                                  MD036464
+     C     @SCRN         DOWEQ     'F'                                                      MD036464
+     C                   EXSR      SCRN@F                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - read                                         MD036464
+     C                   Z-ADD     *ZERO         WIdx_MVAL                                  MD036464
+     C     @SCRN         DOWEQ     'M'                                                      MD036464
+     C                   EXSR      SCRN@M                                                   MD036464
+     C                   ENDDO                                                              MD036464
+      ** Terminate program                                                                  MD036464
+                                                                                            MD036464
+     C     @SCRN         IFEQ      'T'                                                      MD036464
+     C                   MOVE      *ON           *INLR                                      MD036464
+     C                   RETURN                                                             MD036464
+     C                   ENDIF                                                              MD036464
                                                                                               CGL132
       ** Do while screen: FATCA details screen 1                                              CGL132
      C                   Z-ADD     *ZERO         WIdx_GVAL                                    CGL132
@@ -834,6 +979,7 @@
      C     @SCRN         DOWEQ     'N'                                                        CGL132
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
+     C                   ENDDO                                                                CGL157
                                                                                               CGL132
      C**********         IF        @SCRN = 'A'                                       CGL132 MD027658
      C                   IF        @SCRN = 'J' OR                                           MD027658
@@ -915,6 +1061,7 @@
      C                   PARM      *Off          @INKC                                        CGL132
      C                   PARM      *Off          @INKI                                        CGL132
      C                   PARM      '0'           @INKN             1                          CGL132
+     C                   PARM      '0'           @INKQ             1                        MD040563
                                                                                               CGL132
       ** If F3 taken in browse, End Program                                                   CGL132
                                                                                               CGL132
@@ -1027,11 +1174,46 @@
                                                                                               CGL132
      C                   MOVEL     'P'           @SCRN                                        CGL132
      C                   EXSR      SRSfds@P                                                 MD029849
+                                                                                              CGL157
+     C                   DOW       @SCRN <> 'J'                                               CGL157
+     C                             AND @SCRN <> 'B'                                           CGL157
                                                                                               CGL132
      C                   Z-ADD     *ZERO         WIdx_PVAL                                    CGL132
      C     @SCRN         DOWEQ     'P'                                                        CGL132
      C                   EXSR      SRScrn@P                                                   CGL132
      C                   ENDDO                                                                CGL132
+      ** Do while screen: TIN details                                                         CGL157
+     C                   Z-ADD     *ZERO         WIdx_WVAL                                    CGL157
+     C     @SCRN         DOWEQ     'W'                                                        CGL157
+     C                   EXSR      SCRN@W                                                     CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      PWarning = ' '                                           MD036464
+     C                   Z-ADD     *ZERO         WIdx_ZVAL                                  MD036464
+     C     @SCRN         DOWEQ     'Z'                                                      MD036464
+     C                   EXSR      SCRN@Z                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - browse                                       MD036464
+     C                   EVAL      DFCTRY = *Blanks                                         MD036464
+     C                   MOVE      *Blanks       PCrsdB                                     MD036464
+     C                   MOVEA     PCrsdS        PCrsdB                                     MD036464
+     C                   Z-ADD     *ZERO         WIdx_FVAL                                  MD036464
+     C     @SCRN         DOWEQ     'F'                                                      MD036464
+     C                   EXSR      SCRN@F                                                   MD036464
+     C                   ENDDO                                                              MD036464
+                                                                                            MD036464
+      ** Do while screen: CRS details screen - read                                         MD036464
+     C                   Z-ADD     *ZERO         WIdx_MVAL                                  MD036464
+     C     @SCRN         DOWEQ     'M'                                                      MD036464
+     C                   EXSR      SCRN@M                                                   MD036464
+     C                   ENDDO                                                              MD036464
+      ** Terminate program                                                                  MD036464
+                                                                                            MD036464
+     C     @SCRN         IFEQ      'T'                                                      MD036464
+     C                   MOVE      *ON           *INLR                                      MD036464
+     C                   RETURN                                                             MD036464
+     C                   ENDIF                                                              MD036464
                                                                                               CGL132
       ** Do while screen: FATCA details screen 1                                              CGL132
      C                   Z-ADD     *ZERO         WIdx_GVAL                                    CGL132
@@ -1072,6 +1254,7 @@
      C     @SCRN         DOWEQ     'N'                                                        CGL132
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
+     C                   ENDDO                                                                CGL157
                                                                                               CGL132
                                                                                               CGL132
      C                   IF        @SCRN = 'A'                                                CGL132
@@ -1092,6 +1275,276 @@
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C     EndRDNFTBRW   ENDSR                                                                CGL132
+      *****************************************************************                     MD040563
+      /EJECT                                                                                MD040563
+      *****************************************************************                     MD040563
+      ** BLDCSBRW - Build CRS browse subfile                                                MD040563
+      *****************************************************************                     MD040563
+     C     BLDCSBRW      BEGSR                                                              MD040563
+                                                                                            MD040563
+      ** Set/reset return to key screen from primary details                                MD040563
+                                                                                            MD040563
+     C                   MOVE      'N'           INSERTENQ                                  MD040563
+                                                                                            MD040563
+      ** Reset Read next browse subfile record                                              MD040563
+                                                                                            MD040563
+     C                   MOVEL     *BLANK        @RDNB                                      MD040563
+                                                                                            MD040563
+     C                   CALL      'SDC000560'                                              MD040563
+                                                                                            MD040563
+      ** Build Browse subfile                                                               MD040563
+                                                                                            MD040563
+     C                   CALLB     'SDCRNBBRW'                                              MD040563
+      **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                               MD040563
+      ** INPUTS :                                                                           MD040563
+      ** Return Code                                                                        MD040563
+      ** Action Code                                                                        MD040563
+      ** Non-A/C Holder Ref. Pointer                                                        MD040563
+      ** Build subfile                                                                      MD040563
+      ** Read subfile record                                                                MD040563
+                                                                                            MD040563
+     C                   PARM      *BLANK        RetCodeOut                                 MD040563
+     C                   PARM                    DDACTN                                     MD040563
+     C                   PARM                    DDNAHO                                     MD040563
+     C                   PARM      'Y'           @BDSFL                                     MD040563
+     C                   PARM      *BLANK        @RDSFL                                     MD040563
+     C                   PARM      'E'           PMODE                                      MD040563
+     C                   PARM                    FldNameArr                                 MD040563
+     C                   PARM                    MsgIdArr                                   MD040563
+     C                   PARM                    MsgDtaArr                                  MD040563
+                                                                                            MD040563
+      ** OUTPUTS :                                                                          MD040563
+      ** Error message                                                                      MD040563
+      ** Option Selected                                                                    MD040563
+      ** Non-A/C Holder Reference Selected                                                  MD040563
+      ** Command Keys                                                                       MD040563
+                                                                                            MD040563
+     C                   PARM      *BLANK        @ERRMS                                     MD040563
+     C                   PARM                    @OPSEL                                     MD040563
+     C                   PARM                    @NASEL                                     MD040563
+     C                   PARM      '0'           @INKC                                      MD040563
+     C                   PARM      '0'           @INKI                                      MD040563
+     C                   PARM      '0'           @INKN             1                        MD040563
+     C                   PARM      '0'           @INKQ                                      MD040563
+                                                                                            MD040563
+      ** If F3 taken in browse, End Program                                                 MD040563
+                                                                                            MD040563
+     C     @INKC         IFEQ      *On                                                      MD040563
+     C                   EXSR      SREndP                                                   MD040563
+     C                   GOTO      EndBLDCSBRW                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** If Insert (F9) selected from browse, go to key screen                              MD040563
+                                                                                            MD040563
+     C     @OPSEL(1)     IFEQ      'I'                                                      MD040563
+     C                   MOVEL     'K'           @SCRN                                      MD040563
+     C                   MOVE      'I'           DDACTN                                     MD040563
+     C                   GOTO      EndBLDCSBRW                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      * If F16 taken in browse, End Program                                                 MD040563
+     C     @INKQ         IFEQ      '1'                                                      MD040563
+     C                   MOVEL     'B'           @SCRN                                      MD040563
+     C                   GOTO      EndBLDCSBRW                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** If F14 taken in browse, End Program                                                MD040563
+     C     @INKN         IFEQ      '1'                                                      MD040563
+     C                   MOVEL     'J'           @SCRN                                      MD040563
+     C                   GOTO      EndBLDCSBRW                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** If error message returned from browse, send it to detail screen                    MD040563
+                                                                                            MD040563
+     C     @ERRMS        IFNE      *BLANK                                                   MD040563
+     C                   EXSR      SRSndM@P                                                 MD040563
+     C                   GOTO      EndBLDCSBRW                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** Read next browse subfile record                                                    MD040563
+                                                                                            MD040563
+     C                   MOVE      'Y'           @RDNB                                      MD040563
+     C                   MOVEL     '9'           @SCRN                                      MD040563
+                                                                                            MD040563
+     C     EndBLDCSBRW   ENDSR                                                              MD040563
+                                                                                            MD040563
+      *****************************************************************                     MD040563
+      /EJECT                                                                                MD040563
+      *****************************************************************                     MD040563
+      ** RDNCSBRW - Read next browse subfile record                                         MD040563
+      *****************************************************************                     MD040563
+     C     RDNCSBRW      BEGSR                                                              MD040563
+                                                                                            MD040563
+      ** Read Next Subfile Record                                                           MD040563
+                                                                                            MD040563
+     C                   CALLB     'SDCRNBBRW'                                              MD040563
+      **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯                                               MD040563
+      ** INPUTS :                                                                           MD040563
+      ** Return code                                                                        MD040563
+      ** Action code                                                                        MD040563
+      ** Non-A/C Holder Ref. pointer                                                        MD040563
+      ** Build Sub-file                                                                     MD040563
+      ** Read Sub-file record                                                               MD040563
+      ** Browse Screen                                                                      MD040563
+                                                                                            MD040563
+     C                   PARM      *BLANK        RetCodeOut                                 MD040563
+     C                   PARM                    DDACTN                                     MD040563
+     C                   PARM                    DDNAHO                                     MD040563
+     C                   PARM      *BLANK        @BDSFL                                     MD040563
+     C                   PARM      'Y'           @RDSFL                                     MD040563
+     C                   PARM      *BLANKS       PMODE                                      MD040563
+     C                   PARM                    FldNameArr                                 MD040563
+     C                   PARM                    MsgIdArr                                   MD040563
+     C                   PARM                    MsgDtaArr                                  MD040563
+                                                                                            MD040563
+      ** OUTPUTS :                                                                          MD040563
+      ** Error Message                                                                      MD040563
+      ** Option Selected                                                                    MD040563
+      ** Non-A/C Holder Ref. selected                                                       MD040563
+      ** Function keys                                                                      MD040563
+                                                                                            MD040563
+     C                   PARM      *BLANK        @ERRMS                                     MD040563
+     C                   PARM                    @OPSEL                                     MD040563
+     C                   PARM                    @NASEL                                     MD040563
+     C                   PARM      '0'           @INKC                                      MD040563
+     C                   PARM      '0'           @INKI                                      MD040563
+     C                   PARM      '0'           @INKN             1                        MD040563
+     C                   PARM      '0'           @INKQ                                      MD040563
+                                                                                            MD040563
+     C                   EVAL      x = 1                                                    MD040563
+                                                                                            MD040563
+      ** Go to initial screen                                                               MD040563
+                                                                                            MD040563
+     C                   IF        @Opsel(X) = *BLANKS or                                   MD040563
+     C                             @Nasel(X) = *BLANKS                                      MD040563
+     C                   EXSR      SRInitial                                                MD040563
+     C                   MOVEL     '8'           @SCRN                                      MD040563
+     C                   ELSE                                                               MD040563
+                                                                                            MD040563
+      ** If Non-A/C Holder read from subfile                                                MD040563
+                                                                                            MD040563
+     C                   DOW       @opsel(x) <> *BLANKS  or                                 MD040563
+     C                             @nasel(x) <> *BLANKs                                     MD040563
+                                                                                            MD040563
+      ** Retrieve Non-A/C Holder details                                                    MD040563
+                                                                                            MD040563
+     C                   MOVEL     @OPSEL(x)     DDACTN                                     MD040563
+     C                   MOVEL     @NASEL(x)     DDNAHO                                     MD040563
+     C                   EVAL      Idx = x - 1                                              MD040563
+     C                   EXSR      SRRtvNah                                                 MD040563
+     C                   EVAL      X = X + 1                                                MD040563
+     C                   MOVEA     FldnameArr    #fldnamearr                                MD040563
+                                                                                            MD040563
+      ** Stay on browse screen if there is an error on Non-A/C Holder Reference             MD040563
+                                                                                            MD040563
+     C     OKNAHO        IFEQ      'N'                                                      MD040563
+     C     OKACTN        OREQ      'N'                                                      MD040563
+     C                   MOVEL     '8'           @SCRN                                      MD040563
+     C                   ITER                                                               MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+     C                   IF        #FldNameArr = *blanks                                    MD040563
+                                                                                            MD040563
+      ** Convert Non-A/C Holder details                                                     MD040563
+                                                                                            MD040563
+     C                   EXSR      SRCvtNah                                                 MD040563
+     C                   MOVEL     CrNaFilFmt    NwNaFilFmt                                 MD040563
+                                                                                            MD040563
+      ** Put Non-A/C Holder on key screen for Insert, primary details otherwise             MD040563
+                                                                                            MD040563
+     C     @OPSEL(1)     IFEQ      'I'                                                      MD040563
+     C                   MOVEL     'K'           @SCRN                                      MD040563
+     C                   ELSE                                                               MD040563
+     C                   MOVEL     'P'           @SCRN                                      MD040563
+     C                   ENDIF                                                              MD040563
+     C                   EXSR      SRSfdS@P                                                 MD040563
+                                                                                            MD040563
+     C                   Z-ADD     *ZERO         WIdx_PVAL                                  MD040563
+     C     @SCRN         DOWEQ     'P'                                                      MD040563
+     C                   EXSR      SRScrn@P                                                 MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: TIN details                                                       MD040563
+     C                   Z-ADD     *ZERO         WIdx_WVAL                                  MD040563
+     C     @SCRN         DOWEQ     'W'                                                      MD040563
+     C                   EXSR      SCRN@W                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: CRS details screen                                                MD040563
+     C                   Z-ADD     *ZERO         WIdx_WVAL                                  MD040563
+     C     @SCRN         DOWEQ     '6'                                                      MD040563
+     C                   EXSR      SCRN@6                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: FATCA details screen 1                                            MD040563
+     C                   Z-ADD     *ZERO         WIdx_GVAL                                  MD040563
+     C     @SCRN         DOWEQ     'G'                                                      MD040563
+     C                   EXSR      SCRN@G                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: US Indicia screen 1                                               MD040563
+     C                   Z-ADD     *ZERO         WIdx_CVAL                                  MD040563
+     C     @SCRN         DOWEQ     'C'                                                      MD040563
+     C                   EXSR      SCRN@C                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: US Indicia screen 2                                               MD040563
+     C                   Z-ADD     *ZERO         WIdx_HVAL                                  MD040563
+     C     @SCRN         DOWEQ     'H'                                                      MD040563
+     C                   EXSR      SCRN@H                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: US Indicia screen 3                                               MD040563
+     C                   Z-ADD     *ZERO         WIdx_LVAL                                  MD040563
+     C     @SCRN         DOWEQ     'L'                                                      MD040563
+     C                   EXSR      SCRN@L                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: US Indicia screen 4                                               MD040563
+     C                   Z-ADD     *ZERO         WIdx_YVAL                                  MD040563
+     C     @SCRN         DOWEQ     'Y'                                                      MD040563
+     C                   EXSR      SCRN@Y                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: US Indicia comment history screen                                 MD040563
+     C     @SCRN         DOWEQ     'V'                                                      MD040563
+     C                   EXSR      SRUSHC                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Do while screen: Exception screen                                                  MD040563
+     C     @SCRN         DOWEQ     'N'                                                      MD040563
+     C                   EXSR      SCRN@O                                                   MD040563
+     C                   ENDDO                                                              MD040563
+                                                                                            MD040563
+      ** Build browse subfile record                                                        MD040563
+                                                                                            MD040563
+     C     @SCRN         IFEQ      'J'                                                      MD040563
+     C                   EXSR      BLDFTBRW                                                 MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** Read next browse subfile record                                                    MD040563
+                                                                                            MD040563
+     C     @SCRN         IFEQ      'Q'                                                      MD040563
+     C                   EXSR      RDNFTBRW                                                 MD040563
+     C                   ENDIF                                                              MD040563
+     C                   IF        @SCRN = 'A'                                              MD040563
+     C                   EXSR      SRCallNATX                                               MD040563
+     C                   EVAL      @SCRN = 'B'                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+      ** Process the remaining options selected.                                            MD040563
+                                                                                            MD040563
+     C                   IF        @opsel(X) <> *BLANKS or                                  MD040563
+     C                             @nasel(X) <> *BLANKS                                     MD040563
+     C                   EVAL      @scrn = '9'                                              MD040563
+     C                   ITER                                                               MD040563
+     C                   ENDIF                                                              MD040563
+     C                   ENDDO                                                              MD040563
+     C                   ENDIF                                                              MD040563
+                                                                                            MD040563
+     C     EndRDNCSBRW   ENDSR                                                              MD040563
  
       *****************************************************************
       /EJECT
@@ -1131,6 +1584,8 @@
      C                   PARM                    CrNaFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
+     C                   PARM                    CrCrhFlFmt                                 MD036464
+     C                   PARM                    PCrsdF                                     MD036464
      C                   PARM      *BLANK        OKACTN
      C                   PARM      *BLANK        OKNAHO
      C                   PARM                    FldNameArr
@@ -1160,6 +1615,8 @@
      C                   PARM                    CrNaFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
+     C                   PARM                    CrCrhFlFmt                                 MD036464
+     C                   PARM                    PCrsdF                                     MD036464
  
       ** OUTPUTS :
       ** Non-A/C Holder - screen formats
@@ -1168,12 +1625,17 @@
      C                   PARM                    NewNaPrim
      C                   PARM                    NewCuFATC                                    CGL132
      C                   PARM                    NewCuFOTH                                    CGL132
+     C                   PARM                    NewCuCRNH                                  MD036464
+     C                   PARM                    PCrsdS                                     MD036464
  
      C                   MOVEL     NewNaPrim     CurNaPrim
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   MOVEL     NewCuFATC     CurCuFATC                                    CGL132
      C                   MOVEL     NewCuFOTH     CurCuFOTH                                    CGL132
      C                   ENDIF                                                                CGL132
+     C                   IF        CGL157 = 'Y'                                             MD036464
+     C                   MOVEL     NewCuCRNH     CurCuCRNH                                  MD036464
+     C                   ENDIF                                                              MD036464
  
      C                   ENDSR
  
@@ -1774,7 +2236,12 @@
                                                                                               CGL132
      C     CANC@G        BEGSR                                                                CGL132
                                                                                               CGL132
-     C                   MOVEL     'P'           @SCRN                                        CGL132
+     C**********         MOVEL     'P'           @SCRN                                 CGL132 CGL157
+     C                   IF        CGL157 = 'Y'                                             MD036464
+     C                   MOVEL     '6'           @SCRN                                      MD036464
+     C                   ELSE                                                               MD036464
+     C                   MOVEL     'W'           @SCRN                                        CGL157
+     C                   ENDIF                                                              MD036464
                                                                                               CGL132
      C                   ENDSR                                                                CGL132
                                                                                               CGL132
@@ -1853,6 +2320,420 @@
                                                                                               CGL132
      C                   ENDSR                                                                CGL132
                                                                                               CGL132
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      * SCRNGW - TIN detail screen                                    *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SCRNGW        BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Go to TIN details                                                                    CGL157
+     C                   MOVEL     'W'           @SCRN                                        CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      * CANC@W - Cancel on FATCA detail screen 1                      *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     CANC@W        BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   MOVEL     'P'           @SCRN                                        CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      * SCRN@W - Process TIN details                                                          CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SCRN@W        BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Set function key status on screen                                                    CGL157
+     C                   EXSR      SrSFKEYS                                                   CGL157
+                                                                                              CGL157
+      ** Write/read display - TIN details                                                     CGL157
+     C                   CALLB     'SDNAHL3DP'                                                CGL157
+                                                                                              CGL157
+      ** INPUTS :                                                                             CGL157
+      ** Return code                                                                          CGL157
+      ** Non account holder details                                                           CGL157
+      ** Fields in error                                                                      CGL157
+      ** Errors                                                                               CGL157
+      ** Warnings                                                                             CGL157
+      ** Enabled Key & Detail fields                                                          CGL157
+                                                                                              CGL157
+     C                   PARM      *BLANK        RetCodeOut                                   CGL157
+     C                   PARM                    NewNaPrim                                    CGL157
+     C                   PARM                    OkNaPrim                                     CGL157
+     C                   PARM                    FldNameArr                                   CGL157
+     C                   PARM                    MsgIdArr                                     CGL157
+     C                   PARM                    MsgDtaArr                                    CGL157
+     C                   PARM                    WFldNamArr                                   CGL157
+     C                   PARM                    WMsgIdArr                                    CGL157
+     C                   PARM                    WMsgDtaArr                                   CGL157
+                                                                                              CGL157
+      ** OUTPUTS :                                                                            CGL157
+      ** Function Keys                                                                        CGL157
+      ** Write screen with no read indicator                                                  CGL157
+                                                                                              CGL157
+     C                   PARM      *Off          @INKC                                        CGL157
+     C                   PARM      *Off          @INKL                                        CGL157
+     C                   PARM      'N'           WriteOnly                                    CGL157
+                                                                                              CGL157
+      ** Reset errors                                                                         CGL157
+     C                   MOVE      *ALL'Y'       OkNaPrim                                     CGL157
+     C                   MOVEL     *BLANK        FldNameArr                                   CGL157
+     C                   MOVEL     *BLANK        MsgIdArr                                     CGL157
+     C                   MOVEL     *BLANK        MsgDtaArr                                    CGL157
+     C                   MOVEL     *BLANK        WFldNamArr                                   CGL157
+     C                   MOVEL     *BLANK        WMsgIdArr                                    CGL157
+     C                   MOVEL     *BLANK        WMsgDtaArr                                   CGL157
+                                                                                              CGL157
+     C                   IF        @INKC = '1'                                                CGL157
+     C                   EXSR      SREndP                                                     CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        @INKL = '1'                                                CGL157
+     C                   EXSR      CANC@W                                                     CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        @INKC = '0' AND                                            CGL157
+     C                             @INKL = '0'                                                CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   MOVEL     '6'           @SCRN                                        CGL157
+     C                   ELSE                                                                 CGL157
+     C                   IF        CGL132 = 'Y'                                               CGL157
+     C                   MOVEL     'G'           @SCRN                                        CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVEL     'U'           @SCRN                                        CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      * SCRN@6 - Process CRS details                                                          CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SCRN@6        BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Set function key status on screen                                                    CGL157
+     C                   EXSR      SrSFKEYS                                                   CGL157
+                                                                                              CGL157
+      ** Write/read display - TIN details                                                     CGL157
+     C                   CALLB     'SDCRNH1DP'                                                CGL157
+                                                                                              CGL157
+      ** INPUTS :                                                                             CGL157
+      ** Return code                                                                          CGL157
+      ** Non account holder details                                                           CGL157
+      ** Fields in error                                                                      CGL157
+      ** Errors                                                                               CGL157
+      ** Warnings                                                                             CGL157
+      ** Enabled Key & Detail fields                                                          CGL157
+                                                                                              CGL157
+     C                   PARM      *BLANK        RetCodeOut                                   CGL157
+     C                   PARM                    NewCuCRNH                                    CGL157
+     C                   PARM                    OKCRNHdet                                    CGL157
+     C                   PARM                    FldNameArr                                   CGL157
+     C                   PARM                    MsgIdArr                                     CGL157
+     C                   PARM                    MsgDtaArr                                    CGL157
+     C                   PARM                    WFldNamArr                                   CGL157
+     C                   PARM                    WMsgIdArr                                    CGL157
+     C                   PARM                    WMsgDtaArr                                   CGL157
+                                                                                              CGL157
+      ** OUTPUTS :                                                                            CGL157
+      ** Function Keys                                                                        CGL157
+      ** Write screen with no read indicator                                                  CGL157
+                                                                                              CGL157
+     C                   PARM      *Off          @INKC                                        CGL157
+     C                   PARM      *Off          @INKL                                        CGL157
+     C                   PARM      *Off          @INKT                                      MD036464
+     C                   PARM      'N'           WriteOnly                                    CGL157
+                                                                                              CGL157
+      ** Reset errors                                                                         CGL157
+     C                   MOVE      *ALL'Y'       OKCRNHdet                                    CGL157
+     C                   MOVEL     *BLANK        FldNameArr                                   CGL157
+     C                   MOVEL     *BLANK        MsgIdArr                                     CGL157
+     C                   MOVEL     *BLANK        MsgDtaArr                                    CGL157
+     C                   MOVEL     *BLANK        WFldNamArr                                   CGL157
+     C                   MOVEL     *BLANK        WMsgIdArr                                    CGL157
+     C                   MOVEL     *BLANK        WMsgDtaArr                                   CGL157
+                                                                                              CGL157
+     C                   IF        @INKC = '1'                                                CGL157
+     C                   EXSR      SREndP                                                     CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        @INKT = '1'                                              MD036464
+     C                   EXSR      SRCRSLoE                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   IF        @INKL = '1'                                                CGL157
+     C                   IF        CGL157 = 'Y'                                             MD036464
+     C                   MOVEL     'F'           @SCRN                                      MD036464
+     C                   ELSE                                                               MD036464
+     C                   EVAL      @SCRN = 'W'                                                CGL157
+     C                   ENDIF                                                              MD036464
+     C                   ENDIF                                                                CGL157
+     C                   IF        @INKC = '0' AND                                            CGL157
+     C                             @INKL = '0'                                                CGL157
+     C                   IF        CGL132 = 'Y'                                               CGL157
+     C                   MOVEL     'G'           @SCRN                                        CGL157
+     C                   ELSE                                                                 CGL157
+     C                   MOVEL     'B'           @SCRN                                      MD036464
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      * SRCRSLoE - CRS List of Exception Management                                           CGL157
+      *****************************************************************                       CGL157
+     C     SRCRSLoE      BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Display Screen - CRS List of Exception Management                                    CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDCRNEDSP'                                                CGL157
+                                                                                              CGL157
+      ** Input Parameters :                                                                   CGL157
+                                                                                              CGL157
+      ** Return code                                                                          CGL157
+     C                   PARM      *Blanks       RetCodeIn                                    CGL157
+      **  Current Transaction Screen 6 Detail in Screen Format                                CGL157
+     C                   PARM                    NewCuCRNH                                    CGL157
+                                                                                              CGL157
+      ** Output Parameters :                                                                  CGL157
+      ** Function Keys                                                                        CGL157
+     C                   PARM      '0'           @INKC                                        CGL157
+     C                   PARM      '0'           @INKL                                        CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+      ** F3 - End Program                                                                     CGL157
+     C                   WHEN      @INKC = '1'                                                CGL157
+     C                   EXSR      SREndp                                                     CGL157
+                                                                                              CGL157
+      ** F12 - Cancel on Details Screen                                                       CGL157
+     C                   WHEN      @INKL = '1'                                                CGL157
+     C                   EVAL      @SCRN = '6'                                                CGL157
+                                                                                              CGL157
+     C                   ENDSL                                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      ****************************************************************                        CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                     MD036464
+      * SCRN@F - Process Details Screen F                                                   MD036464
+      *****************************************************************                     MD036464
+     C     SCRN@F        BEGSR                                                              MD036464
+                                                                                            MD036464
+     C                   CALLB     'SDCRSNDFT'                                              MD036464
+     C                   PARM                    NewNaPrim                                  MD036464
+     C                   PARM                    PCrsdS                                     MD036464
+     C                   PARM                    PCrsdF                                     MD036464
+                                                                                            MD036464
+      ** Write/Read Display Screen - CRS Country Details Browse                             MD036464
+                                                                                            MD036464
+     C                   CALLB     'SDCRSNBRW'                                              MD036464
+                                                                                            MD036464
+      ** Input Parameters :                                                                 MD036464
+      ** Return code                                                                        MD036464
+     C                   PARM      *Blanks       RetCodeIn                                  MD036464
+     C                   PARM                    DDACTN                                     MD036464
+     C                   PARM                    DDNAHO                                     MD036464
+     C                   PARM      'B'           Pmode                                      MD036464
+     C                   PARM                    PCrsdS                                     MD036464
+      ** Output                                                                             MD036464
+     C                   PARM                    PCountry                                   MD036464
+     C                   PARM      '0'           @INKC                                      MD036464
+     C                   PARM      '0'           @INKI                                      MD036464
+     C                   PARM      '0'           @INKL                                      MD036464
+     C                   PARM                    PTinRq                                     MD036464
+                                                                                            MD036464
+      ** F3 - End Program                                                                   MD036464
+     C     @INKC         CASEQ     '1'           SREndp                                     MD036464
+                                                                                            MD036464
+      ** F9 - Add                                                                           MD036464
+     C     @INKI         CASEQ     '1'           SRCRSAdd                                   MD036464
+                                                                                            MD036464
+      ** F12 - Cancel on Details Screen                                                     MD036464
+     C     @INKL         CASEQ     '1'           SRCRS1                                     MD036464
+                                                                                            MD036464
+     C                   CAS                     SRCRS2                                     MD036464
+                                                                                            MD036464
+     C                   ENDCS                                                              MD036464
+                                                                                            MD036464
+     C                   ENDSR                                                              MD036464
+                                                                                            MD036464
+      *****************************************************************                     MD036464
+      * SCRN@M - Process Details Screen M                                                   MD036464
+      *****************************************************************                     MD036464
+     C     SCRN@M        BEGSR                                                              MD036464
+                                                                                            MD036464
+      ** Write/Read Display Screen - CRS Country Details Browse                             MD036464
+                                                                                            MD036464
+     C                   CALLB     'SDCRSNBRW'                                              MD036464
+                                                                                            MD036464
+      ** Input Parameters :                                                                 MD036464
+      ** Return code                                                                        MD036464
+     C                   PARM      *Blanks       RetCodeIn                                  MD036464
+     C                   PARM                    DDACTN                                     MD036464
+     C                   PARM                    DDNAHO                                     MD036464
+     C                   PARM      'R'           Pmode                                      MD036464
+     C                   PARM                    PCrsdS                                     MD036464
+      ** Output                                                                             MD036464
+     C                   PARM                    PCountry                                   MD036464
+     C                   PARM      '0'           @INKC                                      MD036464
+     C                   PARM      '0'           @INKI                                      MD036464
+     C                   PARM      '0'           @INKL                                      MD036464
+     C                   PARM                    PTinRq                                     MD036464
+                                                                                            MD036464
+      ** F3 - End Program                                                                   MD036464
+     C     @INKC         CASEQ     '1'           SREndp                                     MD036464
+                                                                                            MD036464
+      ** F12 - Cancel on Details Screen                                                     MD036464
+     C     @INKL         CASEQ     '1'           SRCRS1                                     MD036464
+                                                                                            MD036464
+     C                   CAS                     SRCRS3                                     MD036464
+                                                                                            MD036464
+     C                   ENDCS                                                              MD036464
+                                                                                            MD036464
+                                                                                            MD036464
+     C                   ENDSR                                                              MD036464
+                                                                                            MD036464
+      *****************************************************************                     MD036464
+      * SCRN@Z - Process Details Screen Z                                                   MD036464
+      *****************************************************************                     MD036464
+     C     SCRN@Z        BEGSR                                                              MD036464
+                                                                                            MD036464
+     C                   EVAL      WOption = ' '                                            MD036464
+     C                   IF        DDACTN = 'E'                                             MD036464
+     C                   EVAL      WOption = 'E'                                            MD036464
+     C                   ENDIF                                                              MD036464
+                                                                                            MD036464
+      ** Write/Read Display Screen - CRS Country Details                                    MD036464
+                                                                                            MD036464
+     C                   CALLB     'SDCRSN3DP'                                              MD036464
+                                                                                            MD036464
+      ** Input Parameters :                                                                 MD036464
+      ** Return code                                                                        MD036464
+     C                   PARM      *Blanks       RetCodeIn                                  MD036464
+     C                   PARM                    NewNaPrim                                  MD036464
+     C                   PARM                    WOption                                    MD036464
+     C                   PARM                    PCountry                                   MD036464
+                                                                                            MD036464
+      ** CRS Country Details in screen format                                               MD036464
+     C                   PARM                    PCrsdS                                     MD036464
+     C                   PARM                    PWarning                                   MD036464
+                                                                                            MD036464
+      ** CRS Country Details OK indicators                                                  MD036464
+     C                   PARM                    OKCRSCtry                                  MD036464
+                                                                                            MD036464
+      ** Errors                                                                             MD036464
+     C                   PARM                    FldNameArr                                 MD036464
+     C                   PARM                    MsgIdArr                                   MD036464
+     C                   PARM                    MsgDtaArr                                  MD036464
+                                                                                            MD036464
+      ** Warning                                                                            MD036464
+     C                   PARM                    WFldNamArr                                 MD036464
+     C                   PARM                    WMsgIDArr                                  MD036464
+     C                   PARM                    WMsgDtaArr                                 MD036464
+                                                                                            MD036464
+      ** Output Parameters :                                                                MD036464
+      ** Function Keys                                                                      MD036464
+     C                   PARM      '0'           @INKC                                      MD036464
+     C                   PARM      '0'           @INKJ                                      MD036464
+     C                   PARM      '0'           @INKL                                      MD036464
+                                                                                            MD036464
+      ** Reset Errors                                                                       MD036464
+     C                   MOVE      *ALL'Y'       OKCRSCtry                                  MD036464
+     C                   EVAL      FldNameArr = *Blanks                                     MD036464
+     C                   EVAL      MsgIdArr   = *Blanks                                     MD036464
+     C                   EVAL      MsgDtaArr  = *Blanks                                     MD036464
+     C                   EVAL      WFldNamArr = *Blanks                                     MD036464
+     C                   EVAL      WMsgIDArr  = *Blanks                                     MD036464
+     C                   EVAL      WMsgDtaArr = *Blanks                                     MD036464
+                                                                                            MD036464
+      ** F3 - End Program                                                                   MD036464
+     C     @INKC         CASEQ     '1'           SREndp                                     MD036464
+                                                                                            MD036464
+      ** F12 - Cancel on Details Screen                                                     MD036464
+     C     @INKL         CASEQ     '1'           SRCRSBck2                                  MD036464
+                                                                                            MD036464
+      ** Validate Input to Details Screen                                                   MD036464
+     C                   CAS                     SRCRS2                                     MD036464
+                                                                                            MD036464
+     C                   ENDCS                                                              MD036464
+                                                                                            MD036464
+     C                   ENDSR                                                              MD036464
+                                                                                            MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRSAdd - Add country                                                              MD036464
+      *****************************************************************                     MD036464
+     C     SRCRSAdd      BEGSR                                                              MD036464
+     C                   EVAL      @SCRN = 'S'                                              MD036464
+     C                   ENDSR                                                              MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRSBack - Back to country selection                                               MD036464
+      *****************************************************************                     MD036464
+     C     SRCRSBack     BEGSR                                                              MD036464
+     C                   EVAL      @SCRN = 'F'                                              MD036464
+     C                   ENDSR                                                              MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRSBck2 - Back to country selection                                               MD036464
+      *****************************************************************                     MD036464
+     C     SRCRSBck2     BEGSR                                                              MD036464
+     C                   MOVEA     PCrsdB        PCrsdS                                     MD036464
+     C                   EVAL      @SCRN = 'F'                                              MD036464
+     C                   ENDSR                                                              MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRS1   - Back to CRS Main Detail Screen                                           MD036464
+      *****************************************************************                     MD036464
+     C     SRCRS1        BEGSR                                                              MD036464
+     C                   EVAL      @SCRN = 'P'                                              MD036464
+     C                   ENDSR                                                              MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRS2   - Read selection                                                           MD036464
+      *****************************************************************                     MD036464
+     C     SRCRS2        BEGSR                                                              MD036464
+     C                   EVAL      @SCRN = 'M'                                              MD036464
+     C                   ENDSR                                                              MD036464
+      *****************************************************************                     MD036464
+      /EJECT                                                                                MD036464
+      *****************************************************************                     MD036464
+      * SRCRS3   - Go to CRS Details Screen                                                 MD036464
+      *****************************************************************                     MD036464
+     C     SRCRS3        BEGSR                                                              MD036464
+     C                   IF        PCountry <> *Blanks                                      MD036464
+     C                   EVAL      @SCRN = 'Z'                                              MD036464
+     C                   ELSE                                                               MD036464
+     C                   IF        PTinRq = ' '                                             MD036464
+     C                   EVAL      @SCRN = '6'                                              MD036464
+     C                   ELSE                                                               MD036464
+     C                   EVAL      @SCRN = 'F'                                              MD036464
+     C                   ENDIF                                                              MD036464
+     C                   ENDIF                                                              MD036464
+     C                   ENDSR                                                              MD036464
       *****************************************************************
       ** SRCanc@K - Cancel on Key screen
       *****************************************************************
@@ -2028,6 +2909,26 @@
      C                   EVAL      CGL132 = 'Y'                                               CGL132
      C                   EVAL      @IN81 = '1'                                                CGL132
      C                   ENDIF                                                                CGL132
+                                                                                              CGL157
+      ** Check whether CGL157 is available                                                    CGL157
+                                                                                              CGL157
+     C                   CALL      'AOSARDR0'                                                 CGL157
+     C                   PARM      *Blanks       Retcd                                        CGL157
+     C                   PARM      '*VERIFY'     Option                                       CGL157
+     C                   PARM      'CGL157'      PSard                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        Retcd <> *Blanks                                           CGL157
+     C                   IF        Retcd <> '*NRF'                                            CGL157
+     C                   MOVEL     'SCSARDPD'    Dbfile                                       CGL157
+     C                   MOVEL     '902'         Dbase                                        CGL157
+     C                   MOVEL     PSard         Dbkey                                        CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ENDIF                                                                CGL157
  
       ** Go to initial screen
  

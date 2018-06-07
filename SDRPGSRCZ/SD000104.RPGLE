@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027298           Date 06Aug14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027298           Date 06Aug14               *
       *                 MD029848           Date 29Aug14               *
       *                 MD027707           Date 01Jul14               *
       *                 MD027498           Date 20Jun14               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027298 - Incorrect label 'Exempt' (Recompile)              *
       *  MD029848 - (TNT) FATCA Report Issue. Applied fix MD029618    *
@@ -225,7 +227,10 @@
      D PACRV           S              1A
      D PELEC           S              1A
      D WRecFound       S              1A                                                    MD029618
- 
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
       ** Parameter variables for AOSVALR0 string
      D SValK1          S             20
      D SValK2          S             20
@@ -610,6 +615,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV
      C                   PARM      *BLANKS       PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF
       *
      C                   ENDSR

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. MD042805           Date 05Jun17               *
+      *  Last Amend No. MD043624           Date 23Jan17               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 MD042805           Date 05Jun17               *
       *                 MD036356           Date 20Oct15               *
       *                 MD035388           Date 20Oct15               *
       *                 MD029837A          Date 22Aug14               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043624 - FATCA Information Complete Flag value not         *
+      *             being saved                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042805  - FBM2.1SP10-FATCA US TIN mandatory - should be    *
       *              optional depending on FATCA customer type        *
@@ -244,6 +247,7 @@
      C**********                   AND POrigin = 'C'                               MD035388 MD036356
      C                             AND (POrigin = 'C'                                       MD036356
      C                             OR POrigin = 'N')                                        MD036356
+     C                   EVAL      DFINFC = DDINFC                                          MD043624
      C                   RETURN                                                             MD035388
      C                   ENDIF                                                              MD035388
                                                                                            MD026753A

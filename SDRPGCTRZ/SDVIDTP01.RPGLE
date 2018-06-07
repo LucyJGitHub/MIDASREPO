@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR671813           Date 23Jun15               *
+      *  Last Amend No. MD044093           Date 18Apr17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR671813           Date 23Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25053           Date 21Jul09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044093 - The Country of TIN is already defined for this    *
+      *             customer                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR671813 - Bypass validation done by BUG25053 if CER034 is   *
       *             turned on. Applied for MD033988                   *
@@ -123,6 +126,7 @@
      D DDTINO          S             25
      D DDIDTP          S              2
      D DDOKIDTP        S              1
+     D DDIDNO          S             15                                                     MD044093
  
       *****************************************************************
       /EJECT
@@ -167,13 +171,28 @@
       *****************************************************************
  
      C     SRVIDTP       BEGSR
+      *                                                                                     MD044093
+      ** If Identification Type is entered, it should be defined                            MD044093
+      *                                                                                     MD044093
+     C                   IF        NOT(DDIDTP = *BLANKS)                                    MD044093
+     C     DDIDTP        CHAIN     SDIDTPL1                                                 MD044093
+     C                   IF        NOT %FOUND(SDIDTPL1)                                     MD044093
+     C                   EVAL      DDOKIDTP = 'N'                                           MD044093
+     C                   ADD       1             Idx                                        MD044093
+     C                   MOVEL     'DDIDTP'      FldNamXAr(Idx)                             MD044093
+     C                   MOVEL     'USR4756'     MsgIDXAr(Idx)                              MD044093
+     C                   GOTO      ENDVAL                                                   MD044093
+     C                   ENDIF                                                              MD044093
+     C                   ENDIF                                                              MD044093
  
       ** If Identification Type is blank, TIN should be blanks                              BUG25053
                                                                                             BUG25053
      C                   If        DDTINO = *BLANKS And                                     BUG25053
      C**********                   DDIDTP <> *BLANKS                               BUG25053 AR671813
-     C                             DDIDTP <> *BLANKS And                                    AR671813
-     C                             CER034 = 'N'                                             AR671813
+     C**********                   DDIDTP <> *BLANKS And                           AR671813 MD044093
+     C**********                   CER034 = 'N'                                    AR671813 MD044093
+     C                             DDIDTP <> *BLANKS                                        MD044093
+     C                             AND  NOT(IDSWCD = 'NIDN')                                MD044093
      C                   EVAL      DDOKIDTP = 'N'                                           BUG25053
      C                   ADD       1             Idx                                        BUG25053
      C                   MOVEL     'DDIDTP'      FldNamXAr(Idx)                             BUG25053
@@ -191,20 +210,38 @@
 als  C                   MOVEL     'USR4762'     MsgIDXAr(Idx)
      C                   GOTO      ENDVAL
      C                   ENDIF
- 
-      ** If Identification Type is entered, it should be defined
- 
-     C                   IF        DDIDTP <> *Blanks
-     C     DDIDTP        CHAIN     SDIDTPL1
- 
-     C                   IF        NOT %FOUND(SDIDTPL1)
-     C                   EVAL      DDOKIDTP = 'N'
-     C                   ADD       1             Idx
-     C                   MOVEL     'DDIDTP'      FldNamXAr(Idx)
-als  C                   MOVEL     'USR4756'     MsgIDXAr(Idx)
-     C                   GOTO      ENDVAL
-     C                   ENDIF
-     C                   ENDIF
+      ****************************************************************                      MD044093
+      ***If*Identification*Type*is*entered,*it*should*be*defined******                      MD044093
+      ****************************************************************                      MD044093
+     C**********         IF        DDIDTP <> *Blanks                                        MD044093
+     C*****DDIDTP        CHAIN     SDIDTPL1                                                 MD044093
+      ****************************************************************                      MD044093
+     C**********         IF        NOT %FOUND(SDIDTPL1)                                     MD044093
+     C**********         EVAL      DDOKIDTP = 'N'                                           MD044093
+     C**********         ADD       1             Idx                                        MD044093
+     C**********         MOVEL     'DDIDTP'      FldNamXAr(Idx)                             MD044093
+     C**********         MOVEL     'USR4756'     MsgIDXAr(Idx)                              MD044093
+     C**********         GOTO      ENDVAL                                                   MD044093
+     C**********         ENDIF                                                              MD044093
+     C**********         ENDIF                                                              MD044093
+      *                                                                                     MD044093
+      ** If SWIFT CODE is 'NIDN' and Identity number or TIN number is blanks                MD044093
+      ** throw an error                                                                     MD044093
+      *                                                                                     MD044093
+     C                   IF        NOT(DDIDTP = *BLANKS)                                    MD044093
+     C                   IF        (IDSWCD = 'NIDN') AND                                    MD044093
+     C                             ((DDIDNO = *BLANKS) AND                                  MD044093
+     C                             (DDTINO = *BLANKS))                                      MD044093
+     C                   EVAL      DDOKIDTP = 'N'                                           MD044093
+     C                   ADD       1             Idx                                        MD044093
+     C                   MOVEL     'DDIDTP'      FldNamXAr(Idx)                             MD044093
+     C                   MOVEL     'USS0682'     MsgIDXAr(Idx)                              MD044093
+     C                   MOVEL     DDIDTP        Msg               6                        MD044093
+     C                   MOVE      IDSWCD        Msg                                        MD044093
+     C                   MOVEL     Msg           MsgDtaXAr(Idx)                             MD044093
+     C                   GOTO      ENDVAL                                                   MD044093
+     C                   ENDIF                                                              MD044093
+     C                   ENDIF                                                              MD044093
  
      C     ENDVAL        ENDSR
       *****************************************************************
@@ -229,6 +266,9 @@ als  C                   MOVEL     'USR4756'     MsgIDXAr(Idx)
  
       ** Identication Type
      C                   PARM                    DDIDTP
+                                                                                            MD044093
+      ** Identity number                                                                    MD044093
+     C                   PARM                    DDIDNO                                     MD044093
  
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller

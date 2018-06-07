@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL031             Date 05Jul04               *
+      *                 CGL031             Date 05Jul04               *
       *                 BUG2064            Date 29May04               *
       *                 BUG2604            Date 18May04               *
       *                 CAS006             Date 21Jan03               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL031 - Taxation of Savings Income                          *
       *  BUG2064 - Initialization of CSC022.                          *
@@ -632,11 +635,13 @@
      C                   PARM      'SEISEDEPD'   InvFile1
      C                   PARM                    InvFile2
      C                   PARM                    InvFile3
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       *
       ** Invalid file data
      C                   PARM      InvTr         InvFDta1
      C                   PARM                    InvFDta2
      C                   PARM                    InvFDta3
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ** OUTPUT
       ** ======

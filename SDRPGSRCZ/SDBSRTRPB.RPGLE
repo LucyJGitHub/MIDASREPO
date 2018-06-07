@@ -16,19 +16,22 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSC011             Date 18Sep01               *
+      *                 CSC011             Date 18Sep01               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CAP038  *CREATE    Date 07Mar00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC011 - 24x7 Midas Availability                             *
       *  CAP038 - Conversion of SD inputs into modular structure      *
@@ -428,11 +431,13 @@
      C                   PARM      'SDIBSRTPD'   InvFile1         10
      C                   PARM      *BLANKS       InvFile2         10
      C                   PARM      *BLANKS       InvFile3         10
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
  
       * Invalid file data
      C                   PARM      InvBr         InvFDta1       2000
      C                   PARM      *BLANKS       InvFDta2       2000
      C                   PARM      *BLANKS       InvFDta3       2000
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
  
       * OUTPUTS
  

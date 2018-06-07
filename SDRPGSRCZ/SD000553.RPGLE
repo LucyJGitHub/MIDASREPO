@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027334A          Date 23Sep14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027334A          Date 23Sep14               *
       *                 MD027209B          Date 26Sep14               *
       *                 MD027209           Date 07Aug14               *
       *                 MD027033           Date 29May14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027334A- Validation on Mandatory Class Code removed        *
       *  MD027209B - F4-Print Report is not available in USIT and NCUP*
@@ -171,6 +173,10 @@
      D WCALCN          S              5  0
      D DRUND           S              5  0
      D WWTMST          S             26A
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
  
      ** ZSFILE Parameters
      D ZSERR           S              1
@@ -443,6 +449,10 @@
      C                   PARM      *BLANKS       PAftCUXC       5000                        MD026854
      C                   PARM      *BLANKS       PACRV             1
      C                   PARM      *BLANKS       PELEC             1
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF
  
      C                   WHEN      RTYPE = '*NAHO'

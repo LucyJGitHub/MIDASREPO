@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD050595           Date 29Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 MD026708           Date 12May14               *
       *                 MD026477           Date 29Apr14               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050595 - Inserted customer doesn't appear in Joint Account *
+      *             Member Details Maintenance                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
@@ -168,6 +171,7 @@
      D PSARD           S              6A                                                      CGL132
      D*CGL132***       S              1A                                             CGL132 MD026708
      D CGL132          S              1A   INZ('N')                                         MD026708
+     D CGL157          S              1A   INZ('N')                                         MD050595
  
       ** Standard Utility Parameters
      D PZActn          S              1A
@@ -724,8 +728,11 @@
      C                   IF        E5JATP = 'Y' AND
      C                             PZErr = *ZERO
      C                             AND CGL132 = 'N'                                           CGL132
+     C                             AND CGL157 = 'N'                                         MD050595
      C                             OR PZErr = *ZERO                                           CGL132
      C                             AND CGL132 = 'Y'                                           CGL132
+     C                             OR PZErr = *ZERO                                         MD050595
+     C                             AND CGL157 = 'Y'                                         MD050595
      C                   EVAL      KCust = E5CUST
      C     KCust         CHAIN     SDCUSTL1
      C                   LEAVESR
@@ -886,6 +893,28 @@
      C                   ENDIF                                                              MD026708
      C                   ENDIF                                                                CGL132
  
+      ** Check if CGL157 is ON                                                              MD050595
+                                                                                            MD050595
+     C                   CALL      'AOSARDR0'                                               MD050595
+     C                   PARM      *BLANKS       PRTCD                                      MD050595
+     C                   PARM      '*VERIFY'     POPTN                                      MD050595
+     C                   PARM      'CGL157'      PSARD                                      MD050595
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD050595
+                                                                                            MD050595
+     C                   IF        PRTCD <> *BLANKS                                         MD050595
+     C                             AND PRTCD <> '*NRF   '                                   MD050595
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD050595
+     C                   MOVEL     '901'         DBASE                                      MD050595
+     C                   MOVEL     PSARD         DBKEY                                      MD050595
+     C                   EXSR      *PSSR                                                    MD050595
+     C                   ELSE                                                               MD050595
+     C                   IF        PRTCD = '*NRF   '                                        MD050595
+     C                   EVAL      CGL157 = 'N'                                             MD050595
+     C                   ELSE                                                               MD050595
+     C                   EVAL      CGL157 = 'Y'                                             MD050595
+     C                   ENDIF                                                              MD050595
+     C                   ENDIF                                                              MD050595
+                                                                                            MD050595
       **---------------------------------------------------------------
       ** Message Handler Fixed Data
      D/COPY SDCPYSRC,MSGHNDDATA

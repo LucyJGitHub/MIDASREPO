@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD040876           Date 26Aug16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CGL132             Date 01May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CLE148             Date 23Jul12               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions (recompile) *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -315,6 +317,9 @@
      D Trans3A         S                   LIKE(Trans9A)                                      CFT120
      D Trans5A         S                   LIKE(Trans9A)                                      CFT120
      D Trans9C         S           3000A                                                      CGL132
+     D Trans9999_1     S           9999A                                                    MD040876
+     D Trans9999_2     S           9999A                                                    MD040876
+     D Trans9999_3     S           9999A                                                    MD040876
                                                                                 CDL007
       ** Non-screen Interface Data for Class 1 enhancement                      CDL007
      D InfData         S                   LIKE(Trans1)                         CDL007
@@ -537,6 +542,9 @@
                                                                                               CAP043
      C                   WHEN      ParmLstArr(In) = 'T1-8PRF2'                                CAP043
      C                   CALL      PgmArr(In)    T1_8PRF2                                     CAP043
+                                                                                            MD040876
+     C                   WHEN      ParmLstArr(In) = 'T1-8ARLX2'                             MD040876
+     C                   CALL      PgmArr(In)    T1_8ARLX2                                  MD040876
                                                                                               CSC011
       ** Setup the parameters for the calls to the lendfing Api's.  For each                  CSC011
       ** call, check the return code in the reply message to check if a DBASE                 CSC011
@@ -731,6 +739,9 @@
      C                   PARM                    ExtData                        CAP004
       ** Other Depot Details for Securities Customer                                          CSE022
      C                   PARM                    OthDData                                     CSE022
+     C                   PARM                    Trans9999_1                                MD040876
+     C                   PARM                    Trans9999_2                                MD040876
+     C                   PARM                    Trans9999_3                                MD040876
       ** Program, module and procedure names of callers
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
@@ -1473,6 +1484,15 @@
      C                   PARM                    #ProcMod                                     CER001
      C                   PARM                    #ProcName                                    CER001
      C                   PARM                    LoanType                                     CER001
+     C                                                                                      MD040876
+     C     T1_8ARLX2     PLIST                                                              MD040876
+     C                   PARM                    APHead                                     MD040876
+     C                   PARM                    Trans9999_1                                MD040876
+     C                   PARM                    Trans9999_2                                MD040876
+     C                   PARM                    Trans9999_3                                MD040876
+     C                   PARM                    #ProcPgm                                   MD040876
+     C                   PARM                    #ProcMod                                   MD040876
+     C                   PARM                    #ProcName                                  MD040876
  
      C/COPY WNCPYSRC,APH00039
       **--------------------------------------------------------------------------------------------

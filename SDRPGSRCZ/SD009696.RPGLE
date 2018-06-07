@@ -15,8 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030161A          Date 16Sep14               *
+      *  Last Amend No. MD041578           Date 23Sep16               *
+      *  Prev Amend No. MD041407           Date 19Sep16               *
+      *                 MD041389           Date 19Sep16               *
+      *                 MD041066           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD030161A          Date 16Sep14               *
       *                 CER071             Date 01Aug16               *
       *                 MD029850           Date 30Sep14               *
       *                 MD027548           Date 19Jun14               *
@@ -37,6 +43,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041578 - Last Action User is not displayed in the          *
+      *             Description Header generated when deleting        *
+      *             Additional Customer Details of the Customer.      *
+      *  MD041407 - Incorrect User indicated in the user field        *
+      *  MD041389 - Additional Miscellaneous Change Entry with no     *
+      *             details appear after every amendments made in     *
+      *             both Customer Details and Additional Customer     *
+      *             Details when CGL157 is off.                       *
+      *  MD041066 - Additional Miscellaneous Change Entry with no     *
+      *             details appear after every amendments made in     *
+      *             both Customer Details and Additional Customer     *
+      *             Details.                                          *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030161A - SDC009697 COB component run too long             *
       *              Applied fix MD027315, MD027355                   *
@@ -77,6 +97,10 @@
  
      FSDFTCSL1  IF   E           K DISK    INFSR(*PSSR)                                       CGL132
                                                                                               CGL132
+     FSDCRSHL1  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
+                                                                                              CGL177
+     FSDCRSDL2  IF   E           K DISK    INFSR(*PSSR)                                       CGL177
+                                                                                              CGL177
      FSDJACCL4  IF   E           K DISK    INFSR(*PSSR)
  
      F***SDCUAHL0  IF   E           K DISK    INFSR(*PSSR)                                  MD026148
@@ -135,12 +159,24 @@
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
      D SDFTCS        E DS                  EXTNAME(SDFTCSPD)                                  CGL132
+     D SDCRSH        E DS                  EXTNAME(SDCRSHPD)                                  CGL177
+     D SDCRSD        E DS                  EXTNAME(SDCRSDPD)                                  CGL177
      D SDJACC        E DS                  EXTNAME(SDJACCPD)
      D SDCUAH        E DS                  EXTNAME(SDCUAHPD)
      D SDFTCSX       E DS                  EXTNAME(SDFTCSPD)                                  CGL132
      D                                     PREFIX(X)                                          CGL132
      D SDFTCSY       E DS                  EXTNAME(SDFTCSPD)                                  CGL132
      D                                     PREFIX(Y)                                          CGL132
+     D SDCRSHX       E DS                  EXTNAME(SDCRSHPD)                                  CGL177
+     D                                     PREFIX(X)                                          CGL177
+     D SDCRSHY       E DS                  EXTNAME(SDCRSHPD)                                  CGL177
+     D                                     PREFIX(Y)                                          CGL177
+     D SDCRSDX       E DS                  EXTNAME(SDCRSDPD)                                  CGL177
+     D                                     PREFIX(X)                                          CGL177
+     D SDCRSDY       E DS                  EXTNAME(SDCRSDPD)                                  CGL177
+     D                                     PREFIX(Y)                                          CGL177
+      ** External data structure for SARD                                                     CGL177
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL177
      D SDCUXC        E DS                  EXTNAME(SDCUSTXC)                                MD026854
                                                                                             MD026666
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                   MD026666
@@ -216,6 +252,36 @@
      D  SdcuxcPosnB    S             10I 0 dim( FieldArrSize )                              MD026854
      D  SdcuxcLenB     S             10I 0 dim( FieldArrSize )                              MD026854
                                                                                             MD026854
+     D  SdcrshpdArr    DS                                                                     CGL177
+     D  SdcrshName                   10A   dim( FieldArrSize )                                CGL177
+     D  SdcrshPosnA                  10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrshLenA                   10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrshDigt                   10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrshType                    1A   dim( FieldArrSize )                                CGL177
+     D  SdcrshText                   30A   dim( FieldArrSize )                                CGL177
+     D  SdcrshPosnB    S             10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrshLenB     S             10I 0 dim( FieldArrSize )                                CGL177
+                                                                                              CGL177
+     D  SdcrsdpdArr    DS                                                                     CGL177
+     D  SdcrsdName                   10A   dim( FieldArrSize )                                CGL177
+     D  SdcrsdPosnA                  10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrsdLenA                   10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrsdDigt                   10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrsdType                    1A   dim( FieldArrSize )                                CGL177
+     D  SdcrsdText                   30A   dim( FieldArrSize )                                CGL177
+     D  SdcrsdPosnB    S             10I 0 dim( FieldArrSize )                                CGL177
+     D  SdcrsdLenB     S             10I 0 dim( FieldArrSize )                                CGL177
+                                                                                              CGL177
+     D PSard           S              6A                                                      CGL177
+     D A               S              4S 0                                                    CGL177
+     D B               S              4S 0                                                    CGL177
+     D WDCRS           S              1A                                                      CGL177
+     D CGL157          S              1A                                                      CGL177
+     D WCRS8           S              1A                                                      CGL177
+     D WCRS10          S              1A                                                      CGL177
+     D WCHK1           S              1A                                                      CGL177
+     D WCHK2           S              1A                                                      CGL177
+     D WCHK3           S              1A                                                    MD041066
      D PFileNames      DS                                                                   MD026666
      D  FileNameArr                  10A   dim(FileArrSize)                                 MD026666
      D  FileArrSize    C                   10                                               MD026666
@@ -226,6 +292,8 @@
      D SdjaccFNum      S              5I 0                                                  MD026666
      D SdcuahFNum      S              5I 0                                                  MD026666
      D SdcuxcFNum      S              5I 0                                                  MD026854
+     D SdcrshFNum      S              5I 0                                                    CGL177
+     D SdcrsdFNum      S              5I 0                                                    CGL177
      D PFileName       S             10A                                                    MD026666
      D Idx             S              5I 0                                                  MD026666
      D Index           S              5I 0                                                  MD026666
@@ -249,7 +317,8 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
  
-     D PDESC           S             60    DIM(8) CTDATA PERRCD(1)
+     D***PDESC           S             60    DIM(8) CTDATA PERRCD(1)                          CGL157
+     D PDESC           S             60    DIM(11) CTDATA PERRCD(1)                           CGL157
  
      D RetCode         S              7A
      D PFileNam        S             10A
@@ -260,6 +329,10 @@
      D PAftACUS        S           5000A
      D PBefFTCS        S           5000A                                                      CGL132
      D PAftFTCS        S           5000A                                                      CGL132
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
      D PBefJACC        S           5000A
      D PAftJACC        S           5000A
      D PBefCUAH        S           5000A
@@ -324,7 +397,9 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
  
+     C                   EVAL      WCHK3 = 'N'                                              MD041066
      C                   EVAL      YFAINFC = *BLANKS                                        MD027513
+     C                   EVAL      YCRINFO = *BLANKS                                          CGL177
      C                   EVAL      WWJARC = 'N'                                             MD027295
      C                   EVAL      WBJACC = PBefJACC                                        MD027295
      C                   EVAL      WAJACC = PAftJACC                                        MD027295
@@ -335,6 +410,10 @@
      C                             PAftACUS = *BLANKS AND                                   MD027295
      C                             PBefFTCS = *BLANKS AND                                   MD027295
      C                             PAftFTCS = *BLANKS AND                                   MD027295
+     C                             PBefCRSH = *BLANKS AND                                     CGL177
+     C                             PAftCRSH = *BLANKS AND                                     CGL177
+     C                             PBefCRSD = *BLANKS AND                                     CGL177
+     C                             PAftCRSD = *BLANKS AND                                     CGL177
      C                             WBJACC = WAJACC AND                                      MD027295
      C                             PBefCUAH = *BLANKS AND                                   MD027295
      C                             PAftCUAH = *BLANKS AND                                   MD027295
@@ -346,8 +425,19 @@
      C                   EVAL      WOTHER1 = 'N'                                            MD027295
      C                   EVAL      WFAINFO = 'N'                                            MD027295
      C                   EVAL      Y = 1
+     C                   IF        PAftACUS <> *Blanks                                        CGL177
+     C                   EVAL      WWTMST = %SUBST(PAftACUS:552:26)                           CGL177
+     C                   MOVE      WWTMST        WKTMST                                       CGL177
+     C                   ELSE                                                                 CGL177
+     C                   IF        PAftCUST <> *Blanks                                        CGL177
+     C                   EVAL      WWTMST = %SUBST(PAftCUST:870:26)                           CGL177
+     C                   MOVE      WWTMST        WKTMST                                       CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        WWTMST = *BLANKS                                           CGL177
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    WKTMST
+     C                   ENDIF                                                                CGL177
      C                   MOVE      WKTMST        HCTMST
  
      C                   EVAL      WWTMST = *BLANKS
@@ -401,6 +491,10 @@
      C                             PAftACUS = *BLANKS OR
      C                             PBefJACC <> *BLANKS AND
      C                             PAftJACC = *BLANKS OR
+     C                             PBefCRSH <> *BLANKS AND                                    CGL177
+     C                             PAftCRSH = *BLANKS OR                                      CGL177
+     C                             PBefCRSD <> *BLANKS AND                                    CGL177
+     C                             PAftCRSD = *BLANKS OR                                      CGL177
      C                             PBefCUAH <> *BLANKS AND
      C                             PAftCUAH = *BLANKS
      C                             OR                                                       MD026854
@@ -429,6 +523,8 @@
      C                   ENDIF
  
      C                   IF        PELEC = 'Y'                                                CGL132
+     C                             AND PAftCRSH = *Blanks                                     CGL177
+     C                             AND PAftCRSD = *Blanks                                     CGL177
      C                   EVAL      HCDESC = PDESC(4)                                          CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
@@ -495,6 +591,44 @@
                                                                                               CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+     C                   IF        PBefCRSH <> *BLANKS AND                                    CGL177
+     C                             PAftCRSH <> *BLANKS                                        CGL177
+                                                                                              CGL177
+     C                   EVAL      SDCRSHX = PBefCRSH                                         CGL177
+     C                   EVAL      SDCRSHY = PAftCRSH                                         CGL177
+                                                                                              CGL177
+     C                   IF        ( XFACISV <> YFACISV                                       CGL177
+     C                               or XFATXSV <> YFATXSV                                    CGL177
+     C                               or XFACDSV <> YFACDSV                                    CGL177
+     C                               or XFATESV <> YFATESV                                    CGL177
+     C                               or XFAGCSV <> YFAGCSV                                    CGL177
+     C                               or XFACBSV <> YFACBSV                                    CGL177
+     C                               or XFAJASV <> YFAJASV                                    CGL177
+     C                               or XFAHMSV <> YFAHMSV                                    CGL177
+     C                               or XFARPSV <> YFARPSV                                    CGL177
+     C                               or XFAIDSV <> YFAIDSV                                    CGL177
+     C                               or XFAMCSV <> YFAMCSV                                    CGL177
+     C                             )                                                          CGL177
+     C                               and WPRIOR <> 1                                          CGL177
+     C                   EVAL      WPRIOR = 2                                                 CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        WPRIOR = 1                                                 CGL177
+     C                   EVAL      HCDESC = PDESC(1)                                          CGL177
+     C                   EVAL      %SUBST(HCDESC:30:5) = WBCLAS                               CGL177
+     C                   EVAL      %SUBST(HCDESC:41:5) = WACLAS                               CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        WPRIOR = 2                                                 CGL177
+     C                   EVAL      HCDESC = PDESC(2)                                          CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        WPRIOR = 3                                                 CGL177
+     C                   EVAL      HCDESC = PDESC(3)                                          CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
      C                   EVAL      HCINDT = BJRDNB
  
      C**********         WRITE     SDHCIND0                                                 MD027295
@@ -530,6 +664,15 @@
      C                   ENDIF                                                              MD026854
      C                   ENDIF                                                                CGL132
  
+     C                   IF        PBefCRSH = *BLANKS AND                                     CGL177
+     C                             PAftCRSH = *BLANKS                                         CGL177
+     C     PCUST         CHAIN     SDCRSHL1                           9090                    CGL177
+     C                   IF        *IN90 = *OFF                                               CGL177
+     C                   MOVEL     SDCRSH        PBefCRSH                                     CGL177
+     C                   MOVEL     SDCRSH        PAftCRSH                                     CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
      C                   IF        PBefCUXC = *BLANKS AND                                   MD026854
      C                             PAftCUXC = *BLANKS                                       MD026854
      C     PCUST         CHAIN     SDCUSXL1                           9090                  MD026854
@@ -552,6 +695,7 @@
      C                   EVAL      WImage = HDIMAG                                          MD026666
      C                   EXSR      SRUpdateImage                                            MD026666
      C                   WRITE     SDHCIDD0
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ELSE                                                               MD027295
      C                   IF        WWJARC = 'Y'                                             MD027295
      C                   EVAL      *INLR = *ON                                              MD027295
@@ -580,6 +724,7 @@
      C                   EVAL      WImage = HDIMAG                                          MD026666
      C                   EXSR      SRUpdateImage                                            MD026666
      C                   WRITE     SDHCIDD0
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD026854
  
      C**********         IF        PAftACUS <> *BLANKS                             MD026854 MD027295
@@ -603,6 +748,7 @@
      C                   EVAL      WImage = HDIMAG                                          MD026666
      C                   EXSR      SRUpdateImage                                            MD026666
      C                   WRITE     SDHCIDD0                                                   CGL132
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD026854
                                                                                               CGL132
      C**********         IF        PAftFTCS <> *BLANKS                             MD026854 MD027295
@@ -615,6 +761,17 @@
      C**********         ENDIF                                                     MD026854 MD027295
  
      C**********         IF        PBefCUXC <> *BLANKS                             MD026854 MD027295
+     C                   EVAL      KFILE = 'SDCRSHPD'                                         CGL177
+     C                   EVAL      KCustRefNum = *BLANKS                                      CGL177
+     C     KHCIN         CHAIN     SDHCIDL0                                                   CGL177
+     C                   IF        NOT %FOUND(SDHCIDL0) OR                                    CGL177
+     C                             PACRV = 'Y'                                                CGL177
+     C                   EVAL      HDIMAG = PBefCRSH                                          CGL177
+     C                   EVAL      HDFILN = 'SDCRSHPD'                                        CGL177
+     C                   WRITE     SDHCIDD0                                                   CGL177
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
      C                   EVAL      KCUST = HCCUST                                           MD027295
      C                   EVAL      KFILE = 'SDCUSTXC'                                       MD027295
      C                   EVAL      KCustRefNum = *BLANKS                                   MD030161A
@@ -626,6 +783,7 @@
      C**********         EVAL      HDIMGT = 'B'                                    MD026854 MD027295
      C                   EXSR      SRUpdateImage                                            MD026854
      C                   WRITE     SDHCIDD0                                                 MD026854
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD026854
                                                                                             MD026854
      C**********         IF        PAftCUXC <> *BLANKS                             MD026854 MD027295
@@ -686,6 +844,7 @@
      C                                             :PFieldLen  (2))                         MD027295
                                                                                             MD027295
      C                   WRITE     SDHCIDD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD027295
      C                   DOW       *IN80 = '0' AND
      C                             JCCUST = PCUST
@@ -715,6 +874,7 @@
      C                             %SUBST(AftImage :PFieldPosn (2)                          MD027295
      C                                             :PFieldLen  (2))                         MD027295
      C                   WRITE     SDHCIDD0
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
  
      C**********         EVAL      HDIMAG = PAftJACC                                        MD027295
      C**********         EVAL      HDFILN = 'SDJACCPD'                                      MD027295
@@ -743,6 +903,7 @@
      C                             %SUBST(AftImage :PFieldPosn (2)                          MD027295
      C                                             :PFieldLen  (2))                         MD027295
      C                   WRITE     SDHCIDD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD027295
      C                   ENDIF                                                              MD027295
  
@@ -884,6 +1045,8 @@
      C                   EVAL      HLTMST = HCTMST                                          MD027295
      C                   EVAL      HLCDAT = BJRDNB                                         MD027577A
      C                   EVAL      HLINDT = BJRDNB                                          MD027577
+     C                   EVAL      WCRS8 = ' '                                                CGL177
+     C                   EVAL      WCRS10 = ' '                                               CGL177
                                                                                             MD027295
      C                   EVAL      PFileNames = *BLANKS                                     MD027295
      C                   EVAL      FileNameArr(1) = 'SDCUSTPD'                              MD027295
@@ -892,6 +1055,9 @@
      C                   EVAL      FileNameArr(4) = 'SDJACCPD'                              MD027295
      C                   EVAL      FileNameArr(5) = 'SDCUSTXC'                              MD027295
      C                   EVAL      FileNameArr(6) = 'SDCUAHPD'                              MD027295
+     C                   EVAL      FileNameArr(6) = 'SDCRSHPD'                                CGL177
+     C                   EVAL      FileNameArr(7) = 'SDCRSDPD'                                CGL177
+     C                   EVAL      A = 1                                                      CGL177
      C                   EVAL      Index = 1                                                MD027295
      C                   EVAL      Idx = 0                                                  MD027295
                                                                                             MD027295
@@ -918,6 +1084,12 @@
      C                   WHEN      PFilename = 'SDCUAHPD'                                   MD027295
      C                   EVAL      BefImage = PBefCUAH                                      MD027295
      C                   EVAL      AftImage = PAftCUAH                                      MD027295
+     C                   WHEN      PFilename = 'SDCRSHPD'                                     CGL177
+     C                   EVAL      BefImage = PBefCRSH                                        CGL177
+     C                   EVAL      AftImage = PAftCRSH                                        CGL177
+     C                   WHEN      PFilename = 'SDCRSDPD'                                     CGL177
+     C                   EVAL      BefImage = PBefCRSD                                        CGL177
+     C                   EVAL      AftImage = PAftCRSD                                        CGL177
      C                   ENDSL                                                              MD027295
                                                                                             MD027295
      C                   EVAL      Index = Index + 1                                        MD027295
@@ -934,33 +1106,132 @@
                                                                                             MD027295
      C                   EVAL      Idx = 0                                                  MD027295
      C                   EVAL      HLCREF = *BLANKS                                         MD027295
+                                                                                              CGL177
+     C                   IF        PFilename = 'SDCRSDPD'                                     CGL177
+     C                             AND AftImage <> *Blanks                                    CGL177
+     C                   EVAL      KCUST = %SUBST(AftImage:1:6)                               CGL177
+     C                   EVAL      KCustRefNum = %SUBST(AftImage:7:2)                         CGL177
+     C                   EVAL      KFile = 'SDCRSDPD'                                         CGL177
+     C     KHCIN         CHAIN     SDHCIDL0                                                   CGL177
+     C                   IF        NOT %FOUND(SDHCIDL0)                                       CGL177
+     C                   EVAL      HDCREF = %SUBST(AftImage:7:2)                              CGL177
+     C                   EVAL      HDIMAG = *Blanks                                           CGL177
+     C                   EVAL      HDFILN = 'SDCRSDPD'                                        CGL177
+     C                   WRITE     SDHCIDD0                                                   CGL177
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
                                                                                             MD027295
      C                   DO        PFieldsNum                                               MD027295
      C                   EXSR      SRWriteDtl2                                              MD027295
      C                   ENDDO                                                              MD027295
+                                                                                              CGL177
+     C                   IF        PFilename = 'SDCRSDPD'                                     CGL177
+     C                             AND AftImage <> *Blanks                                    CGL177
+     C                   EVAL      A = 230                                                    CGL177
+     C                   EVAL      B = 229                                                    CGL177
+     C                   EVAL      BefImage = %SUBST(BefImage:A:B)                            CGL177
+     C                   EVAL      AftImage = %SUBST(AftImage:A:B)                            CGL177
+     C                   DOW       BefImage <> *BLANKS                                        CGL177
+     C                             OR AftImage <> *BLANKS                                     CGL177
+     C                   EVAL      KCUST = %SUBST(AftImage:1:6)                               CGL177
+     C                   EVAL      KCustRefNum = %SUBST(AftImage:7:2)                         CGL177
+     C                   EVAL      KFile = 'SDCRSDPD'                                         CGL177
+     C     KHCIN         CHAIN     SDHCIDL0                                                   CGL177
+     C                   IF        NOT %FOUND(SDHCIDL0)                                       CGL177
+     C                   EVAL      HDCREF = %SUBST(AftImage:7:2)                              CGL177
+     C                   EVAL      HDIMAG = *Blanks                                           CGL177
+     C                   EVAL      HDFILN = 'SDCRSDPD'                                        CGL177
+     C                   WRITE     SDHCIDD0                                                   CGL177
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
+     C                   ENDIF                                                                CGL177
+     C**********         DOW       BefImage <> *BLANKS                                        CGL177
+     C**********                   OR AftImage <> *BLANKS                                     CGL177
+     C                   EVAL      Idx = 0                                                    CGL177
+     C                   DO        PFieldsNum                                                 CGL177
+     C                   EXSR      SRWriteDtl2                                                CGL177
+     C                   ENDDO                                                                CGL177
+     C                   EVAL      A = A + 229                                                CGL177
+     C                   EVAL      BefImage = %SUBST(BefImage:A:B)                            CGL177
+     C                   EVAL      AftImage = %SUBST(AftImage:A:B)                            CGL177
+     C                   ENDDO                                                                CGL177
+     C                   ENDIF                                                                CGL177
                                                                                             MD027295
      C                   ENDIF                                                              MD027295
      C                   ENDIF                                                              MD027295
                                                                                             MD027295
      C                   ENDDO                                                              MD027295
                                                                                             MD027295
-     C                   IF        WOTHER1 = 'N' AND                                        MD027295
-     C                             WFAINFO = 'Y' AND                                        MD027295
-     C                             HCDESC = PDESC(7)                                        MD027295
-     C                   EVAL      HCDESC = PDESC(8)                                        MD027295
-     C                   EVAL      %SUBST(HCDESC:45:1) = YFAINFC                            MD027295
-     C                   ENDIF                                                              MD027295
+     C**********         IF        WOTHER1 = 'N' AND                                 MD027295 CGL177
+     C**********                   WFAINFO = 'Y' AND                                 MD027295 CGL177
+     C**********                   HCDESC = PDESC(7)                                 MD027295 CGL177
+     C**********         EVAL      HCDESC = PDESC(8)                                 MD027295 CGL177
+     C**********         EVAL      %SUBST(HCDESC:45:1) = YFAINFC                     MD027295 CGL177
+     C**********         ENDIF                                                       MD027295 CGL177
      C                   EVAL      SDFTCSY = PAftFTCS                                       MD029018
+     C                   EVAL      SDCRSHY = PAftCRSH                                         CGL177
+     C                   EVAL      SDCUXC  = PAftCUXC                                       MD041407
      C                   EVAL      HCINFC = YFAINFC                                         MD027513
+     C                   EVAL      HCINF2 = *Blanks                                           CGL177
+     C                   IF        CGL157 = 'Y'                                               CGL177
+     C                   EVAL      HCINF2 = YCRINFO                                           CGL177
+     C                   ENDIF                                                                CGL177
      C                   IF        PACRV = 'Y'                                              MD029018
      C                   EVAL      HCLUSR = USRID                                           MD029018
      C                   ELSE                                                               MD029018
+     C                   IF        PAftCUST <> *BLANKS                                      MD041407
+     C                             AND PAftCUST <> PBefCUST                                 MD041407
+     C                             AND XCLCUS <> *BLANKS                                    MD041407
+     C                   EVAL      HCLUSR = XCLCUS                                          MD041407
+     C                   ELSE                                                               MD041407
+     C                   IF        YFALUSR <> *BLANKS                                       MD041578
      C                   EVAL      HCLUSR = YFALUSR                                         MD029018
+     C                   ELSE                                                               MD041578
+     C                   EVAL      HCLUSR = USRID                                           MD041578
+     C                   ENDIF                                                              MD041578
+     C                   ENDIF                                                              MD041407
      C                   ENDIF                                                              MD029018
      C                   EVAL      HCIEXR = YFAEXMA                                         MD029018
+     C                   IF        HCIEXR = ' '                                               CGL177
+     C                             OR HCIEXR = 'N'                                            CGL177
+     C                   IF        YCREXMG <> ' '                                             CGL177
+     C                   EVAL      HCIEXR = YCREXMG                                           CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        HCIEXR = ' '                                               CGL177
+     C                   EVAL      HCIEXR = 'N'                                               CGL177
+     C                   ENDIF                                                                CGL177
      C                   EVAL      HCCREF = CustRefNum                                     MD030161A
                                                                                            MD030161A
+     C                   IF        HCDESC <> 'Miscellaneous change'                           CGL177
+     C                             OR (CGL157 = 'N' AND WCHK3 = 'Y' AND              CGL177 MD041389
+     C                             HCDESC = 'Miscellaneous change')                  CGL177 MD041389
      C                   WRITE     SDHCIND0                                                 MD027295
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        CGL157 = 'Y'                                               CGL177
+     C                   EVAL      WDCRS = ' '                                                CGL177
+     C                   IF        WCRS10 = 'Y'                                               CGL177
+     C                   EVAL      HCDESC = PDESC(11)                                         CGL177
+     C                   EVAL      WDCRS = 'Y'                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        PELEC = 'Y'                                                CGL177
+     C                             AND (PBefCRSH <> PAftCRSH                                  CGL177
+     C                             OR PBefCRSD <> PAftCRSD)                                   CGL177
+     C                   EVAL      HCDESC = PDESC(10)                                         CGL177
+     C                   EVAL      WDCRS = 'Y'                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        WCRS8 = 'Y'                                                CGL177
+     C                   EVAL      HCDESC = PDESC(9)                                          CGL177
+     C                   EVAL      WDCRS = 'Y'                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        WDCRS = 'Y'                                                CGL177
+     C                             OR (HCDESC = 'Miscellaneous change'                      MD041066
+     C                             AND WCHK3 = 'Y')                                         MD041066
+     C                   WRITE     SDHCIND0                                                   CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
                                                                                             MD027295
      C                   ENDSR                                                              MD027295
                                                                                             MD027295
@@ -979,6 +1250,35 @@
                                                                                             MD027295
      C                   EVAL      Idx = Idx + 1                                            MD027295
                                                                                             MD027295
+     C                   IF        PFieldName (Idx) = 'CDREPT'                                CGL177
+     C                   EVAL      WCHK1  =                                                   CGL177
+     C                             %SUBST(BefImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx))                         CGL177
+     C                   EVAL      WCHK2  =                                                   CGL177
+     C                             %SUBST(AftImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx))                         CGL177
+     C                   IF        (WCHK1 = 'Y'                                               CGL177
+     C                             AND WCHK2 = 'N')                                           CGL177
+     C                             OR (WCHK1 = 'N'                                            CGL177
+     C                             AND WCHK2 = 'Y')                                           CGL177
+     C                   EVAL      WCRS10 = 'Y'                                               CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   IF        PFieldName (Idx) = 'CDCODO'                                CGL177
+     C                             OR PFieldName (Idx) = 'CDJACM'                             CGL177
+     C                             OR PFieldName (Idx) = 'CDMAIL'                             CGL177
+     C                             OR PFieldName (Idx) = 'CDPHON'                             CGL177
+     C                             OR PFieldName (Idx) = 'CDRPAY'                             CGL177
+     C                             OR PFieldName (Idx) = 'CDTINS'                             CGL177
+     C                             OR PFieldName (Idx) = 'CDAUHO'                             CGL177
+     C                   IF        %Subst(BefImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx)) <>                      CGL177
+     C                             %subst(AftImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx))                         CGL177
+     C                   EVAL      WCRS8 = 'Y'                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+     C                                                                                        CGL177
      C                   IF        (%subst(BefImage :PFieldPosn (Idx)                       MD027295
      C                                             :PFieldLen  (Idx)) <>                    MD027295
      C                             %subst(AftImage :PFieldPosn (Idx)                        MD027295
@@ -987,6 +1287,8 @@
      C**********                   PFieldName (Idx) = 'JCCUST'                     MD027295 MD027548
      C                             PFieldName (Idx) = 'JCCUST' OR                           MD027548
      C                             PFieldName (Idx) = 'FALUSR' OR                           MD028949
+     C                             PFieldName (Idx) = 'CDCUST' OR                             CGL177
+     C                             PFieldName (Idx) = 'CDCTRY' OR                             CGL177
      C                             PFieldName (Idx) = 'CACUST' OR                           MD027548
      C                             PFieldName (Idx) = 'CAAUTH'                              MD027548
                                                                                             MD027295
@@ -1048,6 +1350,7 @@
      C                   EVAL      HLINDT = HCINDT                                          MD027295
      C                   EVAL      HLFLDS = 1                                               MD027295
      C                   WRITE     SDHCILD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD027295
                                                                                             MD027295
      C                   ELSE                                                               MD027295
@@ -1064,6 +1367,12 @@
      C                             %SUBST(BefImage :PFieldPosn (Idx)                        MD027310
      C                                             :PFieldLen  (Idx))                       MD027310
      C                   ENDIF                                                              MD027310
+     C                   IF        HCACTN = 'D' AND                                           CGL177
+     C                             PFilename = 'SDCRSDPD'                                     CGL177
+     C                   EVAL      WWIMAG  =                                                  CGL177
+     C                             %SUBST(BefImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx))                         CGL177
+     C                   ENDIF                                                                CGL177
      C                   EVAL      W = 1                                                    MD027295
      C                   EVAL      HLIMAG = *BLANKS                                         MD027295
      C                   EVAL      HLIMAG = %SUBST(WWIMAG:W:10)                             MD027295
@@ -1096,6 +1405,11 @@
      C                             HLFLDN = 'CAAUTH'                                        MD027548
      C                   EVAL      HLCREF = HLIMAG                                          MD027295
      C                   ENDIF                                                              MD027295
+                                                                                              CGL177
+     C                   IF        HLFILN = 'SDCRSDPD' AND                                    CGL177
+     C                             HLFLDN = 'CDCTRY'                                          CGL177
+     C                   EVAL      HLCREF = HLIMAG                                            CGL177
+     C                   ENDIF                                                                CGL177
                                                                                             MD027295
      C**********         IF        HLFLDN = 'JCJANO' AND                           MD027295 MD027310
      C**********                   %subst(BefImage :PFieldPosn (Idx)               MD027295 MD027310
@@ -1121,10 +1435,20 @@
      C                             (HLFLDN = 'CAAUTH' AND                                   MD027548
      C                             %subst(BefImage :PFieldPosn (Idx)                        MD027548
      C                                             :PFieldLen  (Idx)) <>                    MD027548
-     C                             *BLANKS AND HCACTN <> 'D')                               MD027548
+     C**********                   *BLANKS AND HCACTN <> 'D')                        MD027548 CGL177
+     C                             *BLANKS AND HCACTN <> 'D') OR                              CGL177
+     C                             (HLFLDN = 'CDCUST' AND                                     CGL177
+     C                             %subst(BefImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx)) <>                      CGL177
+     C                             *BLANKS AND HCACTN <> 'D') OR                              CGL177
+     C                             (HLFLDN = 'CDCTRY' AND                                     CGL177
+     C                             %subst(BefImage :PFieldPosn (Idx)                          CGL177
+     C                                             :PFieldLen  (Idx)) <>                      CGL177
+     C                             *BLANKS AND HCACTN <> 'D')                                 CGL177
      C                   ELSE                                                               MD027295
      C**********         IF        HLFLDN <> 'JCJANO'                              MD027295 MD027548
      C                   IF        HLFLDN <> 'JCJANO' AND                                   MD027548
+     C                             HLFLDN <> 'CDCUST' AND                                     CGL177
      C                             HLFLDN <> 'CACUST'                                       MD027548
      C**********         IF        HLFLDN <> 'FAINFC'                              MD027295 MD028974
      C                   IF        HLFLDN <> 'FAINFC' AND                                   MD028974
@@ -1145,23 +1469,32 @@
      C                   EVAL      HLFLDS = 1                                               MD027295
      C                   IF        HLFLDN <> 'FALUSR'                                       MD028949
      C                   WRITE     SDHCILD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ELSE                                                               MD028949
      C                   EVAL      WWLLSR = HLIMAG                                          MD028949
      C                   ENDIF                                                              MD028949
      C**********         IF        HLFLDN = 'JCCUST'                               MD027295 MD027548
      C                   IF        HLFLDN = 'JCCUST' OR                                     MD027548
      C                             HLFLDN = 'CAAUTH'                                        MD027548
+     C                             OR HLFLDN = 'CDCTRY'                                       CGL177
      C                   EVAL      HLIMAG = WSTORE1                                         MD027295
-     C                   IF        HCACTN = 'D' AND                                         MD027310
+     C**********         IF        HCACTN = 'D' AND                                  MD027310 CGL177
      C**********                   PFilename = 'SDJACCPD'                          MD027310 MD027548
-     C                             PFilename = 'SDJACCPD' OR                                MD027548
-     C                             HCACTN = 'D' AND                                         MD027548
-     C                             PFilename = 'SDCUAHPD'                                   MD027548
+     C**********                   PFilename = 'SDJACCPD' OR                         MD027548 CGL177
+     C**********                   HCACTN = 'D' AND                                  MD027548 CGL177
+     C**********                   PFilename = 'SDCUAHPD'                            MD027548 CGL177
+     C                   IF        (HCACTN = 'D' AND                                          CGL177
+     C                             PFilename = 'SDJACCPD')                                    CGL177
+     C                             OR (HCACTN = 'D' AND                                       CGL177
+     C                             PFilename = 'SDCRSDPD')                                    CGL177
+     C                             OR (HCACTN = 'D' AND                                       CGL177
+     C                             PFilename = 'SDCUAHPD')                                    CGL177
      C                   EVAL      HLIMAG = *BLANKS                                         MD027310
      C                   ENDIF                                                              MD027310
      C                   EVAL      HLFLDN = WSTORE2                                         MD027295
      C                   EVAL      HLFLDS = 1                                               MD027295
      C                   WRITE     SDHCILD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   ENDIF                                                              MD027295
      C                   ELSE                                                               MD027295
      C                   EVAL      WSTORE1 = HLIMAG                                         MD027295
@@ -1176,6 +1509,7 @@
      C                   DOW       HLIMAG <> *BLANKS                                        MD027295
      C                   EVAL      HLFLDS = HLFLDS + 1                                      MD027295
      C                   WRITE     SDHCILD0                                                 MD027295
+     C                   EVAL      WCHK3 = 'Y'                                              MD041066
      C                   EVAL      W = W + 10                                               MD027295
      C                   EVAL      WWIMAG2 = *BLANKS                                        MD027295
      C                   EVAL      WWIMAG2 = %SUBST(WWIMAG:W:10)                            MD027295
@@ -1245,6 +1579,18 @@
      C                   EVAL      PFieldsNum = SdcuxcFNum                                  MD026854
      C                   EVAL      NFieldPosn = SdcuxcPosnB                                 MD026854
      C                   EVAL      NFieldLen = SdcuxcLenB                                   MD026854
+                                                                                              CGL177
+     C                   WHEN      HDFILN = 'SDCRSHPD'                                        CGL177
+     C                   EVAL      PFieldsDesc = SdcrshpdArr                                  CGL177
+     C                   EVAL      PFieldsNum = SdcrshFNum                                    CGL177
+     C                   EVAL      NFieldPosn = SdcrshPosnB                                   CGL177
+     C                   EVAL      NFieldLen = SdcrshLenB                                     CGL177
+                                                                                              CGL177
+     C                   WHEN      HDFILN = 'SDCRSDPD'                                        CGL177
+     C                   EVAL      PFieldsDesc = SdcrsdpdArr                                  CGL177
+     C                   EVAL      PFieldsNum = SdcrsdFNum                                    CGL177
+     C                   EVAL      NFieldPosn = SdcrsdPosnB                                   CGL177
+     C                   EVAL      NFieldLen = SdcrsdLenB                                     CGL177
      C                   ENDSL                                                              MD026666
      C                                                                                      MD026666
      C                   DO        PFieldsNum                                               MD026666
@@ -1317,6 +1663,10 @@
      C                   PARM                    PAftCUXC                                   MD026854
      C                   PARM                    PACRV
      C                   PARM                    PELEC                                        CGL132
+     C                   PARM                    PBefCRSH                                     CGL177
+     C                   PARM                    PAftCRSH                                     CGL177
+     C                   PARM                    PBefCRSD                                     CGL177
+     C                   PARM                    PAftCRSD                                     CGL177
                                                                                             MD027295
      C     KHCIN         KLIST                                                              MD027295
      C                   KFLD                    KCUST                                      MD027295
@@ -1349,6 +1699,8 @@
      C                   EVAL      FileNameArr(4) = 'SDJACCPD'                              MD026666
      C                   EVAL      FileNameArr(5) = 'SDCUAHPD'                              MD026666
      C                   EVAL      FileNameArr(6) = 'SDCUSTXC'                              MD026854
+     C                   EVAL      FileNameArr(7) = 'SDCRSHPD'                                CGL177
+     C                   EVAL      FileNameArr(8) = 'SDCRSDPD'                                CGL177
      C                   EVAL      Index = 1                                                MD026666
                                                                                             MD026666
      C                   DOW       FileNameArr (Index) <> *BLANKS and                       MD026666
@@ -1418,6 +1770,18 @@
      C                   EVAL      SdcuxcFNum  =  PFieldsNum                                MD026854
      C                   EVAL      SdcuxcPosnB =  NFieldPosn                                MD026854
      C                   EVAL      SdcuxcLenB  =  NFieldLen                                 MD026854
+                                                                                              CGL177
+     C                   WHEN      PFilename = 'SDCRSHPD'                                     CGL177
+     C                   EVAL      SdcrshpdArr =  PFieldsDesc                                 CGL177
+     C                   EVAL      SdcrshFNum  =  PFieldsNum                                  CGL177
+     C                   EVAL      SdcrshPosnB =  NFieldPosn                                  CGL177
+     C                   EVAL      SdcrshLenB  =  NFieldLen                                   CGL177
+                                                                                              CGL177
+     C                   WHEN      PFilename = 'SDCRSDPD'                                     CGL177
+     C                   EVAL      SdcrsdpdArr =  PFieldsDesc                                 CGL177
+     C                   EVAL      SdcrsdFNum  =  PFieldsNum                                  CGL177
+     C                   EVAL      SdcrsdPosnB =  NFieldPosn                                  CGL177
+     C                   EVAL      SdcrsdLenB  =  NFieldLen                                   CGL177
                                                                                             MD026854
      C                   ENDSL                                                              MD026666
                                                                                             MD026666
@@ -1427,6 +1791,28 @@
                                                                                             MD026666
      C                   ENDDO                                                              MD026666
  
+      ** Check whether CGL157 is available                                                    CGL177
+     C                   CALL      'AOSARDR0'                                                 CGL177
+     C                   PARM      *Blanks       PRtcd                                        CGL177
+     C                   PARM      '*VERIFY'     POptn                                        CGL177
+     C                   PARM      'CGL157'      PSard                                        CGL177
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL177
+                                                                                              CGL177
+     C                   IF        PRtcd <> *Blanks                                           CGL177
+     C                   IF        PRtcd <> '*NRF'                                            CGL177
+     C     *LOCK         IN        LDA                                                        CGL177
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL177
+     C                   EVAL      DBKEY  = PSard                                             CGL177
+     C                   EVAL      DBASE  = 3                                                 CGL177
+     C                   EVAL      DBPGM = 'SD009696'                                         CGL177
+     C                   OUT       LDA                                                        CGL177
+     C                   EXSR      *PSSR                                                      CGL177
+     C                   ENDIF                                                                CGL177
+     C                   EVAL      CGL157 = 'N'                                               CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      CGL157 = 'Y'                                               CGL177
+     C                   ENDIF                                                                CGL177
+
      C                   ENDSR
  
       *****************************************************************
@@ -1464,3 +1850,6 @@ Account review
 Joint Account list changed
 Miscellaneous change
 FATCA Information Complete flag changed to 'x'
+CRS indicia changed
+CRS indicia electronic search
+CRS Subject to Reporting Change

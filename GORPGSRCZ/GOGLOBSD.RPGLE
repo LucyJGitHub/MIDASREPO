@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER073A            Date 05Sep17               *
+      *  Last Amend No. MD050231           Date 25Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
       *                 CGL052             Date 02Dec15               *
       *                 CGL165             Date 23Feb15               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050231 - Failed global replication process during switchon *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
       *  CER073 - AnaCredit Reporting                                 *
@@ -332,6 +334,9 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDMTRXTD  '  GLOB_SDMTRXTD                                CLE164
      C     PFLNAME       CASEQ     'SDBRCHX0  '  GLOB_SDBRCHX0                                CGL052
      C     PFLNAME       CASEQ     'SDANACQD  '  GLOB_SDANACQD                                CER073
+     C     PFLNAME       CASEQ     'SDCRSDPD  '  GLOB_SDCRSDPD                              MD050231
+     C     PFLNAME       CASEQ     'SDCRSHPD  '  GLOB_SDCRSHPD                              MD050231
+     C     PFLNAME       CASEQ     'SDCTTXPD  '  GLOB_SDCTTXPD                              MD050231
      C                   ENDCS
      C                   ENDIF
 
@@ -1090,6 +1095,30 @@ O                                                                               
      C     GLOB_SDANACQD BEGSR                                                                CER073
       /COPY GPCPYSRCG,GPSDANACQD                                                              CER073
      C                   ENDSR                                                                CER073
+      *****************************************************************                     MD050231
+      /SPACE 5                                                                              MD050231
+      *****************************************************************                     MD050231
+      * Global Updates - CRS Customer Details                                               MD050231
+      *****************************************************************                     MD050231
+     C     GLOB_SDCRSDPD BEGSR                                                              MD050231
+      /COPY GPCPYSRCG,GPSDCRSDPD                                                            MD050231
+     C                   ENDSR                                                              MD050231
+      *****************************************************************                     MD050231
+      /SPACE 5                                                                              MD050231
+      *****************************************************************                     MD050231
+      * Global Updates - CRS Customer Details                                               MD050231
+      *****************************************************************                     MD050231
+     C     GLOB_SDCRSHPD BEGSR                                                              MD050231
+      /COPY GPCPYSRCG,GPSDCRSHPD                                                            MD050231
+     C                   ENDSR                                                              MD050231
+      *****************************************************************                     MD050231
+      /SPACE 5                                                                              MD050231
+      *****************************************************************                     MD050231
+      * Global Updates - Country of Tax Code                                                MD050231
+      *****************************************************************                     MD050231
+     C     GLOB_SDCTTXPD BEGSR                                                              MD050231
+      /COPY GPCPYSRCG,GPSDCTTXPD                                                            MD050231
+     C                   ENDSR                                                              MD050231
       *****************************************************************                       CGL155
       /SPACE 5                                                                                CGL155
       *****************************************************************

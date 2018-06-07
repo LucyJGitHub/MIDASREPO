@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR689705           Date 03Jan11               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
@@ -589,11 +592,13 @@
      C                   PARM      'SEITRSMPD'   InvFile1
      C                   PARM                    InvFile2
      C                   PARM                    InvFile3
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
       *
       ** Invalid file data
      C                   PARM      InvTr         InvFDta1
      C                   PARM                    InvFDta2
      C                   PARM                    InvFDta3
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
       *
       ** OUTPUT
       ** ======

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
       *                 BUG23146           Date 25Mar09               *
       *                 BUG23587           Date 26Mar09               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER054 - German Features - Church Tax                        *
@@ -198,6 +200,7 @@
       *                                                                                       CER048
      D CER048          S              1                                                       CER048
      D CER054          S              1                                                       CER054
+     D CGL157          S              1                                                       CGL177
  
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
@@ -524,6 +527,34 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
+                                                                                              CGL177
+     C                   IF        CGL157 ='Y'                                                CGL177
+                                                                                              CGL177
+      ** CRS Agreement                                                                        CGL177
+                                                                                              CGL177
+     C                   EVAL      RCRSA = EWCRSA                                             CGL177
+                                                                                              CGL177
+      ** First Reporting Year                                                                 CGL177
+                                                                                              CGL177
+     C                   EVAL      RFRYR = EWFRYR                                             CGL177
+                                                                                              CGL177
+      ** Effective Date                                                                       CGL177
+                                                                                              CGL177
+     C                   EVAL      ZDayNo = EWEFDT                                            CGL177
+     C                   CALLB     'ZDATE2'                                                   CGL177
+     C                   PARM                    ZDayNo                                       CGL177
+     C                   PARM                    BJDFIN                                       CGL177
+     C                   PARM      *Zero         ZDate                                        CGL177
+     C                   PARM      *BLanks       ZADate                                       CGL177
+                                                                                              CGL177
+     C                   MOVE      ZADate        REFDT                                        CGL177
+                                                                                              CGL177
+      ** Reporting Date                                                                       CGL177
+                                                                                              CGL177
+     C                   EVAL      RRPDT = EWRPDT                                             CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
  
       ** Write Detail
  
@@ -748,6 +779,30 @@
      C                   OUT       LDA                                                        CER054
      C                   EXSR      *PSSR                                                      CER054
      C                   ENDIF                                                                CER054
+                                                                                              CGL177
+      ** Check if enhancement CGL157 (CRS Reporting) is on                                    CGL177
+                                                                                              CGL177
+     C                   CALLB     'AOSARDR0'                                                 CGL177
+     C                   PARM      *BLANKS       PRTCD                                        CGL177
+     C                   PARM      '*VERIFY'     POPTN                                        CGL177
+     C                   PARM      'CGL157'      PSARD                                        CGL177
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL177
+                                                                                              CGL177
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                  CGL177
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL177
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL177
+     C                   EVAL      DBASE  = 4                                                 CGL177
+     C                   EXSR      *PSSR                                                      CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+     C                   IF        PRTCD = *BLANKS                                            CGL177
+     C                   EVAL      CGL157 = 'Y'                                               CGL177
+     C                   EVAL      *IN39 = '1'                                                CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      CGL157 = 'N'                                               CGL177
+     C                   EVAL      *IN39 = '0'                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
  
      C                   ENDSR
  

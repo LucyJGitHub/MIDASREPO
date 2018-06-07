@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD035388           Date 20Oct15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035388 - FATCA Screen order rework                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -92,6 +94,13 @@
      C                   Z-ADD     0             WIx
      C                   MOVE      'Y'           DDHVACOK
  
+     C                   IF        DDACTI = 'I'                                             MD035388
+     C                             AND DDHVACO = *BLANK                                     MD035388
+     C                             AND DDHVAC = *BLANK                                      MD035388
+     C                             AND C_DDHVAL <> *BLANK                                   MD035388
+     C                   EVAL      DDHVAC = C_DDHVAL                                        MD035388
+     C                   ENDIF                                                              MD035388
+                                                                                            MD035388
      C                   IF        DDHVAC <> ' ' AND
      C                             DDHVAC <> 'L' AND
      C                             DDHVAC <> 'M' AND
@@ -161,12 +170,18 @@
       ** Return Code
      C                   PARM                    ReturnCode
  
+      ** High Value Account - Original                                                      MD035388
+     C                   PARM                    DDACTI            1                        MD035388
+                                                                                            MD035388
       ** High Value Account - Original
      C                   PARM                    DDHVACO           1
  
       ** High Value Account
      C                   PARM                    DDHVAC            1
  
+      ** CRS High Value Account                                                             MD035388
+     C                   PARM                    C_DDHVAL          1                        MD035388
+                                                                                            MD035388
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr

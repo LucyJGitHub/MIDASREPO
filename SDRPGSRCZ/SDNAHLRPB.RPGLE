@@ -15,8 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD040876           Date 26Aug16               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL132             Date 01May13               *
       *                 AR689705           Date 03Jan11               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -31,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
+      *  MD040876 - CRS MQ                                            *
+      *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -60,6 +67,22 @@
      FSDINAHLL1 UF   E           K DISK    Infsr(*PSSR)
      F                                     Commit
      FSDIFTNHL0 IF   E           K DISK    Infsr(*PSSR)                                       CGL132
+     F                                     Rename(SDIFTNHD0:SDIFTNHX0)                      MD040876
+                                                                                            MD040876
+     FSDIFTNHL1 UF   E           K DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
+                                                                                            MD040876
+     FSDICRNHL0 IF   E           K DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Rename(SDICRNHD0:SDICRNHX0)                      MD040876
+                                                                                            MD040876
+     FSDICRNHL1 UF   E           K DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
+                                                                                            MD040876
+     FSDICRSNL0 IF   E           K DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Rename(SDICRSND0:SDICRSNX0)                      MD040876
+                                                                                            MD040876
+     FSDICRSNL1 UF   E           K DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
  
       ** API Invalid Log File from Support Database
  
@@ -126,6 +149,8 @@
  
      D InvCd         E DS                  Extname(SDINAHLPD)
      D InvFt         E DS                  Extname(SDIFTNHPD)                                 CGL132
+     D InvCrs        E DS                  Extname(SDICRNHPD)                               MD040876
+     D InvCrc        E DS                  Extname(SDICRSNPD)                               MD040876
  
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
@@ -221,6 +246,7 @@
      D PRTCD           S              7
      D POPTN           S              7
      D PSard           S              6    INZ(*Blanks)                                       CGL132
+     D CGL157          S              1A                                                    MD040876
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -481,8 +507,14 @@
      C     ZATRNKX0      CHAIN     SDINAHLX0                          99
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   CLEAR                   InvFt                                        CGL132
-     C     ZATRNKX0      CHAIN     SDIFTNHD0                          99                      CGL132
+     C*****ZATRNKX0      CHAIN     SDIFTNHD0                          99             CGL132 MD040876
+     C     ZATRNKD0      CHAIN     SDIFTNHD0                          99                    MD040876
      C                   ENDIF                                                                CGL132
+                                                                                            MD040876
+     C                   CLEAR                   InvCrs                                     MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C     ZATRNKD0      CHAIN     SDICRNHD0                          99                    MD040876
+     C                   ENDIF                                                              MD040876
  
      C                   CALLB     'ZAINVTRENQ'
       **                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -503,11 +535,15 @@
      C                   PARM      'SDINAHLPD'   InvFile1
      C**********         PARM      *Blanks       InvFile2                                     CGL132
      C                   PARM      'SDIFTNHPD'   InvFile2                                     CGL132
-     C                   PARM      *Blanks       InvFile3
+     C**********         PARM      *Blanks       InvFile3                                   MD040876
+     C                   PARM      'SDICRNHPD'   InvFile3                                   MD040876
+     C                   PARM      'SDICRSNPD'   InvFile4         10                        MD041294
      C                   PARM      InvCd         InvFDta1
      C**********         PARM      *Blanks       InvFDta2                                     CGL132
      C                   PARM      InvFt         InvFDta2                                     CGL132
-     C                   PARM      *Blanks       InvFDta3
+     C**********         PARM      *Blanks       InvFDta3                                   MD040876
+     C                   PARM      InvCrs        InvFDta3                                   MD040876
+     C                   PARM      InvCrc        InvFDta4       4000                        MD041294
  
       ** OUTPUTS :
       ** Function Keys
@@ -591,6 +627,49 @@
      C                   PARM      'SDINAHLPD'   FileName
      C                   DELETE    SDINAHLD0
      C                   ENDIF
+                                                                                            MD040876
+     C                   IF        CGL132 = 'Y'                                             MD040876
+     C     ZATRNKD0      CHAIN     SDIFTNHD0                          99                    MD040876
+     C                   IF        *In99 = *Off                                             MD040876
+     C                   MOVE      'D'           DDACTN                                     MD040876
+     C                   MOVEL     *BLANKS       EntryData                                  MD040876
+     C                   MOVEL     *BLANKS       FileName                                   MD040876
+     C                   CALL      'RPC1600'                                                MD040876
+     C                   PARM      InvFt         EntryData                                  MD040876
+     C                   PARM      'SDIFTNHPD'   FileName                                   MD040876
+     C                   DELETE    SDIFTNHD0                                                MD040876
+     C                   ENDIF                                                              MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C     ZATRNKD0      CHAIN     SDICRNHD0                          99                    MD040876
+     C                   IF        *In99 = *Off                                             MD040876
+     C                   MOVE      'D'           DDACTN                                     MD040876
+     C                   MOVEL     *BLANKS       EntryData                                  MD040876
+     C                   MOVEL     *BLANKS       FileName                                   MD040876
+     C                   CALL      'RPC1600'                                                MD040876
+     C                   PARM      InvCrs        EntryData                                  MD040876
+     C                   PARM      'SDICRNHPD'   FileName                                   MD040876
+     C                   DELETE    SDICRNHD0                                                MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C*****ZATRNKX0      SETLL     SDICRSNL0                                       MD040876 MD041294
+     C*****ZATRNKX0      READE     SDICRSNL0                                       MD040876 MD041294
+     C     DDNAHO        SETLL     SDICRSNL0                                                MD041294
+     C     DDNAHO        READE     SDICRSNL0                                                MD041294
+     C                   DOW       %FOUND(SDICRSNL0)                                        MD040876
+     C                             AND DDNAHO = DDNAHD                                      MD040876
+     C                   MOVE      'D'           DDACTN                                     MD040876
+     C                   MOVEL     *BLANKS       EntryData                                  MD040876
+     C                   MOVEL     *BLANKS       FileName                                   MD040876
+     C                   CALL      'RPC1600'                                                MD040876
+     C                   PARM      InvCrc        EntryData                                  MD040876
+     C                   PARM      'SDICRSNPD'   FileName                                   MD040876
+     C                   DELETE    SDICRSND0                                                MD040876
+     C*****ZATRNKX0      READE     SDICRSNL0                                                MD040876
+     C     DDNAHO        READE     SDICRSNL0                                                MD041294
+     C                   ENDDO                                                              MD040876
+     C                   ENDIF                                                              MD040876
  
  
       ** Delete invalid record from the log file.
@@ -787,6 +866,30 @@
      C                   ELSE                                                                 CGL132
      C                   MOVEL     'N'           CGL132                                       CGL132
      C                   ENDIF                                                                CGL132
+                                                                                            MD040876
+      ** Check if CRS is switched on                                                        MD040876
+                                                                                            MD040876
+     C                   CALLB     'AOSARDR0'                                               MD040876
+     C                   PARM      *BLANKS       Prtcd                                      MD040876
+     C                   PARM      '*VERIFY'     Poptn                                      MD040876
+     C                   PARM      'CGL157'      PSard                                      MD040876
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD040876
+                                                                                            MD040876
+      ** Database error                                                                     MD040876
+                                                                                            MD040876
+     C     @RTCD         IFNE      *BLANKS                                                  MD040876
+     C     @RTCD         ANDNE     '*NRF   '                                                MD040876
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD040876
+     C                   MOVEL     '909'         DBASE                                      MD040876
+     C                   MOVEL     'CGL157'      DBKEY                                      MD040876
+     C                   EXSR      *PSSR                                                    MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C     @RTCD         IFEQ      *BLANK                                                   MD040876
+     C                   MOVEL     'Y'           CGL157                                     MD040876
+     C                   ELSE                                                               MD040876
+     C                   MOVEL     'N'           CGL157                                     MD040876
+     C                   ENDIF                                                              MD040876
  
       ** Key Lists
  

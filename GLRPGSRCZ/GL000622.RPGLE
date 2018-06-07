@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045218           Date 17Apr17               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. CGL157             Date 15Jan16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD045218           Date 17Apr17               *
       *                 MD044423           Date 01Mar17               *
       *                 MD043973           Date 03Feb17               *
       *                 MD043635           Date 18Jan17               *
@@ -22,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045218 - Account Review is not displayed in listview       *
       *  MD044423 - FATCA Classification Date is not updated when     *
@@ -47,6 +51,24 @@
       ** Midas SD FATCA Non Account Holder
      FSDFTNHL7  UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(B_)
+                                                                                              CGL157
+      ** Midas SD CRS Customers                                                               CGL157
+     FSDCRSHL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
+     F                                     PREFIX(C_)                                         CGL157
+                                                                                              CGL157
+      ** Midas SD CRS Customers                                                               CGL157
+     FSDCRSHL1  UF   E           K DISK    INFSR(*PSSR)                                       CGL157
+     F                                     PREFIX(E_)                                         CGL157
+     F                                     RENAME(SDCRSHD0:SDCRSHD1)                          CGL157
+                                                                                              CGL157
+      ** Midas SD CRS Non Account Holder                                                      CGL157
+     FSDCRNHL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
+     F                                     PREFIX(D_)                                         CGL157
+                                                                                              CGL157
+      ** Midas SD CRS Non Account Holder                                                      CGL157
+     FSDCRNHL1  UF   E           K DISK    INFSR(*PSSR)                                       CGL157
+     F                                     PREFIX(G_)                                         CGL157
+     F                                     RENAME(SDCRNHD0:SDCRNHD1)                          CGL157
  
       ** Midas SD Joint Account Member
      FSDJACCL4  IF   E           K DISK    INFSR(*PSSR)
@@ -70,6 +92,11 @@
      FGL000622P1O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
      F                                     USROPN
+                                                                                              CGL157
+      ** Midas SD CRS High Value Account Review Report                                        CGL157
+     FGL000622P2O    E             PRINTER INFSR(*PSSR)                                       CGL157
+     F                                     INFDS(SPOOL2)                                      CGL157
+     F                                     USROPN                                             CGL157
  
       ** Midas SD FATCA High Value Account Review Report Audit
      FGL000622AUO    E             PRINTER INFSR(*PSSR)
@@ -91,6 +118,14 @@
      D SysVal4         C                   'FATCALowValAccEntity'
       ** System value Account Review Default Frequency
      D SysVal5         C                   'AcRevDftFreq'
+      ** System value High Value Currency                                                     CGL157
+     D SysVal6         C                   'CRSHighValCCY'                                    CGL157
+      ** System value High Value Account (Entity)                                             CGL157
+     D SysVal7         C                   'CRSLowValAmount'                                  CGL157
+      ** System value High Value Account (Individual)                                         CGL157
+     D SysVal8         C                   'CRSHighValAmtInd'                                 CGL157
+      ** System value Low Value Amount                                                        CGL157
+     D SysVal9         C                   'CRSHighValAmtEnt'                                 CGL157
  
       *****************************************************************
       *
@@ -136,6 +171,9 @@
  
       ** External DS Based On SCSARDPD
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
+                                                                                              CGL177
+      ** External data structure for SVAL                                                     CGL177
+     D SDCRSH        E DS                  EXTNAME(SDCRSHPD)                                  CGL177
  
      D DSFDY         E DS                  EXTNAME(DSFDY)
  
@@ -164,6 +202,12 @@
      D  Sfnum                123    124B 0
      D  Oflln1               188    189B 0
      D  Prtln1               367    368B 0
+                                                                                              CGL157
+     D Spool2          DS                                                                     CGL157
+     D  Sfile2                83     92                                                       CGL157
+     D  Sfnum2               123    124B 0                                                    CGL157
+     D  Oflln2               188    189B 0                                                    CGL157
+     D  Prtln2               367    368B 0                                                    CGL157
  
      D SpoolU          DS
      D  SfileU                83     92
@@ -180,13 +224,13 @@
      D SValK5          S             20A
      D SVal5           S            200A
      D SValK6          S             20A
-     D SVal6           S            200A
+     D*SVal6****       S            200A                                                      CGL157
      D SValK7          S             20A
-     D SVal7           S            200A
+     D*SVal7****       S            200A                                                      CGL157
      D SValK8          S             20A
-     D SVal8           S            200A
+     D*SVal8****       S            200A                                                      CGL157
      D SValK9          S             20A
-     D SVal9           S            200A
+     D*SVal9****       S            200A                                                      CGL157
      D SValK0          S             20A
      D SVal10          S            200A
  
@@ -200,6 +244,15 @@
      D  SVal313                1     13A
      D SVal4           DS           200
      D  SVal413                1     13A
+                                                                                              CGL157
+     D SVal6           DS           200                                                       CGL157
+     D  SVal63                 1      3A                                                      CGL157
+     D SVal7           DS           200                                                       CGL157
+     D  SVal713                1     13A                                                      CGL157
+     D SVal8           DS           200                                                       CGL157
+     D  SVal813                1     13A                                                      CGL157
+     D SVal9           DS           200                                                       CGL157
+     D  SVal913                1     13A                                                      CGL157
  
      D ZHOLDS          DS
  
@@ -258,6 +311,10 @@
      D PAftCUAH        S           5000A                                                    MD043635
      D Pacrv           S              1A
      D Pelec           S              1A
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
  
       ** Parameters for ZCONVZ1
  
@@ -317,6 +374,9 @@
      D LowValInd       S             13P 0
      D LowValEnt       S             13P 0
      D HighValue       S             13P 0
+     D HighValId2      S             13P 0                                                    CGL157
+     D HighValEt2      S             13P 0                                                    CGL157
+     D LowVale2        S             13P 0                                                    CGL157
      D Zfld15          S             15P 0
      D Zdecs           S              1P 0
      D Zecode          S              1A
@@ -325,6 +385,10 @@
      D Plowe           S             18A
      D Phigt           S             18A
      D Phvcy           S              3A
+     D Phii2           S             18A                                                      CGL157
+     D Phie2           S             18A                                                      CGL157
+     D Plot2           S             18A                                                      CGL157
+     D Phvy2           S              3A                                                      CGL157
      D WHvAM           S             15P 0
      D Wwpsta          S             15P 0
      D Wwcsty          S              1A
@@ -349,6 +413,10 @@
      D WWYy            S              2A
      D WWYy1           S              2S 0
      D WWACRF          S              1A
+     D CGL154          S              1A                                                      CGL157
+     D CGL177          S              1A                                                      CGL157
+     D WProc154        S              1A                                                      CGL157
+     D WProc157        S              1A                                                      CGL157
  
       ** ZSFILE Parameters
  
@@ -359,6 +427,8 @@
  
      D Difln1          S              2  0
      D Rqdln1          S              2  0
+     D Difln2          S              2  0                                                    CGL157
+     D Rqdln2          S              2  0                                                    CGL157
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -392,6 +462,9 @@
  
      C     SrCustomer    BEGSR
  
+     C                   EVAL      WProc154 = ' '                                             CGL157
+     C                   EVAL      WProc157 = ' '                                             CGL157
+     C                   IF        CGL154 = 'Y'                                               CGL157
      C     *LOVAL        SETLL     SDFTCSL7
      C                   READ      SDFTCSL7
  
@@ -405,6 +478,7 @@
      C                   EVAL      Wwcsty = A_FACSTY
      C                   EVAL      Wwclac = A_FACLAC
      C                   EVAL      Wwhvac = A_FAHVAC
+     C                   EVAL      WProc154 = 'Y'                                             CGL157
  
      C                   EXSR      SrCompute
  
@@ -445,6 +519,7 @@
       ** Log changes to history of customer information
  
      C                   IF        CSD092 = 'Y'
+     C                   IF        CGL177 = 'N'                                               CGL177
      C                   CALL      'SD009696'
      C                   PARM      A_FACUST      Pcust
      C                   PARM      *BLANKS       PBefCUST
@@ -461,6 +536,11 @@
      C                   PARM      *BLANKS       PAftCUXC
      C                   PARM      *BLANKS       Pacrv
      C                   PARM      *BLANKS       Pelec
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C                   ENDIF                                                                CGL177
  
       ** Generate an account review if the high value indicator is
       ** changed to high
@@ -556,6 +636,190 @@
      C                   READ      SDFTCSL7
  
      C                   ENDDO
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                   EVAL      WProc154 = ' '                                             CGL157
+     C     *LOVAL        SETLL     SDCRSHL1                                                   CGL157
+     C                   READ      SDCRSHL1                                                   CGL157
+                                                                                              CGL157
+      ** Read until a record is not found                                                     CGL157
+                                                                                              CGL157
+     C                   DOW       NOT %EOF(SDCRSHL1)                                         CGL157
+     C                   IF        E_CRTYPE <> 'F'                                            CGL157
+     C                             AND E_CRTYPE <> ' '                                        CGL157
+     C                             AND E_CRHVAL <> 'N'                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      PBefCRSH = SDCRSH                                          CGL177
+     C                   EVAL      Kcust = E_CRCUST                                           CGL157
+     C                   EVAL      WHvAM = 0                                                  CGL157
+     C***********        EVAL      B_FTCSD = A_FTCSD                                          CGL157
+     C                   EVAL      Wwcsty = E_CRTYPE                                          CGL157
+     C                   EVAL      Wwhvac = E_CRHVAL                                          CGL157
+     C                   EVAL      Wwclac = *Blanks                                           CGL157
+     C                   EVAL      WProc157 = 'Y'                                             CGL157
+                                                                                              CGL157
+     C                   EXSR      SrCompute                                                  CGL157
+                                                                                              CGL157
+     C     Kcust         SETLL     SDJACCL4                                                   CGL157
+     C     Kcust         READE     SDJACCL4                                                   CGL157
+                                                                                              CGL157
+     C                   DOW       NOT %EOF(SDJACCL4)                                         CGL157
+                                                                                              CGL157
+     C     J_JCJANO      CHAIN     SDCRSHL0                                                   CGL157
+     C                   IF        %FOUND(SDCRSHL0) AND                                       CGL157
+     C                             C_CRTYPE = 'J' AND                                         CGL157
+     C                             C_CRHVAL <> 'N'                                            CGL157
+     C                   EVAL      Kcust = J_JCJANO                                           CGL157
+     C**********         EVAL      A_FTCSD = B_FTCSD                                          CGL157
+     C                   EXSR      SrCompute                                                  CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C     Kcust         READE     SDJACCL4                                                   CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+      ** Print details of CRS customer                                                        CGL157
+                                                                                              CGL157
+     C                   IF        E_CRHVAL <> X2HVIN                                         CGL157
+     C                   EXSR      SRCustDt2                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      E_CRHVAL = X2HVIN                                          CGL157
+                                                                                              CGL157
+     C                   UPDATE    SDCRSHD1                                                   CGL157
+     C                   EVAL      PAftCRSH = SDCRSH                                          CGL177
+     C                   IF        CSD092 = 'Y'                                               CGL177
+                                                                                              CGL177
+      ** Log changes to history of customer information                                       CGL177
+                                                                                              CGL177
+     C                   IF        CGL154 = 'Y'                                               CGL177
+     C                   CALL      'SD009696'                                                 CGL177
+     C                   PARM      A_FACUST      Pcust                                        CGL177
+     C                   PARM      *BLANKS       PBefCUST                                     CGL177
+     C                   PARM      *BLANKS       PAftCUST                                     CGL177
+     C                   PARM      *BLANKS       PBefACUS                                     CGL177
+     C                   PARM      *BLANKS       PAftACUS                                     CGL177
+     C                   PARM      B_FTCSD       PBefFTCS                                     CGL177
+     C                   PARM      A_FTCSD       PAftFTCS                                     CGL177
+     C                   PARM      *BLANKS       PBefJACC                                     CGL177
+     C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL177
+     C                   PARM      *BLANKS       PAftCUXC                                     CGL177
+     C                   PARM      *BLANKS       Pacrv                                        CGL177
+     C                   PARM      *BLANKS       Pelec                                        CGL177
+     C                   PARM                    PBefCRSH                                     CGL177
+     C                   PARM                    PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C                   ELSE                                                                 CGL177
+     C                   CALL      'SD009696'                                                 CGL177
+     C                   PARM      E_CRCUST      Pcust                                        CGL177
+     C                   PARM      *BLANKS       PBefCUST                                     CGL177
+     C                   PARM      *BLANKS       PAftCUST                                     CGL177
+     C                   PARM      *BLANKS       PBefACUS                                     CGL177
+     C                   PARM      *BLANKS       PAftACUS                                     CGL177
+     C                   PARM      *BLANKS       PBefFTCS                                     CGL177
+     C                   PARM      *BLANKS       PAftFTCS                                     CGL177
+     C                   PARM      *BLANKS       PBefJACC                                     CGL177
+     C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUXC                                     CGL177
+     C                   PARM      *BLANKS       PAftCUXC                                     CGL177
+     C                   PARM      *BLANKS       Pacrv                                        CGL177
+     C                   PARM      *BLANKS       Pelec                                        CGL177
+     C                   PARM                    PBefCRSH                                     CGL177
+     C                   PARM                    PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** Generate an account review if the high value indicator is                            CGL177
+      ** changed to high                                                                      CGL177
+                                                                                              CGL177
+     C                   IF        CSD092 = 'Y'                                               CGL177
+     C                   IF        E_CRHVAL = 'H' AND                                         CGL177
+     C                             E_CRHVAL <> Wwhvac                                         CGL177
+                                                                                              CGL177
+     C                   EVAL      KCUST = E_CRCUST                                           CGL177
+                                                                                              CGL177
+     C                   MOVE      BJMRDT        WWYy                                         CGL177
+     C                   EVAL      ZDATIN = '0630' + WWYy                                     CGL177
+                                                                                              CGL177
+     C                   CALLB     'ZDATE1'                                                   CGL177
+     C                   PARM                    ZDATIN                                       CGL177
+     C                   PARM      0             ZDAYNO                                       CGL177
+     C                   PARM      'M'           BJDFIN                                       CGL177
+     C                   PARM      ' '           ZERR                                         CGL177
+                                                                                              CGL177
+     C                   IF        BJRDNB <= ZDAYNO                                           CGL177
+     C                   EVAL      WWYy1 = 0                                                  CGL177
+     C                   MOVE      WWYy          WWYy1                                        CGL177
+     C                   EVAL      WWYy1 = WWYy1 + 1                                          CGL177
+     C                   MOVE      WWYy1         WWYy                                         CGL177
+     C                   EVAL      ZDATIN = '0630' + WWYy                                     CGL177
+                                                                                              CGL177
+     C                   CALLB     'ZDATE1'                                                   CGL177
+     C                   PARM                    ZDATIN                                       CGL177
+     C                   PARM      0             ZDAYNO                                       CGL177
+     C                   PARM      'M'           BJDFIN                                       CGL177
+     C                   PARM      ' '           ZERR                                         CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   EVAL      ZCCY = BJCYCD                                              CGL177
+     C                   EVAL      ZLOC = *BLANKS                                             CGL177
+                                                                                              CGL177
+     C                   DOU       ZIND = 'W'                                                 CGL177
+                                                                                              CGL177
+      ** Check if holiday on currency                                                         CGL177
+                                                                                              CGL177
+     C                   EVAL      *IN94 = '0'                                                CGL177
+     C                   EXSR      ZCHKH                                                      CGL177
+                                                                                              CGL177
+      ** If a holiday, increment/decrement day number as required                             CGL177
+                                                                                              CGL177
+     C                   IF        ZIND = 'H'                                                 CGL177
+     C                   EVAL      ZDAYNO = ZDAYNO - 1                                        CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDDO                                                                CGL177
+                                                                                              CGL177
+     C                   EVAL      KSCDT = ZDAYNO                                             CGL177
+     C                   EVAL      KSEQN = 999                                                CGL177
+     C     KACRV         SETGT     SDACRVL0                                                   CGL177
+     C                   READP     SDACRVL0                                                   CGL177
+                                                                                              CGL177
+     C                   IF        ARCUST = KCUST AND                                         CGL177
+     C                             ARSCDT = KSCDT                                             CGL177
+     C                   CLEAR                   SDACRV                                       CGL177
+     C                   EVAL      ARSEQN = ARSEQN + 1                                        CGL177
+     C                   CLEAR                   SDACRV                                       CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      ARSEQN = 1                                                 CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   EVAL      ARSCDT = KSCDT                                             CGL177
+     C                   EVAL      ARCUST = E_CRCUST                                          CGL177
+     C                   EVAL      ARPURP = 'CRS High Value +                                 CGL177
+     C                                      Account Review'                                   CGL177
+     C                   EVAL      ARACRF = *BLANKS                                           CGL177
+     C                   EVAL      ARCOMP = 'N'                                               CGL177
+     C                   EVAL      ARMAGE = 'G'                                               CGL177
+     C                   EVAL      ARLTYP = 'I'                                               CGL177
+     C                   EVAL      ARLUSR = PSUser                                            CGL177
+                                                                                              CGL177
+     C                   CALLB     'ZAGENTMSTM'                                               CGL177
+     C                   PARM                    ARTMST                                       CGL177
+                                                                                              CGL177
+     C                   WRITE     SDACRVD0                                                   CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   READ      SDCRSHL1                                                   CGL157
+                                                                                              CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
      C                   ENDSR
  
@@ -574,6 +838,10 @@
  
      C     SrNonAccntH   BEGSR
  
+     C                   EVAL      WProc154 = ' '                                             CGL157
+     C                   EVAL      WProc157 = ' '                                             CGL157
+     C                   IF        CGL154 = 'Y'                                               CGL157
+     C                   EVAL      WProc154 = 'Y'                                             CGL157
      C     *LOVAL        SETLL     SDFTNHL7
      C                   READ      SDFTNHL7
  
@@ -623,6 +891,58 @@
      C                   READ      SDFTNHL7
  
      C                   ENDDO
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                   EVAL      WProc154 = ' '                                             CGL157
+     C                   EVAL      WProc157 = 'Y'                                             CGL157
+     C     *LOVAL        SETLL     SDCRNHL1                                                   CGL157
+     C                   READ      SDCRNHL1                                                   CGL157
+                                                                                              CGL157
+      ** Read until a record is not found                                                     CGL157
+                                                                                              CGL157
+     C                   DOW       NOT %EOF(SDCRNHL1)                                         CGL157
+     C                   IF        G_NRTYPE <> 'F'                                            CGL157
+     C                             AND G_NRTYPE <> ' '                                        CGL157
+     C                             AND G_NRHVAL <> 'N'                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      Knaho = G_NRNAHO                                           CGL157
+     C                   EVAL      WHvAM = 0                                                  CGL157
+     C**********         EVAL      A_FTNHD = B_FTNHD                                          CGL157
+     C                   EVAL      Wwcsty = G_NRTYPE                                          CGL157
+     C                   EVAL      X2HVIN = Wwhvac                                            CGL157
+                                                                                              CGL157
+     C     Knaho         SETLL     SDJACCL7                                                   CGL157
+     C     Knaho         READE     SDJACCL7                                                   CGL157
+                                                                                              CGL157
+     C                   DOW       NOT %EOF(SDJACCL7)                                         CGL157
+                                                                                              CGL157
+     C     K_JCJANO      CHAIN     SDCRSHL0                                                   CGL157
+     C                   IF        %FOUND(SDCRSHL0) AND                                       CGL157
+     C                             C_CRTYPE = 'J' AND                                         CGL157
+     C                             C_CRHVAL <> 'N'                                            CGL157
+     C                   EVAL      Kcust = K_JCJANO                                           CGL157
+     C                   EXSR      SrCompute                                                  CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C     Knaho         READE     SDJACCL7                                                   CGL157
+     C                   ENDDO                                                                CGL157
+                                                                                              CGL157
+      ** Print details of CRS non account holder                                              CGL157
+                                                                                              CGL157
+     C                   IF        G_NRHVAL <> X2HVIN                                         CGL157
+     C                   EXSR      SRNahoDt2                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      G_NRHVAL = X2HVIN                                          CGL157
+                                                                                              CGL157
+     C                   UPDATE    SDCRNHD1                                                   CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   READ      SDCRNHL1                                                   CGL157
+                                                                                              CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
      C                   ENDSR
  
@@ -661,6 +981,8 @@
      C     Kcust         READE     GLCSBAL0
      C                   ENDDO
  
+     C                   IF        CGL154 = 'Y'                                               CGL157
+     C                             AND WProc154 = 'Y'                                         CGL157
      C                   SELECT
  
      C                   WHEN      WHvAM >= HighValue
@@ -733,6 +1055,45 @@
      C                   ENDSL
  
      C                   ENDIF
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                             AND WProc157 = 'Y'                                         CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      Wwcsty = 'P' AND WHvAM >= HighValId2                       CGL157
+     C                   EVAL      WHvIn = 'H'                                                CGL157
+                                                                                              CGL157
+     C                   WHEN      Wwcsty <> 'P' AND WHvAM >= HighValEt2                      CGL157
+     C                   EVAL      WHvIn = 'H'                                                CGL157
+                                                                                              CGL157
+     C                   WHEN      WHvAM < LowVale2                                           CGL157
+     C                   EVAL      WHvIn = 'L'                                                CGL157
+                                                                                              CGL157
+     C                   OTHER                                                                CGL157
+     C                   EVAL      WHvIn = 'M'                                                CGL157
+     C                   ENDSL                                                                CGL157
+                                                                                              CGL157
+      ** Check whether High Value Indicator can be changed                                    CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      Wwhvac = *BLANKS                                           CGL157
+     C                             AND WHvIn <> *BLANKS                                       CGL157
+     C                   EVAL      X2HVIN = WHvIn                                             CGL157
+                                                                                              CGL157
+     C                   WHEN      Wwhvac = 'L' AND WHvIn = 'M'                               CGL157
+     C                   EVAL      X2HVIN = WHvIn                                             CGL157
+                                                                                              CGL157
+     C                   WHEN      (Wwhvac = 'L' AND WHvIn = 'H') OR                          CGL157
+     C                             (Wwhvac = 'M' AND WHvIn = 'H')                             CGL157
+     C                   EVAL      X2HVIN = WHvIn                                             CGL157
+                                                                                              CGL157
+     C                   OTHER                                                                CGL157
+     C                   EVAL      X2HVIN = Wwhvac                                            CGL157
+     C                   ENDSL                                                                CGL157
+                                                                                              CGL157
+     C                   ENDIF                                                                CGL157
  
      C                   ENDSR
  
@@ -848,11 +1209,22 @@
      C     SrAudit       BEGSR
  
      C                   WRITE     CONTROL
+
+     C                   IF        CGL154 = 'Y'                                               CGL157
+     C                   WRITE     CONTROL1                                                   CGL157
      C                   WRITE     GL000622R2
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                   WRITE     CONTROL2                                                   CGL157
+     C                   WRITE     GL000622R5                                                 CGL157
+     C                   ENDIF                                                                CGL157
  
      C                   IF        RRCUST = 0 AND
-     C                             RRNAHO = 0
- 
+     C**********                   RRNAHO = 0                                                 CGL157
+     C                             RRNAHO = 0 AND                                             CGL157
+     C                             R2CUST = 0 AND                                             CGL157
+     C                             R2NAHO = 0                                                 CGL157
      C                   WRITE     TRAILER
      C                   ENDIF
  
@@ -1099,6 +1471,147 @@
  
      C                   ENDSR
  
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SRHeadr2 - Header subroutine                                 *                       CGL157
+      *                                                               *                       CGL157
+      *  Called by: *INZSR                                            *                       CGL157
+      *                                                               *                       CGL157
+      *  Calls: None                                                  *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SRHeadr2      BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      X2LOGT = %TRIML(Plot2)                                     CGL157
+     C                   EVAL      X2HIWI = %TRIML(Phii2)                                     CGL157
+     C                   EVAL      X2HIWE = %TRIML(Phie2)                                     CGL157
+                                                                                              CGL157
+     C                   WRITE     GL000622R3                                                 CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SRCustDt2 - Print customer details                           *                       CGL157
+      *                                                               *                       CGL157
+      *  Called by: SrCustomer                                        *                       CGL157
+      *                                                               *                       CGL157
+      *  Calls: AOCUSTR0                                              *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SRCustDt2     BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   CALL      'AOCUSTR0'                                                 CGL157
+     C                   PARM      *BLANKS       Prtcd                                        CGL157
+     C                   PARM      '*KEY   '     Poptn                                        CGL157
+     C                   PARM      E_CRCUST      Pkey1                                        CGL157
+     C                   PARM                    Pkyst                                        CGL157
+     C     SDCUSD        PARM      SDCUSD        DSSDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        Prtcd <> *BLANKS                                           CGL157
+     C                             AND Prtcd <> '*CUSDEL'                                     CGL157
+     C                             AND Prtcd <> '*CUSCLS'                                     CGL157
+     C                   EVAL      Dbfile = 'SDCUSDPD'                                        CGL157
+     C                   EVAL      Dbase  = 03                                                CGL157
+     C                   EVAL      Dbkey  = E_CRCUST                                          CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Customer Details                                                                     CGL157
+                                                                                              CGL157
+     C                   EVAL      X2CUST = BBCUST                                            CGL157
+     C                   EVAL      X2CSSN = BBCSSN                                            CGL157
+     C                   EVAL      X2RPNM = BBCRNM                                            CGL157
+     C                   EVAL      X2RPTN = BBCRTN                                            CGL157
+                                                                                              CGL157
+      ** CRS Customer Type                                                                    CGL157
+                                                                                              CGL157
+     C                   EVAL      X2CUTP = E_CRTYPE                                          CGL157
+     C                   EVAL      X2CSTP = E_CRSTYP                                          CGL157
+                                                                                              CGL157
+      ** High Value Calculated                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfld15 = WHvAm                                             CGL157
+     C                   EVAL      Zdecs = ZcdpO                                              CGL157
+     C                   EXSR      SRFmtAmount                                                CGL157
+     C                   MOVE      Zout21        X2HVAM                                       CGL157
+                                                                                              CGL157
+     C                   Eval      Rqdln2 = 3                                                 CGL157
+     C                   Eval      Difln2 = Oflln2 - Prtln2                                   CGL157
+                                                                                              CGL157
+     C                   IF        DifLn2 <= Rqdln2                                           CGL157
+     C                   EXSR      SRHeadr2                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   WRITE     GL000622R4                                                 CGL157
+     C                   EVAL      R2CUST = R2CUST + 1                                        CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      *                                                               *                       CGL157
+      *  SRNahoDt2 - Non Account Holder Details subroutine            *                       CGL157
+      *                                                               *                       CGL157
+      *  Called by: SrNonAccntH                                       *                       CGL157
+      *                                                               *                       CGL157
+      *  Calls: AONAHOR0                                              *                       CGL157
+      *                                                               *                       CGL157
+      *****************************************************************                       CGL157
+                                                                                              CGL157
+     C     SRNahoDt2     BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   CALL      'AONAHOR0'                                                 CGL157
+     C                   PARM      *BLANKS       Prtcd                                        CGL157
+     C                   PARM      '*KEY   '     Poptn                                        CGL157
+     C                   PARM      G_NRNAHO      KNaho                                        CGL157
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        Prtcd <> *BLANKS                                           CGL157
+     C                   EVAL      Dbfile = 'SDNAHOPD'                                        CGL157
+     C                   EVAL      Dbase  = 05                                                CGL157
+     C                   EVAL      Dbkey  = G_NRNAHO                                          CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Non Account Holder Details                                                           CGL157
+                                                                                              CGL157
+     C                   EVAL      X2CUST = NHNAHO                                            CGL157
+     C                   EVAL      X2CSSN = *BLANKS                                           CGL157
+     C                   EVAL      X2RPNM = NHNARN                                            CGL157
+     C                   EVAL      X2RPTN = NHNATW                                            CGL157
+                                                                                              CGL157
+      ** CRS NAHO Type                                                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      X2CUTP = G_NRTYPE                                          CGL157
+     C                   EVAL      X2CSTP = G_NRSTYP                                          CGL157
+                                                                                              CGL157
+      ** High Value Calculated                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfld15 = WHvAm                                             CGL157
+     C                   EVAL      Zdecs = ZcdpO                                              CGL157
+     C                   EXSR      SRFmtAmount                                                CGL157
+     C                   MOVE      Zout21        X2HVAM                                       CGL157
+                                                                                              CGL157
+     C                   Eval      Rqdln2 = 3                                                 CGL157
+     C                   Eval      Difln2 = Oflln2 - Prtln2                                   CGL157
+                                                                                              CGL157
+     C                   IF        DifLn2 <= Rqdln2                                           CGL157
+     C                   EXSR      SRHeadr2                                                   CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   WRITE     GL000622R4                                                 CGL157
+     C                   EVAL      R2NAHO = R2NAHO + 1                                        CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1162,6 +1675,57 @@
      C                   EVAL      CSD092 = 'Y'
      C                   ENDIF
  
+     C                   EVAL      *IN50 = '0'                                                CGL157
+     C                   EVAL      *IN51 = '0'                                                CGL157
+                                                                                              CGL157
+      ** Check whether CGL154 is available                                                    CGL157
+                                                                                              CGL157
+     C                   CALL      'AOSARDR0'                                                 CGL157
+     C                   PARM      *Blanks       PRtcd                                        CGL157
+     C                   PARM      '*VERIFY'     POptn                                        CGL157
+     C                   PARM      'CGL154'      PSard                                        CGL157
+     C     Scsard        PARM      Scsard        Dsfdy                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRtcd <> *BLANKS                                           CGL157
+     C                   IF        PRtcd <> '*NRF'                                            CGL157
+     C     *LOCK         IN        LDA                                                        CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = PSard                                             CGL157
+     C                   EVAL      DBASE  = 10                                                CGL157
+     C                   EVAL      DBPGM = 'GL000622'                                         CGL157
+     C                   OUT       LDA                                                        CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CGL154 = 'N'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL154 = 'Y'                                               CGL157
+     C                   EVAL      *IN50 = '1'                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+      ** Check whether CGL177 is available                                                    CGL157
+                                                                                              CGL157
+     C                   CALL      'AOSARDR0'                                                 CGL157
+     C                   PARM      *Blanks       PRtcd                                        CGL157
+     C                   PARM      '*VERIFY'     POptn                                        CGL157
+     C                   PARM      'CGL177'      PSard                                        CGL157
+     C     Scsard        PARM      Scsard        Dsfdy                                        CGL157
+                                                                                              CGL157
+     C                   IF        PRtcd <> *BLANKS                                           CGL157
+     C                   IF        PRtcd <> '*NRF'                                            CGL157
+     C     *LOCK         IN        LDA                                                        CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = PSard                                             CGL157
+     C                   EVAL      DBASE  = 11                                                CGL157
+     C                   EVAL      DBPGM = 'GL000622'                                         CGL157
+     C                   OUT       LDA                                                        CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+     C                   EVAL      CGL177 = 'N'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL177 = 'Y'                                               CGL157
+     C                   EVAL      *IN51 = '1'                                                CGL157
+     C                   ENDIF                                                                CGL157
+
       ** Check system value high/low account information
  
      C                   CALL      'AOSVALR0'
@@ -1211,13 +1775,17 @@
      C                   PARM                    SVal4
      C                   PARM                    SValK5
      C                   PARM                    SVal5
-     C                   PARM                    SValK6
+     C**********         PARM                    SValK6                                       CGL157
+     C                   PARM      SysVal6       SValK6                                       CGL157
      C                   PARM                    SVal6
-     C                   PARM                    SValK7
+     C**********         PARM                    SValK7                                       CGL157
+     C                   PARM      SysVal7       SValK7                                       CGL157
      C                   PARM                    SVal7
-     C                   PARM                    SValK8
+     C**********         PARM                    SValK8                                       CGL157
+     C                   PARM      SysVal8       SValK8                                       CGL157
      C                   PARM                    SVal8
-     C                   PARM                    SValK9
+     C**********         PARM                    SValK9                                       CGL157
+     C                   PARM      SysVal9       SValK9                                       CGL157
      C                   PARM                    SVal9
      C                   PARM                    SValK0
      C                   PARM                    SVal10
@@ -1233,6 +1801,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
  
+     C                   IF        CGL154 = 'Y'                                               CGL157
      C                   EVAL      PCurr = SVal13
      C                   EXSR      SRRtvCurr
  
@@ -1311,13 +1880,103 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                   EVAL      PCurr = SVal63                                             CGL157
+     C                   EXSR      SRRtvCurr                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      Zadec = A6NBDP                                             CGL157
+     C                   EVAL      Zadig = 13                                                 CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfield = SVal813                                           CGL157
+     C                   EXSR      SRAlgAmount                                                CGL157
+     C                   MOVE      Zfield        HighValId2                                   CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfield = SVal913                                           CGL157
+     C                   EXSR      SRAlgAmount                                                CGL157
+     C                   MOVE      Zfield        HighValEt2                                   CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfield = SVal713                                           CGL157
+     C                   EXSR      SRAlgAmount                                                CGL157
+     C                   MOVE      Zfield        LowVale2                                     CGL157
+                                                                                              CGL157
+      ** Retrieve high value currency rate                                                    CGL157
+                                                                                              CGL157
+     C                   EVAL      PCurr = SVal63                                             CGL157
+     C                   EVAL      X2HVCY = SVal63                                            CGL157
+     C                   EXSR      SRRtvCurr                                                  CGL157
+     C                   EVAL      Zrate2 = A6SPRT                                            CGL157
+     C                   EVAL      Zmdi2 = A6MDIN                                             CGL157
+     C                   EVAL      ZccyO = PCurr                                              CGL157
+     C                   EVAL      ZcdpO = A6NBDP                                             CGL157
+                                                                                              CGL157
+      ** Format system values for report                                                      CGL157
+      ** High Value Threshold (Individual)                                                    CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfld15 = HighValId2                                        CGL157
+     C                   EVAL      Zdecs = A6NBDP                                             CGL157
+     C                   EXSR      SRFmtAmount                                                CGL157
+     C                   MOVE      Zout21        Phii2                                        CGL157
+                                                                                              CGL157
+      ** High Value Threshold (Entity)                                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfld15 = HighValEt2                                        CGL157
+     C                   EVAL      Zdecs = A6NBDP                                             CGL157
+     C                   EXSR      SRFmtAmount                                                CGL157
+     C                   MOVE      Zout21        Phie2                                        CGL157
+                                                                                              CGL157
+      ** Low Value Threshold                                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      Zfld15 = LowVale2                                          CGL157
+     C                   EVAL      Zdecs = A6NBDP                                             CGL157
+     C                   EXSR      SRFmtAmount                                                CGL157
+     C                   MOVE      Zout21        Plot2                                        CGL157
+                                                                                              CGL157
+      ** High Value Currency                                                                  CGL157
+                                                                                              CGL157
+     C                   EVAL      Phvcy = SVal63                                             CGL157
+     C                   EXSR      SRRtvCurr                                                  CGL157
+     C                   EVAL      Zrate2 = A6SPRT                                            CGL157
+     C                   EVAL      Zmdi2 = A6MDIN                                             CGL157
+     C                   EVAL      ZccyO = PHVCY                                              CGL157
+     C                   EVAL      ZcdpO = A6NBDP                                             CGL157
+                                                                                              CGL157
+     C                   OPEN      GL000622P2                                                 CGL157
+                                                                                              CGL157
+     C                   Z-ADD     Sfnum2        Zsnum                                        CGL157
+     C                   CALL      'ZSFILE'                                                   CGL157
+     C                   PARM      *BLANKS       Zseq                                         CGL157
+     C                   PARM      *BLANKS       Zenty                                        CGL157
+     C                   PARM                    Sfile2                                       CGL157
+     C                   PARM                    Zsnum                                        CGL157
+     C                   PARM                    Zserr                                        CGL157
+                                                                                              CGL157
+      ** error during ZSFILE processing, return to calling program                            CGL157
+                                                                                              CGL157
+     C                   IF        ZSERR = 'Y'                                                CGL157
+     C                   EVAL      *INU7 = *ON                                                CGL157
+     C                   EVAL      *INU8 = *ON                                                CGL157
+     C                   EVAL      *INLR = *ON                                                CGL157
+     C                   RETURN                                                               CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
+     C                   IF        CGL154 = 'Y'                                               CGL157
+     C                   EXSR      SRHeader
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        CGL177 = 'Y'                                               CGL157
+     C                   EXSR      SRHeadr2                                                   CGL157
+     C                   ENDIF                                                                CGL157
  
       ** Initialize fields
  
      C                   EVAL      CBCUST = *BLANKS
      C                   EVAL      RRCUST = *ZEROS
      C                   EVAL      RRNAHO = *ZEROS
+     C                   EVAL      R2CUST = *ZEROS                                            CGL157
+     C                   EVAL      R2NAHO = *ZEROS                                            CGL157
  
      C     KACRV         KLIST
      C                   KFLD                    KCUST

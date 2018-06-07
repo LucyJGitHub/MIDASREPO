@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG13596           Date 20Mar07               *
+      *                 BUG13596           Date 20Mar07               *
       *                 BUG13228           Date 07Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027A            Date 05May06               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13596 - Subject to Minimum Reserve not being highlighted  *
       *  BUG13228- Do not call SDVVFNCOS if ULX004 is off             *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT039             Date 28Sep12               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT039             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
       *           Amendment done to accommodate longer data           *
@@ -544,6 +547,7 @@
      C                   PARM      'FTIOPAYPD'   InvFile1         10            CAP014
      C                   PARM                    InvFile2         10            CAP014
      C                   PARM                    InvFile3         10            CAP014
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
                                                                                 CAP014
       * Invalid file data                                                       CAP014
      C***********        PARM      InvTr         InvFDta1       2000            CAP014 CFT014
@@ -553,6 +557,7 @@
      C                   PARM      InvTr         InvFDta1      12000                          CFT039
      C                   PARM                    InvFDta2       4000            CFT014
      C                   PARM                    InvFDta3       4000            CFT014
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
                                                                                 CAP014
       * OUTPUTS                                                                 CAP014
                                                                                 CAP014

@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL154 - FATCA Reporting (Recompile)                         *
@@ -299,6 +301,10 @@
      D PAftCUXC        S           5000A                                                    MD026854
      D PACRV           S              1A
      D PELEC           S              1A
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
      D LowValInd       S             13  0
      D LowValEnt       S             13  0
      D HighValue       S             13  0
@@ -1311,6 +1317,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV
      C                   PARM      *BLANKS       PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
       *
       ** Generate an account review if the high value indicator is
       ** changed to high

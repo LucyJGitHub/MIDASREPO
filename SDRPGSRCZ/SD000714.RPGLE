@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044164           Date 20Feb17               *
+      *  Last Amend No. MD050598           Date 03May18               *
+      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD044164           Date 20Feb17               *
       *                 MD044160           Date 20Feb17               *
       *                 MD039670           Date 26Jul16               *
       *                 MD034071           Date 10Apr15               *
@@ -25,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050598 - SDC000714 00001 failed                            *
+      *  MD040734 - CRS Exception other than Due Diligence is still   *
+      *             displayed                                         *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044164 - FATCA Exception 3 still present even if Customer  *
       *             Details comply w/ System Value FATCAUSTINBrthRqd  *
@@ -53,6 +59,18 @@
  
      FSDFTNHL0  UF   E           K DISK    INFSR(*PSSR)
  
+      ** Midas SD - CRS Customer Details update                                             MD036237
+     FSDCRSHL1  UF   E           K DISK    INFSR(*PSSR)                                     MD036237
+                                                                                            MD036237
+      ** Midas SD Non-account Holders - CRS Details                                         MD036237
+     FSDCRNHL1  UF   E           K DISK    INFSR(*PSSR)                                     MD036237
+                                                                                            MD036237
+      ** Midas SD CRS Customer Details retrieval index                                      MD036237
+     FSDCRSDL2  IF   E           K DISK                                                     MD036237
+                                                                                            MD036237
+      ** Midas SD CRS Country details - NAHO                                                MD036237
+     FSDCRSNL2  IF   E           K DISK                                                     MD036237
+                                                                                            MD036237
      FSDFTCSL1  IF   E           K DISK
      F                                     RENAME(SDFTCSD0:SDFTCSD1)
      F                                     PREFIX(J)
@@ -126,6 +144,12 @@
                                                                                             MD033414
       ** External DS for SAR Details                                                        MD033414
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD033414
+                                                                                            MD036237
+      ** External DS for Customer Details                                                   MD036237
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                MD036237
+                                                                                            MD036237
+      ** External DS for Country of Tax Codes                                               MD036237
+     D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                MD036237
  
      D DSLDY         E DS                  EXTNAME(DSLDY)
  
@@ -222,6 +246,13 @@
      D PMDate          S              5  0
      D PSARD           S              6A                                                    MD033414
      D CGL154          S              1A                                                    MD033414
+     D PInEfDte        S              6A                                                    MD036237
+     D PMEfDate        S              5  0                                                  MD036237
+     D CGL157          S              1A                                                    MD036237
+     D WCNCD           S              2A                                                    MD036237
+     D WCOLC           S              2A                                                    MD036237
+     D @PCTRT          S              2A                                                    MD036237
+     D @PCTRR          S              2A                                                    MD036237
  
      D WRUND           S              5S 0
      D WBthDate        S              5S 0
@@ -252,6 +283,29 @@
      D PIDate          S              6A                                                    MD033414
      D PODate          S              5  0                                                  MD033414
      D PErrFlag        S              1A                                                    MD033414
+                                                                                            MD036237
+     D WCRSEftStrtDte  S              6A                                                    MD036237
+     D WCRSDlgMedInd   S              6A                                                    MD036237
+     D WCRSDlgHiInd    S              6A                                                    MD036237
+     D WCRSDlgMedEnt   S              6A                                                    MD036237
+     D WCRSDlgHiEnt    S              6A                                                    MD036237
+     D WCRSDlgNewAC    S              2  0                                                  MD036237
+     D WCRSForTINMan   S              1A                                                    MD036237
+     D WCRSLocTINMan   S              1A                                                    MD036237
+     D WCREXMI         S             30A                                                    MD036237
+     D WNREXMI         S             30A                                                    MD036237
+     D WDDCRSA         S              1A                                                    MD036237
+     D NCRSDlgMedInd   S              5  0                                                    CGL177
+     D NCRSDlgHiInd    S              5  0                                                    CGL177
+     D NCRSDlgMedEnt   S              5  0                                                    CGL177
+     D NCRSDlgHiEnt    S              5  0                                                    CGL177
+     D LowVal1         S              5  0                                                    CGL177
+     D LowVal2         S              5  0                                                    CGL177
+     D LowestVal       S              5  0                                                    CGL177
+                                                                                            MD036237
+      ** Parameter for AOCUSTR0                                                             MD036237
+     D PKey1           S             10A                                                    MD036237
+     D PKySt           S              7A                                                    MD036237
  
       ** Exception Report Flag Array
      D WExcpRptArr     S              1    Dim(30)
@@ -273,6 +327,19 @@
       ** FATCA Exception Reporting for Non-Account Holders
      C                   EXSR      SrExcpNAHO
  
+     C                   IF        CGL157 = 'Y'                                             MD036237
+                                                                                            MD036237
+      ** Access System Values for CRS                                                       MD036237
+     C                   EXSR      SRSVAL2                                                  MD036237
+                                                                                            MD036237
+      ** CRS Exception Reporting for Customers                                              MD036237
+     C                   EXSR      SrCRSExcCust                                             MD036237
+                                                                                            MD036237
+      ** CRS Exception Reporting for Non-Account Holders                                    MD036237
+     C                   EXSR      SrCRSExcNAHO                                             MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
      C                   EVAL      *INLR = *ON
  
      C                   RETURN
@@ -1393,6 +1460,1012 @@
      C                   ENDSR                                                              MD033414
       *****************************************************************                     MD033414
       /EJECT                                                                                MD033414
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSExcCust - CRS Exception Reporting for Customers         *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSExcCust  BEGSR                                                              MD036237
+                                                                                            MD036237
+     C     *LOVAL        SETLL     SDCRSHL1                                                 MD036237
+     C                   READ      SDCRSHL1                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF(SDCRSHL1)                                       MD036237
+                                                                                            MD036237
+     C                   EVAL      WArrCnt = 0                                              MD036237
+                                                                                            MD036237
+      ** Initialize Array                                                                   MD036237
+     C                   EVAL      WCREXMI = *BLANKS                                        MD036237
+     C                   MOVE      *BLANKS       WExcpRptArr                                MD036237
+                                                                                           MD036237A
+      ** Check creation date                                                               MD036237A
+                                                                                           MD036237A
+     C     CRCUST        CHAIN     SDCUSTX0                                                MD036237A
+     C                   IF        NOT %FOUND(SDCUSXL0)                                    MD036237A
+     C                   EVAL      DBFILE = 'SDCUSXL0'                                     MD036237A
+     C                   EVAL      DBASE  = 902                                            MD036237A
+     C                   EVAL      DBKEY  = POPTN                                          MD036237A
+     C                   EXSR      *PSSR                                                   MD036237A
+     C                   ENDIF                                                             MD036237A
+                                                                                            MD036237
+      ** CRS Customer is not exempt and is flagged as 'NFE'/Passive but                     MD036237
+      ** there are no controlling persons defined                                           MD036237
+     C                   EXSR      SrCRSNFEiry                                              MD036237
+                                                                                            MD036237
+      ** CRS Customer is not exempt and is flagged as 'Joint account'                       MD036237
+      ** but there are no joint account members defined                                     MD036237
+     C                   EXSR      SrCRSJACMbr                                              MD036237
+                                                                                            MD036237
+      ** CRS New Customer or Non-account holder is subject to reporting                     MD036237
+      ** but no TIN is defined                                                              MD036237
+     C                   EXSR      SrNewSubTIN                                              MD036237
+                                                                                            MD036237
+      ** CRS Existing Customer or Non-account holder is subject to reporting                MD036237
+      ** but no TIN is defined                                                              MD036237
+     C                   EXSR      SrExtSubTIN                                              MD036237
+                                                                                            MD036237
+      ** CRS customer type is defined as NFE, but no CRS customer sub-type defined.         MD036237
+     C                   EXSR      SrCRSTypeNFE                                             MD036237
+                                                                                            MD036237
+      ** CRS Due Diligence period has expired but the CRS Information Complete Flag         MD036237
+      ** is still set to 'No' or 'Blank'                                                    MD036237
+     C                   EXSR      SrCRSDueDlg                                              MD036237
+                                                                                              CGL177
+      ** A CRS account review is passed due date                                              CGL177
+     C                   EXSR      SrCRSActRv                                                 CGL177
+                                                                                            MD036237
+     C                   MOVEA     WExcpRptArr   WCREXMI                                    MD036237
+                                                                                            MD036237
+      ** Move and update file on change in exceptions                                       MD036237
+     C                   IF        WCREXMI <> CREXMI                                        MD036237
+                                                                                            MD036237
+     C                   MOVEA     WExcpRptArr   CREXMI                                     MD036237
+                                                                                            MD036237
+     C                   IF        %trim(CREXMI) = *BLANKS                                  MD036237
+     C                   EVAL      CREXMG = 'N'                                             MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      CREXMG = 'Y'                                             MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   UPDATE    SDCRSHD0                                                 MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   READ      SDCRSHL1                                                 MD036237
+                                                                                            MD036237
+     C                   ENDDO                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSNFEiry - CRS Customer NFE/Passive not exempt            *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSNFEiry   BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** CRS Customer is not exempt and is flagged as 'NFE'/Passive but                     MD036237
+      ** there are no controlling persons defined                                           MD036237
+                                                                                            MD036237
+     C                   IF        CREXMP <> 'Y'                                            MD036237
+     C                             AND CRTYPE = 'N'                                         MD036237
+     C                             AND CRSTYP = 'PA'                                        MD036237
+     C     CRCUST        CHAIN     SDJACCD0                                                 MD036237
+     C                   IF        NOT %FOUND(SDJACCL0)                                     MD036237
+                                                                                              CGL177
+     C     CRCUST        CHAIN     SDCUAHD0                                                   CGL177
+     C                   IF        %FOUND(SDCUAHLA)                                           CGL177
+     C                             AND CACINT <> 'Y'                                          CGL177
+     C                             OR NOT %FOUND(SDCUAHLA)                                    CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'H'                              MD036237
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSJACMbr - Customer is not Exempt and flagged as Joint A/c*                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSJACMbr   BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** CRS Customer is not exempt and is flagged as 'Joint account'                       MD036237
+      ** but there are no joint account members defined                                     MD036237
+                                                                                            MD036237
+     C                   IF        CREXMP <> 'Y'                                            MD036237
+     C                             AND CRTYPE = 'J'                                         MD036237
+     C     CRCUST        CHAIN     SDJACCD0                                                 MD036237
+     C                   IF        NOT %FOUND(SDJACCL0)                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'I'                              MD036237
+     C                   ENDIF                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrNewSubTIN - CRS New Customer Subject to Reporting          *                     MD036237
+      *                but no Tax Identification Number               *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrNewSubTIN   BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        CREXMP <> 'Y'                                            MD040734
+     C                             AND CRTYPE <> 'F'                                        MD040734
+     C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
+     C                   EXSR      SRDate1                                                  MD036237
+                                                                                            MD036237
+      ** Read through CRS Customer Detail File - Detail                                     MD036237
+     C     CRCUST        SETLL     SDCRSDD0                                                 MD036237
+     C     CRCUST        READE     SDCRSDD0                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF (SDCRSDL2)                                      MD036237
+                                                                                            MD036237
+      ** Retrieve first CRS Agreement                                                       MD036237
+     C                   EXSR      SrRtvCRSAC                                               MD036237
+                                                                                            MD036237
+      ** If New Customer is Subject to Reporting but No TIN defined                         MD036237
+                                                                                            MD036237
+     C                   IF        (CDREPT = 'Y'                                            MD036237
+     C                             AND CDTINN = *BLANKS                                     MD036237
+     C                             AND XCCRDT >= PMEfDate)                                  MD036237
+                                                                                            MD036237
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory   MD036237
+                                                                                            MD036237
+      ** If CRS Country is Local Country                                                    MD036237
+     C                   IF        BJCNCD = CDCTRY                                          MD036237
+                                                                                            MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSLocTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ELSE                                                               MD036237
+      ** If CRS Country is Foreign Country                                                  MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSForTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C     CRCUST        READE     SDCRSDD0                                                 MD036237
+     C                   ENDDO                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrExtSubTIN - CRS Existing Customer Subject to Reporting     *                     MD036237
+      *                but no Tax Identification Number               *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrExtSubTIN   BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        CREXMP <> 'Y'                                            MD040734
+     C                             AND CRTYPE <> 'F'                                        MD040734
+     C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
+     C                   EXSR      SRDate1                                                  MD036237
+                                                                                            MD036237
+      ** Read through CRS Customer Detail File - Detail                                     MD036237
+     C     CRCUST        SETLL     SDCRSDD0                                                 MD036237
+     C     CRCUST        READE     SDCRSDD0                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF (SDCRSDL2)                                      MD036237
+                                                                                            MD036237
+      ** Retrieve first CRS Agreement                                                       MD036237
+     C                   EXSR      SrRtvCRSAC                                               MD036237
+                                                                                            MD036237
+      ** If Existing Customer Subject to Reporting but No TIN defined                       MD036237
+                                                                                            MD036237
+     C                   IF        (CDREPT = 'Y'                                            MD036237
+     C                             AND CDTINN = *BLANKS                                     MD036237
+     C                             AND XCCRDT < PMEfDate)                                   MD036237
+                                                                                            MD036237
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory   MD036237
+                                                                                            MD036237
+      ** If CRS Country is Local Country                                                    MD036237
+     C                   IF        BJCNCD = CDCTRY                                          MD036237
+                                                                                            MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSLocTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ELSE                                                               MD036237
+      ** If CRS Country is Foreign Country                                                  MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSForTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C     CRCUST        READE     SDCRSDD0                                                 MD036237
+     C                   ENDDO                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSTypeNFE - CRS customer type is defined as NFE, but no   *                     MD036237
+      *                 CRS customer sub-type defined.                *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSTypeNFE  BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        CREXMP <> 'Y'                                            MD040734
+      ** CRS customer type is defined as NFE, but no CRS customer sub-type defined          MD036237
+                                                                                            MD036237
+     C                   IF        (CRTYPE = 'N' AND                                        MD036237
+     C                             CRSTYP = 'UN')                                           MD036237
+     C                             OR (CRTYPE = 'N' AND                                     MD036237
+     C                             CRSTYP = *BLANKS)                                        MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'P'                              MD036237
+     C                   ENDIF                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSDueDlg - CRS Due Diligence period has expired but the   *                     MD036237
+      *                CRS Info Complete Flag is still set to         *                     MD036237
+      *                'No' or 'Blank'                                *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSDueDlg   BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** CRS Due Diligence period has expired but the CRS Info Complete Flag                MD036237
+      ** is still set to 'No' or 'Blank'                                                    MD036237
+                                                                                            MD036237
+     C                   EVAL      PIDate = *ZERO                                           MD036237
+     C                   EVAL      PODate = *ZERO                                           MD036237
+                                                                                            MD036237
+     C                   EVAL      PIDate = WCRSEftStrtDte                                  MD036237
+     C                   EXSR      SRMdasDay                                                MD036237
+                                                                                            MD036237
+      ** New CRS Customer                                                                   MD036237
+                                                                                            MD036237
+     C                   IF        XCCRDT >= PODate                                         MD036237
+                                                                                            MD036237
+     C                   EVAL      WDlgDt = XCCRDT + WCRSDlgNewAC                           MD036237
+     C                   IF        WDlgDt <= WRUND AND                                      MD036237
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                              CGL177
+     C                   ELSE                                                                 CGL177
+                                                                                              CGL177
+      ** Existing CRS Customer (Created before CRS Effective Date)                            CGL177
+                                                                                              CGL177
+     C                   EXSR      SrCRSDlgDte                                                CGL177
+                                                                                              CGL177
+     C                   SELECT                                                               CGL177
+      ** CRS Existing A/C - Individual/Blank or Individual/N                                  CGL177
+     C                   WHEN      CRTYPE = 'P' AND CRHVAL = ' '                              CGL177
+     C                             OR CRTYPE = 'P' AND CRHVAL = 'N'                           CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Blank or Entity/N                                          CGL177
+     C                   WHEN      CRTYPE <> 'P' AND CRHVAL = ' '                             CGL177
+     C                             OR CRTYPE <> 'P' AND CRHVAL = 'N'                          CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/Medium  or Individual/Low                              CGL177
+     C                   WHEN      CRTYPE = 'P' AND CRHVAL = 'M'                              CGL177
+     C                             OR CRTYPE = 'P' AND CRHVAL = 'L'                           CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedInd PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/High                                                   CGL177
+                                                                                              CGL177
+     C                   WHEN      CRTYPE = 'P' AND CRHVAL = 'H'                              CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiInd  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Medium or Entity/Low                                       CGL177
+     C                                                                                        CGL177
+     C                   WHEN      CRTYPE <> 'P' AND CRHVAL = 'M'                             CGL177
+     C                             OR CRTYPE <> 'P' AND CRHVAL = 'L'                          CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedEnt PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/High                                                       CGL177
+                                                                                              CGL177
+     C                   WHEN      CRTYPE <> 'P' AND CRHVAL = 'H'                             CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiEnt  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             CRINFO <> 'Y' AND CRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDSL                                                                CGL177
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                  CGL177
+      *****************************************************************                       CGL177
+      *                                                               *                       CGL177
+      *  SrCRSDlgDte - CRS Due Diligence date comparison for CRS High *                       CGL177
+      *                Value 'Blank' or 'N', check against earliest   *                       CGL177
+      *                defined Due Diligence date                     *                       CGL177
+      *                                                               *                       CGL177
+      *****************************************************************                       CGL177
+     C     SrCRSDlgDte   BEGSR                                                                CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence period prep for earliest date comparison                           CGL177
+     C                   EVAL      PIDate = *ZERO                                             CGL177
+     C                   EVAL      PODate = *ZERO                                             CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedInd PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgMedInd = PODate                                     CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiInd  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgHiInd = PODate                                      CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedEnt PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgMedEnt = PODate                                     CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiEnt  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+     C                   EVAL      NCRSDlgHiEnt = PODate                                      CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence earliest date comparison                                           CGL177
+     C                   IF        NCRSDlgMedInd > NCRSDlgHiInd                               CGL177
+     C                   EVAL      LowVal1 = NCRSDlgHiInd                                     CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowVal1 = NCRSDlgMedInd                                    CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   IF        NCRSDlgMedEnt > NCRSDlgHiEnt                               CGL177
+     C                   EVAL      LowVal2 = NCRSDlgHiEnt                                     CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowVal2 = NCRSDlgMedEnt                                    CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Due Diligence earliest date                                                      CGL177
+     C                   IF        LowVal1 > LowVal2                                          CGL177
+     C                   EVAL      LowestVal = LowVal2                                        CGL177
+     C                   ELSE                                                                 CGL177
+     C                   EVAL      LowestVal = LowVal1                                        CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDSR                                                                CGL177
+      *****************************************************************                       CGL177
+      /EJECT                                                                                  CGL177
+      *****************************************************************                       CGL177
+      *                                                               *                       CGL177
+      *  SrCRSActRv - CRS Account Review is passed due date           *                       CGL177
+      *                                                               *                       CGL177
+      *****************************************************************                       CGL177
+     C     SrCRSActRv    BEGSR                                                                CGL177
+                                                                                              CGL177
+     C                   IF        CREXMP <> 'Y'                                            MD040734
+     C                             AND CRTYPE <> 'F'                                        MD040734
+      ** CRS account review is passed due date                                                CGL177
+                                                                                              CGL177
+     C     CRCUST        SETLL     SDACRVD6                                                   CGL177
+     C     CRCUST        READE     SDACRVD6                                                   CGL177
+                                                                                              CGL177
+     C                   EVAL      WFOUND = 'N'                                               CGL177
+                                                                                              CGL177
+     C                   DOW       NOT %EOF (SDACRVL6)                                        CGL177
+     C                             AND WFOUND = 'N'                                           CGL177
+                                                                                              CGL177
+     C                   IF        ARSCDT < WRUND                                             CGL177
+     C                   EVAL      WFOUND = 'Y'                                               CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'L'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C     CRCUST        READE     SDACRVD6                                                   CGL177
+     C                   ENDDO                                                                CGL177
+     C                   ENDIF                                                              MD040734
+                                                                                              CGL177
+     C                   ENDSR                                                                CGL177
+      *****************************************************************                       CGL177
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrRtvCRSAC - Retrieve CRS Agreement flag for country         *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrRtvCRSAC    BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** Retrieve Country of Location                                                       MD036237
+     C                   Eval      PKey1 = CRCUST                                           MD036237
+                                                                                            MD036237
+     C                   CALL      'AOCUSTR0'                                               MD036237
+     C                   PARM      *Blanks       PRtcd                                      MD036237
+     C                   PARM      '*KEY   '     POptn                                      MD036237
+     C                   PARM                    PKey1                                      MD036237
+     C                   PARM                    PKySt                                      MD036237
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD036237
+                                                                                            MD036237
+      ** Database Error                                                                     MD036237
+                                                                                            MD036237
+     C                   IF        PRtcd <> *BLANKS                                         MD036237
+     C                             AND Prtcd <> '*CUSCLS'                                   MD050598
+     C                             AND Prtcd <> '*CUSDEL'                                   MD050598
+     C                   EVAL      DBFILE = 'SDCUSTPD'                                      MD036237
+     C                   EVAL      DBASE  =  901                                            MD036237
+     C                   EVAL      DBKEY  = POptn                                           MD036237
+     C                   OUT       LDA                                                      MD036237
+     C                   EXSR      *PSSR                                                    MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+      ** Get CRS agreement                                                                  MD036237
+     C                   EVAL      WCNCD = CDCTRY                                           MD036237
+     C                   EVAL      WCOLC = BBCOLC                                           MD036237
+                                                                                            MD036237
+     C                   CALL      'AOCTTXR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*KEY   '     POPTN                                      MD036237
+     C                   PARM      WCNCD         @PCTRT                                     MD036237
+     C                   PARM      WCOLC         @PCTRR                                     MD036237
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD036237
+                                                                                            MD036237
+     C                   IF        PRTCD = '*NRF   '                                        MD036237
+     C                   EVAL      WCOLC = *BLANK                                           MD036237
+     C                   CALL      'AOCTTXR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*KEY   '     POPTN                                      MD036237
+     C                   PARM      WCNCD         @PCTRT                                     MD036237
+     C                   PARM      WCOLC         @PCTRR                                     MD036237
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD036237
+                                                                                            MD036237
+     C                   IF        PRTCD = *BLANK                                           MD036237
+     C                   EVAL      WDDCRSA = EWCRSA                                         MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      WDDCRSA = *Blanks                                        MD036237
+     C                   ENDIF                                                              MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      WDDCRSA = EWCRSA                                         MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSExcNAHO - CRS Exception Reporting for Non-Account Holder*                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSExcNAHO  BEGSR                                                              MD036237
+                                                                                            MD036237
+     C     *LOVAL        SETLL     SDCRNHL1                                                 MD036237
+     C                   READ      SDCRNHL1                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF(SDCRNHL1)                                       MD036237
+                                                                                            MD039670
+     C                   IF        NRNAHO <> *BLANKS                                        MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *BLANKS       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM      NRNAHO        PNAHO                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDCRNHL1                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD036237
+     C                   EVAL      WArrCnt = 0                                              MD036237
+                                                                                            MD036237
+      ** Initialize Array                                                                   MD036237
+     C                   EVAL      WNREXMI = *BLANKS                                        MD036237
+     C                   MOVE      *BLANKS       WExcpRptArr                                MD036237
+                                                                                           MD036237A
+      ** Check creation date                                                               MD036237A
+                                                                                           MD036237A
+     C     NRNAHO        CHAIN     SDNAHOD0                                                MD036237A
+     C                   IF        NOT %FOUND(SDNAHOL0)                                    MD036237A
+     C                   EVAL      DBFILE = 'SDNAHOPD'                                     MD036237A
+     C                   EVAL      DBASE  = 903                                            MD036237A
+     C                   EVAL      DBKEY  = POPTN                                          MD036237A
+     C                   EXSR      *PSSR                                                   MD036237A
+     C                   ENDIF                                                             MD036237A
+                                                                                           MD036237A
+                                                                                            MD036237
+      ** CRS New Non-account holder is subject to reporting but no TIN is defined           MD036237
+     C                   EXSR      SrNewSubTINN                                             MD036237
+                                                                                            MD036237
+      ** CRS Existing Non-account holder is subject to reporting but no TIN is defined      MD036237
+     C                   EXSR      SrExtSubTINN                                             MD036237
+                                                                                            MD036237
+      ** CRS type is defined as NFE, but no CRS customer sub-type defined.                  MD036237
+     C                   EXSR      SrCRSTypeNFEN                                            MD036237
+                                                                                            MD036237
+      ** CRS Due Diligence period has expired but the CRS Information Complete Flag         MD036237
+      ** is still set to 'No' or 'Blank'                                                    MD036237
+     C                   EXSR      SrCRSDueDlgN                                             MD036237
+                                                                                            MD036237
+     C                   MOVEA     WExcpRptArr   WNREXMI                                    MD036237
+                                                                                            MD036237
+      ** Move and update file on change in exceptions                                       MD036237
+     C                   IF        WNREXMI <> NREXMI                                        MD036237
+                                                                                            MD036237
+     C                   MOVEA     WExcpRptArr   NREXMI                                     MD036237
+                                                                                            MD036237
+     C                   IF        %trim(NREXMI) = *BLANKS                                  MD036237
+     C                   EVAL      NREXMG = 'N'                                             MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      NREXMG = 'Y'                                             MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   UPDATE    SDCRNHD0                                                 MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   READ      SDCRNHL1                                                 MD036237
+                                                                                            MD036237
+     C                   ENDDO                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrNewSubTINN - CRS New NAHO Subject to Reporting             *                     MD036237
+      *                but no Tax Identification Number               *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrNewSubTINN  BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        NREXMP <> 'Y'                                            MD040734
+     C                             AND NRTYPE <> 'F'                                        MD040734
+     C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
+     C                   EXSR      SRDate1                                                  MD036237
+                                                                                            MD036237
+     C                   EVAL      PInDate = NHCRDT                                         MD036237
+     C                   EXSR      SRDate10                                                 MD036237
+                                                                                            MD036237
+      ** Read through CRS NAHO Detail File - Detail                                         MD036237
+     C     NRNAHO        SETLL     SDCRSND0                                                 MD036237
+     C     NRNAHO        READE     SDCRSND0                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF (SDCRSNL2)                                      MD036237
+                                                                                            MD036237
+      ** Retrieve first CRS Agreement                                                       MD036237
+     C                   EXSR      SrRtvCRSAN                                               MD036237
+                                                                                            MD036237
+      ** If New NAHO is Subject to Reporting but No TIN defined                             MD036237
+                                                                                            MD036237
+     C                   IF        (CNREPT = 'Y'                                            MD036237
+     C                             AND CNTINN = *BLANKS                                     MD036237
+     C                             AND PMDate >= PMEfDate)                                  MD036237
+                                                                                            MD036237
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory   MD036237
+                                                                                            MD036237
+      ** If CRS Country is Local Country                                                    MD036237
+     C                   IF        BJCNCD = CNCTRY                                          MD036237
+                                                                                            MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSLocTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ELSE                                                               MD036237
+      ** If CRS Country is Foreign Country                                                  MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSForTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'N'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C     NRNAHO        READE     SDCRSND0                                                 MD036237
+     C                   ENDDO                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrExtSubTINN - CRS Existing NAHO Subject to Reporting        *                     MD036237
+      *                but no Tax Identification Number               *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrExtSubTINN  BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        NREXMP <> 'Y'                                            MD040734
+     C                             AND NRTYPE <> 'F'                                        MD040734
+     C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
+     C                   EXSR      SRDate1                                                  MD036237
+                                                                                            MD036237
+     C                   EVAL      PInDate = NHCRDT                                         MD036237
+     C                   EXSR      SRDate10                                                 MD036237
+                                                                                            MD036237
+      ** Read through CRS NAHO Detail File - Detail                                         MD036237
+     C     NRNAHO        SETLL     SDCRSND0                                                 MD036237
+     C     NRNAHO        READE     SDCRSND0                                                 MD036237
+                                                                                            MD036237
+     C                   DOW       NOT %EOF (SDCRSNL2)                                      MD036237
+                                                                                            MD036237
+      ** Retrieve first CRS Agreement                                                       MD036237
+     C                   EXSR      SrRtvCRSAN                                               MD036237
+                                                                                            MD036237
+      ** If Existing NAHO Subject to Reporting but No TIN defined                           MD036237
+                                                                                            MD036237
+     C                   IF        (CNREPT = 'Y'                                            MD036237
+     C                             AND CNTINN = *BLANKS                                     MD036237
+     C                             AND PMDate < PMEfDate)                                   MD036237
+                                                                                            MD036237
+      ** If Country has a CRS agreement, or the system value defines the TIN as mandatory   MD036237
+                                                                                            MD036237
+      ** If CRS Country is Local Country                                                    MD036237
+     C                   IF        BJCNCD = CNCTRY                                          MD036237
+                                                                                            MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSLocTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ELSE                                                               MD036237
+      ** If CRS Country is Foreign Country                                                  MD036237
+     C                   IF        (WDDCRSA = 'Y' OR                                        MD036237
+     C                             WCRSForTINMan = 'Y')                                     MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'O'                              MD036237
+     C                   LEAVE                                                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C     NRNAHO        READE     SDCRSND0                                                 MD036237
+     C                   ENDDO                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSTypeNFEN - CRS type is defined as NFE, but no           *                     MD036237
+      *                 CRS sub-type defined.                         *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSTypeNFEN BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   IF        NREXMP <> 'Y'                                            MD040734
+      ** CRS type is defined as NFE, but no CRS sub-type defined                            MD036237
+                                                                                            MD036237
+     C                   IF        (NRTYPE = 'N' AND                                        MD036237
+     C                             NRSTYP = 'UN')                                           MD036237
+     C                             OR (NRTYPE = 'N' AND                                     MD036237
+     C                             NRSTYP = *BLANKS)                                        MD036237
+     C                   EVAL      WArrCnt = WArrCnt +1                                     MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'P'                              MD036237
+     C                   ENDIF                                                              MD036237
+     C                   ENDIF                                                              MD040734
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrCRSDueDlgN - CRS Due Diligence period has expired but the  *                     MD036237
+      *                CRS Info Complete Flag is still set to         *                     MD036237
+      *                'No' or 'Blank'                                *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrCRSDueDlgN  BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** CRS Due Diligence period has expired but the CRS Info Complete Flag                MD036237
+      ** is still set to 'No' or 'Blank'                                                    MD036237
+                                                                                            MD036237
+     C                   EVAL      PIDate = *ZERO                                           MD036237
+     C                   EVAL      PODate = *ZERO                                           MD036237
+                                                                                            MD036237
+     C                   EVAL      PIDate = WCRSEftStrtDte                                  MD036237
+     C                   EXSR      SRMdasDay                                                MD036237
+                                                                                            MD036237
+     C                   EVAL      PInDate = NHCRDT                                         MD036237
+     C                   EXSR      SRDate10                                                 MD036237
+                                                                                            MD036237
+      ** New CRS Customer                                                                   MD036237
+                                                                                            MD036237
+     C                   IF        PMDate >= PODate                                         MD036237
+                                                                                            MD036237
+     C                   EVAL      WDlgDt = PMDate + WCRSDlgNewAC                           MD036237
+     C                   IF        WDlgDt <= WRUND AND                                      MD036237
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                    MD036237
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                              MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                              CGL177
+     C                   ELSE                                                                 CGL177
+                                                                                              CGL177
+      ** Existing CRS Customer (Created before CRS Effective Date)                            CGL177
+                                                                                              CGL177
+     C                   EXSR      SrCRSDlgDte                                                CGL177
+                                                                                              CGL177
+     C                   SELECT                                                               CGL177
+      ** CRS Existing A/C - Individual/Blank or Individual/N                                  CGL177
+     C                   WHEN      NRTYPE = 'P' AND NRHVAL = ' '                              CGL177
+     C                             OR NRTYPE = 'P' AND NRHVAL = 'N'                           CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Blank or Entity/N                                          CGL177
+     C                   WHEN      NRTYPE <> 'P' AND NRHVAL = ' '                             CGL177
+     C                             OR NRTYPE <> 'P' AND NRHVAL = 'N'                          CGL177
+                                                                                              CGL177
+     C                   IF        LowestVal <= WRUND AND                                     CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/Medium or Individual/Low                               CGL177
+     C                   WHEN      NRTYPE = 'P' AND NRHVAL = 'M'                              CGL177
+     C                             OR NRTYPE = 'P' AND NRHVAL = 'L'                           CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedInd PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Individual/High                                                   CGL177
+                                                                                              CGL177
+     C                   WHEN      NRTYPE = 'P' AND NRHVAL = 'H'                              CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiInd  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/Medium or Entity/Low                                       CGL177
+     C                                                                                        CGL177
+     C                   WHEN      NRTYPE <> 'P' AND NRHVAL = 'M'                             CGL177
+     C                             OR NRTYPE <> 'P' AND NRHVAL = 'L'                          CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgMedEnt PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+      ** CRS Existing A/C - Entity/High                                                       CGL177
+                                                                                              CGL177
+     C                   WHEN      NRTYPE <> 'P' AND NRHVAL = 'H'                             CGL177
+                                                                                              CGL177
+     C                   MOVE      WCRSDlgHiEnt  PIDate                                       CGL177
+     C                   EXSR      SRMdasDay                                                  CGL177
+                                                                                              CGL177
+     C                   IF        PODate <= WRUND AND                                        CGL177
+     C                             NRINFO <> 'Y' AND NRINFO <> 'A'                            CGL177
+     C                   EVAL      WArrCnt = WArrCnt + 1                                      CGL177
+     C                   EVAL      WExcpRptArr (WArrCnt) = 'Q'                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDSL                                                                CGL177
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SrRtvCRSAN - Retrieve CRS Agreement flag for country NAHO    *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SrRtvCRSAN    BEGSR                                                              MD036237
+                                                                                            MD036237
+      ** Retrieve Country of Location                                                       MD036237
+                                                                                            MD036237
+     C                   CALL      'AONAHOR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*KEY   '     POPTN                                      MD036237
+     C                   PARM      CNNAHO        PNAHO                                      MD036237
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD036237
+                                                                                            MD036237
+      ** Database Error                                                                     MD036237
+                                                                                            MD036237
+     C                   IF        PRtcd <> *BLANKS                                         MD036237
+     C                   EVAL      DBFILE = 'SDNAHOPD'                                      MD036237
+     C                   EVAL      DBASE  =  901                                            MD036237
+     C                   EVAL      DBKEY  = POptn                                           MD036237
+     C                   OUT       LDA                                                      MD036237
+     C                   EXSR      *PSSR                                                    MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+      ** Get CRS agreement                                                                  MD036237
+     C                   EVAL      WCNCD = CNCTRY                                           MD036237
+     C                   EVAL      WCOLC = NHCOLC                                           MD036237
+                                                                                            MD036237
+     C                   CALL      'AOCTTXR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*KEY   '     POPTN                                      MD036237
+     C                   PARM      WCNCD         @PCTRT                                     MD036237
+     C                   PARM      WCOLC         @PCTRR                                     MD036237
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD036237
+                                                                                            MD036237
+     C                   IF        PRTCD = '*NRF   '                                        MD036237
+     C                   EVAL      WCOLC = *BLANK                                           MD036237
+     C                   CALL      'AOCTTXR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*KEY   '     POPTN                                      MD036237
+     C                   PARM      WCNCD         @PCTRT                                     MD036237
+     C                   PARM      WCOLC         @PCTRR                                     MD036237
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD036237
+                                                                                            MD036237
+     C                   IF        PRTCD = *BLANK                                           MD036237
+     C                   EVAL      WDDCRSA = EWCRSA                                         MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      WDDCRSA = *Blanks                                        MD036237
+     C                   ENDIF                                                              MD036237
+     C                   ELSE                                                               MD036237
+     C                   EVAL      WDDCRSA = EWCRSA                                         MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SRDate1 - Convert Date DDMMYY to Midas Date                  *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SRDate1       BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   CALLB     'ZDATE1'                                                 MD036237
+     C                   PARM                    PInEfDte                                   MD036237
+     C                   PARM      *ZERO         PMEfDate                                   MD036237
+     C                   PARM                    BJDFIN                                     MD036237
+     C                   PARM      *BLANK        PErrFlag                                   MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
+      *****************************************************************                     MD036237
+      *                                                               *                     MD036237
+      *  SRSVAL2 - Access System Values for CRS                       *                     MD036237
+      *                                                               *                     MD036237
+      *****************************************************************                     MD036237
+     C     SRSVAL2       BEGSR                                                              MD036237
+                                                                                            MD036237
+     C                   EVAL      POP01 = 'CRSEffectStartDate'                             MD036237
+     C                   EVAL      POP02 = 'CRSDiligenceHiEnt'                              MD036237
+     C                   EVAL      POP03 = 'CRSDiligenceHiInd'                              MD036237
+     C                   EVAL      POP04 = 'CRSDiligenceMedEnt'                             MD036237
+     C                   EVAL      POP05 = 'CRSDiligenceMedInd'                             MD036237
+     C                   EVAL      POP06 = 'CRSDiligenceNewA/C'                             MD036237
+     C                   EVAL      POP07 = 'CRSForTINMandatory'                             MD036237
+     C                   EVAL      POP08 = 'CRSLocalTINMandatory'                           MD036237
+                                                                                            MD036237
+     C                   CALL      'AOSVALR0'                                               MD036237
+     C                   PARM      *BLANKS       PRtcd                                      MD036237
+     C                   PARM                    POP01                                      MD036237
+     C                   PARM                    PVL01                                      MD036237
+     C                   PARM                    POP02                                      MD036237
+     C                   PARM                    PVL02                                      MD036237
+     C                   PARM                    POP03                                      MD036237
+     C                   PARM                    PVL03                                      MD036237
+     C                   PARM                    POP04                                      MD036237
+     C                   PARM                    PVL04                                      MD036237
+     C                   PARM                    POP05                                      MD036237
+     C                   PARM                    PVL05                                      MD036237
+     C                   PARM                    POP06                                      MD036237
+     C                   PARM                    PVL06                                      MD036237
+     C                   PARM                    POP07                                      MD036237
+     C                   PARM                    PVL07                                      MD036237
+     C                   PARM                    POP08                                      MD036237
+     C                   PARM                    PVL08                                      MD036237
+     C                   PARM                    POP09                                      MD036237
+     C                   PARM                    PVL09                                      MD036237
+     C                   PARM                    POP10                                      MD036237
+     C                   PARM                    PVL10                                      MD036237
+                                                                                            MD036237
+     C                   EVAL      WCRSEftStrtDte = PVL01                                   MD036237
+     C                   EVAL      WCRSDlgHiEnt = PVL02                                       CGL177
+     C                   EVAL      WCRSDlgHiInd = PVL03                                     MD036237
+     C                   EVAL      WCRSDlgMedEnt = PVL04                                    MD036237
+     C                   EVAL      WCRSDlgMedInd = PVL05                                      CGL177
+     C                   MOVEL     PVL06         WCRSDlgNewAC                               MD036237
+     C                   EVAL      WCRSForTINMan = PVL07                                    MD036237
+     C                   EVAL      WCRSLocTINMan = PVL08                                    MD036237
+                                                                                            MD036237
+     C                   ENDSR                                                              MD036237
+      *****************************************************************                     MD036237
+      /EJECT                                                                                MD036237
       *****************************************************************                     MD033414
       *                                                               *                     MD033414
       *  SRMdasDay - Convert Diligence 6A Dates to Midas Day No.      *                     MD033414
@@ -1711,6 +2784,34 @@
                                                                                             MD033414
      C                   ENDIF                                                              MD033414
  
+      ** Check if CGL157 is On                                                              MD036237
+                                                                                            MD036237
+     C                   MOVE      'N'           CGL157                                     MD036237
+                                                                                            MD036237
+     C                   CALL      'AOSARDR0'                                               MD036237
+     C                   PARM      *BLANKS       PRTCD                                      MD036237
+     C                   PARM      '*VERIFY'     POPTN                                      MD036237
+     C                   PARM      'CGL157'      PSARD                                      MD036237
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD036237
+                                                                                            MD036237
+     C     PRTCD         IFEQ      *BLANKS                                                  MD036237
+                                                                                            MD036237
+     C                   EVAL      CGL157 = 'Y'                                             MD036237
+                                                                                            MD036237
+     C                   ELSE                                                               MD036237
+                                                                                            MD036237
+     C     PRTCD         IFNE      '*NRF   '                                                MD036237
+                                                                                            MD036237
+     C     *LOCK         IN        LDA                                                      MD036237
+     C                   EVAL      DBFile = 'SCSARDPD'                                      MD036237
+     C                   EVAL      DBase = 103                                              MD036237
+     C                   OUT       LDA                                                      MD036237
+     C                   EXSR      *PSSR                                                    MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
+     C                   ENDIF                                                              MD036237
+                                                                                            MD036237
      C                   ENDSR
       *****************************************************************
       /EJECT

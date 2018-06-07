@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD039670           Date 26Jul16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD027209C          Date 08Oct14               *
       *                 MD029835           Date 29Aug14               *
       *                 MD027209B          Date 25Sep14               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027209C - F4-Print Report is not available in USIT and NCUP*
@@ -683,6 +685,18 @@
  
      C                   DOW       NOT %EOF(SDFTNHL4)
  
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *BLANKS       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    FNNAHO                                     MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHL4                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD039670
      C     FNNAHO        CHAIN     SDFNBKL0
  
      C                   IF        SDFTNH = SDFNBK
@@ -1088,6 +1102,18 @@
      C     KCustKey1     READE     SDFTNHL4                                                 MD028682
      C                   DOW       NOT %EOF(SDFTNHL4)
  
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *BLANKS       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    FNNAHO                                     MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHL4                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+                                                                                            MD039670
      C     FNNAHO        CHAIN     SDFNBKL0
  
      C                   IF        SDFTNH = SDFNBK

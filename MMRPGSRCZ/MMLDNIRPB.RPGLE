@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
@@ -569,6 +572,7 @@
      C                   PARM      'APIDSETPD'   InvFile2         10            CAP014
      C**********         PARM                    InvFile3         10                   CAP014 209905
      C                   PARM      'MMIFIDTPD'   InvFile3         10                          209905
+     C                   PARM      *Blanks       InvFile4         10                        MD041294
                                                                                 CAP014
       * Invalid file data                                                       CAP014
      C***********        PARM      InvTr         InvFDta1       2000            CAP014 CFT014
@@ -578,6 +582,7 @@
      C                   PARM      InvTrSetIn    InvFDta2       4000            CFT014
      C**********         PARM                    InvFDta3       4000                   CFT014 209905
      C                   PARM      FIDTInvTr     InvFDta3       5000                          209905
+     C                   PARM      *Blanks       InvFDta4       4000                        MD041294
                                                                                 CAP014
       * OUTPUTS                                                                 CAP014
                                                                                 CAP014

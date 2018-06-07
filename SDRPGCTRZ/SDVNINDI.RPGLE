@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043147           Date 03Jan17               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043147           Date 03Jan17               *
       *                 MD036489           Date 11Nov15               *
       *                 MD036460           Date 05Nov15               *
       *                 MD036356 *CREATE   Date 20Oct15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043147 - US account authority holder indicia is not        *
       *             updated from insert like other US Indicia         *
@@ -319,6 +321,36 @@
      C                             AND PAINSF = 'I'                                         MD036460
      C                   EVAL      DDIDSV = 'N'
      C                   ENDIF
+                                                                                              CGL157
+      ** FATCA Details                                                                        CGL157
+      ** Check Mailing Country                                                                CGL157
+                                                                                              CGL157
+     C                   IF        DDMAIL = *BLANKS                                           CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAMCT1:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAMCT1 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = NAMCT1                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAMCT2:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAMCT2 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = NAMCT2                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAMCT3:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAMCT3 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = NAMCT3                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAMCT4:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAMCT4 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = NAMCT4                                            CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAMCT5:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAMCT5 <> *BLANKS                                      CGL157
+     C                   EVAL      DDMAIL = NAMCT5                                            CGL157
+                                                                                              CGL157
+     C                   ENDSL                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
       ** FATCA Details
  
@@ -363,7 +395,34 @@
      C**********                   AND DDACTI = 'I'                                         MD036460
      C                   EVAL      DDGCSV = 'N'
      C                   ENDIF
- 
+                                                                                              CGL157
+     C                   IF        DDPHNE = *BLANKS                                           CGL157
+                                                                                              CGL157
+     C                   SELECT                                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAPCT1:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAPCT1 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHNE = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAPCT2:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAPCT2 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHNE = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAPCT3:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAPCT3 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHNE = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAPCT4:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAPCT4 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHNE = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   WHEN      %LOOKUP(NAPCT5:CtryCodeArr) <> 0                           CGL157
+     C                             AND NAPCT5 <> *BLANKS                                      CGL157
+     C                   EVAL      DDPHNE = 'Y'                                               CGL157
+                                                                                              CGL157
+     C                   ENDSL                                                                CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
       ** Check Telephone Number
      C                   IF        DDPHNE = 'Y'
      C                             AND DDTESV <> 'Y'

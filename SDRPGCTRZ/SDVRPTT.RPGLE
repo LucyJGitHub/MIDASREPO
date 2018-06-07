@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027010B          Date 22May14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027010B          Date 22May14               *
       *                 MD027010A          Date 22May14               *
       *                 MD026873           Date 15May14               *
       *                 MD026507A          Date 12May14               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027010B - FATCA Exempt and Reporting type is incorrect     *
       *  MD027010A - FATCA Exempt and Reporting type is incorrect     *
@@ -221,7 +223,8 @@
      C                   EVAL      WHH = %SUBST(WTimestamp:12:2)
      C                   EVAL      WMM = %SUBST(WTimestamp:15:2)
      C                   EVAL      WSS = %SUBST(WTimestamp:18:2)
-     C                   EVAL      DFRPTM = WHH + WMM + WSS
+     C**********         EVAL      DFRPTM = WHH + WMM + WSS                                   CGL177
+     C                   EVAL      DFRPTM = '******'                                          CGL177
      C**********         EVAL      DFRPTU = DDUSID                                          MD026507
      C                   EVAL      DFRPTU = WKUSER                                          MD026507
      C                   EVAL      DFRPTF = WFRPTF

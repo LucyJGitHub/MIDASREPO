@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041709           Date 28Sep16               *
+      *  Last Amend No. MD039670           Date 11Aug16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041709           Date 28Sep16               *
       *                 MD027474           Date 11Jun14               *
       *                 MD027483           Date 16Jun14               *
       *                 MD024592           Date 28Jan14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039670 - FATCA Housekeeping program                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000715 failure. Adjusted customer    *
       *             counter to 10 numeric.                            *
@@ -159,6 +161,9 @@
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank Details Accessed via Access Program
  
+     D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD039670
+      ** Data Structure for Non-A/C Holder                                                  MD039670
+                                                                                            MD039670
      D  @JOB                 244    253
      D  @USER                254    263
      D                 DS
@@ -239,6 +244,7 @@
      D POPTN           S              7
      D PDCCD           S              2
      D PCTRY           S              2
+     D PKEY1           S             10                                                     MD039670
  
       ** Parameters for AOSVALR0
      D P@OP01          S             20A
@@ -602,6 +608,21 @@
      C     NHKEY         SETLL     SDFTNHJ0                                                 MD025536
      C                   DOW       NOT %EOF (SDFTNHJ0)                                      MD025536
      C                   READ      SDFTNHJ0                               24                MD025536
+                                                                                            MD039670
+     C                   EVAL      PKEY1 = FNNAHO                                           MD039670
+     C                   IF        PKEY1 <> *BLANKS                                         MD039670
+     C                   CALL      'AONAHOR0'                                               MD039670
+     C                   PARM      *BLANKS       PRTCD                                      MD039670
+     C                   PARM      '*KEY   '     POPTN                                      MD039670
+     C                   PARM                    PKEY1                                      MD039670
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+                                                                                            MD039670
+     C                   IF        PRTCD = '*NRF'                                           MD039670
+     C                             OR NHCHTP = 'D'                                          MD039670
+     C                   READ      SDFTNHJ0                                                 MD039670
+     C                   ITER                                                               MD039670
+     C                   ENDIF                                                              MD039670
+     C                   ENDIF                                                              MD039670
      C                   IF        NOT %EOF (SDFTNHJ0)                                      MD025536
      C                             AND FNCLAC = WClassCode                                  MD025536
      C                   EXSR      SRNAHOEXT                                                MD025536

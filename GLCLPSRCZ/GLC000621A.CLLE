@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*       Last Amend No. CGL177             Date 11Jan16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL154  *CREATE    Date 13Oct14              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL154 - FATCA Reporting                                    */
 /*                                                                   */
@@ -36,6 +38,15 @@
              DCL        VAR(&GLRMDTPD) TYPE(*CHAR) LEN(10) VALUE('GLRMDTPD  ')
              DCL        VAR(&GLRMIEPD) TYPE(*CHAR) LEN(10) VALUE('GLRMIEPD  ')
              DCL        VAR(&GLRPMGPD) TYPE(*CHAR) LEN(10) VALUE('GLRPMGPD  ')
+             DCL        VAR(&GLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMDPD  ')           /*CGL177*/
+             DCL        VAR(&GLCRMGPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMGPD  ')           /*CGL177*/
+             DCL        VAR(&GLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMIPD  ')           /*CGL177*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)                                 /*CGL177*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                   /*CGL177*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                    /*CGL177*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                    /*CGL177*/
+             DCL        VAR(&CGL154) TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL177*/
+             DCL        VAR(&CGL177) TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL177*/
  
 /* Monitor for any errors and send appropriate message to MOPERQ */
  
@@ -61,7 +72,23 @@
              CHGVAR     VAR(%SUBSTRING(&GLRMDTPD 9 2)) VALUE(&PYRNO)
              CHGVAR     VAR(%SUBSTRING(&GLRMIEPD 9 2)) VALUE(&PYRNO)
              CHGVAR     VAR(%SUBSTRING(&GLRPMGPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCRMDPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(%SUBSTRING(&GLCRMGPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(%SUBSTRING(&GLCRMIPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(&CGL154) VALUE(' ') /*CGL177*/
+             CHGVAR     VAR(&CGL177) VALUE(' ') /*CGL177*/
  
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY') /*CGL177*/
+             CHGVAR     VAR(&SARD) VALUE('CGL154') /*CGL177*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT) /*CGL177*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL154) +
+                          VALUE('Y')) /*CGL177*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY') /*CGL177*/
+             CHGVAR     VAR(&SARD) VALUE('CGL177') /*CGL177*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT) /*CGL177*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL177) +
+                          VALUE('Y')) /*CGL177*/
+
              CPYF       FROMFILE(&DMLIB/GLCAPAPD) MBROPT(*REPLACE) +
                           TOFILE(&DALIB/&GLCAPAPD) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
@@ -70,7 +97,7 @@
                           TOFILE(&DALIB/&GLCSBAPD) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
  
- 
+             IF         COND(&CGL154 *EQ 'Y') THEN(DO) /*CGL177*/
              CPYF       FROMFILE(&DMLIB/GLRMDTPD) MBROPT(*REPLACE) +
                           TOFILE(&DALIB/&GLRMDTPD) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
@@ -82,14 +109,36 @@
              CPYF       FROMFILE(&DMLIB/GLRPMGPD) MBROPT(*REPLACE) +
                           TOFILE(&DALIB/&GLRPMGPD) CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO      /*CGL177*/
+
+             IF         COND(&CGL177 *EQ 'Y') THEN(DO) /*CGL177*/
+                CPYF       FROMFILE(&DMLIB/GLCRMDPD) TOFILE(&DALIB/&GLCRMDPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+
+                CPYF       FROMFILE(&DMLIB/GLCRMGPD) TOFILE(&DALIB/&GLCRMGPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+
+                CPYF       FROMFILE(&DMLIB/GLCRMIPD) TOFILE(&DALIB/&GLCRMIPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+             ENDDO      /*CGL177*/
  
 /** Clear all files after back up */
              CLRPFM     FILE(&DMLIB/GLCAPAPD)
              CLRPFM     FILE(&DMLIB/GLCSBAPD)
              CLRPFM     FILE(&DMLIB/GLFCABPD)
+             IF         COND(&CGL154 *EQ 'Y') THEN(DO) /*CGL177*/
              CLRPFM     FILE(&DMLIB/GLRMDTPD)
              CLRPFM     FILE(&DMLIB/GLRMIEPD)
              CLRPFM     FILE(&DMLIB/GLRPMGPD)
+             ENDDO      /*CGL177*/
+             IF         COND(&CGL177 *EQ 'Y') THEN(DO) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMDPD) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMGPD) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMIPD) /*CGL177*/
+             ENDDO      /*CGL177*/
  
              GOTO       CMDLBL(END)
  

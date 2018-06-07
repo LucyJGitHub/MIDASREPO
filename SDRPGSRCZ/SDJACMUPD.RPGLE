@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036377           Date 30Oct15               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036377           Date 30Oct15               *
       *                 MD033947           Date 28Apr15               *
       *                 MD030151           Date 05Sep14               *
       *                 CER070             Date 19Aug14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036377 - Database error upon F12 cancel                    *
       *  MD033947 - Database Error occurred when amending US Indicia  *
@@ -238,6 +240,10 @@
      D PAftCUXC        S           5000A                                                    MD026854
      D PACRV           S              1A                                                      CSD092
      D PELEC           S              1A                                                      CGL132
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
      D CER048          S              1A                                                    BUG23732
      D PCust           S             10A                                                    BUG23732
      D PCustT          S              6A                                                    BUG23732
@@ -246,8 +252,13 @@
      D PLocn           S              3A                                                    BUG23732
      D KCtax           S              2A                                                    BUG23732
      D CER069          S              1A                                                      CER069
+     D CMDNHCRS        S             50    DIM(1) CTDATA PERRCD(1)                            CGL177
+     D CMDCSCRS        S             50    DIM(1) CTDATA PERRCD(1)                            CGL177
      D PCommitCUSD     S              1A                                                    MD033947
      D PCommitNAHL     S              1A                                                    MD033947
+     D PReturn         S              7A                                                      CGL177
+     D CGL157          S              1A                                                      CGL177
+     D WIndicia        S              1A                                                      CGL177
       ** Override SDFTCSPD, SDFTNHPD                                                        MD027576
      D CMDNH           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
      D CMDCS           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
@@ -291,6 +302,16 @@
      C                   PARM                    A_JANO                                     MD026790
      C                   PARM      '0'           PCommitCUSD                                MD036377
      C                   PARM      '0'           PCommitNAHL                                MD033947
+                                                                                              CGL177
+      ** Invoke CRS Joint account member indicia update                                       CGL177
+                                                                                              CGL177
+     C                   IF        CGL157 = 'Y'                                               CGL177
+     C                             AND A_CHTP <> 'D'                                          CGL177
+     C                   CALL      'SD000561'                                                 CGL177
+     C                   PARM      *Blanks       PReturn                                      CGL177
+     C                   PARM                    A_JANO                                       CGL177
+     C                   PARM      'Y'           WIndicia                                     CGL177
+     C                   ENDIF                                                                CGL177
       *                                                                                     BUG23732
      C                   IF        CER048 = 'Y' AND                                         BUG23732
      C                             A_CUST <> *BLANKS  AND                                   BUG23732
@@ -415,6 +436,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
                                                                                               CSD092
      C                   ENDSR
@@ -482,6 +507,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                      MD026854
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
                                                                                               CSD092
      C                   ENDSR
@@ -511,6 +540,13 @@
      C                   EXSR      *PSSR
      C                   ENDIF
  
+     C                   IF        CGL157 = 'Y'                                               CGL177
+     C                   CALL      'SD000561'                                                 CGL177
+     C                   PARM      *Blanks       PReturn                                      CGL177
+     C                   PARM                    A_CUST                                       CGL177
+     C                   PARM      ' '           WIndicia                                     CGL177
+     C                   ENDIF                                                                CGL177
+
       ** Update 'Before Image'.
  
      C                   MOVEL(P)  SDJACM        B_JAcM
@@ -534,6 +570,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                      MD026854
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                                CSD092
                                                                                               CSD092
      C                   ENDSR
@@ -1023,6 +1063,16 @@
      C                   PARM                    CMDCS                                      MD027576
      C                   PARM                    CMDLEN                                     MD027576
                                                                                             MD027576
+      ** Override SDCRSNL1                                                                    CGL177
+     C                   Z-ADD     50            CMDLEN                                       CGL177
+     C                   CALL      'QCMDEXC'                                                  CGL177
+     C                   PARM                    CMDNHCRS                                     CGL177
+     C                   PARM                    CMDLEN                                       CGL177
+      ** Override SDCRSDL1                                                                    CGL177
+     C                   CALL      'QCMDEXC'                                                  CGL177
+     C                   PARM                    CMDCSCRS                                     CGL177
+     C                   PARM                    CMDLEN                                       CGL177
+                                                                                              CGL177
      C     *ENTRY        PLIST
  
       **********************
@@ -1107,6 +1157,30 @@
      C                   ENDIF                                                                CSD092
                                                                                               CSD092
      C                   ENDIF                                                                CSD092
+                                                                                              CGL177
+      ** Check if CGL157 is enabled.                                                          CGL177
+                                                                                              CGL177
+     C                   EVAL      CGL157 = 'N'                                               CGL177
+     C                   CALL      'AOSARDR0'                                                 CGL177
+     C                   PARM      *BLANKS       PRtCd                                        CGL177
+     C                   PARM      '*VERIFY'     POptn                                        CGL177
+     C                   PARM      'CGL157'      PSARD                                        CGL177
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL177
+                                                                                              CGL177
+     C                   IF        PRtCd = *BLANKS                                            CGL177
+     C                   EVAL      CGL157 = 'Y'                                               CGL177
+     C                   ELSE                                                                 CGL177
+                                                                                              CGL177
+     C                   IF        PRtCd <> '*NRF   '                                         CGL177
+     C     *LOCK         IN        LDA                                                        CGL177
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CGL177
+     C                   EVAL      DBKey = PSARD                                              CGL177
+     C                   EVAL      DBase = 108                                                CGL177
+     C                   OUT       LDA                                                        CGL177
+     C                   EXSR      *PSSR                                                      CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   ENDIF                                                                CGL177
  
       ** Determine whether the program is running interactively (PZType = '1')
       ** or in batch (PZType = '0').
@@ -1218,3 +1292,7 @@
 OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                                           MD027576
 ** CMDCS                                                                                    MD027576
 OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027576
+** CMDNHCRS                                                                                   CGL177
+OVRDBF FILE(SDCRSNL1) TOFILE(SDCRSNL1) SHARE(*NO)                                             CGL177
+** CMDCSCRS                                                                                   CGL177
+OVRDBF FILE(SDCRSDL1) TOFILE(SDCRSDL1) SHARE(*NO)                                             CGL177

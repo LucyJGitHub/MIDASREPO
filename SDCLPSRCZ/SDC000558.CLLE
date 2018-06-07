@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL132  *CREATE    Date 01May13              */
+/*       Last Amend No. CGL177             Date 11Jan16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL132  *CREATE    Date 01May13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
 /*                Classification - Master                            */
@@ -29,7 +31,8 @@
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
-             DCL        VAR(&IFILE) TYPE(*CHAR) LEN(50)
+/**********  DCL        VAR(&IFILE) TYPE(*CHAR) LEN(50) */                                /*CGL177*/
+             DCL        VAR(&IFILE) TYPE(*CHAR) LEN(80)                                   /*CGL177*/
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
  
 /* Monitor for any errors and send appropriate message to MOPERQ */
@@ -72,7 +75,36 @@
              CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDFTNHPD')
              CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDNACUPD')
              ENDDO
+                                                                                          /*CGL177*/
+             /** CRS Customer Type/Subtype Allocation Tool*/                              /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000302') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDCRSHPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
+             /** CRS Indicia Search Tool*/                                                /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000306') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDCRSDPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
+             /** CRS High  Value Account Identification Tool */                           /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000311') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 1 10)) VALUE('SDACRVPD')                       /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 31 10)) VALUE('SDCRSHPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 41 10)) VALUE('SDCRNHPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
  
+             /** CRS Normal Accounts Tool */                                              /*CGL177*/
+             ELSE       IF COND(&PGM *EQ 'SD000315') THEN(DO)                             /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE  1 10)) VALUE('SDCRSDPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 11 10)) VALUE('SDCRSNPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 21 10)) VALUE('SDCRSHPD')                      /*CGL177*/
+                CHGVAR     VAR(%SST(&IFILE 31 10)) VALUE('SDCRNHPD')                      /*CGL177*/
+             ENDDO                                                                        /*CGL177*/
+                                                                                          /*CGL177*/
 /* Check FATCA files allocation  */
              CALL       PGM(SDC000162) PARM(&RTN &IFILE &MODE)
              IF         COND(&RTN *NE ' ') THEN(CHGVAR VAR(&RTCD) +

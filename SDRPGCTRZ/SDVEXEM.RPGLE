@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027458A          Date 15Sep14               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027458A          Date 15Sep14               *
       *                 MD027458           Date 04Aug14               *
       *                 MD027010A          Date 22May14               *
       *                 MD026873           Date 15May14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027458A - FATCA Exempt? flag should not be amendable to    *
       *             blank (Re-open)                                   *
@@ -194,6 +196,7 @@
      C                   ENDIF                                                              MD027458
  
      C                   IF        DDEXEMO <> DDEXEM
+     C                             AND DDEXEM = 'Y'                                           CGL157
      C                   EVAL      WNEW = 'Y'
      C                   CALLB     'ZDATE2'
      C                   PARM      BJRDNB        ZDAYNO            5 0

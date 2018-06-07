@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029805           Date 05Sep14               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029805           Date 05Sep14               *
       *                 MD026550           Date 22May14               *
       *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
       *  MD026550 - Require US TIN when Subject to Reporting is 'Y'   *
@@ -77,12 +79,22 @@
      F                                     PREFIX(V_)                                         CGL132
      F                                     COMMIT                                             CGL132
  
+     FSDVCRNHPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
+     FSDVCRSNPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
+
       ** Invalid Non-A/C Holders
      FSDINAHLPD UF A E             DISK    Infsr(*PSSR)
      F                                     Commit
      FSDIFTNHPD UF A E             DISK    INFSR(*PSSR)                                       CGL132
      F                                     COMMIT                                             CGL132
  
+     FSDICRNHPD UF A E             DISK    Infsr(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876    
+     FSDICRSNPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
+     F                                     Commit                                           MD040876
+
      FSDVNAHLL1 IF   E           K DISK    RENAME(SDVNAHLD0:SDVNAHLCHK)
  
      FZAFLDNPD  IT   F   15        DISK    Infsr(*PSSR)
@@ -181,6 +193,8 @@
      D TranInPrim1             1   1000                                                       CER047
      D TranInPrim2          1001   1417                                                       CER054
      D TranInFatca   E DS                  EXTNAME(SDFTNRPD)                                  CGL132
+     D TranInCRNH    E DS                  EXTNAME(SDCRNSPD)                                MD040876
+     D TranInCRSN    E DS                  EXTNAME(SDCRNDPD)                                MD040876
  
       ** Valid Non-A/C Holder layout
      D ValidNaho     E DS                  Extname(SDVNAHLPD)
@@ -192,6 +206,15 @@
       ** (Current) Non-A/C Holder in Screen Format - Primary Details
      D CurNaPrim     E DS                  Extname(SDNAHLPD)
      D                                     Prefix(@)
+     D SDICRSN       E DS                  Extname(SDICRSNPD)                               MD041311
+                                                                                            MD040876
+      ** Current Non-A/C Holder in File Format - CRS details                                MD040876
+     D CrCrhFlFmt    E DS                  EXTNAME(SDCRNHPD)                                MD040876
+     D                                     PREFIX(C_)                                       MD040876
+     D                                                                                      MD040876
+      ** Current NOn-A/C Holder in Screen Format - CRS Details                              MD040876
+     D CurCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                MD040876
+     D                                     PREFIX(@_)                                       MD040876
                                                                                               CGL132
       ** Current Non-A/C Holder in File Format - FATCA details                                CGL132
      D CrFaFilFmt    E DS                  EXTNAME(SDFTNHPD)                                  CGL132
@@ -204,10 +227,17 @@
       ** New Non-A/C Holder in File Format - FATCA Details                                    CGL132
      D ValidFatca    E DS                  EXTNAME(SDVFTNHPD)                                 CGL132
      D                                     PREFIX(V_)                                         CGL132
+                                                                                            MD040876
+      ** New Non-A/C Holder in File Format - CRS Details                                    MD040876
+     D ValidCRNH     E DS                  EXTNAME(SDVCRNHPD)                               MD040876
+     D SDVCRSN       E DS                  EXTNAME(SDVCRSNPD)                               MD040876
+                                                                                            MD040876
  
       ** Error indicators
      D OKNaPrim      E DS                  Extname(SDENAHLPD)
      D OKFATCAdet    E DS                  EXTNAME(SDEFTNHPD)                                 CGL132
+     D OKCRNHDet     E DS                  EXTNAME(SDECRNHPD)                               MD040876
+     D OKCRSCtry     E DS                  EXTNAME(SDECRSNPD)                               MD040876
  
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
@@ -278,6 +308,24 @@
       ** Fields (500A) to receive the incoming transaction                                    CER047
       *                                                                                       CER047
      D Trans5002       S            500A                                                      CER047
+     D Trans9999_1     S           9999A                                                    MD040876
+     D Trans9999_2     S           9999A                                                    MD040876
+     D Trans9999_3     S           9999A                                                    MD040876
+     D Bfp             S              4S 0                                                  MD040876
+     D NAHLLn          S              4S 0                                                  MD040876
+     D FTNHLn          S              4S 0                                                  MD040876
+     D CRNHLn          S              4S 0                                                  MD040876
+     D CRSNLn          S              4S 0                                                  MD040876
+     D RecordLen       S              5P 0                                                  MD040876
+     D FileName        S             10A                                                    MD040876
+     D FileLib         S             10A                                                    MD040876
+     D PCrsdF          S            222A   DIM(30)                                          MD040876
+     D PCrsdS          S            351A   DIM(30)                                          MD040876
+     D PCrsdB          S            351A   DIM(30)                                          MD040876
+     D PCrsdZ          S            351A                                                    MD040876
+     D WChar12         S             12A                                                    MD041311
+     D WChar217        S            217A                                                    MD041311
+     D WChar229        S            229A                                                    MD041311
  
  
       ** Index for arrays of error message ids etc in Amend validation
@@ -353,6 +401,20 @@
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
+     D PAINSF          S              1A                                                    MD040876
+     D WINKJ           S              1                                                     MD040876
+     D PWarning        S              1A                                                    MD040876
+     D CGL132          S              1A                                                    MD040876
+     D CGL157          S              1A                                                    MD040876
+     D PCountry        S              2A                                                    MD040876
+     D X               S              2S 0                                                  MD040876
+     D Y               S              5S 0                                                  MD040876
+     D Z               S              5S 0                                                  MD041311
+     D WIdx_WVAL       S              3P 0                                                  MD040876
+     D WTRANS          S           7000A                                                    MD040876
+     D WChar2          S              2A                                                    MD041311
+     D Wtemp1          S              3A                                                    MD041311
+     D Wtemp2          S            348A                                                    MD041311
  
  
       ** +--------------------------------------+
@@ -381,11 +443,12 @@
       ** This module needs to break these 500A fields by loading them into
       ** the appropriate (externally described) data structure.
  
-     C                   EVAL      TranInPrim1 = Trans5001                                    CER047
-     C                   EVAL      TranInPrim2 = Trans5002                                    CER047
+     C**********         EVAL      TranInPrim1 = Trans5001                           CER047 MD040876
+     C**********         EVAL      TranInPrim2 = Trans5002                           CER047 MD040876
      C**********         EVAL      TranInPrim = Trans5001 + extdata                           CER047
-     C                   EVAL      TranInPrim = TranInPrim + extdata                          CER047
-     C                   EVAL      TranInFatca = Trans5003                                    CGL132
+     C**********         EVAL      TranInPrim = TranInPrim + extdata                 CER047 MD040876
+     C**********         EVAL      TranInFatca = Trans5003                           CGL132 MD040876
+     C                   EXSR      Parse_NAHL                                               MD040876
  
       ** Generate a timestamp for this transaction
  
@@ -676,6 +739,8 @@
      C                   PARM                    NahoFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
+     C                   PARM                    CrCrhFlFmt                                 MD040876
+     C                   PARM                    PCrsdF                                     MD040876
      C                   PARM                    OkActn
      C                   PARM                    OKNaho
      C                   PARM                    FldNameArr
@@ -683,6 +748,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
  
+     C                   EVAL      PAINSF = DDACTN                                          MD040876
      C                   ENDSR
  
       *****************************************************************
@@ -698,7 +764,7 @@
       **  file record - fields in this will be updated during processing
  
      C                   MOVE      NahoFilFmt    ValidNaho
-     C                   MOVE      CrFaFilFmt    ValidFatca                                   CGL132
+     C**********         MOVE      CrFaFilFmt    ValidFatca                          CGL132 MD041311
  
       ** For Amends, convert the Non-A/C Holder to screen format
  
@@ -711,6 +777,8 @@
      C                   PARM                    ValidNaho
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
+     C                   PARM                    CrCrhFlFmt                                 MD040876
+     C                   PARM                    PCrsdF                                     MD040876
  
       ** OUTPUTS :
       ** Non-A/C Holder Details - screen formats
@@ -718,6 +786,8 @@
      C                   PARM                    CurNaPrim
      C                   PARM                    CurCuFATC                                    CGL132
      C                   PARM                    CurCuFOTH                                    CGL132
+     C                   PARM                    CurCuCRNH                                  MD040876
+     C                   PARM                    PCrsdS                                     MD040876
  
  
      C                   ENDSR
@@ -740,7 +810,9 @@
      C                   GOTO      EVALidTr
      C                   ENDIF
  
+     C                   IF        CGL132 = 'Y'                                             MD040876
      C                   EXSR      SRValdNaFatca                                              CGL132
+     C                   ENDIF                                                              MD040876
                                                                                               CGL132
       **  If error in validation, fail this input                                             CGL132
                                                                                               CGL132
@@ -748,6 +820,10 @@
      C                   GOTO      EVALidTr                                                   CGL132
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
+     C                   IF        CGL157 = 'Y'                                             MD041294
+     C                   EXSR      SRValdNaCRS                                              MD041294
+     C                   ENDIF                                                              MD041294
+                                                                                            MD041294
      C     EVALidTr      ENDSR
  
       *****************************************************************
@@ -786,7 +862,7 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    ValidNaho
-     C                   PARM                    CGL032
+     C**********         PARM                    CGL032                                     MD040876
  
      C                   ENDSR
  
@@ -814,6 +890,9 @@
      C                   PARM                    CrFoFilFmt                                   CGL132
      C                   PARM                    ValidNaho                                    CGL132
      C                   PARM      DDCRDT        P_CRDT            8                        MD026550
+     C                   PARM                    WCLAFlag          1                        MD027561
+     C                   PARM                    PAINSF                                     MD036460
+     C                   PARM                    CurCuCRNH                                  MD035388
                                                                                               CGL132
       ** OUTPUTS :                                                                            CGL132
       ** FATCA Customer Details OK inds                                                       CGL132
@@ -1020,6 +1099,127 @@
                                                                                               CGL132
                                                                                               CGL132
      C     ESRValdNaFatcaENDSR                                                                CGL132
+                                                                                            MD040876
+      *****************************************************************                     MD040876
+      /EJECT                                                                                MD040876
+      *****************************************************************                     MD040876
+      ** SRValdNaCRS - Validate Non-A/C Holder CRS details            *                     MD040876
+      *****************************************************************                     MD040876
+                                                                                            MD040876
+     C     SRValdNaCRS   BEGSR                                                              MD040876
+                                                                                            MD040876
+     C                   EVAL      X = 1                                                    MD040876
+     C                   EVAL      Y = 1                                                    MD040876
+     C                   MOVEA     *BLANKS       PCrsdB(X)                                  MD041311
+     C                   MOVEA     *BLANKS       PCrsdF(X)                                  MD041311
+     C                   MOVEA     *BLANKS       PCrsdS(X)                                  MD041311
+     C                   DOW       X < 31                                                   MD040876
+     C                   EVAL      Wtemp1 = %SUBST(WTRANS:Y:2)                              MD041311
+     C                   EVAL      Z = Y + 2                                                MD041311
+     C                   EVAL      Wtemp2 = %SUBST(WTRANS:Z:213)                            MD041311
+     C**********         EVAL      PCrsdB(X) = %SUBST(WTRANS:Y:217)                MD040876 MD041311
+     C                   EVAL      PCrsdB(X) = Wtemp1                                       MD041311
+     C                   MOVE      Wtemp2        PCrsdB(X)                                  MD041311
+     C                   EVAL      X = X + 1                                                MD040876
+     C**********         EVAL      Y = Y + 217                                     MD040876 MD041311
+     C                   EVAL      Y = Y + 215                                              MD041311
+     C                   ENDDO                                                              MD040876
+                                                                                            MD040876
+     C                   MOVEA     PCrsdB        PCrsdS                                     MD040876
+     C                   CALLB     'SDCRSNDFT'                                              MD040876
+     C                   PARM                    TranInPrim                                 MD040876
+     C                   PARM                    PCrsdS                                     MD040876
+     C                   PARM                    PCrsdF                                     MD040876
+                                                                                            MD040876
+     C                   EVAL      X = 1                                                    MD040876
+     C                   DOW       X < 31                                                   MD040876
+     C                   EVAL      PCountry = PCrsdF(X)                                     MD040876
+                                                                                            MD040876
+     C                   IF        PCountry <> *Blanks                                      MD040876
+     C                   CALLB     'SDCRSN3VL'                                              MD040876
+                                                                                            MD040876
+      ** Inputs                                                                             MD040876
+      ** Mode                                                                               MD040876
+     C                   PARM      *Blanks       RespMode                                   MD040876
+     C                   PARM                    DDNAHO                                     MD040876
+                                                                                            MD040876
+      ** CRS Country Transaction Details                                                    MD040876
+     C                   PARM                    PCountry                                   MD040876
+     C                   PARM                    PCrsdS                                     MD040876
+     C                   PARM                    WINKJ                                      MD040876
+     C                   PARM                    PWarning                                   MD040876
+                                                                                            MD040876
+      ** Outputs                                                                            MD040876
+      ** Transaction Details OK inds                                                        MD040876
+     C                   PARM                    OKCRSCtry                                  MD040876
+                                                                                            MD040876
+      ** Error fields/message IDs/message data (arrays) from/to caller                      MD040876
+     C                   PARM                    FldNameArr                                 MD040876
+     C                   PARM                    MsgIDArr                                   MD040876
+     C                   PARM                    MsgDtaArr                                  MD040876
+                                                                                            MD040876
+      ** Array index (3P0) from/to caller                                                   MD040876
+     C                   PARM                    Idx                                        MD040876
+                                                                                            MD040876
+     C                   PARM                    WFldNamArr                                 MD040876
+     C                   PARM                    WMsgIDArr                                  MD040876
+     C                   PARM                    WMsgDtaArr                                 MD040876
+     C                   PARM                    WIdx_WVAL                                  MD040876
+                                                                                            MD040876
+      ** Valid Transaction details layout (DS) from/to caller                               MD040876
+     C                   PARM                    PCrsdF                                     MD040876
+                                                                                            MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C                   EVAL      X = X + 1                                                MD040876
+     C                   ENDDO                                                              MD040876
+                                                                                            MD040876
+     C                   IF        Idx = 0                                                  MD040876
+     C                   CALLB     'SDCRNH1VL'                                              MD040876
+                                                                                            MD040876
+      ** INPUTS :                                                                           MD040876
+      ** Response mode                                                                      MD040876
+      ** Non-A/C Holder Primary Details                                                     MD040876
+                                                                                            MD040876
+     C                   PARM                    RespMode                                   MD040876
+     C                   PARM                    TranInCRNH                                 MD040876
+     C                   PARM                    CurCuCRNH                                  MD040876
+      **  New Non-A/C Holder in File Format                                                 MD040876
+     C                   PARM                    ValidNaho                                  MD040876
+     C                   PARM                    ValidFatca                                 MD040876
+      ** CRS Country Transaction Details                                                    MD040876
+     C                   PARM                    PCrsdS                                     MD040876
+                                                                                            MD040876
+      ** OUTPUTS :                                                                          MD040876
+      ** FATCA Customer Details OK inds                                                     MD040876
+      ** Error fields/message IDs/message data (arrays) from/to caller                      MD040876
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD040876
+      ** Valid FATCA Customer layout (DS) from/to caller                                    MD040876
+                                                                                            MD040876
+     C                   PARM                    OkCRNHdet                                  MD040876
+                                                                                            MD040876
+      * Error fields/message IDs/message data (arrays) from/to caller                       MD040876
+     C                   PARM                    FldNameArr                                 MD040876
+     C                   PARM                    MsgIDArr                                   MD040876
+     C                   PARM                    MsgDtaArr                                  MD040876
+                                                                                            MD040876
+      ** Array index (3P0) from/to caller                                                   MD040876
+     C                   PARM                    Idx                                        MD040876
+                                                                                            MD040876
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD040876
+     C                   PARM                    WFldNamArr                                 MD040876
+     C                   PARM                    WMsgIDArr                                  MD040876
+     C                   PARM                    WMsgDtaArr                                 MD040876
+                                                                                            MD040876
+      ** Array index (3P0) from/to caller                                                   MD040876
+     C                   PARM                    WIdx_WVAL                                  MD040876
+                                                                                            MD040876
+      ** Valid CRS Non Account Holder                                                       MD040876
+     C                   PARM                    ValidCRNH                                  MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C                   ENDSR                                                              MD040876
+                                                                                            MD040876
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1074,7 +1274,28 @@
      C                   IF        Idx = 0
      C                   EXSR      SRSetUpValid
      C                   WRITE     SDVNAHLD0
+     C                   IF        CGL132 = 'Y'                                             MD040876
+     C                   EVAL      V_FVUTIN = DDUTIN                                        MD041311
      C                   WRITE     SDVFTNHD0                                                  CGL132
+     C                   ENDIF                                                              MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C                   EVAL      NVLCDT = *ZERO                                             CGL157
+     C                   WRITE     SDVCRNHD0                                                MD040876
+                                                                                            MD040876
+     C                   EVAL      X = 1                                                    MD040876
+     C                   DOW       X < 31                                                   MD040876
+     C                   EVAL      PCrsdZ = PCrsdF(X)                                       MD040876
+     C                   EVAL      WCHAR2 = PCrsdZ                                          MD041311
+     C                   IF        WCHAR2 <> *Blanks                                        MD041311
+     C                   EVAL      SDVCRSN = PCrsdZ                                         MD040876
+     C                   EVAL      RVNAHO = DDNAHO                                          MD040876
+     C                   EVAL      RVFRNT = APFOTranID                                      MD040876
+     C                   EVAL      RVTMST = TimeStamp                                       MD040876
+     C                   WRITE     SDVCRSND0                                                MD040876
+     C                   ENDIF                                                              MD040876
+     C                   EVAL      X = X + 1                                                MD040876
+     C                   ENDDO                                                              MD040876
+     C                   ENDIF                                                              MD040876
      C                   EXSR      SRCallMsgHdl
      C                   ENDIF
  
@@ -1085,7 +1306,28 @@
  
      C                   IF        APRprLocn = 'B'
      C                   WRITE     SDINAHLD0
+     C                   IF        CGL132 = 'Y'                                             MD040876
      C                   WRITE     SDIFTNHD0                                                  CGL132
+     C                   ENDIF                                                              MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C                   WRITE     SDICRNHD0                                                MD040876
+     C                   EVAL      X = 1                                                    MD041311
+     C                   DOW       X < 31                                                   MD041311
+     C                   EVAL      WChar12 = DDNAHO                                         MD041311
+     C                   EVAL      DDCTRY = PCrsdS(X)                                       MD041311
+     C                   IF        DDCTRY <> *Blanks                                        MD041311
+     C                   MOVE      DDCTRY        WChar12                                    MD041311
+     C                   EVAL      WChar217 = %SUBST(PCrsdS(X):4:217)                       MD041311
+     C                   EVAL      WChar229 = WChar12                                       MD041311
+     C                   MOVE      WChar217      WChar229                                   MD041311
+     C                   EVAL      SDICRSN = WChar229                                       MD041311
+     C                   MOVE      TimeStamp     DDTMSN                                     MD041311
+     C                   EVAL      DDFRNN = APFOTranID                                      MD041311
+     C                   WRITE     SDICRSND0                                                MD040876
+     C                   ENDIF                                                              MD041311
+     C                   EVAL      X = X + 1                                                MD041311
+     C                   ENDDO                                                              MD041311
+     C                   ENDIF                                                              MD040876
      C                   ENDIF
  
       ** If support system is active, write invalid transaction to
@@ -1094,7 +1336,9 @@
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
  
      C**********         EVAL      TransDtl = TranInPrim + ExtData                            CGL132
-     C                   EVAL      TransDtl = TranInPrim + TranInFatca + ExtData              CGL132
+     C**********         EVAL      TransDtl = TranInPrim + TranInFatca + ExtData     CGL132 MD040876
+     C                   EVAL      TransDtl = TranInPrim + TranInFatca                      MD040876
+     C                                        + TranInCRNH + ExtData                        MD040876
      C                   EVAL      APTGTTYPE = 'SDNAHL'
      C                   EVAL      PNahoNum = DDNAHO
  
@@ -1148,9 +1392,14 @@
      C                   RESET                   FldNoArr
      C                   CLEAR                   CurNaPrim
      C                   CLEAR                   CurCuFATC                                    CGL132
+     C                   CLEAR                   CurCuCRNH                                  MD040876
+     C                   MOVEA     *BLANKS       PCrsdF                                     MD040876
+     C                   MOVEA     *BLANKS       PCrsdB                                     MD040876
      C                   MOVE      *ALL'Y'       OKNaPrim
      C                   CLEAR                   ValidNaho
      C                   CLEAR                   ValidFatca                                   CGL132
+     C                   CLEAR                   ValidCRNH                                  MD040876
+     C                   CLEAR                   SDVCRSN                                      CGL157
  
      C                   ENDSR
       *****************************************************************
@@ -1170,6 +1419,14 @@
      C                   EVAL      DDRPRLOCN  = APRprLocn                                     CGL132
      C                   MOVE      TimeStamp     DDTMESTMP                                    CGL132
      C                   MOVE      TimeStamp     DDTMST
+     C                   EVAL      DDNAHL = DDNAHO                                          MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C                   EVAL      DDNAHR = DDNAHO                                          MD040876
+     C                   MOVE      TimeStamp     DDTMSN                                     MD040876
+     C                   MOVE      TimeStamp     DDTMSH                                     MD041311
+     C                   EVAL      DDFRNN = APFOTranID                                      MD040876
+     C                   EVAL      DDFRNH = APFOTranID                                      MD041311
+     C                   ENDIF                                                              MD040876
  
      C                   EVAL      TranStatus = 'F'
  
@@ -1188,7 +1445,7 @@
  
      C                   IF           DDACTN = 'D'
      C                   MOVE      NahoFilFmt    ValidNaho
-     C                   MOVE      CrFaFilFmt    ValidFatca                                   CGL132
+     C**********         MOVE      CrFaFilFmt    ValidFatca                          CGL132 MD040876
      C                   ENDIF
  
       ** Set Valid file field(s) that are needed for all Action Codes
@@ -1206,6 +1463,14 @@
      C                   EVAL      V_FVFOID = APFOTranID                                      CGL132
      C                   EVAL      V_FVREPA = APRprLocn                                       CGL132
      C                   MOVE      TimeStamp     V_FVTMST                                     CGL132
+                                                                                            MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C                   EVAL      NVNAHR = DDNAHO                                          MD040876
+     C                   EVAL      NVFRNT = APFOTranID                                      MD040876
+     C                   EVAL      NVTMST = TimeStamp                                       MD040876
+     C                   EVAL      RVFRNT = APFOTranID                                      MD040876
+     C                   EVAL      RVTMST = TimeStamp                                       MD040876
+     C                   ENDIF
  
      C                   EVAL      TranStatus = 'S'
  
@@ -1280,7 +1545,15 @@
  
      C                   PARM                    ReturnCode
      C                   PARM                    NahoFilFmt
+     C                   PARM                    CrFaFilFmt                                 MD040876
+     C                   PARM                    CrFoFilFmt                                 MD040876
+     C                   PARM                    CrCrhFlFmt                                 MD040876
+     C                   PARM                    PCrsdF                                     MD040876
      C                   PARM                    CurNaPrim
+     C                   PARM                    CurCuFATC                                  MD040876
+     C                   PARM                    CurCuFOTH                                  MD040876
+     C                   PARM                    CurCuCRNH                                  MD040876
+     C                   PARM                    PCrsdS                                     MD040876
  
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
@@ -1304,9 +1577,122 @@
  
      C                   MOVEL     IncDATA       TranInPrim
  
+     C                   IF        CGL132 = 'Y'                                             MD040876
+     C                   CLEAR                   IncData                                    MD040876
+     C                   CLEAR                   CurData                                    MD040876
+     C                   RESET                   ReturnCode                                 MD040876
+                                                                                            MD040876
+     C                   MOVE      TranInFATCA   IncData                                    MD040876
+     C                   MOVE      CurCuFATC     CurData                                    MD040876
+     C                   CALLB     'APDTASUBS'                                              MD040876
+     C                   PARM                    ReturnCode                                 MD040876
+     C                   PARM                    GHSUBS                                     MD040876
+     C                   PARM                    IncData                                    MD040876
+     C                   PARM                    CurData                                    MD040876
+                                                                                            MD040876
+     C                   MOVEL     IncDATA       TranInFATCA                                MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+     C                   IF        CGL157 = 'Y'                                             MD040876
+     C                   CLEAR                   IncData                                    MD040876
+     C                   CLEAR                   CurData                                    MD040876
+     C                   RESET                   ReturnCode                                 MD040876
+                                                                                            MD040876
+     C                   MOVE      TranInCRNH    IncData                                    MD040876
+     C                   MOVE      CurCuCRNH     CurData                                    MD040876
+     C                   CALLB     'APDTASUBS'                                              MD040876
+     C                   PARM                    ReturnCode                                 MD040876
+     C                   PARM                    GHSUBS                                     MD040876
+     C                   PARM                    IncData                                    MD040876
+     C                   PARM                    CurData                                    MD040876
+                                                                                            MD040876
+     C                   MOVEL     IncDATA       TranInCRNH                                 MD040876
+                                                                                            MD040876
+     C                   CLEAR                   IncData                                    MD040876
+     C                   CLEAR                   CurData                                    MD040876
+     C                   RESET                   ReturnCode                                 MD040876
+                                                                                            MD040876
+     C                   MOVE      TranInCRSN    IncData                                    MD040876
+     C                   MOVEA     PCrsdS        CurData                                    MD040876
+     C                   CALLB     'APDTASUBS'                                              MD040876
+     C                   PARM                    ReturnCode                                 MD040876
+     C                   PARM                    GHSUBS                                     MD040876
+     C                   PARM                    IncData                                    MD040876
+     C                   PARM                    CurData                                    MD040876
+                                                                                            MD040876
+     C                   MOVEL     IncDATA       TranInCRSN                                 MD040876
+     C                   ENDIF                                                              MD040876
      C                   ENDIF
  
      C                   ENDSR
+                                                                                            MD040876
+      *****************************************************************                     MD040876
+      /EJECT                                                                                MD040876
+      *****************************************************************                     MD040876
+      *                                                               *                     MD040876
+      * Parse_NAHL - Parse Non Account Holder Details                 *                     MD040876
+      *                                                               *                     MD040876
+      *****************************************************************                     MD040876
+     C     Parse_NAHL    BEGSR                                                              MD040876
+                                                                                            MD040876
+     C                   MOVEL     'SDNAHLPD'    FileName                                   MD040876
+     C                   EXSR      GETRCDLN                                                 MD040876
+     C                   Z-ADD     RecordLen     NAHLLn                                     MD040876
+                                                                                            MD040876
+     C                   MOVEL     'SDFTNRPD'    FileName                                   MD040876
+     C                   EXSR      GETRCDLN                                                 MD040876
+     C                   Z-ADD     RecordLen     FTNHLn                                     MD040876
+                                                                                            MD040876
+     C                   MOVEL     'SDCRNSPD'    FileName                                   MD040876
+     C                   EXSR      GETRCDLN                                                 MD040876
+     C                   Z-ADD     RecordLen     CRNHLn                                     MD040876
+                                                                                            MD040876
+     C                   MOVEL     'SDCRNDPD'    FileName                                   MD040876
+     C                   EXSR      GETRCDLN                                                 MD040876
+     C                   Z-ADD     RecordLen     CRSNLn                                     MD040876
+                                                                                            MD040876
+     C                   EVAL      Bfp = 1                                                  MD040876
+     C                   EVAL      TranInPrim=%SUBST(Trans9999_1:Bfp:NAHLLn)                MD040876
+     C                   ADD       NAHLLn        Bfp                                        MD040876
+     C                   EVAL      TranInFatca=%SUBST(Trans9999_1:Bfp:FTNHLn)               MD040876
+     C                   ADD       FTNHLn        Bfp                                        MD040876
+     C                   EVAL      TranInCRNH=%SUBST(Trans9999_1:Bfp:CRNHLn)                MD040876
+     C                   ADD       CRNHLn        Bfp                                        MD040876
+     C                   EVAL      WTrans=%SUBST(Trans9999_1:Bfp:CRSNLn)                    MD040876
+     C                   ADD       CRSNLn        Bfp                                        MD040876
+     C                   EVAL      ExtData   =%SUBST(Trans9999_1:Bfp:500)                   MD040876
+     C                   Add       500           Bfp                                        MD040876
+                                                                                            MD040876
+     C                   ENDSR                                                              MD040876
+                                                                                            MD040876
+      ****************************************************************                      MD040876
+      /EJECT                                                                                MD040876
+      ****************************************************************                      MD040876
+      *                                                              *                      MD040876
+      *  Get Record Lengths of Transaction Data Blocks               *                      MD040876
+      *                                                              *                      MD040876
+      ****************************************************************                      MD040876
+     C     GETRCDLN      BEGSR                                                              MD040876
+                                                                                            MD040876
+     C                   EVAL      RecordLen = 0                                            MD040876
+     C                   CALLB     'UTGETRCDLN'                                             MD040876
+      ** Return code                                                                        MD040876
+     C                   PARM                    ReturnCode                                 MD040876
+      ** Record length                                                                      MD040876
+     C                   PARM                    RecordLen                                  MD040876
+      ** File name                                                                          MD040876
+     C                   PARM                    FileName                                   MD040876
+      ** File library                                                                       MD040876
+     C                   PARM      '*LIBL     '  FileLib                                    MD040876
+      ** If file not found (or any other error) shut down the program                       MD040876
+     C                   IF        ReturnCode <> *BLANKS                                    MD040876
+     C                   EXSR      *PSSR                                                    MD040876
+     C                   ENDIF                                                              MD040876
+      ** Clear the file name field to prevent it getting corrupted by                       MD040876
+      ** later MOVELs.                                                                      MD040876
+     C                   CLEAR                   FileName                                   MD040876
+                                                                                            MD040876
+     C                   ENDSR                                                              MD040876
       *****************************************************************
       /EJECT
      C/COPY ZACPYSRC,PSSR_ILE
@@ -1325,10 +1711,13 @@
       ** Ultimate calling Program/Module/Procedure
  
      C                   PARM                    HeadIn
-     C                   PARM                    Trans5001
-     C                   PARM                    Trans5002                                    CER047
-     C                   PARM                    Trans5003                                    CGL132
-     C                   PARM                    ExtData
+     C**********         PARM                    Trans5001                                  MD040876
+     C**********         PARM                    Trans5002                           CER047 MD040876
+     C**********         PARM                    Trans5003                           CGL132 MD040876
+     C**********         PARM                    ExtData                                    MD040876
+     C                   PARM                    Trans9999_1                                MD040876
+     C                   PARM                    Trans9999_2                                MD040876
+     C                   PARM                    Trans9999_3                                MD040876
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
@@ -1385,6 +1774,46 @@
      C                   IN        SDSTAT
      C                   IN        SC24X7
      C                   ENDIF
+                                                                                            MD040876
+      ** Check whether CGL132 is available                                                  MD040876
+                                                                                            MD040876
+     C                   CALL      'AOSARDR0'                                               MD040876
+     C                   PARM      *Blanks       Prtcd                                      MD040876
+     C                   PARM      '*VERIFY'     Poptn                                      MD040876
+     C                   PARM      'CGL132'      PSard                                      MD040876
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD040876
+                                                                                            MD040876
+     C                   IF        Prtcd <> *Blanks                                         MD040876
+     C                   IF        Prtcd <> '*NRF'                                          MD040876
+     C                   MOVEL     'SCSARDPD'    Dbfile                                     MD040876
+     C                   MOVEL     '904'         Dbase                                      MD040876
+     C                   MOVEL     PSard         Dbkey                                      MD040876
+     C                   EXSR      *PSSR                                                    MD040876
+     C                   ENDIF                                                              MD040876
+     C                   EVAL      CGL132 = 'N'                                             MD040876
+     C                   ELSE                                                               MD040876
+     C                   EVAL      CGL132 = 'Y'                                             MD040876
+     C                   ENDIF                                                              MD040876
+                                                                                            MD040876
+      ** Check whether CGL157 is available                                                  MD040876
+                                                                                            MD040876
+     C                   CALL      'AOSARDR0'                                               MD040876
+     C                   PARM      *Blanks       Prtcd                                      MD040876
+     C                   PARM      '*VERIFY'     Poptn                                      MD040876
+     C                   PARM      'CGL157'      PSard                                      MD040876
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD040876
+                                                                                            MD040876
+     C                   IF        Prtcd <> *Blanks                                         MD040876
+     C                   IF        Prtcd <> '*NRF'                                          MD040876
+     C                   MOVEL     'SCSARDPD'    Dbfile                                     MD040876
+     C                   MOVEL     '905'         Dbase                                      MD040876
+     C                   MOVEL     PSard         Dbkey                                      MD040876
+     C                   EXSR      *PSSR                                                    MD040876
+     C                   ENDIF                                                              MD040876
+     C                   EVAL      CGL157 = 'N'                                             MD040876
+     C                   ELSE                                                               MD040876
+     C                   EVAL      CGL157 = 'Y'                                             MD040876
+     C                   ENDIF                                                              MD040876
  
       ** Set up the name of the server/database updater data queue.
  

@@ -15,8 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027671A          Date 15Sep14               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD036311           Date 01Nov15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD027671A          Date 15Sep14               *
       *                 CGL132             Date 01May13               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
@@ -34,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036311 - Database error on existing Customer and Non-Acct  *
+      *             Holder                                            *
+      *  CGL157 - CRS Reporting (Recompile)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027671A - FATCA classification descriptions of an enquired *
       *              NAHO is retained in display when a new NAHO is   *
@@ -73,6 +80,10 @@
      F                                     PREFIX(A_)                                         CGL132
      F                                     RENAME(SDFTNHD0:SDFTNHD1)                          CGL132
                                                                                               CGL132
+     FSDCRNHL1  IF   E           K Disk    Infsr(*PSSR)                                       CGL157
+                                                                                              CGL157
+      * Midas SD CRS Details File                                                             CGL157
+     FSDCRSNL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL157
  
       *****************************************************************
       ** +--------------------------------------+
@@ -141,6 +152,13 @@
  
       ** Non-A/C Holder in File Format
      D NahoFilFmt    E DS                  Extname(SDNAHOPD)
+                                                                                              CGL157
+      ** CRS Non-Account Holder Details File Format                                           CGL157
+     D CuCrhFlFmt    E DS                  EXTNAME(SDCRNHPD)                                  CGL157
+                                                                                              CGL157
+      ** External DS for CRS Details                                                          CGL157
+     D SDVCRSN       E DS                  EXTNAME(SDVCRSNPD)                                 CGL157
+                                                                                              CGL157
                                                                                               CGL132
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL132
                                                                                               CGL132
@@ -162,6 +180,7 @@
      D  WWACCZ               147    148                                                       CGL132
      D  WWTINO               149    173                                                       CGL132
                                                                                               CGL132
+     D PCrsdF          S            222A   DIM(30)                                            CGL177
  
      D RUNDAT          DS
      D  @MBIN                 13     13
@@ -216,11 +235,13 @@
      D OKNAHO          S              1
      D PSARD           S              6A                                                      CGL132
      D CGL132          S              1A                                                      CGL132
+     D CGL157          S              1A                                                      CGL157
      D DDDATE          S              5P 0                                                    CGL132
      D DDSEQN          S              3S 0                                                    CGL132
      D @CLAC           S              5A                                                      CGL132
      D PCustNo         S              6A                                                      CGL132
      D DDCRTT          S              2A                                                      CGL132
+     D X               S              2S 0                                                    CGL157
  
      D Err             S              1  0
  
@@ -419,6 +440,50 @@
      C                   MOVEL     'USR0081'     MsgIdArr(Ix)
      C                   ENDIF
  
+      ** Retrieve CRS Customer Details if CGL157 is ON                                        CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C     DDNAHO        CHAIN     SDCRNHL1                           96                    MD036311
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+                                                                                              CGL157
+     C                   IF        CGL157 = 'Y'                                               CGL157
+     C                   EVAL      X = 1                                                      CGL157
+     C     DDNAHO        SETLL     SDCRSNL0                                                   CGL157
+     C     DDNAHO        READE     SDCRSNL0                                                   CGL157
+     C                   DOW       NOT %EOF(SDCRSNL0)                                         CGL157
+     C                             AND DDNAHO = CNNAHO                                        CGL157
+     C                             AND X < 31                                                 CGL157
+     C                   EVAL      RVCTRY = CNCTRY                                            CGL157
+     C                   EVAL      RVREPT = CNREPT                                            CGL157
+     C                   EVAL      RVREPR = CNREPR                                            CGL157
+     C                   EVAL      RVREPD = CNREPD                                            CGL157
+     C                   EVAL      RVREPM = CNREPM                                            CGL157
+     C                   EVAL      RVREPU = CNREPU                                            CGL157
+     C                   EVAL      RVEVE1 = CNEVE1                                            CGL157
+     C                   EVAL      RVEVS1 = CNEVS1                                            CGL157
+     C                   EVAL      RVEVE2 = CNEVE2                                            CGL157
+     C                   EVAL      RVEVS2 = CNEVS2                                            CGL157
+     C                   EVAL      RVEVE3 = CNEVE3                                            CGL157
+     C                   EVAL      RVEVS3 = CNEVS3                                            CGL157
+     C                   EVAL      RVEVE4 = CNEVE4                                            CGL157
+     C                   EVAL      RVEVS4 = CNEVS4                                            CGL157
+     C                   EVAL      RVEVE5 = CNEVE5                                            CGL157
+     C                   EVAL      RVEVS5 = CNEVS5                                            CGL157
+     C                   EVAL      RVTINN = CNTINN                                            CGL157
+     C                   EVAL      RVEFFD = CNEFFD                                            CGL157
+     C                   EVAL      RVEXPD = CNEXPD                                            CGL157
+     C                   EVAL      RVCODO = CNCODO                                            CGL157
+     C                   EVAL      RVJACM = CNJACM                                            CGL157
+     C                   EVAL      RVMAIL = CNMAIL                                            CGL157
+     C                   EVAL      RVPHON = CNPHON                                            CGL157
+     C                   EVAL      RVRPAY = CNRPAY                                            CGL157
+     C                   EVAL      RVTINS = CNTINS                                            CGL177
+                                                                                              CGL157
+     C                   EVAL      PCrsdF(X) = SDVCRSN                                        CGL157
+     C                   EVAL      X = X + 1                                                  CGL157
+     C     DDNAHO        READE     SDCRSNL0                                                   CGL157
+     C                   ENDDO                                                                CGL157
+     C                   ENDIF                                                                CGL157
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -727,6 +792,7 @@
       ** Clear Outputs
  
      C                   CLEAR                   NahoFilFmt
+     C                   CLEAR                   PCrsdF                                       CGL157
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKNAHO
      C                   EVAL      *In36 = @IN36
@@ -769,6 +835,8 @@
      C                   PARM                    NahoFilFmt
      C                   PARM                    CuFaFilFmt                                   CGL132
      C                   PARM                    CuFoFilFmt                                   CGL132
+     C                   PARM                    CuCrhFlFmt                                   CGL157
+     C                   PARM                    PCrsdF                                       CGL157
      C                   PARM                    OKACTN
      C                   PARM                    OKNAHO
      C                   PARM                    FldNameArr
@@ -798,6 +866,7 @@
                                                                                               CGL132
      C                   CLEAR                   CuFaFilFmt                                   CGL132
      C                   MOVEL     *BLANK        CuFoFilFmt                                   CGL132
+     C                   CLEAR                   CuCrhFlFmt                                   CGL157
  
       ** Access Bank Details
  
@@ -814,6 +883,28 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                              CGL157
+      ** Check if enhancement CGL157 is on                                                    CGL157
+                                                                                              CGL157
+     C                   CALLB     'AOSARDR0'                                                 CGL157
+     C                   PARM      *BLANKS       @RTCD                                        CGL157
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL157
+     C                   PARM      'CGL157'      PSARD                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   IF        @RTCD <> *BLANKS AND                                       CGL157
+     C                             @RTCD <> '*NRF   '                                         CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY  = 'CGL157'                                          CGL157
+     C                   EVAL      DBASE  = 903                                               CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+                                                                                              CGL157
+     C                   IF        @RTCD = *BLANKS                                            CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C                   ENDIF                                                                CGL157
                                                                                               CGL132
       ** Check if enhancement CGL132 is on                                                    CGL132
                                                                                               CGL132

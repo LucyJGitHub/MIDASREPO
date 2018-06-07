@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026541           Date 29Apr14               *
+      *  Last Amend No. MD044093           Date 18Apr17               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036274           Date 21Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD026541           Date 29Apr14               *
       *                 CGL132             Date 01May13               *
       *                 MD022651           Date 10Oct13               *
       *                 AR978528           Date 21May12               *
@@ -42,6 +46,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044093 - The Country of TIN is already defined for this    *
+      *             customer                                          *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036274 - Local TIN validation changes                      *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026541 - Field "Title" should be optional and not mandatory*
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -205,6 +214,16 @@
                                                                                               CSW207
      D CSW207          S              1A   INZ('N')                                           CSW207
      D wPrivBank       S              1A   INZ('N')                                           CSW207
+     D CGL157          S              1A                                                      CGL157
+     D DDCODO          S              1A                                                    MD036274
+     D DDCTRY          S              2A                                                    MD036274
+     D DDJACM          S              1A                                                    MD036274
+     D DDMAIL          S              1A                                                    MD036274
+     D DDPHNN          S              1A                                                    MD036274
+     D DDRPAY          S              1A                                                    MD036274
+     D DDSUBJ          S              1A                                                    MD036274
+     D PCRSChk         S              1A                                                    MD036274
+     D CVTINS          S              1A                                                      CGL177
  
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
@@ -281,7 +300,9 @@
       *                                                                                       CER047
      C                   ENDIF                                                                CER047
       *                                                                                       CER047
+     C                   IF        CGL157 = 'N'                                             MD036274
      C                   MOVE      DDTINO        NATINO
+     C                   ENDIF                                                              MD036274
      C                   MOVE      DDBTHT        NABTHT
      C                   MOVE      DDCNA3        NACNA3
      C                   MOVE      DDCNA4        NACNA4
@@ -314,6 +335,11 @@
  
      C                   EXSR      SRVcColC
  
+                                                                                            MD036274
+     C                   IF        CGL157 = 'Y'                                             MD036274
+     C                   EXSR      SRVTINN                                                  MD036274
+     C                   ENDIF                                                              MD036274
+
       ** Validate Date of Birth
  
      C                   EXSR      SRVcDate
@@ -367,9 +393,15 @@
       ** Validate Creation Date                                                               CGL132
      C                   EXSR      SRVcCocz                                                   CGL132
      C                   EXSR      SRVcAccz                                                   CGL132
-     C                   EXSR      SRVcTin1                                                   CGL132
-     C                   EXSR      SRVcCTIN                                                   CGL132
+     C**********         EXSR      SRVcTin1                                            CGL132 CGL157
+     C**********         EXSR      SRVcCTIN                                            CGL132 CGL157
      C                   EXSR      SRVcCrdt                                                   CGL132
+                                                                                              CGL157
+      ** Validate Mailing Countries                                                           CGL157
+     C                   EXSR      SRVCTRYD                                                   CGL157
+                                                                                              CGL157
+      ** Validate Phone Number Countries                                                      CGL157
+     C                   EXSR      SRVPHONE                                                   CGL157
  
      C                   IF        CER047 = 'Y'                                               CER047
       *                                                                                       CER047
@@ -569,6 +601,7 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    DDTINO
      C     NAIDTP        PARM                    DDIDTP
+     C                   PARM                    DDIDNO           15                        MD044093
  
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -838,6 +871,53 @@
      C                   EXSR      SRUpdatErrs
  
      C                   ENDSR
+      *****************************************************************                     MD036274
+      /EJECT                                                                                MD036274
+      *****************************************************************                     MD036274
+      ** SRVTINN - Validate TIN                                                             MD036274
+      *****************************************************************                     MD036274
+     C     SRVTINN       BEGSR                                                              MD036274
+                                                                                            MD036274
+      ** Reset variables updated by each module                                             MD036274
+                                                                                            MD036274
+     C                   EXSR      SRResetErrs                                              MD036274
+                                                                                            MD036274
+      ** Validate TIN                                                                       MD036274
+                                                                                            MD036274
+     C                   CALLB     'SDVTINN'                                                MD036274
+                                                                                            MD036274
+      ** INPUTS                                                                             MD036274
+      ** Return Code                                                                        MD036274
+      ** TIN                                                                                MD036274
+                                                                                            MD036274
+     C                   PARM                    RetCodeOut                                 MD036274
+     C                   PARM      'N'           PCRSChk                                    MD036274
+      ** TIN                                                                                MD036274
+     C                   PARM                    DDTINO                                     MD036274
+     C                   PARM      DDCOLC        DDCTRY                                     MD036274
+     C                   PARM      *Blanks       DDSUBJ                                     MD036274
+     C                   PARM      *Blanks       DDCODO                                     MD036274
+     C                   PARM      *Blanks       DDJACM                                     MD036274
+     C                   PARM      *Blanks       DDMAIL                                     MD036274
+     C                   PARM      *Blanks       DDPHNN                                     MD036274
+     C                   PARM      *Blanks       DDRPAY                                     MD036274
+                                                                                            MD036274
+      ** OUTPUTS                                                                            MD036274
+      ** Error fields/message IDs/message data (arrays) from/to caller                      MD036274
+      ** TIN - OK                                                                           MD036274
+                                                                                            MD036274
+     C                   PARM                    FldNamXAr                                  MD036274
+     C                   PARM                    MsgIDXAr                                   MD036274
+     C                   PARM                    MsgDtaXAr                                  MD036274
+     C                   PARM                    OKTINO                                     MD036274
+     C                   PARM                    NATINO                                     MD036274
+     C                   PARM                    CVTINS                                       CGL177
+                                                                                            MD036274
+      ** Update error info with that returned from the validation module                    MD036274
+                                                                                            MD036274
+     C                   EXSR      SRUpdatErrs                                              MD036274
+                                                                                            MD036274
+     C                   ENDSR                                                              MD036274
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1228,116 +1308,116 @@
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
       *****************************************************************                       CGL132
-      ** SRVcTin1 - Validate TIN                                                              CGL132
-      *****************************************************************                       CGL132
-     C     SRVcTin1      BEGSR                                                                CGL132
-                                                                                              CGL132
-      ** Reset variables updated by each module                                               CGL132
-                                                                                              CGL132
-     C                   EXSR      SRResetErrs                                                CGL132
-                                                                                              CGL132
-      ** Validate TIN                                                                         CGL132
-                                                                                              CGL132
-     C                   CALLB     'SDVTIN1'                                                  CGL132
-      ** INPUTS                                                                               CGL132
-      ** Return Code                                                                          CGL132
-     C                   PARM                    RetCodeOut                                   CGL132
-      ** TIN                                                                                  CGL132
-     C                   PARM                    DDTINO                                       CGL132
-      ** TIN2                                                                                 CGL132
-     C     NATIN2        PARM                    DDTIN2                                       CGL132
-      ** TIN3                                                                                 CGL132
-     C     NATIN3        PARM                    DDTIN3                                       CGL132
-      ** TIN4                                                                                 CGL132
-     C     NATIN4        PARM                    DDTIN4                                       CGL132
-      ** TIN5                                                                                 CGL132
-     C     NATIN5        PARM                    DDTIN5                                       CGL132
-      ** Country of TIN 2                                                                     CGL132
-     C                   PARM                    DDCTIN2                                      CGL132
-      ** Country of TIN 3                                                                     CGL132
-     C                   PARM                    DDCTIN3                                      CGL132
-      ** Country of TIN 4                                                                     CGL132
-     C                   PARM                    DDCTIN4                                      CGL132
-      ** Country of TIN 5                                                                     CGL132
-     C                   PARM                    DDCTIN5                                      CGL132
-      ** OUTPUTS                                                                              CGL132
-      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL132
-     C                   PARM                    FldNamXAr                                    CGL132
-     C                   PARM                    MsgIDXAr                                     CGL132
-     C                   PARM                    MsgDtaXAr                                    CGL132
-      ** TIN - OK                                                                             CGL132
-     C                   PARM                    OKTINO                                       CGL132
-      ** TIN 2 - OK                                                                           CGL132
-     C                   PARM                    OKTIN2                                       CGL132
-      ** TIN 3 - OK                                                                           CGL132
-     C                   PARM                    OKTIN3                                       CGL132
-      ** TIN 4 - OK                                                                           CGL132
-     C                   PARM                    OKTIN4                                       CGL132
-      ** TIN 5 - OK                                                                           CGL132
-     C                   PARM                    OKTIN5                                       CGL132
-                                                                                              CGL132
-      ** Update error info with that returned from the validation module                      CGL132
-                                                                                              CGL132
-     C                   EXSR      SRUpdatErrs                                                CGL132
-                                                                                              CGL132
-     C                   ENDSR                                                                CGL132
-      *****************************************************************                       CGL132
-      /EJECT                                                                                  CGL132
-      *****************************************************************                       CGL132
-      ** SRVcCTIN - Validate Country of TIN                                                   CGL132
-      *****************************************************************                       CGL132
-     C     SRVcCTIN      BEGSR                                                                CGL132
-                                                                                              CGL132
-      ** Reset variables updated by each module                                               CGL132
-                                                                                              CGL132
-     C                   EXSR      SRResetErrs                                                CGL132
-                                                                                              CGL132
-      ** Validate Country of TIN                                                              CGL132
-                                                                                              CGL132
-     C                   CALLB     'SDVCTIN'                                                  CGL132
-      ** INPUTS                                                                               CGL132
-      ** Return Code                                                                          CGL132
-     C                   PARM                    RetCodeOut                                   CGL132
-      ** TIN2                                                                                 CGL132
-     C                   PARM                    DDTIN2                                       CGL132
-      ** TIN3                                                                                 CGL132
-     C                   PARM                    DDTIN3                                       CGL132
-      ** TIN4                                                                                 CGL132
-     C                   PARM                    DDTIN4                                       CGL132
-      ** TIN5                                                                                 CGL132
-     C                   PARM                    DDTIN5                                       CGL132
-      ** Country of Domicile                                                                  CGL132
-     C                   PARM                    DDCOLC                                       CGL132
-      ** Country of TIN 2                                                                     CGL132
-     C     NACTIN2       PARM                    DDCTIN2                                      CGL132
-      ** Country of TIN 3                                                                     CGL132
-     C     NACTIN3       PARM                    DDCTIN3                                      CGL132
-      ** Country of TIN 4                                                                     CGL132
-     C     NACTIN4       PARM                    DDCTIN4                                      CGL132
-      ** Country of TIN 5                                                                     CGL132
-     C     NACTIN5       PARM                    DDCTIN5                                      CGL132
-                                                                                              CGL132
-      ** OUTPUTS                                                                              CGL132
-      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL132
-     C                   PARM                    FldNamXAr                                    CGL132
-     C                   PARM                    MsgIDXAr                                     CGL132
-     C                   PARM                    MsgDtaXAr                                    CGL132
-      ** Country of Domicile - OK                                                             CGL132
-     C                   PARM                    OKCOLC                                       CGL132
-      ** Country of TIN 2 - OK                                                                CGL132
-     C                   PARM                    OKCTIN2                                      CGL132
-      ** Country of TIN 3 - OK                                                                CGL132
-     C                   PARM                    OKCTIN3                                      CGL132
-      ** Country of TIN 4 - OK                                                                CGL132
-     C                   PARM                    OKCTIN4                                      CGL132
-      ** Country of TIN 5 - OK                                                                CGL132
-     C                   PARM                    OKCTIN5                                      CGL132
-                                                                                              CGL132
-      ** Update error info with that returned from the validation module                      CGL132
-                                                                                              CGL132
-     C                   EXSR      SRUpdatErrs                                                CGL132
-                                                                                              CGL132
-     C                   ENDSR                                                                CGL132
+      ***SRVcTin1*-*Validate*TIN***************************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C*****SRVcTin1      BEGSR                                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Reset*variables*updated*by*each*module************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         EXSR      SRResetErrs                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Validate*TIN                                                                  CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         CALLB     'SDVTIN1'                                           CGL132 CGL157
+      ***INPUTS********************************************************                CGL132 CGL157
+      ***Return*Code                                                                   CGL132 CGL157
+     C**********         PARM                    RetCodeOut                            CGL132 CGL157
+      ***TIN***********************************************************                CGL132 CGL157
+     C**********         PARM                    DDTINO                                CGL132 CGL157
+      ***TIN2**********************************************************                CGL132 CGL157
+     C*****NATIN2        PARM                    DDTIN2                                CGL132 CGL157
+      ***TIN3**********************************************************                CGL132 CGL157
+     C*****NATIN3        PARM                    DDTIN3                                CGL132 CGL157
+      ***TIN4**********************************************************                CGL132 CGL157
+     C*****NATIN4        PARM                    DDTIN4                                CGL132 CGL157
+      ***TIN5**********************************************************                CGL132 CGL157
+     C*****NATIN5        PARM                    DDTIN5                                CGL132 CGL157
+      ***Country*of*TIN*2**********************************************                CGL132 CGL157
+     C**********         PARM                    DDCTIN2                               CGL132 CGL157
+      ***Country*of*TIN*3**********************************************                CGL132 CGL157
+     C**********         PARM                    DDCTIN3                               CGL132 CGL157
+      ***Country*of*TIN*4**********************************************                CGL132 CGL157
+     C**********         PARM                    DDCTIN4                               CGL132 CGL157
+      ***Country*of*TIN*5**********************************************                CGL132 CGL157
+     C**********         PARM                    DDCTIN5                               CGL132 CGL157
+      ***OUTPUTS*******************************************************                CGL132 CGL157
+      ***Error*fields/message*IDs/message*data*(arrays)*from/to*caller*                CGL132 CGL157
+     C**********         PARM                    FldNamXAr                             CGL132 CGL157
+     C**********         PARM                    MsgIDXAr                              CGL132 CGL157
+     C**********         PARM                    MsgDtaXAr                             CGL132 CGL157
+      ***TIN*-*OK******************************************************                CGL132 CGL157
+     C**********         PARM                    OKTINO                                CGL132 CGL157
+      ***TIN*2*-*OK****************************************************                CGL132 CGL157
+     C**********         PARM                    OKTIN2                                CGL132 CGL157
+      ***TIN*3*-*OK****************************************************                CGL132 CGL157
+     C**********         PARM                    OKTIN3                                CGL132 CGL157
+      ***TIN*4*-*OK****************************************************                CGL132 CGL157
+     C**********         PARM                    OKTIN4                                CGL132 CGL157
+      ***TIN*5*-*OK****************************************************                CGL132 CGL157
+     C**********         PARM                    OKTIN5                                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Update*error*info*with*that*returned*from*the*validation*module               CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         EXSR      SRUpdatErrs                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         ENDSR                                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***/EJECT********************************************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***SRVcCTIN*-*Validate*Country*of*TIN****************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C*****SRVcCTIN      BEGSR                                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Reset*variables*updated*by*each*module************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         EXSR      SRResetErrs                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Validate*Country*of*TIN***************************************                CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         CALLB     'SDVCTIN'                                           CGL132 CGL157
+      ***INPUTS********************************************************                CGL132 CGL157
+      ***Return*Code***************************************************                CGL132 CGL157
+     C**********         PARM                    RetCodeOut                            CGL132 CGL157
+      ***TIN2**********************************************************                CGL132 CGL157
+     C**********         PARM                    DDTIN2                                CGL132 CGL157
+      ***TIN3**********************************************************                CGL132 CGL157
+     C**********         PARM                    DDTIN3                                CGL132 CGL157
+      ***TIN4**********************************************************                CGL132 CGL157
+     C**********         PARM                    DDTIN4                                CGL132 CGL157
+      ***TIN5**********************************************************                CGL132 CGL157
+     C**********         PARM                    DDTIN5                                CGL132 CGL157
+      ***Country*of*Domicile*******************************************                CGL132 CGL157
+     C**********         PARM                    DDCOLC                                CGL132 CGL157
+      ***Country*of*TIN*2**********************************************                CGL132 CGL157
+     C*****NACTIN2       PARM                    DDCTIN2                               CGL132 CGL157
+      ***Country*of*TIN*3**********************************************                CGL132 CGL157
+     C*****NACTIN3       PARM                    DDCTIN3                               CGL132 CGL157
+      ***Country*of*TIN*4**********************************************                CGL132 CGL157
+     C*****NACTIN4       PARM                    DDCTIN4                               CGL132 CGL157
+      ***Country*of*TIN*5**********************************************                CGL132 CGL157
+     C*****NACTIN5       PARM                    DDCTIN5                               CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***OUTPUTS*******************************************************                CGL132 CGL157
+      ***Error*fields/message*IDs/message*data*(arrays)*from/to*caller*                CGL132 CGL157
+     C**********         PARM                    FldNamXAr                             CGL132 CGL157
+     C**********         PARM                    MsgIDXAr                              CGL132 CGL157
+     C**********         PARM                    MsgDtaXAr                             CGL132 CGL157
+      ***Country*of*Domicile*-*OK**************************************                CGL132 CGL157
+     C**********         PARM                    OKCOLC                                CGL132 CGL157
+      ***Country*of*TIN*2*-*OK*****************************************                CGL132 CGL157
+     C**********         PARM                    OKCTIN2                               CGL132 CGL157
+      ***Country*of*TIN*3*-*OK*****************************************                CGL132 CGL157
+     C**********         PARM                    OKCTIN3                               CGL132 CGL157
+      ***Country*of*TIN*4*-*OK*****************************************                CGL132 CGL157
+     C**********         PARM                    OKCTIN4                               CGL132 CGL157
+      ***Country*of*TIN*5*-*OK*****************************************                CGL132 CGL157
+     C**********         PARM                    OKCTIN5                               CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+      ***Update*error*info*with*that*returned*from*the*validation*module               CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         EXSR      SRUpdatErrs                                         CGL132 CGL157
+      *****************************************************************                CGL132 CGL157
+     C**********         ENDSR                                                         CGL132 CGL157
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
       *****************************************************************                       CGL132
@@ -1380,6 +1460,97 @@
                                                                                               CGL132
      C                   ENDSR                                                                CGL132
       *****************************************************************                       CGL132
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      * SRVCTRYD - Validate Mailing Country                           *                       CGL157
+      *****************************************************************                       CGL157
+     C     SRVCTRYD      BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Reset variables updated by validation                                                CGL157
+                                                                                              CGL157
+     C                   EXSR      SRResetErrs                                                CGL157
+                                                                                              CGL157
+      ** Validate Country Codes                                                               CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDVCTRYD'                                                 CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Return Code                                                                          CGL157
+     C                   PARM                    RetCodeOut                                   CGL157
+                                                                                              CGL157
+      ** Other parms                                                                          CGL157
+      ** Mailing Countries                                                                    CGL157
+     C     NAMCT1        PARM                    DDMCT1                                       CGL157
+     C     NAMCT2        PARM                    DDMCT2                                       CGL157
+     C     NAMCT3        PARM                    DDMCT3                                       CGL157
+     C     NAMCT4        PARM                    DDMCT4                                       CGL157
+     C     NAMCT5        PARM                    DDMCT5                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNamXAr                                    CGL157
+     C                   PARM                    MsgIDXAr                                     CGL157
+     C                   PARM                    MsgDtaXAr                                    CGL157
+                                                                                              CGL157
+      ** Mailing Country Codes - OK                                                           CGL157
+     C                   PARM                    OKMCT1                                       CGL157
+     C                   PARM                    OKMCT2                                       CGL157
+     C                   PARM                    OKMCT3                                       CGL157
+     C                   PARM                    OKMCT4                                       CGL157
+     C                   PARM                    OKMCT5                                       CGL157
+                                                                                              CGL157
+      ** Update error info with that returned from the validation module                      CGL157
+                                                                                              CGL157
+     C                   EXSR      SRUpdatErrs                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+      *****************************************************************                       CGL157
+      /EJECT                                                                                  CGL157
+      *****************************************************************                       CGL157
+      * SRVPHONE - Validate Phone Number Country                      *                       CGL157
+      *****************************************************************                       CGL157
+     C     SRVPHONE      BEGSR                                                                CGL157
+                                                                                              CGL157
+      ** Reset variables updated by validation                                                CGL157
+                                                                                              CGL157
+     C                   EXSR      SRResetErrs                                                CGL157
+                                                                                              CGL157
+      ** Validate Country Codes                                                               CGL157
+                                                                                              CGL157
+     C                   CALLB     'SDVCTRYD'                                                 CGL157
+                                                                                              CGL157
+      ** Inputs                                                                               CGL157
+      ** Return Code                                                                          CGL157
+     C                   PARM                    RetCodeOut                                   CGL157
+                                                                                              CGL157
+      ** Other parms                                                                          CGL157
+      ** Phone Number Country Codes                                                           CGL157
+     C     NAPCT1        PARM                    DDPCT1                                       CGL157
+     C     NAPCT2        PARM                    DDPCT2                                       CGL157
+     C     NAPCT3        PARM                    DDPCT3                                       CGL157
+     C     NAPCT4        PARM                    DDPCT4                                       CGL157
+     C     NAPCT5        PARM                    DDPCT5                                       CGL157
+                                                                                              CGL157
+      ** Outputs                                                                              CGL157
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CGL157
+     C                   PARM                    FldNamXAr                                    CGL157
+     C                   PARM                    MsgIDXAr                                     CGL157
+     C                   PARM                    MsgDtaXAr                                    CGL157
+                                                                                              CGL157
+      ** Phone Number Country Codes - OK                                                      CGL157
+     C                   PARM                    OKPCT1                                       CGL157
+     C                   PARM                    OKPCT2                                       CGL157
+     C                   PARM                    OKPCT3                                       CGL157
+     C                   PARM                    OKPCT4                                       CGL157
+     C                   PARM                    OKPCT5                                       CGL157
+                                                                                              CGL157
+      ** Update error info with that returned from the validation module                      CGL157
+                                                                                              CGL157
+     C                   EXSR      SRUpdatErrs                                                CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
+                                                                                              CGL157
+      *****************************************************************                       CGL157
       /EJECT
       *****************************************************************                       CER047
       * SRIcod - Validate Industry Code                               *                       CER047
@@ -1924,6 +2095,29 @@
      C                   EVAL      wPrivBank = 'Y'                                            CSW207
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
+                                                                                              CGL157
+      ** Check if CGL157 is enabled                                                           CGL157
+                                                                                              CGL157
+     C                   CALL      'AOSARDR0'                                                 CGL157
+     C                   PARM      *Blanks       PRtcd                                        CGL157
+     C                   PARM      '*VERIFY'     POptn                                        CGL157
+     C                   PARM      'CGL157'      PSard                                        CGL157
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL157
+                                                                                              CGL157
+     C                   EVAL      CGL157 = 'N'                                               CGL157
+     C     PRTCD         IFEQ      *BLANKS                                                    CGL157
+     C                   EVAL      CGL157 = 'Y'                                               CGL157
+     C                   ELSE                                                                 CGL157
+     C     PRTCD         IFNE      *BLANKS                                                    CGL157
+     C     PRTCD         ANDNE     '*NRF   '                                                  CGL157
+     C     *LOCK         IN        LDA                                                        CGL157
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CGL157
+     C                   EVAL      DBKEY = 'CGL157'                                           CGL157
+     C                   EVAL      DBASE = 903                                                CGL157
+     C                   OUT       LDA                                                        CGL157
+     C                   EXSR      *PSSR                                                      CGL157
+     C                   ENDIF                                                                CGL157
+     C                   ENDIF                                                                CGL157
  
       *                                                                                       CER047
       ** Call AOSARDR0 to check for CER047                                                    CER047

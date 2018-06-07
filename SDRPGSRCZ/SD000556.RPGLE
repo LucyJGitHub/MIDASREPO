@@ -17,11 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. MD039196           Date 21Jul16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039196 - FATCA/CRS Exceptions Report Cosmetic Issues       *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -145,7 +149,9 @@
      D Recursive       S              1    INZ('N')
      D WScrn           S              1A
      D WExceptions     S             30A   INZ(*BLANKS)
-     D WExDesc         S             64A   DIM(3)
+     D*WExDesc**       S             64A   DIM(3)                                             CGL177
+     D WExDesc         S             64A   DIM(4)                                             CGL177
+     D WCtr            S              2  0                                                  MD039196
  
      D PMsgId          S              7A
      D PMsgF           S             10A
@@ -294,6 +300,7 @@
       *****************************************************************
       *
      C     BuildSfl      BEGSR
+     C                   EVAL      WCtr = 0                                                 MD039196
       *
      C     1             SETLL     SDEXMAPD
      C                   READ      SDEXMAD0
@@ -308,12 +315,42 @@
      C                   DOW       %EOF <> '1'
  
      C                   EVAL      SflRRN = SflRRN + 1
+     C                   EVAL      WCtr = WCtr + 1                                          MD039196
+      *                                                                                     MD039196
+     C                   IF        WCtr > 14                                                MD039196
+     C                   EVAL      WCtr = 1                                                 MD039196
+     C                   ENDIF                                                              MD039196
+     C                                                                                      MD039196
+      *                                                                                     MD039196
      C                   EVAL      *IN40 = *OFF
      C
      C                   EVAL      XRACTN = *BLANKS
      C                   EVAL      XREXID = FEEXID
      C                   MOVEA     *BLANKS       WExDesc
      C                   MOVEA     FEEXDE        WExDesc
+      *                                                                                     MD039196
+     C                   IF        WExDesc(2) <> *Blanks                                    MD039196
+     C                             and WExDesc(3) = *Blanks                                 MD039196
+     C                             and WExDesc(4) = *Blanks                                 MD039196
+     C                             and WCtr + 1 > 14                                        MD039196
+     C                   EVAL      SflRRN = SflRRN + 1                                      MD039196
+     C                   EVAL      WCtr = WCtr + 1                                          MD039196
+      *                                                                                     MD039196
+     C                   ELSEIF    WExDesc(2) <> *Blanks                                    MD039196
+     C                             and WExDesc(3) <> *Blanks                                MD039196
+     C                             and WExDesc(4) = *Blanks                                 MD039196
+     C                             and WCtr + 2 > 14                                        MD039196
+     C                   EVAL      SflRRN = SflRRN + 2                                      MD039196
+     C                   EVAL      WCtr = WCtr + 2                                          MD039196
+      *                                                                                     MD039196
+     C                   ELSEIF    WExDesc(2) <> *Blanks                                    MD039196
+     C                             and WExDesc(3) <> *Blanks                                MD039196
+     C                             and WExDesc(4) <> *Blanks                                MD039196
+     C                             and WCtr + 3 > 14                                        MD039196
+     C                   EVAL      SflRRN = SflRRN + 3                                      MD039196
+     C                   EVAL      WCtr = WCtr + 3                                          MD039196
+     C                   ENDIF                                                              MD039196
+      *                                                                                     MD039196
      C                   MOVE      WExDesc(1)    XREXMA
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000556S0
@@ -323,6 +360,7 @@
      C                   IF        WExDesc(2) <> *BLANKS
      C                   MOVE      WExDesc(2)    XREXMA
      C                   EVAL      SflRRN = SflRRN + 1
+     C                   EVAL      WCtr = WCtr + 1                                          MD039196
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000556S0
      C                   EVAL      *IN80 = *OFF
@@ -331,10 +369,20 @@
      C                   IF        WExDesc(3) <> *BLANKS
      C                   MOVE      WExDesc(3)    XREXMA
      C                   EVAL      SflRRN = SflRRN + 1
+     C                   EVAL      WCtr = WCtr + 1                                          MD039196
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SD000556S0
      C                   EVAL      *IN80 = *OFF
      C                   ENDIF
+      ** If Message Line 4 is not blank                                                       CGL177
+     C                   IF        WExDesc(4) <> *BLANKS                                      CGL177
+     C                   MOVE      WExDesc(4)    XREXMA                                       CGL177
+     C                   EVAL      SflRRN = SflRRN + 1                                        CGL177
+     C                   EVAL      WCtr = WCtr + 1                                          MD039196
+     C                   EVAL      *IN80 = *ON                                                CGL177
+     C                   WRITE     SD000556S0                                                 CGL177
+     C                   EVAL      *IN80 = *OFF                                               CGL177
+     C                   ENDIF                                                                CGL177
  
      C     ReadNext      TAG
      C                   READ      SDEXMAD0

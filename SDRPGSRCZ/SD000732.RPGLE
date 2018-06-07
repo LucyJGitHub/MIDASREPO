@@ -28,8 +28,10 @@
       *                                                               *                     MD027669
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD040497           Date 18Aug16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 MD027677           Date 08Aug14               *
       *                 MD027571           Date 06Jul14               *
       *                 MD027669           Date 01Jul14               *
@@ -48,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040497 - US Indicia Changed not recorded in Customer       *
+      *             Information History                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD027677 - FATCA Reporting Type Comment update by the tool   *
@@ -373,6 +378,10 @@
      D PAftCUAH        S           5000A
      D PBefCUXC        S           5000A                                                    MD026854
      D PAftCUXC        S           5000A                                                    MD026854
+     D PBefCRSH        S           5000A                                                      CGL177
+     D PAftCRSH        S           5000A                                                      CGL177
+     D PBefCRSD        S           5000A                                                      CGL177
+     D PAftCRSD        S           5000A                                                      CGL177
      D PACRV           S              1A
      D PELEC           S              1A
      D WHasIndicia     S              1A   INZ('N')
@@ -881,10 +890,11 @@
       ** If this is being run as part of automatic updates,
       ** Indicia should not be updated when tool has not been run
       ** manually first for the Customer
-     C                   IF        (PMode = 'A'
-     C                             AND BBTYLC = 'A'
-     C                             AND CustIndiciaDS = *BLANKS)
-     C                             OR (PMode = 'A'
+     C**********         IF        (PMode = 'A'                                             MD040497
+     C**********                   AND BBTYLC = 'A'                                         MD040497
+     C**********                   AND CustIndiciaDS = *BLANKS)                             MD040497
+     C**********                   OR (PMode = 'A'                                          MD040497
+     C                   IF        (PMode = 'A'                                             MD040497
      C                             AND BBTYLC = 'I'
      C                             AND BBLCD  < WEffDate
      C                             AND CustIndiciaDS = *BLANKS)
@@ -1336,10 +1346,11 @@
       ** If this is being run as part of automatic updates,
       ** Indicia should not be updated when tool has not been run
       ** manually first for the Customer
-     C                   IF        (PMode = 'A'
-     C                             AND BBTYLC = 'A'
-     C                             AND CustIndiciaDS = *BLANKS)
-     C                             OR (PMode = 'A'
+     C**********         IF        (PMode = 'A'                                             MD040497
+     C**********                   AND BBTYLC = 'A'                                         MD040497
+     C**********                   AND CustIndiciaDS = *BLANKS)                             MD040497
+     C**********                   OR (PMode = 'A'                                          MD040497
+     C                   IF        (PMode = 'A'                                             MD040497
      C                             AND BBTYLC = 'I'
      C                             AND BBLCD  < WEffDate
      C                             AND CustIndiciaDS = *BLANKS)
@@ -1401,6 +1412,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  
@@ -1475,6 +1490,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  
@@ -1566,6 +1585,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  
@@ -1632,6 +1655,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  
@@ -1714,6 +1741,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  
@@ -2145,6 +2176,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026705
      C                   PARM      'N'           PACRV                                      MD026705
      C                   PARM      'Y'           PELEC                                      MD026705
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF                                                              MD026705
                                                                                             MD026705
@@ -2219,6 +2254,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
+     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
+     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
      C                   ENDIF                                                              MD027295
      C                   ENDIF
  

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD041294           Date 19Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 20May09               *
       *                 BUG22580           Date 02Feb09               *
       *                 CER047             Date 19May08               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041294 - Customer extension details is missing in          *
+      *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24029 - COB Error RE3662 Database Error                   *
@@ -474,11 +477,13 @@
      C                   PARM      'SDIJACMPD'   PInvF1
      C                   PARM      *BLANKS       PInvF2
      C                   PARM      *BLANKS       PInvF3
+     C                   PARM      *BLANKS       PInvF4           10                        MD041294
  
       ** Invalid File Data
      C                   PARM      SDIJACM       PInFD1
      C                   PARM      *BLANKS       PInFD2
      C                   PARM      *BLANKS       PInFD3
+     C                   PARM      *BLANKS       PInFD4         4000                        MD041294
  
       ***********************
       ** Output Parameters **

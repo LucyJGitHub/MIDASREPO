@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042897           Date 29Nov16               *
+      *  Last Amend No. CGL177             Date 11Jan16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042897           Date 29Nov16               *
       *                 MD039670           Date 26Jul16               *
       *                 MD039196           Date 21Jul16               *
       *                 MD025220           Date 03Feb14               *
@@ -20,6 +21,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042897 - Customer/Non-Account Holders with FATCA Exceptions*
       *             are not reported in FATCA Exceptions IC Report    *
@@ -61,11 +63,17 @@
       ** ¦ =======                              ¦                     *
       ** +--------------------------------------+                     *
       ** FATCA Customers with Exceptions - List
-     FSDFTCSL6  IF   E             DISK
+     FSDFTCSL6  IF   E           K DISK
  
       ** FATCA Non-Account Holders with Exceptions - List
      F***SDFTNHL6  IF   E             DISK                                                  MD039670
      FSDFTNHL6  IF   E           K DISK                                                     MD039670
+                                                                                              CGL177
+      ** CRS Customers with Exceptions - List                                                 CGL177
+     FSDCRSHL2  IF   E           K DISK                                                       CGL177
+                                                                                              CGL177
+      ** CRS Non-Account Holders with Exceptions - List                                       CGL177
+     FSDCRNHL2  IF   E           K DISK                                                       CGL177
  
       ** Non - Account Holder Details
      FSDNAHOL0  IF   E           K DISK
@@ -149,13 +157,15 @@
  
      DExcpts           S              1A   DIM(30)
      DSelEx            S              1A   DIM(30)
-     DMsgLines         S             64A   DIM(4)
+     D*MsgLines         S             64A   DIM(4)                                            CGL177
+     DMsgLines         S             64A   DIM(5)                                             CGL177
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
  
-     D WMatch          S              1  0
+     D*WMatch***       S              1  0                                                    CGL177
+     D WMatch          S              2  0                                                    CGL177
      D*WIdx*****       S              1  0                                                  MD025220
      D*WIdx2****       S              1  0                                                  MD025220
      D WIdx            S              2  0                                                  MD025220
@@ -178,6 +188,13 @@
      D WCALCN          S              5  0
      D DRUND           S              5  0
      D WWTMST          S             26A
+     D WxEXID          S             30A                                                      CGL177
+     D WcEXID          S             30A                                                      CGL177
+     D WcheckH         S              5  0                                                    CGL177
+     D WcheckI         S              5  0                                                    CGL177
+     D WcheckCH        S              5  0                                                    CGL177
+     D WcheckCI        S              5  0                                                    CGL177
+     D WxCUST          S              6A                                                      CGL177
  
      ** ZSFILE Parameters
      D ZSERR           S              1
@@ -259,8 +276,10 @@
       *
      C                   EVAL      RTYPE = '*CUST'
      C*    *LOVAL        SETLL     SDFTCSL6
-     C                   READ      SDFTCSD0                               14
+     C**********         READ      SDFTCSD0                               14                  CGL177
+     C                   READ      SDCUSTL0                               14                  CGL177
      C                   DOW       *IN14 <> *ON
+     C                   EVAL      WxCUST = BBCUST                                            CGL177
       ** Record(s) found
      C                   IF        *IN50 = *OFF
      C                   OPEN      SD000554P1
@@ -274,6 +293,80 @@
      C                   WRITE     SD000554R0
      C                   ENDIF
       *
+      ** Initialize printer fields                                                            CGL177
+      *                                                                                       CGL177
+     C                   EVAL      XRREFR = *BLANKS                                           CGL177
+     C                   EVAL      XRRPNM = *BLANKS                                           CGL177
+     C                   EVAL      XRRPTN = *BLANKS                                           CGL177
+     C                   EVAL      XRSNAM = *BLANKS                                           CGL177
+     C                   MOVEA     *BLANKS       Excpts                                       CGL177
+     C                   EVAL      WcheckH = *ZERO                                            CGL177
+     C                   EVAL      WcheckCH = *ZERO                                           CGL177
+     C                   EVAL      WcheckI = *ZERO                                            CGL177
+     C                   EVAL      WcheckCI = *ZERO                                           CGL177
+     C                   EVAL      WxEXID = *BLANKS                                           CGL177
+     C                   EVAL      WcEXID = *BLANKS                                           CGL177
+      *                                                                                       CGL177
+      ** Check Customer if there's FATCA Exception                                            CGL177
+      *                                                                                       CGL177
+     C     WxCUST        CHAIN     SDFTCSD0                                                   CGL177
+      *                                                                                       CGL177
+     C                   IF        %FOUND(SDFTCSL6)                                           CGL177
+     C                   IF        FAEXID <> *BLANKS                                          CGL177
+     C                   EVAL      XRREFR = BBCUST                                            CGL177
+     C                   EVAL      XRRPNM = BBCRNM                                            CGL177
+     C                   EVAL      XRRPTN = BBCRTN                                            CGL177
+     C                   EVAL      XRSNAM = BBCSSN                                            CGL177
+     C                   EVAL      WxEXID = FAEXID                                            CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Customer if there's CRS Exception                                              CGL177
+      *                                                                                       CGL177
+     C     WxCUST        CHAIN     SDCRSHD0                                                   CGL177
+      *                                                                                       CGL177
+     C                   IF        %FOUND(SDCRSHL2)                                           CGL177
+     C                   IF        CREXMI <> *BLANKS                                          CGL177
+     C                   EVAL      XRREFR = BBCUST                                            CGL177
+     C                   EVAL      XRRPNM = BBCRNM                                            CGL177
+     C                   EVAL      XRRPTN = BBCRTN                                            CGL177
+     C                   EVAL      XRSNAM = BBCSSN                                            CGL177
+     C                   EVAL      WcEXID = CREXMI                                            CGL177
+      *                                                                                       CGL177
+      ** Check Customer if there's Exception 'H' in FATCA and CRS record                      CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckH = %SCAN ('H' : WxEXID)                             CGL177
+     C                   IF        WcheckH <> 0                                               CGL177
+     C                   EVAL      WcheckCH = %SCAN ('H' : WcEXID)                            CGL177
+     C                   IF        WcheckCH <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('H':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Customer if there's Exception 'I' in FATCA and CRS record                      CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckI = %SCAN ('I' : WxEXID)                             CGL177
+     C                   IF        WcheckI <> 0                                               CGL177
+     C                   EVAL      WcheckCI = %SCAN ('I' : WcEXID)                            CGL177
+     C                   IF        WcheckCI <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('I':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Customer if there's Exception 'L' in FATCA and CRS record                      CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckI = %SCAN ('L' : WxEXID)                             CGL177
+     C                   IF        WcheckI <> 0                                               CGL177
+     C                   EVAL      WcheckCI = %SCAN ('L' : WcEXID)                            CGL177
+     C                   IF        WcheckCI <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('L':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WxEXID = %TRIM(WxEXID) + %TRIM(WcEXID)                     CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
       ** Prepare detail data for printing
       *
      C                   EXSR      SRDETAIL
@@ -299,7 +392,8 @@
       *
       ** Read next record
       *
-     C                   READ      SDFTCSD0                               14
+     C**********         READ      SDFTCSD0                               14                  CGL177
+     C                   READ      SDCUSTL0                               14                  CGL177
      C                   ENDDO
  
      C                   EVAL      *IN05 = *ON
@@ -318,7 +412,8 @@
       *
      C                   EVAL      RTYPE = '*NAHO'
      C*    *LOVAL        SETLL     SDFTNHL6
-     C                   READ      SDFTNHD0                               14
+     C**********         READ      SDFTNHD0                               14                  CGL177
+     C                   READ      SDNAHOL0                               14                  CGL177
      C                   DOW       *IN14 <> *ON
      C**********         EVAL      WxNAHO = NHNAHO                                 MD040686 MD042897
      C*****NHNAHO        CHAIN     SDFTNHL6                                        MD039670 MD042897
@@ -355,6 +450,80 @@
      C                   IF        *IN05 = *ON
      C                   WRITE     SD000554R0
      C                   ENDIF
+      *                                                                                       CGL177
+      ** Initialize printer fields                                                            CGL177
+      *                                                                                       CGL177
+     C                   EVAL      XRREFR = *BLANKS                                           CGL177
+     C                   EVAL      XRRPNM = *BLANKS                                           CGL177
+     C                   EVAL      XRRPTN = *BLANKS                                           CGL177
+     C                   EVAL      XRSNAM = *BLANKS                                           CGL177
+     C                   MOVEA     *BLANKS       Excpts                                       CGL177
+     C                   EVAL      WcheckH = *ZERO                                            CGL177
+     C                   EVAL      WcheckCH = *ZERO                                           CGL177
+     C                   EVAL      WcheckI = *ZERO                                            CGL177
+     C                   EVAL      WcheckCI = *ZERO                                           CGL177
+     C                   EVAL      WxEXID = *BLANKS                                           CGL177
+     C                   EVAL      WcEXID = *BLANKS                                           CGL177
+      *                                                                                       CGL177
+      ** Check Non-account Holder if there's FATCA Exception                                  CGL177
+      *                                                                                       CGL177
+     C     WxNAHO        CHAIN     SDFTNHD0                                                   CGL177
+      *                                                                                       CGL177
+     C                   IF        %FOUND(SDFTNHL6)                                           CGL177
+     C                   IF        FNEXID <> *BLANKS                                          CGL177
+     C                   EVAL      XRREFR = NHNAHO                                            CGL177
+     C                   EVAL      XRRPNM = NHNARN                                            CGL177
+     C                   EVAL      XRRPTN = NHNATW                                            CGL177
+     C                   EVAL      XRSNAM = *BLANKS                                           CGL177
+     C                   EVAL      WxEXID = FNEXID                                            CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Non-account Holder if there's CRS Exception                                    CGL177
+      *                                                                                       CGL177
+     C     WxNAHO        CHAIN     SDCRNHD0                                                   CGL177
+      *                                                                                       CGL177
+     C                   IF        %FOUND(SDCRNHL2)                                           CGL177
+     C                   IF        NREXMI <> *BLANKS                                          CGL177
+     C                   EVAL      XRREFR = NHNAHO                                            CGL177
+     C                   EVAL      XRRPNM = NHNARN                                            CGL177
+     C                   EVAL      XRRPTN = NHNATW                                            CGL177
+     C                   EVAL      XRSNAM = *BLANKS                                           CGL177
+     C                   EVAL      WcEXID = NREXMI                                            CGL177
+      *                                                                                       CGL177
+      ** Check Non-account Holder if there's Exception 'H' in FATCA and CRS record            CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckH = %SCAN ('H' : WxEXID)                             CGL177
+     C                   IF        WcheckH <> 0                                               CGL177
+     C                   EVAL      WcheckCH = %SCAN ('H' : WcEXID)                            CGL177
+     C                   IF        WcheckCH <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('H':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Non-account Holder if there's Exception 'I' in FATCA and CRS record            CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckI = %SCAN ('I' : WxEXID)                             CGL177
+     C                   IF        WcheckI <> 0                                               CGL177
+     C                   EVAL      WcheckCI = %SCAN ('I' : WcEXID)                            CGL177
+     C                   IF        WcheckCI <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('I':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+      *                                                                                       CGL177
+      ** Check Non-account Holder if there's Exception 'L' in FATCA and CRS record            CGL177
+      *                                                                                       CGL177
+     C                   EVAL      WcheckH = %SCAN ('L' : WxEXID)                             CGL177
+     C                   IF        WcheckH <> 0                                               CGL177
+     C                   EVAL      WcheckCH = %SCAN ('L' : WcEXID)                            CGL177
+     C                   IF        WcheckCH <> 0                                              CGL177
+     C                   EVAL      WcEXID=%replace(' ':WcEXID:%scan('L':WcEXID))              CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
+                                                                                              CGL177
+     C                   EVAL      WxEXID = %TRIM(WxEXID) + %TRIM(WcEXID)                     CGL177
+     C                   ENDIF                                                                CGL177
+     C                   ENDIF                                                                CGL177
       *
       ** Prepare detail data for printing
       *
@@ -384,8 +553,10 @@
       *
       ** Read next record
       *
-     C                   READ      SDFTNHD0                               14
+     C**********         READ      SDFTNHD0                               14                  CGL177
+     C                   READ      SDNAHOL0                               14                  CGL177
      C                   ENDDO
+      *                                                                                       CGL177
      C                   IF        *IN50 = *ON
      C                   IF        WCALCC = 0
      C                   WRITE     SD000554R3
@@ -420,44 +591,45 @@
       *****************************************************************
      C     SRDETAIL      BEGSR
  
-     C                   EVAL      XRREFR = *BLANKS
-     C                   EVAL      XRRPNM = *BLANKS
-     C                   EVAL      XRRPTN = *BLANKS
-     C                   EVAL      XRSNAM = *BLANKS
+     C**********         EVAL      XRREFR = *BLANKS                                           CGL177
+     C**********         EVAL      XRRPNM = *BLANKS                                           CGL177
+     C**********         EVAL      XRRPTN = *BLANKS                                           CGL177
+     C**********         EVAL      XRSNAM = *BLANKS                                           CGL177
      C                   MOVEA     *BLANKS       Excpts
+     C                   MOVEA     WxEXID        Excpts                                       CGL177
       * Set Report Details
- 
-     C                   IF        RTYPE = '*CUST'
-     C                   EVAL      XRREFR = FACUST
+     C**********         IF        RTYPE = '*CUST'                                            CGL177
+     C**********         EVAL      XRREFR = FACUST                                            CGL177
       ** Get customer details
-     C     FACUST        CHAIN     @BBREBG
-     C                   IF        %FOUND = '1'
-     C                   EVAL      XRRPNM = BBCRNM
-     C                   EVAL      XRRPTN = BBCRTN
-     C                   EVAL      XRSNAM = BBCSSN
-     C                   ENDIF
-     C                   EVAL      Excpts = *BLANKS
-     C                   MOVEA     FAEXID        Excpts
+     C*****FACUST        CHAIN     @BBREBG                                                    CGL177
+     C**********         IF        %FOUND = '1'                                               CGL177
+     C**********         EVAL      XRRPNM = BBCRNM                                            CGL177
+     C**********         EVAL      XRRPTN = BBCRTN                                            CGL177
+     C**********         EVAL      XRSNAM = BBCSSN                                            CGL177
+     C**********         ENDIF                                                                CGL177
+     C**********         EVAL      Excpts = *BLANKS                                           CGL177
+     C**********         MOVEA     FAEXID        Excpts                                       CGL177
       *
-     C                   ELSEIF    RTYPE = '*NAHO'
-     C                   EVAL      XRREFR = FNNAHO
+     C**********         ELSEIF    RTYPE = '*NAHO'                                            CGL177
+     C**********         EVAL      XRREFR = FNNAHO                                            CGL177
       ** Get non-account holder details
-     C     FNNAHO        CHAIN     SDNAHOD0
-     C                   IF        %FOUND = '1'
-     C                   EVAL      XRRPNM = NHNARN
-     C                   EVAL      XRRPTN = NHNATW
-     C                   EVAL      XRSNAM = *BLANKS
-     C                   ENDIF
-     C                   EVAL      Excpts = *BLANKS
-     C                   MOVEA     FNEXID        Excpts
-     C                   ENDIF
+     C*****FNNAHO        CHAIN     SDNAHOD0                                                   CGL177
+     C**********         IF        %FOUND = '1'                                               CGL177
+     C**********         EVAL      XRRPNM = NHNARN                                            CGL177
+     C**********         EVAL      XRRPTN = NHNATW                                            CGL177
+     C**********         EVAL      XRSNAM = *BLANKS                                           CGL177
+     C**********         ENDIF                                                                CGL177
+     C**********         EVAL      Excpts = *BLANKS                                           CGL177
+     C**********         MOVEA     FNEXID        Excpts                                       CGL177
+     C**********         ENDIF                                                                CGL177
       ** If a selection was made, filter for them
      C                   IF        PExceptions <> *BLANKS
      C                   EVAL      WIdx = 1
      C                   EVAL      WExIDs = *BLANKS
      C                   DOW       %trim(SelEx(WIdx)) <> *BLANKS
      C                   EVAL      WMatch = %LOOKUP(SelEx(WIdx):Excpts)
-     C                   IF        %FOUND = '1' and WMatch > 0
+     C**********         IF        %FOUND = '1' and WMatch > 0                                CGL177
+     C                   IF        WMatch > 0                                                 CGL177
      C                   EVAL      WExIDs = %trim(WExIDs) + SelEx(WIdx)
      C                   ENDIF
      C                   EVAL      WIdx += 1
@@ -478,7 +650,8 @@
      C                   EVAL      WIdx = 1
      C                   DOW       Excpts(WIdx) <> *BLANKS
      C     Excpts(WIdx)  CHAIN     SDEXMAL0
-     C                   IF        %FOUND = '1'
+     C**********         IF        %FOUND = '1'                                               CGL177
+     C                   IF        %FOUND(SDEXMAL0)                                           CGL177
       ** Move exception message (256A) to array of 4 elements (64A)
      C                   EVAL      MsgLines = *BLANKS
      C                   MOVEA     FEEXDE        MsgLines
@@ -488,6 +661,14 @@
      C                   EVAL      WIdx2 = 1
      C                   DOW       MsgLines(WIdx2) <> *BLANKS
      C                   EVAL      XREXMX = MsgLines(WIdx2)
+      *                                                                                       CGL177
+      ** If overflow indicator fires up, write header format                                  CGL177
+      *                                                                                       CGL177
+     C                   IF        *IN05 = *ON                                                CGL177
+     C                   WRITE     SD000554R0                                                 CGL177
+     C                   WRITE     SD000554R1                                                 CGL177
+     C                   EVAL      *IN05 = *OFF                                               CGL177
+     C                   ENDIF                                                                CGL177
       ** Append line to exceptions list of current customer
      C                   WRITE     SD000554R2
       ** Move to next exception message line index

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CGL185             Date 13Mar17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD044377           Date 28Feb17               *
       *                 MD043973           Date 03Feb17               *
       *                 MD042828           Date 15Dec16               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL185 - FATCA XML 2.0                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD044377 - Traded FRA is captured in FATCA EOY customer      *
@@ -1010,7 +1012,7 @@
       ** Save only those account that are not yet close
 
      C                   IF        RE_RECI <> 'C'
-     C                             AND RE_CLBL <=0
+     C**********                   AND RE_CLBL <=0                                            CGL185
 
      C                   MOVEL     RE_CNUM       KNCUST
      C                   EVAL      NO_A7CUST = *Blanks

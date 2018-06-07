@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CGL185             Date 13Mar17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD043943           Date 03Feb17               *
       *                 MD043793           Date 30Jan17               *
       *                 MD043652           Date 18Jan17               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL185 - FATCA XML 2.0                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD043943 - Forward foreign exchange deals that are matured   *
@@ -196,6 +198,7 @@
      D KRcdt           S              1
      D Wtrade          S              1
      D PPFTC           S              2                                                     MD043793
+     D Wcusn           S              6A                                                      CGL185
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -789,6 +792,7 @@
                                                                                             MD042828
      C                   IF        Wcust <> *BLANKS                                         MD042828
      C                             OR Wrevi = 1                                             MD042828
+     C                   MOVE      Wcust         CACBCNUM                                     CGL185
      C                   EVAL      CACBCNUM = Wcust                                         MD042828
      C                   EVAL      CACBCURR = D_ECCY                                        MD042828
      C                   EVAL      CACBBRCH = D_BRCA                                        MD042828
@@ -830,6 +834,9 @@
      C                   EVAL      CACCACHL = Wcust                                         MD043652
      C                   EVAL      CACCACTY = 'CUST'                                        MD043652
      C                   EVAL      CACCJATP = *BLANKS                                       MD042828
+     C                   IF        WCusn = Wcust                                              CGL185
+     C                   EVAL      CACBAMNT = *Zero                                           CGL185
+     C                   ENDIF                                                                CGL185
      C                   WRITE     GLFCABD0                                                 MD042828
                                                                                             MD042828
      C                   EVAL      JCJANO = CACBCNUM                                        MD042828
@@ -1507,6 +1514,60 @@
      C                   EVAL      Wbrch = BBBRCD
      C                   ENDIF
 
+     C                   SELECT                                                               CGL185
+     C                   WHEN      Wstyp = 01                                                 CGL185
+     C                             OR Wstyp = 02                                              CGL185
+     C                             OR Wstyp = 07                                              CGL185
+     C                             OR Wstyp = 08                                              CGL185
+     C                             OR Wstyp = 12                                              CGL185
+                                                                                              CGL185
+     C                   CALLB     'AONOSTR0'                                                 CGL185
+     C                   PARM                    Prtcd                                        CGL185
+     C                   PARM      '*KEY   '     Poptn                                        CGL185
+     C                   PARM      *BLANKS       Pcnum                                        CGL185
+     C                   PARM      Wcurr         Pcycd                                        CGL185
+     C                   PARM      *BLANKS       Paccd                                        CGL185
+     C                   PARM      *BLANKS       Pacsq                                        CGL185
+     C                   PARM      Wsacc         Pnonb                                        CGL185
+     C                   PARM      *BLANKS       Pbrca                                        CGL185
+     C                   PARM      *BLANKS       Pcssn                                        CGL185
+     C                   PARM      *BLANKS       Ppnoi                                        CGL185
+     C     SDNOST        PARM      SDNOST        Dsfdy                                        CGL185
+                                                                                              CGL185
+     C                   IF        Prtcd = *BLANKS                                            CGL185
+     C                   EVAL      Wcusn = A7CUST                                             CGL185
+     C                   ELSE                                                                 CGL185
+     C                   EVAL      Wcusn = *BLANKS                                            CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
+     C                   WHEN      Wstyp = 14                                                 CGL185
+     C                   CALLB     'AOACCTR0'                                                 CGL185
+     C                   PARM      *BLANKS       Prtcd                                        CGL185
+     C                   PARM      '*KEY   '     Poptn                                        CGL185
+     C                   PARM      WSACC         Pretl                                        CGL185
+     C                   PARM      *BLANKS       Pcnum                                        CGL185
+     C                   PARM      *BLANKS       Pcucd                                        CGL185
+     C                   PARM      *BLANKS       Paccd                                        CGL185
+     C                   PARM      *BLANKS       Pacsq                                        CGL185
+     C                   PARM      *BLANKS       Pbrca                                        CGL185
+     C     SDACCT        PARM      SDACCT        Dssdy                                        CGL185
+                                                                                              CGL185
+     C                   IF        Prtcd = *BLANKS                                            CGL185
+     C                   MOVE      *BLANKS       Wcusn                                        CGL185
+     C                   MOVE      CNUM          Wcusn                                        CGL185
+     C                   ELSE                                                                 CGL185
+     C                   EVAL      Wcusn = *BLANKS                                            CGL185
+     C                   ENDIF                                                                CGL185
+                                                                                              CGL185
+     C                   WHEN      Wstyp = 05                                                 CGL185
+                                                                                              CGL185
+     C                   EVAL      Wcusn = WSACC                                              CGL185
+                                                                                              CGL185
+     C                   OTHER                                                                CGL185
+     C                   EVAL      Wcusn = *BLANKS                                            CGL185
+                                                                                              CGL185
+     C                   ENDSL                                                                CGL185
+                                                                                              CGL185
      C                   ENDSR
 
       *****************************************************************

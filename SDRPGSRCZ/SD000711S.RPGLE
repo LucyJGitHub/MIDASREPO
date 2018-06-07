@@ -15,11 +15,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026556 *CREATE   Date 28Apr14               *
+      *  Last Amend No. MD036200           Date 28Oct15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026556 *CREATE   Date 28Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036200 - Database error on insert in NAHO                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026556 - Encountered Database error in override document   *
       *             field from US Indicia                             *
@@ -144,6 +146,8 @@
  
      D WRun            S              1A
      D WRead           S              1A
+     D PPNARN          S             20A                                                    MD036200
+     D PPNATW          S             10A                                                    MD036200
  
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
@@ -636,6 +640,8 @@
      C                   PARM                    PRTYP
      C                   PARM                    PCODE
      C                   PARM                    PSEQN
+     C                   PARM                    PPNARN                                     MD036200
+     C                   PARM                    PPNATW                                     MD036200
  
       ** End Parameter List
       ** ==================
@@ -700,11 +706,13 @@
      C                   PARM                    PNAHO
      C     SDNAHO        PARM      SDNAHO        DSSDY
      C                   IF        PRTCD <> *BLANKS
-     C                   EVAL      DBFILE = 'SDNAHOPD'
-     C                   EVAL      DBASE = 903
-     C                   EVAL      DBKEY = PNAHO
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
+     C**********         EVAL      DBFILE = 'SDNAHOPD'                                      MD036200
+     C**********         EVAL      DBASE = 903                                              MD036200
+     C**********         EVAL      DBKEY = PNAHO                                            MD036200
+     C**********         OUT       LDA                                                      MD036200
+     C**********         EXSR      *PSSR                                                    MD036200
+     C                   EVAL      DDCRNM = PPNARN                                          MD036200
+     C                   EVAL      DDCRTN = PPNATW                                          MD036200
      C                   ELSE
      C                   EVAL      DDCRTN = NHNATW
      C                   EVAL      DDCRNM = NHNARN

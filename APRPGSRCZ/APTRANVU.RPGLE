@@ -13,8 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CFT163             Date 04May18               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. MD050345           Date 04Apr18               *
+      *  Pret Amend No. MD050342           Date 04Apr18               *
+      *                 CGL157             Date 17Aug15               *
+      *                 CFT163             Date 04May18               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 03Nov17               *
       *                 MD041996           Date 12Oct16               *
@@ -211,6 +214,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050345 - Data under CRS Country Details are not aligned to *
+      *             their corresponding columns                       *
+      *  MD050342 - Mailing Country details is not displayed during   *
+      *             Pre-Confirmation page                             *
+      *  CGL157 - CRS Reporting                                       *
       *  CFT163 - FT Nostro Transfer Authorisation (RPG)              *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
@@ -627,6 +635,7 @@
      D  TransCUXC                          LIKE(SDCUXC)                                       CGL132
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
+     D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -634,6 +643,10 @@
      D TransInEx4      DS          9999                                                       CSW213
      D  TransCUAH                          LIKE(SDCUAH)                                       CSW213
      D  TransCCTX                          LIKE(SDCCTX)                                       CSW213
+     D  TransCRDD1                 6039                                                       CGL157
+                                                                                              CGL157
+     D TransInEx5      DS          9999                                                       CGL157
+     D  TransCRDD2                  651                                                       CGL157
                                                                                               CSW213
      D SDCUPR        E DS                  EXTNAME(SDCUPRPD)                                  CSW213
      D  DDACTN_CP    E                     EXTFLD(DDACTN)                                   MD024631
@@ -689,6 +702,10 @@
      D SDCUXC        E DS                  EXTNAME(SDCUXCPD)                                  CGL132
      D SDFTCR        E DS                  EXTNAME(SDFTCRPD)                                  CGL132
      D  DDCUST_FC    E                     EXTFLD(DDCUST)                                     CGL132
+     D SDCRSS        E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D                                     PREFIX(W)                                          CGL157
+     D SDCRDD        E DS                  EXTNAME(SDCRDDPD)                                  CGL157
+     D                                     PREFIX(W)                                          CGL157
                                                                                               CDL099
       ** CDL099 Split Value Date with additional extra fields                                 CDL099
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
@@ -866,12 +883,28 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D TransACT4       S            500                                                       CER059
      D TransACT5       S            500                                                       CER059
      D TransACT6       S            500                                                       CER059
+     D TransCRS01      S            500                                                       CGL157
+     D TransCRS02      S            500                                                       CGL157
+     D TransCRS03      S            500                                                       CGL157
+     D TransCRS04      S            500                                                       CGL157
+     D TransCRS05      S            500                                                       CGL157
+     D TransCRS06      S            500                                                       CGL157
+     D TransCRS07      S            500                                                       CGL157
+     D TransCRS08      S            500                                                       CGL157
+     D TransCRS09      S            500                                                       CGL157
+     D TransCRS10      S            500                                                       CGL157
+     D TransCRS11      S            500                                                       CGL157
+     D TransCRS12      S            500                                                       CGL157
+     D TransCRS13      S             39                                                       CGL157
+     D TransCRS14      S            500                                                       CGL157
+     D TransCRS15      S            500                                                       CGL157
      D TRANS17         S            500                                                       CSD079
      D TRANS18         S            500                                                       CSD079
      D BCLData         S            500                                                       CSD079
      D EurRepData      S            500                                                       CSD079
      D TRANS8A         S            500                                                       CSD079
      D TRANS8B         S            500                                                       CSD079
+     D TRANS8C         S            500                                                       CGL157
      D Trans83         S            500                                                       CER059
      D Trans84         S            500                                                       CER059
      D TRANS19         S            500                                                    AR1086546
@@ -965,6 +998,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D SDADLn          S              4  0                                                    CRE026
      D SDADLnA         S              4  0                                                    CRE026
      D SDADLnB         S              4  0                                                    CRE026
+     D SDADLnC         S              4  0                                                    CGL157
      D SDADLn3         S              4  0                                                    CER059
      D SDADLn4         S              4  0                                                    CER059
      D SDSFLn          S              4  0                                                    CRE026
@@ -1046,6 +1080,7 @@ RGC  D RPIF4LN         S              4  0                                      
      D BFEX2Ln         S              4  0 INZ(9999)                                        MD022093
      D BFEX3Ln         S              4  0 INZ(9999)                                        MD022093
      D BFEX4Ln         S              4  0 INZ(9999)                                        MD022093
+     D BFEX5Ln         S              4  0 INZ(9999)                                          CGL157
                                                                                             MD022093
       ** Remaining filler for CUSP API only                                                 MD022093
      D FillerBufTot    S           5235A                                                    MD022093
@@ -1064,6 +1099,8 @@ RGC  D RPIF4LN         S              4  0                                      
      D/COPY OFCPYSRCZ,CGL158_001                                                              CGL158
      D CUXCLn          S              4  0                                                    CGL132
      D FTCRLn          S              4  0                                                    CGL132
+     D CRSSLn          S              4  0                                                    CGL157
+     D CRDDLn          S              4  0                                                    CGL157
      D/COPY OFCPYSRCZ,CRE101_001                                                              CRE101
       ** +--- Start of main processing -----------------------------------+
 
@@ -1913,8 +1950,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      TRANS8A = %SUBST(BUFFER:Bfp:SDADLnA)                       CSD079
      C                   ADD       SDADLnA       Bfp                                          CSD079
      C                   EVAL      TRANS8B = %SUBST(BUFFER:Bfp:SDADLnB)                       CSD079
+     C                   ADD       SDADLnB       Bfp                                        MD050342
+     C                   EVAL      TRANS8C = %SUBST(BUFFER:Bfp:SDADLnC)                       CGL157
      C                   EVAL      TransCUAD = TRANS8 + TRANS8A + TRANS8B                   MD022093
-     C                   ADD       SDADLnB       Bfp                                          CSD079
+     C                                         + TRANS8C                                      CGL157
+     C**********         ADD       SDADLnB       Bfp                                 CSD079 MD050342
+     C                   ADD       SDADLnC       Bfp                                          CGL157
      C                   EVAL      Trans83 = %SUBST(BUFFERTOTAL:Bfp:SDADLn3)                  CER059
      C                   EVAL      TransACU3 = TRANS83                                      MD022093
      C                   ADD       SDADLn3       Bfp                                          CER059
@@ -2004,6 +2045,8 @@ RGC  D RPIF4LN         S              4  0                                      
       ** Extract from BufferEx4                                                             MD022093
      C                   EXSR      ExtCUSDBufEx4                                            MD022093
                                                                                               CSW059
+     C                   EXSR      ExtCUSDBufEx5                                              CGL157
+                                                                                              CGL157
      C*****CCTNLn        SUBST     BUFFER:Bfp    TRANS19                          AR1086546 MD021813
      C**********         ADD       CCTNLn        Bfp                              AR1086546 MD021813
      C*****SDEXLn        SUBST     BUFFER:Bfp    ExtData                                      CER059
@@ -2057,6 +2100,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    TransInEx2                                 MD022093
      C                   PARM                    TransInEx3                                 MD022093
      C                   PARM                    TransInEx4                                 MD022093
+     C                   PARM                    TransInEx5                                   CGL157
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -2070,6 +2114,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    BufferEx2                                  MD022093
      C                   PARM                    BufferEx3                                  MD022093
      C                   PARM                    BufferEx4                                  MD022093
+     C                   PARM                    BufferEx5                                    CGL157
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    AAuth                                      BUG22140
@@ -5486,7 +5531,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CSD079
      C                   Z-ADD     500           SDADLn            4 0                        CSD079
      C                   Z-ADD     500           SDADLnA           4 0                        CSD079
-     C     RecordLen     SUB       1000          SDADLnB           4 0                        CSD079
+     C*****RecordLen     SUB       1000          SDADLnB           4 0               CSD079 MD050342
+     C                   Z-ADD     500           SDADLnB           4 0                      MD050342
+     C     RecordLen     SUB       1500          SDADLnC           4 0                      MD050342
                                                                                               CSD079
      C                   MOVEL     'SDACU3DPD'   FileName                                     CER059
      C                   EXSR      GETRCDLN                                                   CER059
@@ -5579,6 +5626,28 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CGL132
      C                   EVAL      FTCRLn = RecordLen                                         CGL132
                                                                                               CGL132
+     C                   EVAL      FileName = 'SDCRSSPD'                                      CGL157
+     C                   EXSR      GETRCDLN                                                   CGL157
+     C                   EVAL      CRSSLn = RecordLen                                         CGL157
+                                                                                              CGL157
+     C                   EVAL      FileName = 'SDCRDDPD'                                      CGL157
+     C                   EXSR      GETRCDLN                                                   CGL157
+     C                   Z-ADD     500           CRS01Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS02Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS03Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS04Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS05Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS06Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS07Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS08Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS09Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS10Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS11Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS12Ln           4 0                        CGL157
+     C                   Z-ADD     39            CRS13Ln           4 0                        CGL157
+     C                   Z-ADD     500           CRS14Ln           4 0                        CGL157
+     C     RecordLen     SUB       6539          CRS15Ln           4 0                        CGL157
+                                                                                              CGL157
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -7168,6 +7237,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      Bfp  += FTCRLn                                             CGL132
      C                   EVAL      TransCUEX = %SUBST(BufferEx2:Bfp:SDEXLn)                 MD044880
      C                   EVAL      Bfp  += SDEXLn                                           MD044880
+     C                   EVAL      TransCRSH = %SUBST(BufferEx2:Bfp:CRSSLn)                   CGL157
+     C                   EVAL      Bfp  += CRSSLn                                             CGL157
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093
@@ -7225,11 +7296,82 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       CCTNLn        Bfp                                        MD041996
      C**********         EVAL      ExtData   = %SUBST(BufferEx4:Bfp:SDEXLn)        MD022093 MD044880
      C**********         ADD       SDEXLn        Bfp                               MD022093 MD004480
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS01 = %SUBST(BufferEx4:Bfp:CRS01Ln)                 CGL157
+     C                   ADD       CRS01Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS02 = %SUBST(BufferEx4:Bfp:CRS02Ln)                 CGL157
+     C                   ADD       CRS02Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS03 = %SUBST(BufferEx4:Bfp:CRS03Ln)                 CGL157
+     C                   ADD       CRS03Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS04 = %SUBST(BufferEx4:Bfp:CRS04Ln)                 CGL157
+     C                   ADD       CRS04Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS05 = %SUBST(BufferEx4:Bfp:CRS05Ln)                 CGL157
+     C                   ADD       CRS05Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS06 = %SUBST(BufferEx4:Bfp:CRS06Ln)                 CGL157
+     C                   ADD       CRS06Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS07 = %SUBST(BufferEx4:Bfp:CRS07Ln)                 CGL157
+     C                   ADD       CRS07Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS08 = %SUBST(BufferEx4:Bfp:CRS08Ln)                 CGL157
+     C                   ADD       CRS08Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS09 = %SUBST(BufferEx4:Bfp:CRS09Ln)                 CGL157
+     C                   ADD       CRS09Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS10 = %SUBST(BufferEx4:Bfp:CRS10Ln)                 CGL157
+     C                   ADD       CRS10Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS11 = %SUBST(BufferEx4:Bfp:CRS11Ln)                 CGL157
+     C                   ADD       CRS11Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS12 = %SUBST(BufferEx4:Bfp:CRS12Ln)                 CGL157
+     C                   ADD       CRS12Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRS13 = %SUBST(BufferEx4:Bfp:CRS13Ln)                 CGL157
+     C                   ADD       CRS13Ln       Bfp                                          CGL157
+      *                                                                                       CGL157
+     C                   EVAL      TransCRDD1 = TransCRS01 + TransCRS02                       CGL157
+     C                                        + TransCRS03 + TransCRS04                       CGL157
+     C                                        + TransCRS05 + TransCRS06                       CGL157
+     C                                        + TransCRS07 + TransCRS08                       CGL157
+     C                                        + TransCRS09 + TransCRS10                       CGL157
+     C                                        + TransCRS11 + TransCRS12                       CGL157
+     C                                        + TransCRS13                                    CGL157
+      *                                                                                       CGL157
                                                                                             MD022093
      C                   EVAL      BFEx4Ln  -= Bfp                                          MD022093
       *                                                                                     MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093
+      *****************************************************************                       CGL157
+      /SPACE 5                                                                                CGL157
+      *****************************************************************                       CGL157
+      * Extract buffer ex 5                                                                   CGL157
+      *****************************************************************                       CGL157
+     C     ExtCUSDBufEx5 BEGSR                                                                CGL157
+                                                                                              CGL157
+     C                   EVAL      Bfp = 1                                                    CGL157
+                                                                                              CGL157
+     C                   EVAL      TransCRS14 = %SUBST(BufferEx5:Bfp:CRS14Ln)                 CGL157
+     C                   ADD       CRS14Ln       Bfp                                          CGL157
+                                                                                              CGL157
+     C                   EVAL      TransCRS15 = %SUBST(BufferEx5:Bfp:CRS15Ln)                 CGL157
+     C                   ADD       CRS15Ln       Bfp                                          CGL157
+                                                                                              CGL157
+     C                   EVAL      TransCRDD2 = TransCRS14 + TransCRS15                       CGL157
+                                                                                              CGL157
+     C                   EVAL      ExtData   = %SUBST(BufferEx5:Bfp:SDEXLn)                   CGL157
+     C                   ADD       SDEXLn        Bfp                                          CGL157
+                                                                                              CGL157
+     C                   EVAL      BFEx5Ln -= Bfp                                             CGL157
+                                                                                              CGL157
+     C                   ENDSR                                                                CGL157
       *****************************************************************                       BG0505
       /SPACE 5
       ****************************************************************

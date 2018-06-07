@@ -11,8 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045238           Date 24Apr17               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036375           Date 02Nov15               *
+      *                 MD036356           Date 02Nov15               *
+      *                 MD035388           Date 20Oct15               *
+      *                 CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD045238           Date 24Apr17               *
       *                 MD042966           Date 20Dec16               *
       *                 MD042794           Date 21Nov16               *
       *                 MD042692           Date 20Dec16               *
@@ -43,6 +49,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040876 - CRS MQ (Recompile)                                *
+      *  CGL177 - CRS Reporting Phase 2                               *
+      *  MD036375 - Exception 3 is displayed even TIN details are comp*
+      *  MD036356 - Multiple NAHO FATCA fields does not default values*
+      *            from Main NAHO/CRS Details                         *
+      *  MD033588 - FATCA Screen order rework                         *
+      *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045238 - Authority Holder is not recognized as Controlling *
       *             Person                                            *
@@ -211,6 +224,12 @@
      D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                          MD027454
      D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                          MD027454
                                                                                             MD027454
+      ** CRS Transaction Details in screen format                                             CGL157
+     D CurCrsdDets   E DS                  EXTNAME(SDCRSSPD)                                  CGL157
+     D                                     PREFIX(C_)                                         CGL157
+                                                                                              CGL157
+      ** External DS for CRS Details                                                          CGL157
+     D ValidCusD     E DS                  EXTNAME(SDVCRSDPD)                                 CGL157
      D PAPARM          DS           100                                                     MD036356
      D  PAMODE                 1      1                                                     MD036356
      D  PADOMC                 2      3                                                     MD036356
@@ -270,6 +289,9 @@
      D PVL01           S            200A   INZ(*BLANKS)                                     MD027454
      D POP02           S             20A   INZ(*BLANKS)                                     MD027454
      D PVL02           S            200A   INZ(*BLANKS)                                     MD027454
+                                                                                              CGL157
+     D PFeature        S              3A   INZ('FTC')                                         CGL157
+     D PCrsdS          S            351A   DIM(30)                                            CGL177
                                                                                             MD036375
      D PBirthDetails   DS                                                                   MD036375
      D  BirthDate              1      8                                                     MD036375
@@ -380,17 +402,17 @@
       ** Process Exception of customer
      C                   IF        Idx = 0
      C                   EVAL      FVCUST = DDCUST
-     C                   EVAL      FVHMSV = P_DDHMSV
-     C                   EVAL      FVMCSV = P_DDMCSV
-     C                   EVAL      FVRPSV = P_DDRPSV
-     C                   EVAL      FVCISV = P_DDCISV
-     C                   EVAL      FVCBSV = P_DDCBSV
-     C                   EVAL      FVCDSV = P_DDCDSV
-     C                   EVAL      FVGCSV = P_DDGCSV
-     C                   EVAL      FVIDSV = P_DDIDSV
-     C                   EVAL      FVJASV = P_DDJASV
-     C                   EVAL      FVTESV = P_DDTESV
-     C                   EVAL      FVTXSV = P_DDTXSV
+     C**********         EVAL      FVHMSV = P_DDHMSV                                          CGL177
+     C**********         EVAL      FVMCSV = P_DDMCSV                                          CGL177
+     C**********         EVAL      FVRPSV = P_DDRPSV                                          CGL177
+     C**********         EVAL      FVCISV = P_DDCISV                                          CGL177
+     C**********         EVAL      FVCBSV = P_DDCBSV                                          CGL177
+     C**********         EVAL      FVCDSV = P_DDCDSV                                          CGL177
+     C**********         EVAL      FVGCSV = P_DDGCSV                                          CGL177
+     C**********         EVAL      FVIDSV = P_DDIDSV                                          CGL177
+     C**********         EVAL      FVJASV = P_DDJASV                                          CGL177
+     C**********         EVAL      FVTESV = P_DDTESV                                          CGL177
+     C**********         EVAL      FVTXSV = P_DDTXSV                                          CGL177
      C                   EVAL      FVGIIN = DDGIIN
      C                   EVAL      FVUTIN = DDUTIN
      C**********         IF        FVLUSR = *BLANKS                               MD026835A MD028332
@@ -910,12 +932,17 @@
       ** Return Code
      C                   PARM                    RetCodeOut
  
+      ** Action Code                                                                        MD035388
+     C                   PARM                    DDACTI                                     MD035388
+                                                                                            MD035388
       ** High Value Account (Original)
      C                   PARM                    P_DDHVAC
  
       ** High Value Account
      C                   PARM                    DDHVAC            1
  
+     C                   PARM                    C_DDHVAL                                   MD035388
+                                                                                            MD035388
       ** OUTPUTS
  
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -962,12 +989,18 @@
       ** Return Code
      C                   PARM                    RetCodeOut
  
+      ** Action Code                                                                        MD035388
+     C                   PARM                    DDACTI                                     MD035388
+                                                                                            MD035388
       ** FATCA Customer Type
      C                   PARM                    DDCSTP            1
  
       ** FATCA Customer Type Description
      C                   PARM                    DDCSTD
  
+     C                   PARM                    P_DDCSTP                                   MD035388
+     C                   PARM                    C_DDTYPE                                   MD035388
+                                                                                            MD035388
       ** OUTPUTS
  
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -1008,12 +1041,16 @@
      C                   PARM                    RetCodeOut
  
       ** FATCA Customer Sub type
+     C                   PARM                    DDACTI                                     MD035388
      C                   PARM                    DDCSST            2
      C                   PARM                    DDCSTP            1
      C                   PARM                    DDCSSD
                                                                                             MD027252
       ** FATCA Customer Sub type (Previous)                                                 MD027252
      C                   PARM                    P_DDCSTP                                   MD027252
+     C                   PARM                    P_DDCSST                                   MD035388
+     C                   PARM                    C_DDSTYP                                   MD035388
+
  
       ** OUTPUTS
  
@@ -1212,6 +1249,10 @@
      C                   PARM                    BJDFIN                                     MD026997
      C                   PARM                    PHasIndicia                                MD042692
      C                   PARM                    V_CUAHArr                                  MD045238
+     C                   PARM                    CurCrsdDets                                MD035388
+     C                   PARM                    PCrsdS                                     MD035388
+     C                   PARM                    ValidCusD                                  MD035388
+     C                   PARM                    PFeature                                   MD035388
  
       ** Warning fields/message IDs/message data (arrays)
       ** from/to caller
@@ -1321,6 +1362,7 @@
      C                   PARM                    NwXcFilFmt                                 MD026497
      C                   PARM                    PAPARM                                     MD036356
      C                   PARM                    V_CUAHArr                                  MD045238
+     C                   PARM                    CurCrsdDets                                MD035388
  
       ** OUTPUTS
  

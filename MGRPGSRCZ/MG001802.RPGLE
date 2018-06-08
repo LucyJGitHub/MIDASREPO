@@ -11,12 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD051100           Date 30May18               *
-      *  Prev Amend No. CSW218  *CREATE    Date 19Mar18               *
+      *  Last Amend No. CSW218  *CREATE    Date 19Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051100 - System generated Dump after executing MGC001801   *
       *  CSW218 - SWIFT Changes 2018                                  *
       *                                                               *
       *****************************************************************
@@ -92,30 +90,21 @@
 
       ** Create UUIDClass object field
      D uUIDClassObj    S               O   CLASS(*JAVA:
-     D                                     'com.misys.midas.bankfusion.+                    MD051100
-     D                                     swift.SwiftUUID')                                MD051100
-     D**********                           'com.misys.midas.bankfusion.+                    MD051100
-     D**********                           util.GenerateUUID')                              MD051100
+     D                                     'com.misys.midas.bankfusion.+
+     D                                     util.GenerateUUID')
 
       ** Prototype for GenerateUUID object creation (instantiation)
      D crtUUIDClass    PR              O   EXTPROC(*JAVA:
-     D                                     'com.misys.midas.bankfusion.+                    MD051100
-     D                                     swift.SwiftUUID':                                MD051100
-     D                                     *CONSTRUCTOR)                                    MD051100
-     D**********                           'com.misys.midas.bankfusion.+                    MD051100
-     D**********                           util.GenerateUUID':                              MD051100
-     D**********                           *CONSTRUCTOR)                                    MD051100
+     D                                     'com.misys.midas.bankfusion.+
+     D                                     util.GenerateUUID':
+     D                                     *CONSTRUCTOR)
 
       ** Prototype for Generate UUID class 'getUUID' method
      D getUUID         PR              O   EXTPROC(*JAVA:
-     D                                     'com.misys.midas.bankfusion.+                    MD051100
-     D                                     swift.SwiftUUID':                                MD051100
-     D                                     'getUUID')                                       MD051100
-     D                                     CLASS(*JAVA:'java.lang.String')                  MD051100
-     D**********                           'com.misys.midas.bankfusion.+                    MD051100
-     D**********                           util.GenerateUUID':                              MD051100
-     D**********                           'getUUID')                                       MD051100
-     D**********                           CLASS(*JAVA:'java.lang.String')                  MD051100
+     D                                     'com.misys.midas.bankfusion.+
+     D                                     util.GenerateUUID':
+     D                                     'getUUID')
+     D                                     CLASS(*JAVA:'java.lang.String')
 
       ** Create string objects
      D Parm1           S               O   CLASS(*JAVA:'java.lang.String')

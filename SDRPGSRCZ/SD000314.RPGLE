@@ -18,11 +18,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD039670           Date 26Jul16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD051045           Date 01Jun18               *
+      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051045 - CRS High Value Account Identification Tool gets   *
+      *             database error when run in Update Mode            *
       *  MD039670 - FATCA Housekeeping program                        *
       *  CGL177 - CRS Reporting Phase 2                               *
       *                                                               *
@@ -65,8 +68,8 @@
       ** Live Customers
      FSDCUSTL5  IF   E           K DISK    INFSR(*PSSR)
       *
-      ** Non Account Holders
-     FSDNAHOL1  IF   E           K DISK    INFSR(*PSSR)
+      ***Non*Account*Holders*******************************************                     MD051045
+     F**SDNAHOL1  IF   E           K DISK    INFSR(*PSSR)                                   MD051045
       *
       ** Joint Accounts by Customer
      FSDJACCL4  IF   E           K DISK    INFSR(*PSSR)
@@ -113,7 +116,8 @@
      F                                     PREFIX(A)
      F                                     RENAME(SDCRSHD0:SDCRSHD1)
       ** CRS Customer - Countries File
-     FSDCRSDL2  UF   E           K DISK    INFSR(*PSSR)
+     F**SDCRSDL2  UF   E           K DISK    INFSR(*PSSR)                                   MD051045
+     FSDCRSDL3  UF   E           K DISK    INFSR(*PSSR)                                     MD051045
      F                                     COMMIT
       *
       ** CRS Non Account Holder Details File
@@ -1132,8 +1136,10 @@
      C                   ELSE
      C     GetXRSUBJ     TAG
       ** Get the initial Subject to Reporting
-     C     BBCUST        SETLL     SDCRSDL2
-     C     BBCUST        CHAIN     SDCRSDL2
+     C*****BBCUST        SETLL     SDCRSDL2                                                 MD051045
+     C*****BBCUST        CHAIN     SDCRSDL2                                                 MD051045
+     C     BBCUST        SETLL     SDCRSDL3                                                 MD051045
+     C     BBCUST        CHAIN     SDCRSDL3                                                 MD051045
       *
      C                   EVAL      XRSUBJ = CDREPT
      C                   ENDIF
@@ -1266,10 +1272,13 @@
      C                   EVAL      A = 1
       *
       ** Subject to Reporting
-     C     BBCUST        SETLL     SDCRSDL2
-     C     BBCUST        READE     SDCRSDL2
+     C*****BBCUST        SETLL     SDCRSDL2                                                 MD051045
+     C*****BBCUST        READE     SDCRSDL2                                                 MD051045
+     C     BBCUST        SETLL     SDCRSDL3                                                 MD051045
+     C     BBCUST        READE     SDCRSDL3                                                 MD051045
       *
-     C                   DOW       NOT %EOF(SDCRSDL2)
+     C**********         DOW       NOT %EOF(SDCRSDL2)                                       MD051045
+     C                   DOW       NOT %EOF(SDCRSDL3)                                       MD051045
      C                   EVAL      SDCRSDB = SDCRSD
      C                   EVAL      CDREPT = XRSUBJ
      C                   IF        WSTRUPDN = 'Y'
@@ -1287,7 +1296,8 @@
      C                   EVAL      A = A + 218
      C                   ENDIF
      C                   UPDATE    SDCRSDD0
-     C     BBCUST        READE     SDCRSDL2
+     C*****BBCUST        READE     SDCRSDL2                                                 MD051045
+     C     BBCUST        READE     SDCRSDL3                                                 MD051045
      C                   ENDDO
       *
       ** Save after image of SDCRSHPD

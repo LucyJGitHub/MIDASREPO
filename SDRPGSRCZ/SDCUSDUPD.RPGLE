@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041429           Date 22Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD051230           Date 08Jun18               *
+      *  Prev Amend No. MD041429           Date 22Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045218           Date 17Apr17               *
@@ -136,6 +137,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051230 - Authorise of customer record in CUSD gets serious *
+      *             midas error message                               *
       *  MD041429 - History of Customer Information does not reflect  *
       *             US Indicia Changed upon Insert and Miscellaneous  *
       *             Change to log Additional Customer Details upon    *
@@ -1123,6 +1126,7 @@
      D CMDXC           S             50    DIM(1) CTDATA PERRCD(1)                            CGL132
      D CMDNH           S             50    DIM(1) CTDATA PERRCD(1)                          MD027115
      D CMDCS           S             50    DIM(1) CTDATA PERRCD(1)                          MD027115
+     D CMDCR           S             50    DIM(1) CTDATA PERRCD(1)                          MD051230
                                                                                               CSD015
       ** Array containing the tags for the XML format parameter                               CSD015
      D****ARRTAG       S             40    DIM(10) CTDATA                              CSD015 CSD079
@@ -3402,7 +3406,8 @@
       ** Look for the US Country and use the TIN if provided                                MD036375
      C                   IF        CGL132 = 'Y' AND                                         MD036375
      C                             CGL133 = 'N'                                             MD036375
-     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD036375
+     C*****BBCUST        CHAIN     SDFTCSL0                             99         MD036375 MD051230
+     C     BBCUST        CHAIN(N)  SDFTCSL0                             99                  MD051230
                                                                                             MD036375
       ** Database error                                                                     MD036375
      C                   IF        NOT %FOUND(SDFTCSL0)                                     MD036375
@@ -3415,10 +3420,12 @@
      C                   EVAL      WCTAX = SVal1                                            MD036375
                                                                                             MD036375
      C                   IF        BBCOLC = WCTAX                                           MD036375
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD051230
      C                   EVAL      FAUTIN = E5TINO                                          MD036375
      C                   UPDATE    SDFTCSD0                                                 MD036375
      C                   ELSE                                                               MD036457
      C                   IF        D_CVCTRY = WCTAX                                         MD036457
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD051230
      C                   EVAL      FAUTIN = D_CVTINN                                        MD036457
      C                   UPDATE    SDFTCSD0                                                 MD036457
      C                   ENDIF                                                              MD036457
@@ -3432,7 +3439,8 @@
      C                   ENDIF                                                                CGL157
      C                   EVAL      CDREPM = D_CVREPM                                          CGL157
      C                   IF        CDREPM = '******'                                          CGL177
-     C                   MOVE      E5TMST        WTime                                        CGL177
+     C**********         MOVE      E5TMST        WTime                               CGL177 MD051230
+     C                   MOVE      BBTMST        WTime                                      MD051230
      C     *HMS0         MOVE      WTime         CDREPM                                       CGL177
      C                   ENDIF                                                                CGL177
      C                   EVAL      CDREPU = D_CVREPU                                          CGL157
@@ -4892,7 +4900,8 @@
       ** Look for the US Country and use the TIN if provided                                MD036375
      C                   IF        CGL132 = 'Y' AND                                         MD036375
      C                             CGL133 = 'N'                                             MD036375
-     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD036375
+     C*****BBCUST        CHAIN     SDFTCSL0                             99         MD036375 MD051230
+     C     BBCUST        CHAIN(N)  SDFTCSL0                             99                  MD051230
                                                                                             MD036375
       ** Database error                                                                     MD036375
      C                   IF        NOT %FOUND(SDFTCSL0)                                     MD036375
@@ -4905,10 +4914,12 @@
      C                   EVAL      WCTAX = SVal1                                            MD036375
                                                                                             MD036375
      C                   IF        BBCOLC = WCTAX                                           MD036375
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD051230
      C                   EVAL      FAUTIN = E5TINO                                          MD036375
      C                   UPDATE    SDFTCSD0                                                 MD036375
      C                   ELSE                                                               MD036457
      C                   IF        D_CVCTRY = WCTAX                                         MD036457
+     C     BBCUST        CHAIN     SDFTCSL0                             99                  MD051230
      C                   EVAL      FAUTIN = D_CVTINN                                        MD036457
      C                   UPDATE    SDFTCSD0                                                 MD036457
      C                   ENDIF                                                              MD036457
@@ -6811,6 +6822,10 @@
      C                   CALL      'QCMDEXC'                                                MD027115
      C                   PARM                    CMDCS                                      MD027115
      C                   PARM                    CMDLEN                                     MD027115
+      ** Override SDCRSHL1                                                                  MD051230
+     C                   CALL      'QCMDEXC'                                                MD051230
+     C                   PARM                    CMDCR                                      MD051230
+     C                   PARM                    CMDLEN                                     MD051230
       *
       **  PROGRAM PARAMETERS
       *
@@ -10270,6 +10285,8 @@ OVRDBF FILE(SDCUSXL0) TOFILE(SDCUSXL0) SHARE(*NO)                               
 OVRDBF FILE(SDFTNHL0) TOFILE(SDFTNHL0) SHARE(*NO)                                           MD027115
 ** CMDCS                                                                                    MD027115
 OVRDBF FILE(SDFTCSL0) TOFILE(SDFTCSL0) SHARE(*NO)                                           MD027115
+** CMDCR                                                                                    MD051230
+OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)                                           MD051230
 **  ARRTAG                                                                                    CSD015
 <Customer Name>                                                                               CSD015
 </Customer Name>                                                                              CSD015

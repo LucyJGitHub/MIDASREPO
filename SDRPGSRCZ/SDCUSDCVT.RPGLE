@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD035388           Date 20Oct15               *
+      *  Last Amend No. MD051191           Date 05Jun18               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD035388           Date 20Oct15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
@@ -66,6 +67,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051191 - US Phone Number field in FATCA Information tab    *
+      *             blanks out after amendment authorisation          *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD033588 - FATCA Screen order rework                         *
       *  CGL157 - CRS Reporting                                       *
@@ -3050,8 +3053,10 @@
      C                   EVAL      DDTINN = CVTINN                                            CGL157
      C                   EVAL      DDCODO = CVCODO                                            CGL157
      C                   EVAL      DDJACM = CVJACM                                            CGL157
-     C                   EVAL      DDMAIL = CVMAIL                                            CGL157
-     C                   EVAL      DDPHON = CVPHON                                            CGL157
+     C**********         EVAL      DDMAIL = CVMAIL                                   CGL157 MD051191
+     C**********         EVAL      DDPHON = CVPHON                                   CGL157 MD051191
+     C                   EVAL      DDMAIQ = CVMAIL                                          MD051191
+     C                   EVAL      DDPHOQ = CVPHON                                          MD051191
      C                   EVAL      DDRPAY = CVRPAY                                            CGL157
      C                   EVAL      DDTINS = CVTINS                                            CGL177
                                                                                               CGL157

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. CGL157             Date 15Jan16               *
+      *  Last Amend No. MD051218           Date 06Jun18               *
+      *  Prev Amend No. MD051051           Date 28May18               *
+      *                 CGL177             Date 11Jan16               *
+      *                 CGL157             Date 15Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045218           Date 17Apr17               *
       *                 MD044423           Date 01Mar17               *
@@ -24,6 +26,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051218 - US Indicia Tool not running properly              *
+      *  MD051051 - Could not find record where DBfield Field name is *
+      *             a primary key                                     *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
@@ -702,6 +707,8 @@
      C                   PARM      A_FTCSD       PAftFTCS                                     CGL177
      C                   PARM      *BLANKS       PBefJACC                                     CGL177
      C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *Blanks       PBefCUAH                                   MD051218
+     C                   PARM      *Blanks       PAftCUAH                                   MD051218
      C                   PARM      *BLANKS       PBefCUXC                                     CGL177
      C                   PARM      *BLANKS       PAftCUXC                                     CGL177
      C                   PARM      *BLANKS       Pacrv                                        CGL177
@@ -721,6 +728,8 @@
      C                   PARM      *BLANKS       PAftFTCS                                     CGL177
      C                   PARM      *BLANKS       PBefJACC                                     CGL177
      C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *Blanks       PBefCUAH                                   MD051218
+     C                   PARM      *Blanks       PAftCUAH                                   MD051218
      C                   PARM      *BLANKS       PBefCUXC                                     CGL177
      C                   PARM      *BLANKS       PAftCUXC                                     CGL177
      C                   PARM      *BLANKS       Pacrv                                        CGL177
@@ -810,6 +819,13 @@
      C                   PARM                    ARTMST                                       CGL177
                                                                                               CGL177
      C                   WRITE     SDACRVD0                                                   CGL177
+                                                                                            MD051051
+     C                   EVAL      EXDDCUST = ARCUST                                        MD051051
+     C                   EVAL      EXDDSCDF = *BLANKS                                       MD051051
+     C                   MOVEL     ARSCDT        EXDDSCDF                                   MD051051
+     C                   EVAL      EXDDSEQN = %TRIML(%CHAR(ARSEQN):'0')                     MD051051
+     C                   EVAL      EXDDFOID = ARFOID                                        MD051051
+     C                   WRITE     TSDACRVD0                                                MD051051
      C                   ENDIF                                                                CGL177
      C                   ENDIF                                                                CGL177
                                                                                               CGL157

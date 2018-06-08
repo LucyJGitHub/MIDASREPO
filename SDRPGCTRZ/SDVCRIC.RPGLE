@@ -184,11 +184,12 @@
      D  DDRPAYC              220    220                                                     MD050622
      D  DDCRSA               221    221                                                     MD050622
      D  DDTINS               222    222                                                     MD050622
+     D  DDAUHO               223    223                                                     MD050622
 
      D WHasInfoCmp     S              1A
      D*PCrsdS***       S            350A   DIM(30)                                            CGL177
      D*PCrsdS***       S            351A   DIM(30)                                   CGL177 MD050622
-     D PCrsdS          S            222A   DIM(30)                                          MD050622
+     D PCrsdS          S            223A   DIM(30)                                          MD050622
      D X               S              2S 0
 
       ** Parameter for Access Object

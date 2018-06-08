@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD040734           Date 23Aug16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD051230           Date 08Jun18               *
+      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *               . CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044164           Date 20Feb17               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051230 - Authorise of customer record in CUSD gets serious *
+      *             midas error message                               *
       *  MD040734 - CRS Exception other than Due Diligence is still   *
       *             displayed                                         *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -60,9 +63,9 @@
      F**********                           COMMIT                                           MD033947
      F                                     COMMIT(PCommitCUSD)                              MD033947
  
-     FSDFTNHL0  UF   E           K DISK    INFSR(*PSSR)
+     F***SDFTNHL0  UF   E           K DISK    INFSR(*PSSR)                                  MD051230
      F**********                           COMMIT                                           MD033947
-     F                                     COMMIT(PCommitNAHL)                              MD033947
+     F**********                           COMMIT(PCommitNAHL)                     MD033947 MD051230
                                                                                               CGL157
       ** Midas SD - CRS Customer Details update                                               CGL157
      FSDCRSHL1  UF   E           K DISK    INFSR(*PSSR)                                       CGL157

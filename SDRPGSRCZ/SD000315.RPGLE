@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD050775           Date 12May18               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. MD050772           Date 28May18               *
+      *  Prev Amend No. MD050775           Date 12May18               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050772 - Duplicate entries appears when running the normal *
+      *             accounts tool in Information Mode                 *
       *  MD050775 - When pressing F11, the screen refreshed and       *
       *             inputs became blank                               *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -266,8 +269,9 @@
       *
       ** Do While - validation fails and main menu / previous not invoked
       *
-     C                   DOW       (WValErr = '1'
-     C                             or InpRevwOK = 0)
+     C**********         DOW       (WValErr = '1'                                           MD050772
+     C**********                   or InpRevwOK = 0)                                        MD050772
+     C                   DOW       WValErr = '1'                                            MD050772
      C                             and *INKC = *OFF
      C                             and *INKJ = *OFF
 

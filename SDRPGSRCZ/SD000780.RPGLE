@@ -13,8 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD036195           Date 20Oct15               *
-      *  Prev Amend No. MD036194           Date 16Oct15               *
+      *  Last Amend No. MD051054           Date 30May18               *
+      *  Prev Amend No. MD051053           Date 30May18               *
+      *                 MD051052           Date 30May18               *
+      *                 MD036195           Date 20Oct15               *
+      *                 MD036194           Date 16Oct15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033960           Date 29Jun15               *
@@ -51,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051054 - Incorrect error message                           *
+      *  MD051053 - Incorrect error message                           *
+      *  MD051052 - Incorrect error message                           *
       *  MD036195- Effective Date input is not retained               *
       *  MD036194 - Incorrect Error Message is displayed for setting  *
       *             invalid CRS Agreement input                       *
@@ -2750,7 +2756,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN67 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0600'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0600'                               CGL157 MD051052
+     C                   EVAL      PZMsgID = 'USS0731'                                      MD051052
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ENDIF                                                                CGL157
                                                                                               CGL157
@@ -2760,7 +2767,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN68 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0601'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0601'                               CGL157 MD051052
+     C                   EVAL      PZMsgID = 'USS0732'                                      MD051052
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ELSE                                                                 CGL157
      C                   IF        #2EFDT <> *BLANKS                                          CGL157
@@ -2777,7 +2785,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN68 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0602'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0602'                               CGL157 MD051053
+     C                   EVAL      PZMsgID = 'USS0588'                                      MD051053
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ELSE                                                                 CGL157
      C                   Z-ADD     ZDAYNO        WWEFDT                                       CGL157
@@ -2790,7 +2799,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN69 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0603'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0603'                               CGL157 MD051052
+     C                   EVAL      PZMsgID = 'USS0733'                                      MD051052
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ELSE                                                                 CGL157
      C                   IF        #2FRYR <> *BLANKS                                          CGL157
@@ -2800,7 +2810,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN69 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0604'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0604'                               CGL157 MD051054
+     C                   EVAL      PZMsgID = 'USS0729'                                      MD051054
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ELSE                                                                 CGL157
      C                   IF        *IN68 = *OFF                                               CGl157
@@ -2813,7 +2824,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN69 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0605'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0605'                               CGL157 MD051054
+     C                   EVAL      PZMsgID = 'USS0730'                                      MD051054
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
@@ -2826,7 +2838,8 @@
      C                   EVAL      *IN40 = *ON                                                CGL157
      C                   EVAL      *IN72 = *ON                                                CGL157
      C                   EVAL      W#EROR2 = 'Y'                                              CGL157
-     C                   EVAL      PZMsgID = 'USS0606'                                        CGL157
+     C**********         EVAL      PZMsgID = 'USS0606'                               CGL157 MD051054
+     C                   EVAL      PZMsgID = 'USS0734'                                      MD051054
      C                   EXSR      SRZasnms                                                   CGL157
      C                   ELSE                                                                 CGL157
      C                   IF        #2RPDT <> *BLANKS                                          CGL157

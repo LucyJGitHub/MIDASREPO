@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD051218           Date 06Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 MD027498           Date 20Jun14               *
       *                 MD027327           Date 03Jun14               *
       *                 MD027355B          Date 06Jun14               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051218 - US Indicia Tool not running properly              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD027498 - Inconsistent behaviour of setting New             *
@@ -358,6 +360,10 @@
      D PAftCUAH        S           5000A
      D PBefCUXC        S           5000A                                                    MD026854
      D PAftCUXC        S           5000A                                                    MD026854
+     D PBefCRSH        S           5000A                                                    MD051218
+     D PAftCRSH        S           5000A                                                    MD051218
+     D PBefCRSD        S           5000A                                                    MD051218
+     D PAftCRSD        S           5000A                                                    MD051218
      D PACRV           S              1A
      D PELEC           S              1A
      D WHasIndicia     S              1A   INZ('N')
@@ -1161,6 +1167,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM                    PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -1351,6 +1361,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -1423,6 +1437,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -1512,6 +1530,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -1576,6 +1598,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -1656,6 +1682,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  
@@ -2085,6 +2115,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026705
      C                   PARM      'N'           PACRV                                      MD026705
      C                   PARM      'Y'           PELEC                                      MD026705
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF                                                              MD026705
                                                                                             MD026705
@@ -2157,6 +2191,10 @@
      C                   PARM      *BLANKS       PAftCUXC                                   MD026854
      C                   PARM      'N'           PACRV
      C                   PARM      'Y'           PELEC
+     C                   PARM      *BLANKS       PBefCRSH                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSH                                   MD051218
+     C                   PARM      *BLANKS       PBefCRSD                                   MD051218
+     C                   PARM      *BLANKS       PAftCRSD                                   MD051218
      C                   ENDIF                                                              MD026869
      C                   ENDIF
  

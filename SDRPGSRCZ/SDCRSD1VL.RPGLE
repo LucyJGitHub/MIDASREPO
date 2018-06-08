@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD050572           Date 03May18               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. MD051230           Date 08Jun18               *
+      *  Prev Amend No. MD050572           Date 03May18               *
+      *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036375           Date 02Nov15               *
       *                 MD035388           Date 20Oct15               *
@@ -20,6 +21,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051230 - Authorise of customer record in CUSD gets serious *
+      *             midas error message                               *
       *  MD050572 - Exception 14 and 15 is not being displayed /      *
       *             triggered                                         *
       *  MD040876 - CRS MQ (Recompile)                                *
@@ -140,6 +143,11 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+                                                                                            MD051230
+      ** Override Database Table                                                            MD051230
+     D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                          MD051230
+     D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                          MD051230
+     D WMsgLen         S             15P 5 INZ(50)                                          MD051230
 
       ** Parameter for *Entry
      D RespMode        S              1A
@@ -453,6 +461,10 @@
       *****************************************************************
 
      C     SrVCRIC       BEGSR
+                                                                                            MD051230
+     C                   CALL      'QCMDEXC'                                                MD051230
+     C                   PARM                    ##OV1                                      MD051230
+     C                   PARM                    WMsgLen                                    MD051230
 
      C                   EVAL      CUSTID = 'C'
      C                   EVAL      DDINFCO = CVINFO
@@ -493,6 +505,10 @@
       ** CRS Information Complete - OK
      C                   PARM                    DDOKINFC
      C                   PARM                    CVINFO
+                                                                                            MD051230
+     C                   CALL      'QCMDEXC'                                                MD051230
+     C                   PARM                    ##OV2                                      MD051230
+     C                   PARM                    WMsgLen                                    MD051230
 
       ** Update error info with that returned from the validation module
 
@@ -732,3 +748,7 @@
       *****************************************************************
 ** CTDATA CPY@
 (c) Finastra International Limited 2013
+** ##OV1                                                                                    MD051230
+OVRDBF FILE(SDCRSHL1) TOFILE(SDCRSHL1) SHARE(*NO)                                           MD051230
+** ##OV2                                                                                    MD051230
+DLTOVR FILE(SDCRSHL1)                                                                       MD051230

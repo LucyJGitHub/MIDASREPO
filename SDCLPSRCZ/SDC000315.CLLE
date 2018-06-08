@@ -9,10 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. CGL177   *CREATE   Date 11Jan16              */
+/*       Last Amend No. MD050772           Date 28May18              */
+/*       Prev Amend No. CGL177   *CREATE   Date 11Jan16              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050772 - Duplicate entries appears when running the normal*/
+/*                  accounts tool in Information Mode                */
 /*       CGL177 - CRS Reporting Phase 2                              */
 /*                                                                   */
 /*********************************************************************/
@@ -25,6 +28,7 @@
              DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                 /*MD050772*/
              DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(7) VALUE('  DVLIB')
 
 /* Monitor for any errors and send appropriate message to MOPERQ */
@@ -37,13 +41,18 @@
              RTVJOBA    JOB(&JOBID)
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                       /*MD050772*/
              CHGVAR     VAR(%SUBSTRING(&DVLIB 1 2)) VALUE(&SYSID)
              DLTOVR     FILE(*ALL)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/SDCRNAL0)
              MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAL1)                                            /*MD050772*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD050772*/
              DLTF       FILE(QTEMP/SDCRNAPD)
              MONMSG     MSGID(CPF0000)
+
+             CLRPFM     FILE(&DPLIB/SDCRNAPD)                                           /*MD050772*/
 
              CPYF       FROMFILE(SDCRNAPD) TOFILE(QTEMP/SDCRNAPD) MBROPT(*REPLACE) +
                           CRTFILE(*YES)
@@ -63,6 +72,22 @@
              MONMSG     MSGID(CPF2130 CPD2104)
 
              DLTF       FILE(&DMLIB/&JOBID)
+                                                                                        /*MD050772*/
+             CRTDUPOBJ  OBJ(SDCRNAL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(&JOBID)                                                /*MD050772*/
+             MONMSG     MSGID(CPF2130 CPD2104)                                          /*MD050772*/
+                                                                                        /*MD050772*/
+             MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)                        /*MD050772*/
+             MONMSG     MSGID(CPF2135)                                                  /*MD050772*/
+                                                                                        /*MD050772*/
+             CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(SDCRNAL1)                                              /*MD050772*/
+             MONMSG     MSGID(CPF2130 CPD2104)                                          /*MD050772*/
+                                                                                        /*MD050772*/
+             DLTF       FILE(&DMLIB/&JOBID)                                             /*MD050772*/
+                                                                                        /*MD050772*/
+             OVRDBF     FILE(SDCRNAL0) TOFILE(QTEMP/SDCRNAL0) OVRSCOPE(*CALLLVL)        /*MD050772*/
+             OVRDBF     FILE(SDCRNAL1) TOFILE(QTEMP/SDCRNAL1) OVRSCOPE(*CALLLVL)        /*MD050772*/
 
 /* Call the tool */
              CALL       PGM(SD000318) PARM(&MOD)
@@ -78,6 +103,8 @@ END:
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/SDCRNAL0)
              MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/SDCRNAL1)                                            /*MD050772*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD050772*/
              DLTF       FILE(QTEMP/SDCRNAPD)
              MONMSG     MSGID(CPF0000)
 

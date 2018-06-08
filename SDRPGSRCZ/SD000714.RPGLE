@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050598           Date 03May18               *
-      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *  Last Amend No. MD051233           Date 03May18               *
+      *  Prev Amend No. MD050598           Date 03May18               *
+      *                 MD040734           Date 23Aug16               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044164           Date 20Feb17               *
       *                 MD044160           Date 20Feb17               *
@@ -27,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051233 - Exception 15 is displayed with Exception 14       *
       *  MD050598 - SDC000714 00001 failed                            *
       *  MD040734 - CRS Exception other than Due Diligence is still   *
       *             displayed                                         *
@@ -464,7 +467,8 @@
      C                   PARM      *BLANKS       PRTCD                                      MD039670
      C                   PARM      '*KEY   '     POPTN                                      MD039670
      C                   PARM      FNNAHO        PNAHO                                      MD039670
-     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                             MD039670 MD051233
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD051233
                                                                                             MD039670
      C                   IF        PRTCD = '*NRF'                                           MD039670
      C                             OR NHCHTP = 'D'                                          MD039670
@@ -2011,7 +2015,8 @@
      C                   PARM      *BLANKS       PRTCD                                      MD039670
      C                   PARM      '*KEY   '     POPTN                                      MD039670
      C                   PARM      NRNAHO        PNAHO                                      MD039670
-     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD039670
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                             MD039670 MD051233
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD051233
                                                                                             MD039670
      C                   IF        PRTCD = '*NRF'                                           MD039670
      C                             OR NHCHTP = 'D'                                          MD039670
@@ -2087,8 +2092,8 @@
      C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
      C                   EXSR      SRDate1                                                  MD036237
                                                                                             MD036237
-     C                   EVAL      PInDate = NHCRDT                                         MD036237
-     C                   EXSR      SRDate10                                                 MD036237
+     C**********         EVAL      PInDate = NHCRDT                                MD036237 MD051233
+     C**********         EXSR      SRDate10                                        MD036237 MD051233
                                                                                             MD036237
       ** Read through CRS NAHO Detail File - Detail                                         MD036237
      C     NRNAHO        SETLL     SDCRSND0                                                 MD036237
@@ -2098,6 +2103,8 @@
                                                                                             MD036237
       ** Retrieve first CRS Agreement                                                       MD036237
      C                   EXSR      SrRtvCRSAN                                               MD036237
+     C                   EVAL      PInDate = NHCRDT                                         MD051233
+     C                   EXSR      SRDate10                                                 MD051233
                                                                                             MD036237
       ** If New NAHO is Subject to Reporting but No TIN defined                             MD036237
                                                                                             MD036237
@@ -2150,8 +2157,8 @@
      C                   EVAL      PInEfDte = WCRSEftStrtDte                                MD036237
      C                   EXSR      SRDate1                                                  MD036237
                                                                                             MD036237
-     C                   EVAL      PInDate = NHCRDT                                         MD036237
-     C                   EXSR      SRDate10                                                 MD036237
+     C**********         EVAL      PInDate = NHCRDT                                MD036237 MD051233
+     C**********         EXSR      SRDate10                                        MD036237 MD051233
                                                                                             MD036237
       ** Read through CRS NAHO Detail File - Detail                                         MD036237
      C     NRNAHO        SETLL     SDCRSND0                                                 MD036237
@@ -2161,6 +2168,8 @@
                                                                                             MD036237
       ** Retrieve first CRS Agreement                                                       MD036237
      C                   EXSR      SrRtvCRSAN                                               MD036237
+     C                   EVAL      PInDate = NHCRDT                                         MD051233
+     C                   EXSR      SRDate10                                                 MD051233
                                                                                             MD036237
       ** If Existing NAHO Subject to Reporting but No TIN defined                           MD036237
                                                                                             MD036237
@@ -2355,7 +2364,8 @@
      C                   PARM      *BLANKS       PRTCD                                      MD036237
      C                   PARM      '*KEY   '     POPTN                                      MD036237
      C                   PARM      CNNAHO        PNAHO                                      MD036237
-     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD036237
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                             MD036237 MD051233
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD051233
                                                                                             MD036237
       ** Database Error                                                                     MD036237
                                                                                             MD036237
@@ -2614,7 +2624,8 @@
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      FNNAHO        PNAHO
-     C     SDNAHO        PARM      SDNAHO        DSSDY
+     C*****SDNAHO        PARM      SDNAHO        DSSDY                                      MD051233
+     C     SDNAHO        PARM      SDNAHO        DSLDY                                      MD051233
  
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      WBthDateA = NHDBTH

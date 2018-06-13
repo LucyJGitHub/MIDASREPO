@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SD Customer Details Private Banking Valid'n')
+/*EXI *  TEXT('Midas SD Customer Details Private Banking Valid')      *
       *****************************************************************
       *                                                               *
       *  Midas - Customer Details Module.                             *
@@ -40,15 +40,15 @@
       *  CAP034 - Conversion of SD inputs into modular structure      *
       *           for use as APIs.                                    *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUDRV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -60,111 +60,111 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CuPriv        E DS                  EXTNAME(SDCUPBPD)
       ** Private Banking Customer Details in screen format
- 
+
      D OKCuPriv      E DS                  EXTNAME(SDECUPBPD)
       ** Private Banking Customer Details OK Indicators
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Long DS for access programs
- 
+
      D ValidPriv     E DS                  EXTNAME(SDVCUPBPD)
       ** Valid Private Banking Customer Details Layout
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       *                                                                                       CGL031
       ** Input Parameter                                                                      CGL031
      D DDCUSN          S              6A                                                      CGL031
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUDRV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       /COPY WNCPYSRC,SDCUDRV003
- 
+
       * Call Validation Modules in Sequence
       *
       ** Validate Hold Mail Indicator
@@ -206,21 +206,21 @@
       /COPY WNCPYSRC,SDCUDRV014
      C                   EXSR      VCPBST
       /COPY WNCPYSRC,SDCUDRV015
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUDRV016
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Validate Hold Mail Indicator
       *****************************************************************
      C     VCHOLD        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -250,10 +250,10 @@
       *
       ** Valid Hold Mail Indicator - OK
      C                   PARM                    DDHOLDOK
- 
- 
+
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -263,9 +263,9 @@
       ** Validate Numbered Account Indicator
       *****************************************************************
      C     VCNUAC        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -296,9 +296,9 @@
       ** Numbered Account Indicator - OK
      C                   PARM                    DDNUACOK
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -308,9 +308,9 @@
       ** Validate Agent
       *****************************************************************
      C     VCAGEN        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -344,9 +344,9 @@
       ** Private Banking Aent - OK
      C                   PARM                    DDAGENOK
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -356,9 +356,9 @@
       ** Validate Valid Counterparty
       *****************************************************************
      C     VCCOUN        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -389,9 +389,9 @@
       ** Valid Counterparty Indicator - OK
      C                   PARM                    DDCOUNOK
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -401,9 +401,9 @@
       ** Validate Requested Private Banking Customer
       *****************************************************************
      C     VCREPB        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -448,7 +448,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -458,9 +458,9 @@
       ** Validate Private Banking Start Date
       *****************************************************************
      C     VCPBST        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Call Validation Module
@@ -493,9 +493,9 @@
       ** Valid Counterparty Indicator - OK
      C                   PARM                    DDPBSTOK
       *
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -506,14 +506,14 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
      C                   MOVEL     *BLANK        FldNamXAr
      C                   MOVEL     *BLANK        MsgIDXAr
      C                   MOVEL     *BLANK        MsgDtaXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -547,11 +547,11 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
       *
@@ -574,17 +574,17 @@
       *
       ** Customer Private Banking Details OK inds
      C                   PARM                    OKCuPriv
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Valid Private Banking layout (DS) from/to caller
      C                   PARM                    ValidPriv
- 
+
       *
       ** ACCESS BANK DETAILS
       *
@@ -608,10 +608,10 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUDRV017
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

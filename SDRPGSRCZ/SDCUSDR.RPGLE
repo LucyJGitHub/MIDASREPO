@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051299           Date 19Jun18               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041996           Date 12Oct15               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
@@ -60,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051299 - Serious Midas Error occurs during insert,         *
+      *             amendment and deletion of customers               *
       *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041996 - Incorrect mapping for FX Netting                  *
@@ -118,50 +121,50 @@
       *  CAP084 - Java wrapper project                                *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       /COPY WNCPYSRC,SDCUSDT03
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
       * New Customer in Screen Format - Primary Details
      D NewCuPrim     E DS                  EXTNAME(SDCUPRPD)
- 
+
       * New Customer in Screen Format - Base Rate Tax Details
      D NewCuBrt      E DS                  EXTNAME(SDCUBRPD)
- 
+
       * New Customer in Screen Format - Private Banking Details
      D NewCuPriv     E DS                  EXTNAME(SDCUPBPD)
                                                                                             BUG15872
      D CuSwft        E DS                  EXTNAME(SDCUSWPD)                                BUG15872
- 
+
       * New Customer in Screen Format - Secondary Details
      D NewCuSeco     E DS                  EXTNAME(SDCUSEPD)
- 
+
       * New Customer in Screen Format - Message Details
      D NewCuMsg      E DS                  EXTNAME(SDCUMRPD)
- 
+
       ** New Customer in Screen Format - MT3xx BEI Details
      D NewCuMT3x     E DS                  EXTNAME(SDCUMTPD)
- 
+
       ** New Customer in Screen Format - Extension Details                                   BUG5870
      D ExtData       E DS                  EXTNAME(SDCUEXPD)                                 BUG5870
                                                                                              BUG5870
@@ -208,18 +211,27 @@
                                                                                               CGL132
       ** FATCA Customer details extension file                                                CGL132
      D CuFTCR        E DS                  EXTNAME(SDFTCRPD)                                  CGL132
+                                                                                            MD051299
+      ** SDCRSSPD Transaction Details in Screen Format                                      MD051299
+     D CrsdDets      E DS                  EXTNAME(SDCRSSPD)                                MD051299
+     D                                     PREFIX(E_)                                       MD051299
+     D CrsdCtry      E DS                  EXTNAME(SDCRDDPD)                                MD051299
+     D                                     PREFIX(E_)                                       MD051299
+                                                                                            MD051299
+      ** Transaction Details in File Format                                                 MD051299
+     D CrsdFilFmt    E DS                  EXTNAME(SDCRSHPD)                                MD051299
       **-------------------------------------------------------------------------------------
       ** FILE FORMATS
       **-------------------------------------------------------------------------------------
- 
+
       * Current Customer in File Format
      D CrCuFilFmt    E DS                  EXTNAME(SDCUSTPD)
      D                                     PREFIX(C_)
- 
+
       * Current Customer in File Format - Base Rate Tax Details
      D CrBrFilFmt    E DS                  EXTNAME(SDCBRTPD)
      D                                     PREFIX(C_)
- 
+
       * Current Customer in File Format - Private Banking Details
      D CrPBFilFmt    E DS                  EXTNAME(SDVCUPBPD)
      D                                     PREFIX(C_)
@@ -229,7 +241,7 @@
                                                                                              BUG5082
       ** Global Customer X-Reference - File Format                                            222373
      D GCustFilFmt   E DS                  EXTNAME(GPCUSTXPD)                                 222373
- 
+
       ** Marketing Information                                                                CSD079
      D CumiFilFmt    E DS                  EXTNAME(SDCMRKPD)                                  CSD079
                                                                                               CSD079
@@ -238,7 +250,7 @@
                                                                                               CSD079
       ** Service Fees                                                                         CSD079
      D SfeeFilFmt    E DS                  EXTNAME(SDCFCDPD)                                  CSD079
- 
+
       ** Cheques and Card Details                                                             CSD079
      D ChecFilFmt    E DS                  EXTNAME(SDCHEQPD)                                  CSD079
                                                                                               CSD079
@@ -273,10 +285,10 @@
                                                                                               CGL132
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
- 
+
       ** SWIFT Details in File Format                                                       BUG14929
      D SwftFilFmt    E DS                  EXTNAME(SDCSSWPD)                                BUG14929
                                                                                             BUG14929
@@ -287,10 +299,10 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
       **--------------------------------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D PTransType      S              4                                                       CSD028
@@ -303,19 +315,24 @@
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
      D FillerBufEx4    S           6039A                                                    MD044880
+     D Filler65        S             65A                                                    MD051299
      D NewCuCtnm1      S              8A                                                    MD041996
      D NewCuCtnm2      S            110A                                                    MD041996
- 
+
       ** Stamp Tax details                                                                    CER049
      DTranStamp        S             31A                                                      CER049
                                                                                               CER049
+     D PCrsdF          S            219A   DIM(30)                                          MD051299
+                                                                                            MD051299
       **--------------------------------------------------------------------------------------------
- 
+
      C                   CLEAR                   CrCuFilFmt
      C                   CLEAR                   CrBrFilFmt
      C                   CLEAR                   CrPBFilFmt
      C                   CLEAR                   CuXcFilFmt                                   CGL132
      C                   CLEAR                   CuFaFilFmt                                   CGL132
+     C                   CLEAR                   CrsdFilFmt                                 MD051299
+     C                   CLEAR                   PCrsdF                                     MD051299
      C     DDACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
      C                   MOVEL     'X'           DDACTN
@@ -323,7 +340,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -336,7 +353,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      SDCUSDRED
@@ -376,15 +393,15 @@
      C                   ENDIF                                                              AR316373
       *                                                                                     AR316373
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDCUSN'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
      C                   MOVE      C_BBTMST      @TimeStamp       26                         BUG4196
      C                   EVAL      NewCuCtnm1 = %SUBST(NewCuCtnm:1:8)                       MD041996
      C                   EVAL      NewCuCtnm2 = %SUBST(NewCuCtnm:9)                         MD041996
@@ -422,7 +439,9 @@
      C                   EVAL      BufferEx2 = CuSW13                                         CSW213
      C                                       + CuCUXC                                         CGL132
      C                                       + CuFTCR                                         CGL132
-     C                                       + ExtData                                      MD044880
+     C**********                             + ExtData                             MD044880 MD051299
+     C                                       + Filler65                                     MD051299
+     C                                       + CrsdDets                                     MD051299
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -430,9 +449,10 @@
      C                   EVAL      BufferEx4 = NewCuCUAH                                      CSW213
      C                                       + NewCuCCTX                                      CSW213
      C                                       + NewCuCtnm2                                   MD041996
+     C                                       + CrsdCtry                                     MD051299
      C**********                             + ExtData                             MD041996 MD044880
      C                                       + FillerBufEx4                                   CSW213
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -445,7 +465,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -460,7 +480,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SDUSRMSG'
@@ -602,17 +622,17 @@
      C                   ELSE                                                               AR316373
      C                   MOVEL     'N'           LLN007                                     AR316373
      C                   ENDIF                                                              AR316373
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,SDCUSDT01
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
      C     SDCUSDRED     BEGSR
- 
+
      C                   CALLB     'SDCUSDRED'
       *
       * INPUT PARAMETERS
@@ -639,11 +659,11 @@
       *
       * CUSTO REF. READ
      C                   PARM      *BLANK        @CURED            6
- 
+
      C                   ENDSR
       **********************************************************************
      C     SDCUSDRTV     BEGSR
- 
+
      C                   CALLB     'SDCUSDRTV'
       *
       * INPUTS
@@ -696,6 +716,8 @@
      C                   PARM                    CuSW13                                       CSW213
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                   CGL132
+     C                   PARM                    CrsdFilFmt                                 MD051299
+     C                   PARM                    PCrsdF                                     MD051299
      C                   PARM                    CumiFilFmt                                   CSD079
      C                   PARM                    CuadFilFmt                                   CSD079
      C                   PARM                    SfeeFilFmt                                   CSD079
@@ -732,8 +754,8 @@
      C                   PARM                    WMsgDtaArr                                 BUG23518
       * Array index (3P0) from/to caller                                                    BUG23518
      C                   PARM      *ZEROS        WIdx                                       BUG23518
- 
- 
+
+
      C                   ENDSR
       *****************************************************************                     AR316373
      C     SDCUSDRTV1    BEGSR                                                              AR316373
@@ -765,9 +787,9 @@
      C                   ENDSR                                                              AR316373
       **********************************************************************
      C     SDCUSDCVT     BEGSR
- 
+
      C                   CALLB     'SDCUSDCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM      *BLANK        ReturnCode       10
@@ -837,6 +859,8 @@
      C                   PARM                    SwftFilFmt                                 BUG15872
      C                   PARM                    CuXcFilFmt                                   CGL132
      C                   PARM                    CuFaFilFmt                                   CGL132
+     C                   PARM                    CrsdFilFmt                                 MD051299
+     C                   PARM                    PCrsdF                                     MD051299
                                                                                              BUG4452
       ** Credit Lines                                                                        BUG4452
      C                   PARM                    CLE025                                      BUG4452
@@ -869,9 +893,11 @@
      C                   PARM                    NewCuCtnm                                 AR1086546
      C                   PARM                    CuCUXC                                       CGL132
      C                   PARM                    CuFTCR                                       CGL132
+     C                   PARM                    CrsdDets                                   MD051299
+     C                   PARM                    CrsdCtry                                   MD051299
      C**********         PARM                    CuSW13                              CSW213 MD022463
       *
- 
+
      C                   ENDSR
       *****************************************************************                     AR316373
      C     SDCUSDCVT1    BEGSR                                                              AR316373

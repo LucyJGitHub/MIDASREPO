@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL051             Date 02May18               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend no. MD051239           Date 14Jun18               *
+      *  Prev Amend No. CDL051             Date 02May18               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046115           Date 24Jul17               *
       *                 MD036475           Date 04Dec15               *
@@ -133,6 +134,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051239 - [CDL051]- Validation errors for Settlement        *
+      *             Payment during Authorization in WIP are not       *
+      *             appearing for FXDL, DEAM and NASP APis.           *
       *  CDL051 - Incomplete Deals to Repair                          *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -957,6 +961,10 @@
      C                             OR ((##ACTN <> 'R' AND ##CALP2 = 'LERI')                 AR863960
      C                             OR ((##ACTN = 'R' AND ##CALP2 = 'LERI' )                 AR863960
      C                             AND ##PPAY <> 'Y'))                                      AR863960
+     C                             OR (CDL051 = 'Y' AND ##ACTN = 'X'                        MD051239
+     C                             AND ##PPAY = ' ' AND (##CALP = 'FXDL'                    MD051239
+     C                             OR ##CALP = 'LDNI' OR ##CALP = 'NASP'                    MD051239
+     C                             OR ##CALP = 'NASS' OR ##CALP = 'DEAM'))                  MD051239
      C                   EXSR      PAYMNT
      C/COPY WNCPYSRC,ZASETNVC36
      C                   ENDIF                                                               BUG6010

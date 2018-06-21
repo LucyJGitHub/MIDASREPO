@@ -19,8 +19,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD051324           Date 21Jun18
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051324 - Profit Centre Defaulting should also happen       *
+      *             during amendment.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -104,7 +107,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -123,70 +126,70 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       * External DS for General Ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Midas Profit Centre details
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** Midas Profit Centre details                                                          179732
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  179732
                                                                                               179732
@@ -225,15 +228,15 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
      D C#BOKC          S              2A
      D C#BRCA          S              3A
      D C#DEPT          S              3A
@@ -268,15 +271,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
      C                   Eval      MsgIDXAr  = *Blanks
      C                   Eval      MsgDtaXAr = *Blanks
      C                   Eval      Idx = 0
- 
+
       * PCTR - Profit Centre Validation if Type / Sub-Type and Book Code
       *        valid
       *        And Ordering Customer and Ordering Bank are valid.                             179732
@@ -288,14 +291,14 @@
      C                             OKOrbk = 'Y'                                               179732
      C                   EXSR      VPRFCTR
      C                   End
- 
+
       * If an error was found, set the return code appropriately
      C                   If        OKPrfc = 'N'
      C                   Eval      RetCodeIn = 'Error'
      C                   End
- 
+
       * RETURN
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -309,10 +312,14 @@
       *  If the profit centre field is blank set to a default only if
       *  the Profit Centre Defaults Used flag is set to 'Y'.
       *  This could only happen on an Insert.
-     C                   If        SACTION = 'I' and
-     C                             SPRFC = *Blanks and
-     C                             BKPCDU = 'Y'
- 
+     C**********         If        SACTION = 'I' and                                        MD051324
+     C                   If        (SACTION = 'I' and                                       MD051324
+     C                             SPRFC = *Blanks or
+     C**********                   BKPCDU = 'Y'                                             MD051324
+     C                             BKPCDU = 'Y') OR                                         MD051324
+     C                             (SACTION = 'A' and                                       MD051324
+     C                             SPRFC = *Blanks and                                      MD051324
+     C                             BKPCDU = 'Y')                                            MD051324
       * Retrieve the Ordering Customer details.                                               179732
      C                   Movel     *Blanks       BBACOZ                                       179732
      C                   Movel     *Blanks       @Key1                                        179732
@@ -376,7 +383,7 @@
       *  Determine parameters to be passed
      C                   Movel     SPYTP         C#TRTP
      C                   Movel     BBACOZ        Acof                                         179732
- 
+
       *  Get default profit centre
       *
      C                   CALLB     'AOPRFMR0'                           90
@@ -392,7 +399,7 @@
      C                   Parm      Acof          C#ACOF                                       179732
      C                   Parm      Cust          C#CUST                                       179732
      C     SPRFC         Parm      *Blanks       C#PRFC
- 
+
       *  If error on CALL - process as database error
      C                   If        *IN90 = '1'
      C                   Exsr      *PSSR
@@ -408,7 +415,7 @@
      C                   Movel     'MMA0991'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        OKPrfc = 'Y'
       *  Validate Profit Centre
      C                   If        SACTION = 'I'      and
@@ -419,32 +426,32 @@
      C                             BGN0ST = 'Y'      or
      C                             SACTION = 'A'      and
      C                             BGN0ST = 'Y'
- 
+
      C                   CALLB     'AOPRFCR0'                           90
      C                   Parm      *BLANKS       C#RTCD
      C                   Parm      '*KEY'        C#OPTN
      C                   Parm      SPRFC         C#PRFC
      C     SDPRFC        Parm      SDPRFC        DSFDY
- 
+
       *  If error on CALL - process as database error
      C                   If        *IN90 = '1'
      C                   Exsr      *PSSR
      C                   End
- 
+
       * If return code is not blank - process for an error
      C                   If        C#RTCD <> *Blanks
      C                   Move      'N'           OKPrfc
      C                   Add       1             Idx
      C                   Movel     'SPRFC'       FldNamXAr(Idx)
      C                   Movel     'MMA0992'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   Eval      SPRFC = DSPCCD
      C                   End
- 
+
      C                   End
      C                   End
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -452,28 +459,28 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
       ** OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** ACCESS GENERAL LEDGER DETAILS
       *
      C**********         CALL      'AOGELRR0'                                                 CGL029
@@ -514,9 +521,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

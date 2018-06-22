@@ -318,7 +318,7 @@
      C**********                   BKPCDU = 'Y'                                             MD051324
      C                             BKPCDU = 'Y') OR                                         MD051324
      C                             (SACTION = 'A' and                                       MD051324
-     C                             SPRFC = *Blanks and                                      MD051324
+     C                             SPRFC = *Blanks or                                       MD051324
      C                             BKPCDU = 'Y')                                            MD051324
       * Retrieve the Ordering Customer details.                                               179732
      C                   Movel     *Blanks       BBACOZ                                       179732

@@ -19,7 +19,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD051324           Date 21Jun18
+      *  Last Amend No. MD051324           Date 21Jun18               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -311,14 +311,16 @@
       *
       *  If the profit centre field is blank set to a default only if
       *  the Profit Centre Defaults Used flag is set to 'Y'.
-      *  This could only happen on an Insert.
+      ***This could only happen on an Insert.***********************************************MD051324
+      ** This could happen on Insert or Amend                                               MD051324
+      *
      C**********         If        SACTION = 'I' and                                        MD051324
      C                   If        (SACTION = 'I' and                                       MD051324
-     C                             SPRFC = *Blanks or
+     C                             SPRFC = *Blanks and
      C**********                   BKPCDU = 'Y'                                             MD051324
      C                             BKPCDU = 'Y') OR                                         MD051324
      C                             (SACTION = 'A' and                                       MD051324
-     C                             SPRFC = *Blanks or                                       MD051324
+     C                             SPRFC = *Blanks and                                      MD051324
      C                             BKPCDU = 'Y')                                            MD051324
       * Retrieve the Ordering Customer details.                                               179732
      C                   Movel     *Blanks       BBACOZ                                       179732

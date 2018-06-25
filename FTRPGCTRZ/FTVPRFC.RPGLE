@@ -17,11 +17,14 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212  *CREATE    Date 15Sep14               *
+      *  Last Amend No. MD050862           Date 26Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050862 - Profit Center Defaulting should also happen       *
+      *             during amendment                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
       *                                                               *
@@ -30,7 +33,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Account Master Details
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
@@ -50,83 +53,83 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transfer Details in screen format
      D TrnDets       E DS                  EXTNAME(FTFTNTPD)
- 
+
       ** Transfer Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(FTEFTNTPD)
- 
+
       ** Valid Transfer Details layout
      D ValidNoTr     E DS                  EXTNAME(FTVFTNTPD)
- 
+
       ** External DS for Midas Modules
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for GL ICD Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External DS for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACCD1      E                     EXTFLD(QQACCD)
- 
+
       ** External DS for Profit Centres
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
- 
+
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** User / Branch data area
      D ZMUSER          DS            17
      D  USRID                  1     10
      D  DPPT                  14     16
- 
+
       ** DS for DBERR on ACCNT
      D ACKeyDS         DS
      D  KCNUM                  1      6
@@ -134,16 +137,16 @@
      D  KACOD                 10     19  0
      D  KACSQ                 20     21  0
      D  KBRCA                 22     24
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D WIdx            S              3P 0
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PCUST           S              6
@@ -154,7 +157,7 @@
      D PBRCA           S              3
      D PCSSN           S             10
      D PPNOI           S              1
- 
+
      D PBOKC           S              2
      D PTRTP           S              5
      D PPYST           S              2
@@ -162,7 +165,7 @@
      D PUSER           S             10
      D PACOF           S              2
      D PPRFC           S              4
- 
+
      D TRTP            S              5
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -178,11 +181,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        ReturnCode
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -191,10 +194,10 @@
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             Idx
      C                   Z-ADD     0             WIdx
- 
+
       *
       ** VALIDATION
- 
+
       ** If profit centre is non-blank, but Profit Centres Used is 'N',
       ** send error
      C                   IF        BKPRCU <> 'Y' AND
@@ -205,7 +208,7 @@
      C                   EVAL      MsgIdXAr(Idx) = '5047465'
      C                   GOTO      EMAIN
      C                   ENDIF
- 
+
       ** If profit centre is changed, but Profit Centres Amendable is
       ** 'N', send error
      C                   IF        BKPRCA <> 'Y' AND
@@ -222,7 +225,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** If profit centre is blank, and to nostro & currency combination
       ** is either retail or nostro, use account's profit centre
      C                   IF        NTPRFC = *BLANKS
@@ -254,15 +257,25 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** If profit centre is blank and Profit Centre Defaults Used is
-      ** 'Y', use default. This is only applicable in insert mode
-     C                   IF        NTACTN = 'I' AND
+      ***'Y', use default. This is only applicable in insert mode***************************MD050862
+     C** 'Y', use default. This is applicable in insert and amend                           MD050862
+     C**********         IF        NTACTN = 'I' AND
+     C                   IF        (NTACTN = 'I' AND
      C                             NTPRFC = *BLANKS AND
      C                             BKPCDU = 'Y' AND
      C                             OKBOKC = 'Y' AND
      C                             OKOBRC = 'Y' AND
-     C                             OKTFST = 'Y'
+     C**********                   OKTFST = 'Y'                                             MD050862
+     C                             OKTFST = 'Y') OR                                         MD050862
+     C                             (NTACTN = 'A' AND                                        MD050862
+     C                             NTPRFC = *BLANKS AND                                     MD050862
+     C                             BKPCDU = 'Y' AND                                         MD050862
+     C                             OKBOKC = 'Y' AND                                         MD050862
+     C                             OKOBRC = 'Y' AND                                         MD050862
+     C                             OKTFST = 'Y')                                            MD050862
+     C
       *
      C                   MOVEL     'NT'          TRTP
       *
@@ -287,7 +300,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Validate profit centre
      C                   IF        (NTPRFC <> *BLANKS OR
      C                              BGN0ST = 'Y') AND
@@ -309,14 +322,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Move value to valid file
      C                   EVAL      NVPRFC = NTPRFC
- 
+
       * RETURN
- 
+
      C     EMAIN         TAG
- 
+
      C                   RETURN
       *****************************************************************
      C/EJECT
@@ -324,7 +337,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -352,7 +365,7 @@
       *
       * Validation Fields
      C                   PARM                    ValidNoTr
- 
+
       *
       * Access Midas Modules
      C                   CALL      'AOMMODR0'
@@ -382,9 +395,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

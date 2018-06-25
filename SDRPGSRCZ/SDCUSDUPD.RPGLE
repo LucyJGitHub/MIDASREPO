@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051230           Date 08Jun18               *
-      *  Prev Amend No. MD041429           Date 22Sep16               *
+      *  Last Amend No. MD051206           Date 11Jun18               *
+      *  Prev Amend No. MD051230           Date 08Jun18               *
+      *                 MD041429           Date 22Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -137,6 +138,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051206 - Time field in FATCA Information tab changes to    *
+      *             asterisks after amendment authorisation           *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
       *             midas error message                               *
       *  MD041429 - History of Customer Information does not reflect  *
@@ -3249,6 +3252,10 @@
      C                   EVAL      FARPTR = A_FVRPTR                                          CGL132
      C                   EVAL      FARPTD = A_FVRPTD                                          CGL132
      C                   EVAL      FARPTM = A_FVRPTM                                          CGL132
+     C                   IF        FARPTM = '******'                                        MD051206
+     C                   MOVE      BBTMST        WTime                                      MD051206
+     C     *HMS0         MOVE      WTime         FARPTM                                     MD051206
+     C                   ENDIF                                                              MD051206
      C                   EVAL      FARPTU = A_FVRPTU                                          CGL132
      C                   EVAL      FAHVAC = A_FVHVAC                                          CGL132
      C                   EVAL      FAINFC = A_FVINFC                                          CGL132
@@ -4744,6 +4751,10 @@
      C                   EVAL      FARPTR = A_FVRPTR                                          CGL132
      C                   EVAL      FARPTD = A_FVRPTD                                          CGL132
      C                   EVAL      FARPTM = A_FVRPTM                                          CGL132
+     C                   IF        FARPTM = '******'                                        MD051206
+     C                   MOVE      BBTMST        WTime                                      MD051206
+     C     *HMS0         MOVE      WTime         FARPTM                                     MD051206
+     C                   ENDIF                                                              MD051206
      C                   EVAL      FARPTU = A_FVRPTU                                          CGL132
      C                   EVAL      FAHVAC = A_FVHVAC                                          CGL132
      C                   EVAL      FAINFC = A_FVINFC                                          CGL132

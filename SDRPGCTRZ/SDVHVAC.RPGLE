@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD035388           Date 20Oct15               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050570           Date 25Jun18               *
+      *  Prev Amend No. MD035388           Date 20Oct15               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050570 - Error message for High Value Account is not being *
+      *             displayed correctly                               *
       *  MD035388 - FATCA Screen order rework                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -73,6 +76,11 @@
      D Idx             S              3P 0
      D WIx             S              3P 0
  
+      **                                                                                    MD050570
+     D BChar           DS                                                                   MD050570
+     D   BLen                  1      2B 0                                                  MD050570
+     D   LenStr                1      2                                                     MD050570
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -141,7 +149,10 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDHVAC'      FldNamXAr(Idx)
      C                   MOVEL     'USS0393'     MsgIdXAr(Idx)
-     C                   MOVEL     DDHVACO       MsgDtaXAr(Idx)
+     C**********         MOVEL     DDHVACO       MsgDtaXAr(Idx)                             MD050570
+     C                   EVAL      BLen = %Len(%Trim(DDHVACO))                              MD050570
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(DDHVACO)                  MD050570
+
      C                   ENDIF
      C                   ENDIF
  

@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD036335           Date 28Oct15               *
+      *  Last Amend No. MD050570           Date 25Jun18               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD036335           Date 28Oct15               *
       *                 MD036274  *CREATE  Date 21Oct15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050570 - Error message for High Value Account is not being *
+      *             displayed correctly                               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036335 - Protect evidence field if CSD093 is off           *
       *  MD036274 - Local TIN validation changes                      *
@@ -77,6 +80,10 @@
 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
+                                                                                            MD050570
+     D BChar           DS                                                                   MD050570
+     D   BLen                  1      2B 0                                                  MD050570
+     D   LenStr                1      2                                                     MD050570
 
      D Prtcd           S              7
      D POptn           S              7
@@ -149,7 +156,9 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDTINN'      FldNamXAr(Idx)
      C                   MOVEL     'USS0657'     MsgIdXAr(Idx)                              MD036335
-     C                   MOVEL     DDCTRY        MsgDtaXAr(Idx)                             MD036335
+     C**********         MOVEL     DDCTRY        MsgDtaXAr(Idx)                    MD036335 MD050570
+     C                   EVAL      BLen = %Len(%Trim(DDCTRY))                               MD050570
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(DDCTRY)                   MD050570
 
      C                   ENDIF
 

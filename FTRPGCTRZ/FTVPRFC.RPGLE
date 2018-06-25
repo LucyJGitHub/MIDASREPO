@@ -260,7 +260,7 @@
 
       ** If profit centre is blank and Profit Centre Defaults Used is
       ***'Y', use default. This is only applicable in insert mode***************************MD050862
-     C** 'Y', use default. This is applicable in insert and amend                           MD050862
+      ** 'Y', use default. This is applicable in insert and amend                           MD050862
      C**********         IF        NTACTN = 'I' AND
      C                   IF        (NTACTN = 'I' AND
      C                             NTPRFC = *BLANKS AND

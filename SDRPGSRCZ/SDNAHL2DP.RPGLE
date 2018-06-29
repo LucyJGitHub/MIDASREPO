@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD050383           Date 18Apr18               *
-      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *  Last Amend No. MD051432           Date 30Jun18               *
+      *  Prev Amend No. MD050383           Date 18Apr18               *
+      *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028364           Date 11Jul14               *
       *                 MD026506           Date 29May14               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051432 - Remove TIN2 to TIN5 (Recompile)                   *
       *  MD050383 - Phone Number Country highlights an error even the *
       *             fields are not mandatory for input in NAHO        *
       *  CGL157 - CRS Reporting                                       *
@@ -94,15 +96,15 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDNAHL2DDFCF   E             Workstn
- 
+
       ** Non-A/C Holders Details Retrieval
      FSDNAHOL1  IF   E           K Disk    Infsr(*PSSR)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        Disk    Infsr(*PSSR)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -129,25 +131,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -155,76 +157,76 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    Dim(60) Ctdata Perrcd(60)
      D @EI             S              1    Dim(60)
- 
- 
+
+
      D NaPrim        E DS                  Extname(SDNAHLPD)
      D OKNaPrim      E DS                  Extname(SDENAHLPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  Extname(SCSARDPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       ** External DS for Midas modules                                                        CSW207
      D SDMMOD        E DS                  Extname(SDMMODPD)                                  CSW207
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameter fields for ZDATE2
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7
- 
+
       ** Entrty Parameter fields
      D @EKYFD          S              1
      D @EDTFD          S              1
@@ -237,7 +239,7 @@
      D @INKJ           S              1
      D @INKL           S              1
      D @INKX           S              1                                                       CSD093
- 
+
      D Retcd           S              7
      D Option          S              7
      D QueryFld        S              1
@@ -269,7 +271,7 @@
                                                                                               CSW207
      D CSW207          S              1A   INZ('N')                                           CSW207
      D wPrivBank       S              1A   INZ('N')                                           CSW207
- 
+
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
@@ -292,17 +294,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Main processing
- 
+
      C                   EXSR      SRMain
- 
+
       ** Return
- 
+
      C     @INKC         IFEQ      *On
      C                   EVAL      *InLR = *On
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -310,7 +312,7 @@
       ** SRMain - Main processing
       *****************************************************************
      C     SRMain        BEGSR
- 
+
      C                   IF        CSW207 = 'Y' or wPrivBank = 'Y'                            CSW207
      C                   EVAL      *IN84 = *ON                                                CSW207
      C                   ELSE                                                                 CSW207
@@ -326,24 +328,24 @@
                                                                                               CSD093
                                                                                               CSW207
       ** Move 'OK' flags into array (for checking)
- 
+
      C                   MOVEA     OKNaPrim      @EI
- 
+
       ** Set screen error indicators acoording to status of 'OK' flags
- 
+
      C                   Z-ADD     1             C
      C                   Z-ADD     10            E
- 
+
      C     C             DOUGT     60
- 
+
      C     @EI(C)        IFEQ      'N'
      C     @EI(C)        OREQ      'W'
      C                   MOVEL     *On           *In(E)
      C                   ENDIF
- 
+
      C                   ADD       1             C
      C                   ADD       1             E
- 
+
      C                   ENDDO
       *
      C     OKISAU1       COMP      'N'                                    33                AR655783
@@ -411,7 +413,7 @@
      C     OKPCT4        COMP      'N'                                    68                  CGL157
      C*****OKPCT5        COMP      'N'                                    69                  CGL157
      C     OKPCT5        COMP      'N'                                    89                MD050383
- 
+
      C**********         IF        DDCRDT <> *BLANKS                                 CGL132 MD026506
      C                   EVAL      *IN60 = *OFF                                             MD026506
      C                   IF        DDACTN = 'A'                                             MD026506
@@ -421,7 +423,7 @@
      C                   ENDIF                                                              MD026506
      C                   ENDIF                                                                CGL132
       ** Set up the Non-A/C Holder Reference to be used by the message handler
- 
+
      C                   EVAL      TranRef = DDNAHO
      C                   EVAL      ActionCode = DDACTN
                                                                                               232543
@@ -439,49 +441,49 @@
      C                   MOVEL     IsdteYY       DteM_YY                                      232543
      C                   MOVEL     DteFmtM       DDISDT1                                      232543
      C                   ENDIF                                                                232543
- 
+
       ** The following /COPY line includes processing for the error and
       ** warning messages.
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
       ** Position cursor on first field if no errors
- 
+
      C     'N'           LOOKUP    @EI                                    69
- 
+
       ** Protect all fields
- 
+
      C                   MOVE      *OFF          *IN70
- 
+
       ** Enable detail fields (all fields except action code & non-a/c holder reference)
- 
+
      C     @EDTFD        COMP      'Y'                                7070
- 
+
       ** Enable Function keys
- 
+
      C     @EINKG        COMP      'Y'                                    71
      C     @EINKJ        COMP      'Y'                                    72
- 
+
       ** Write message subfile, Primary details and Footer screen
- 
+
      C                   TIME                    DDTIME
- 
+
      C                   WRITE     SDNAHLPS0
      C                   WRITE     SDNAHLPF1                                                AR656294
      C                   WRITE     SDNAHLPD1
      C**********         WRITE     SDNAHLPF1                                                AR656294
- 
+
       ** Read details screen, if not write only
- 
+
      C     WriteOnly     IFNE      'Y'
      C                   READ      SDNAHLPD1                              99
      C                   ENDIF
- 
+
       ** If Exit/Previous screen not selected
       ** Process User request for data tables with query '?'
- 
+
      C     @INKC         IFNE      *ON
      C     @INKL         ANDNE     *ON
- 
+
       ** Identification Type                                                                AR740749
                                                                                             AR740749
      C                   EVAL      QueryFld = DDIDTP                                        AR740749
@@ -492,32 +494,32 @@
      C                   ENDIF                                                              AR740749
                                                                                             AR740749
       ** Issuing Country
- 
+
      C                   MOVEL     DDISCT        QueryFld
      C     QueryFld      IFEQ      '?'
      C                   CALL      'SD0180S'
      C                   PARM                    Retcd
      C                   PARM                    DDISCT
      C                   ENDIF
- 
+
       ** Place of Birth - Country
- 
+
      C                   MOVEL     DDBTHC        QueryFld
      C     QueryFld      IFEQ      '?'
      C                   CALL      'SD0180S'
      C                   PARM                    Retcd
      C                   PARM                    DDBTHC
      C                   ENDIF
- 
+
       ** Country of Residence
- 
+
      C                   MOVEL     DDCOLC        QueryFld
      C     QueryFld      IFEQ      '?'
      C                   CALL      'SD0180S'
      C                   PARM                    Retcd
      C                   PARM                    DDCOLC
      C                   ENDIF
- 
+
       *                                                                                       CER047
       ** Country of Domicile                                                                  CER047
       *                                                                                       CER047
@@ -590,14 +592,14 @@
      C                   ENDIF                                                                CER054
       *                                                                                       CER047
      C                   ENDIF
- 
+
       ** Clear message subfile
       ** Set screen error indicators off
- 
+
      C                   MOVEA     @Z0           *IN(10)
- 
+
       ** Set Return Keys
- 
+
      C                   MOVE      *INKC         @INKC
      C                   MOVE      *INKG         @INKG
      C                   MOVE      *INKH         @INKH
@@ -620,27 +622,27 @@
      C                   MOVEL     DteM_YY       IsDteYY                                      232543
      C                   MOVEL     WIssDate      DDISDT                                       232543
      C                   ENDIF                                                                232543
- 
+
      C                   ENDSR
       *****************************************************************
- 
+
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
       /COPY ZACPYSRC,MSGHNDDSP2
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRZDate2 - Format a date for output
       *****************************************************************
      C     SRZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -648,11 +650,11 @@
       ** *INZSR - Initial processing
       *****************************************************************
      C     *Inzsr        BEGSR
- 
+
       ** Parameters
- 
+
      C     *Entry        PLIST
- 
+
       ** INPUT PARAMETERS :
       ** Return code
       ** Custo (IN SCREEN FORMAT - Primary)
@@ -663,7 +665,7 @@
       ** Enabled Function keys
       ** KG = Command Key 07 = Read Previous (AND KH = KEY 08 = Read Next)
       ** KJ = Command Key 10 = Delete
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    NaPrim
      C                   PARM                    OKNaPrim
@@ -678,11 +680,11 @@
      C                   PARM                    @EINKG
      C                   PARM                    @EINKJ
      C                   PARM                    @EINKX                                       CSD093
- 
+
       ** OUTPUT PARAMETERS :
       ** Function Keys
       ** Write screen with no read indicator
- 
+
      C                   PARM                    @INKC
      C                   PARM                    @INKG
      C                   PARM                    @INKH
@@ -690,28 +692,28 @@
      C                   PARM                    @INKL
      C                   PARM                    @INKX                                        CSD093
      C                   PARM                    WriteOnly
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SDNAHL2DP'   Dbpgm
- 
+
       ** Move user and workstation ID to screen fields.
- 
+
      C                   MOVEL     PsUser        Dduser
      C                   MOVEL     PsJobName     Ddwid
- 
+
      C                   MOVE      *On           *In97
      C                   MOVEL     '*'           Ddpgmq
- 
+
       ** Access Bank details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     Retcd
      C                   PARM      '*FIRST '     Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     Retcd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    Dbfile
      C                   MOVEL     '901'         Dbase
@@ -745,7 +747,7 @@
      C                   EVAL      wPrivBank = 'Y'                                            CSW207
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
- 
+
       *                                                                                       CER047
       ** Call AOSARDR0 to check for CER047                                                    CER047
       *                                                                                       CER047
@@ -842,17 +844,17 @@
      C                   EXSR      *PSSR                                                      CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
- 
+
      C                   IF        CER047 = 'Y' OR CER048 = 'Y'                             BUG23642
      C                   EVAL      *IN88 = *ON                                              BUG23642
      C                   ELSE                                                               BUG23642
      C                   EVAL      *IN88 = *OFF                                             BUG23642
      C                   ENDIF                                                              BUG23642
- 
+
       ** The following /COPY line sets up the fixed data for SD *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -860,18 +862,18 @@
       ** SRERR - Exception errors                                     *
       *****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     'SDNAHL2DP'   Dbpgm
      C                   MOVE      *On           *InU7
      C                   MOVE      *On           *InU8
      C                   MOVE      *On           *InLR
- 
+
      C                   DUMP
- 
+
       **  Terminte the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

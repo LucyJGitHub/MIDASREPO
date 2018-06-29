@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD051230           Date 08Jun18               *
-      *  Prev Amend No. MD050572           Date 03May18               *
+      *  Last Amend No. MD051393           Date 29Jun18               *
+      *  Prev Amend No. MD051230           Date 08Jun18               *
+      *                 MD050572           Date 03May18               *
       *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036375           Date 02Nov15               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051393 - Info complete flag                                *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
       *             midas error message                               *
       *  MD050572 - Exception 14 and 15 is not being displayed /      *
@@ -487,6 +489,7 @@
      C                   PARM                    SDVACUD1
      C                   PARM                    CUSTID            1
      C                   PARM                    DDINFCO           1
+     C                   PARM                    P_DDINFO                                   MD051393
 
       ** OUTPUTS
 

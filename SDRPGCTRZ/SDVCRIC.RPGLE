@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD050622           Date 03May18               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. MD051393           Date 29Jun18               *
+      *  Prev Amend No. MD050622           Date 03May18               *
+      *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 CGL157   *CREATE   Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051393 - Info complete flag                                *
       *  MD050622 - CRS Info complete flag 'Y' cannot be set due to   *
       *             subj to rept is blank error                       *
       *  MD040876 - CRS MQ (Recompile)                                *
@@ -226,10 +228,14 @@
      C                   IF        DDINFO <> 'Y' AND
      C                             DDINFO <> 'N' AND
      C                             DDINFO <> *BLANKS
+     C                   IF        (DDINFO = 'A' AND                                        MD051393
+     C                             DDINFOO <> 'A'                                           MD051393
+     C                             ) or DDINFO <> 'A'                                       MD051393
      C                   MOVE      'N'           DDINFOOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDINFO'      FldNamXAr(Idx)
      C                   MOVEL     'USS0589'     MsgIdXAr(Idx)
+     C                   ENDIF                                                              MD051393
      C                   ENDIF
 
       ** Do NOT Validate CRS Info Complete flag only if the CRS Customer type is 'F' (FI)
@@ -450,6 +456,7 @@
      C                   PARM                    SDVACUD1
      C                   PARM                    CUSTID            1
      C                   PARM                    DDINFOI           1
+     C                   PARM                    DDINFOO           1                        MD051393
 
       ** Output
       ** Error fields/message IDs/message data (arrays) from/to caller

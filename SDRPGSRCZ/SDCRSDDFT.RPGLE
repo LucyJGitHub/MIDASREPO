@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD050493           Date 05May18               *
-      *  Prev Amend No. MD041522           Date 21Sep16               *
+      *  Last Amend No. MD051393           Date 29Jun18               *
+      *  Prev Amend No. MD050493           Date 05May18               *
+      *                 MD041522           Date 21Sep16               *
       *                 MD040627           Date 18Aug16               *
       *                 CGL177             Date 11Jan16               *
       *                 CGL157  *CREATE    Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051393 - Authority Holder indicia                          *
       *  MD050493 - Phone Number and mailing Country values becomes   *
       *             blank after Confirm Authorise                     *
       *  MD041522 - Additional Customers Details MQ and Non-Account   *
@@ -685,7 +687,97 @@
      C                   EVAL      Y = Y + 1
      C                   ENDDO
      C                   ENDIF
-
+                                                                                            MD051393
+      ** Process Authority Holder                                                           MD051393
+     C                   EVAL      PCountry = *Blanks                                       MD051393
+     C                   EVAL      CUAHArrDS = ArAuthCust                                   MD051393
+                                                                                            MD051393
+     C                   CALL      'SD000564'                                               MD051393
+     C                   PARM                    PReturn                                    MD051393
+     C                   PARM                    DDCUST                                     MD051393
+     C                   PARM                    CUAHArrDS                                  MD051393
+     C                   PARM                    DDAUHO                                     MD051393
+     C                   PARM                    PCountry                                   MD051393
+                                                                                            MD051393
+     C                   IF        DDAUHO = 'Y'                                             MD051393
+     C                   EVAL      Y = 1                                                    MD051393
+     C                   DOW       Y < 31                                                   MD051393
+     C                   EVAL      WWCTRY = PCountry(Y)                                     MD051393
+     C                   IF        WWCTRY <> *Blanks                                        MD051393
+     C                   IF        %LOOKUP(WWCTRY:PCtry:1:30) <> 0                          MD051393
+     C                   EVAL      X = 1                                                    MD051393
+     C                   DOW       X < 31                                                   MD051393
+     C                   EVAL      PCRSDT = PCrsdS(X)                                       MD051393
+     C                   IF        DDCTRR = WWCTRY                                          MD051393
+     C                   EVAL      PCRSDT = PCrsdS(X)                                       MD051393
+     C                   EVAL      PCRSDU = PCrsdF(X)                                       MD051393
+     C                   EVAL      DDAUHO = 'Y'                                             MD051393
+     C                   EVAL      DFAUHO = 'Y'                                             MD051393
+     C                   IF        DDREPT <> 'N'                                            MD051393
+     C                             AND DDREPT <> ' '                                        MD051393
+     C                   EVAL      DDREPT = 'Y'                                             MD051393
+     C                   EVAL      DFREPT = 'Y'                                             MD051393
+     C                   ENDIF                                                              MD051393
+     C                   EVAL      WCNCD = DDCTRR                                           MD051393
+                                                                                            MD051393
+      ** Get CRS agreement                                                                  MD051393
+                                                                                            MD051393
+     C                   CALL      'AOCTTXR0'                                               MD051393
+     C                   PARM      *BLANKS       PRTCD                                      MD051393
+     C                   PARM      '*KEY   '     POPTN                                      MD051393
+     C                   PARM      DS_A8LCCD     @PCTRT                                     MD051393
+     C                   PARM      WCNCD         @PCTRR                                     MD051393
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD051393
+                                                                                            MD051393
+     C                   IF        PRTCD = '*NRF   '                                        MD051393
+     C                   EVAL      @PCTRR = *Blanks                                         MD051393
+     C                   CALL      'AOCTTXR0'                                               MD051393
+     C                   PARM      *BLANKS       PRTCD                                      MD051393
+     C                   PARM      '*KEY   '     POPTN                                      MD051393
+     C                   PARM      DS_A8LCCD     @PCTRT                                     MD051393
+     C                   PARM                    @PCTRR                                     MD051393
+     C     SDCTTX        PARM      SDCTTX        DSFDY                                      MD051393
+     C                   ENDIF                                                              MD051393
+                                                                                            MD051393
+     C                   IF        PRTCD = *BLANK                                           MD051393
+     C                   EVAL      DFCRSA = EWCRSA                                          MD051393
+     C                   ELSE                                                               MD051393
+     C                   EVAL      DFCRSA = *Blanks                                         MD051393
+     C                   ENDIF                                                              MD051393
+     C                   EVAL      DDCRSA = DFCRSA                                          MD051393
+                                                                                            MD051393
+     C                   EVAL      PCrsdS(X) = PCRSDT                                       MD051393
+     C                   EVAL      PCrsdF(X) = PCRSDU                                       MD051393
+     C                   ENDIF                                                              MD051393
+     C                   EVAL      X = X + 1                                                MD051393
+     C                   ENDDO                                                              MD051393
+     C                   ELSE                                                               MD051393
+     C                   EVAL      DDCTRR = WWCTRY                                          MD051393
+     C                   EVAL      DDCTRY = WWCTRY                                          MD051393
+     C                   EVAL      DDAUHO = 'Y'                                             MD051393
+     C                   EVAL      DFAUHO = 'Y'                                             MD051393
+     C                   EVAL      CVAUHO = 'Y'                                             MD051393
+     C                   EVAL      DDREPT = 'Y'                                             MD051393
+     C                   EVAL      DFREPT = 'Y'                                             MD051393
+     C                   EVAL      CVREPT = 'Y'                                             MD051393
+     C                   EVAL      DDCODO = ' '                                             MD051393
+     C                   EVAL      DDMAIL = ' '                                             MD051393
+     C                   EVAL      DDPHON = ' '                                             MD051393
+     C                   EVAL      DDRPAY = ' '                                             MD051393
+     C                   EVAL      DDJACM = ' '                                             MD051393
+     C                   EVAL      DFJACM = ' '                                             MD051393
+     C                   EVAL      DFCODO = ' '                                             MD051393
+     C                   EVAL      DFMAIL = ' '                                             MD051393
+     C                   EVAL      DFPHON = ' '                                             MD051393
+     C                   EVAL      DFRPAY = ' '                                             MD051393
+     C                   EVAL      DFTINS = ' '                                             MD051393
+     C                   EXSR      SRVChk                                                   MD051393
+     C                   EXSR      SRVDft                                                   MD051393
+     C                   ENDIF                                                              MD051393
+     C                   ENDIF                                                              MD051393
+     C                   EVAL      Y = Y + 1                                                MD051393
+     C                   ENDDO                                                              MD051393
+     C                   ENDIF                                                              MD051393
 
       ** Load countries
 

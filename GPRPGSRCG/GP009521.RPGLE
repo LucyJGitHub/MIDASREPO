@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CGL185  *CREATE    Date 13Mar17               *
+      *  Last Amend No. MD051393           Date 29Jun18               *
+      *  Prev Amend No. CGL185  *CREATE    Date 13Mar17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051393 - FATCAFilerCategory error                          *
       *  CGL185 - FATCA XML 2.0                                       *
       *                                                               *
       *****************************************************************
@@ -99,6 +101,7 @@
      C                   RETURN
      C                   ENDIF
 
+     C                   EVAL      pos = 1                                                  MD051393
      C                   EVAL      WFatca = %SUBST(SVAL1:pos:8)
      C                   EXSR      SrFATCA6XX
      C                   EVAL      pos = pos + 8

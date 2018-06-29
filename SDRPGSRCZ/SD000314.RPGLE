@@ -18,12 +18,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD051045           Date 01Jun18               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *  Last Amend No. MD051393           Date 29Jun18               *
+      *  Prev Amend No. MD051045           Date 01Jun18               *
+      *                 MD039670           Date 26Jul16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051393 - FATCAFilerCategory error                          *
       *  MD051045 - CRS High Value Account Identification Tool gets   *
       *             database error when run in Update Mode            *
       *  MD039670 - FATCA Housekeeping program                        *
@@ -319,6 +321,8 @@
      D PAftCRSH        S           5000A
      D PBefCRSD        S           5000A
      D PAftCRSD        S           5000A
+     D PBefCUAH        S           5000A                                                    MD051393
+     D PAftCUAH        S           5000A                                                    MD051393
 
      D WCRSDlgMedInd   S              6A
      D WCRSDlgHiInd    S              6A
@@ -1327,6 +1331,8 @@
      C                   PARM      *BLANKS       PAftFTCS
      C                   PARM      *BLANKS       PBefJACC
      C                   PARM      *BLANKS       PAftJACC
+     C                   PARM      *BLANKS       PBefCUAH                                   MD051393
+     C                   PARM      *BLANKS       PAftCUAH                                   MD051393
      C                   PARM      *BLANKS       PBefCUXC
      C                   PARM      *BLANKS       PAftCUXC
      C                   PARM      *BLANKS       PACRV

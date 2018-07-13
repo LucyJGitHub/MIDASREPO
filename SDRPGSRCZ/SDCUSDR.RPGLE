@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051299           Date 19Jun18               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. MD051532           Date 13Jul18               *
+      *  Prev Amend No. MD051299           Date 19Jun18               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041996           Date 12Oct15               *
       *                 CSW216             Date 14Mar16               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051532 - BOE details changed after authorisation           *
       *  MD051299 - Serious Midas Error occurs during insert,         *
       *             amendment and deletion of customers               *
       *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
@@ -440,7 +442,8 @@
      C                                       + CuCUXC                                         CGL132
      C                                       + CuFTCR                                         CGL132
      C**********                             + ExtData                             MD044880 MD051299
-     C                                       + Filler65                                     MD051299
+     C**********                             + Filler65                            MD051299 MD051532
+     C                                       + ExtData                                      MD051532
      C                                       + CrsdDets                                     MD051299
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213

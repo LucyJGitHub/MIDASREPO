@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. MD023365           Date 12Nov13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 MD023365           Date 12Nov13               *
       *                 MD022508           Date 23Sep13               *
       *                 MD022888           Date 17Sep13               *
       *                 MD022310A          Date 16Sep13               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD023365 - Event code not found for UTC sign.                *
       *  MD022508 - Error encountered when RPIF Execution             *

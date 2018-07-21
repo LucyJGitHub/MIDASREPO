@@ -9,8 +9,8 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. MD041958           Date 11Dec17              */
-/*       Prev Amend No. MD031243           Date 06Nov14              */
+/*       Last Amend No. MD031243           Date 06Nov14              */
+/*       Prev Amend No. MD041958           Date 11Dec17              */
 /*                      CSW214             Date 25Nov14              */
 /*                      MD030111           Date 28Aug14              */
 /*                      MD028093           Date 03Jul14              */
@@ -62,9 +62,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD041958 - DLC0603 MSGW - I/O error detected DAIND          */
-/*                  Applied for MD048787                            */
 /*       MD031243 - DLC0603 sequence 00001 failed in COB             */
+/*       MD041958 - DLC0603 MSGW - I/O error detected DAIND          */
+/*                  Applied for MD048788                             */
 /*       CSW214 - SWIFT Changes 2014                                 */
 /*       MD030111 - Incorrect value equated for CSW213 condition     */
 /*       MD028093 - No MT341 confirmation was archived on            */
@@ -758,7 +758,7 @@
 /**  Share open data path to YES   **/                                                  /*MD022405*/
 /**********  IF         COND(&CSW2013 *EQ 'CSW213') THEN( +
              OVRDBF     FILE(DEALS) SHARE(*YES))                   */          /*MD022405 MD030111*/
-/**********  IF         COND(&CSW2013 *EQ 'CSW2013') THEN( +                  
+/**********  IF         COND(&CSW2013 *EQ 'CSW2013') THEN( +
              OVRDBF     FILE(DEALS) SHARE(*YES))                   */          /*MD030111 MD031243*/
                                                                                         /*MD022405*/
 /**                                                                   /*084318*/

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. MD024179           Date 19Dec13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 MD024179           Date 19Dec13               *
       *                 MD024166           Date 19Dec13               *
       *                 MD024151           Date 18Dec13               *
       *                 MD024146           Date 17Dec13               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD024179 - Reporting party party ID defaulted again after    *
       *             it was amended to blank.                          *
@@ -177,9 +179,12 @@
      D***COMBI2                185    229A                                           MD022633 CSW214
      D***COMBI3                369    413A                                           MD022633 CSW214
      D***COMBI4                553    597A                                           MD022633 CSW214
-     D COMBI2                195    239A                                                      CSW214
-     D COMBI3                389    433A                                                      CSW214
-     D COMBI4                583    627A                                                      CSW214
+     D***COMBI2                195    239A                                             CSW214 CSW216
+     D***COMBI3                389    433A                                             CSW214 CSW216
+     D***COMBI4                583    627A                                             CSW214 CSW216
+     D COMBI2                205    249A                                                      CSW216
+     D COMBI3                409    453A                                                      CSW216
+     D COMBI4                613    657A                                                      CSW216
                                                                                             MD022633
      D ArrTType        S              1A   DIM(3)                                           MD022633
  
@@ -332,6 +337,7 @@
      D WRType3         S              1A                                                    MD024179
      D WRType4         S              1A                                                    MD024179
      D CSW214          S              1A                                                      CSW214
+     D CSW216          S              1A                                                      CSW216
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -620,6 +626,17 @@
      C                   EVAL      R2UTI1OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+                                                                                              CSW216
+     C                   IF        CSW216 <> 'Y'                                              CSW216
+     C                   IF        %SUBST(R2UTI1:21:10) <> *BLANKS                            CSW216
+     C                   EXSR      ResetErrs                                                  CSW216
+     C                   EVAL      FldNamXAr = 'R2UTI1'                                       CSW216
+     C                   EVAL      MsgIDXAr  = '5048669'                                      CSW216
+     C                   EVAL      R2UTI1OK  = 'N'                                            CSW216
+     C                   EXSR      UpdatErrs                                                  CSW216
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
+     C                   ELSE                                                                 CSW216
                                                                                               CSW214
      C                   IF        CSW214 <> 'Y'                                              CSW214
      C                   IF        %SUBST(R2UTI1:11:10) <> *BLANKS                            CSW214
@@ -631,6 +648,8 @@
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
       *
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
      C                   ENDIF
       *
       ** Validate Transaction Identifier 1
@@ -1157,6 +1176,17 @@
      C                   EVAL      R2UTI2OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+                                                                                              CSW216
+     C                   IF        CSW216 <> 'Y'                                              CSW216
+     C                   IF        %SUBST(R2UTI2:21:10) <> *BLANKS                            CSW216
+     C                   EXSR      ResetErrs                                                  CSW216
+     C                   EVAL      FldNamXAr = 'R2UTI2'                                       CSW216
+     C                   EVAL      MsgIDXAr  = '5048669'                                      CSW216
+     C                   EVAL      R2UTI2OK  = 'N'                                            CSW216
+     C                   EXSR      UpdatErrs                                                  CSW216
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
+     C                   ELSE                                                                 CSW216
                                                                                               CSW214
      C                   IF        CSW214 <> 'Y'                                              CSW214
      C                   IF        %SUBST(R2UTI2:11:10) <> *BLANKS                            CSW214
@@ -1167,6 +1197,8 @@
      C                   EXSR      UpdatErrs                                                  CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
+                                                                                              CSW216
+     C                   ENDIF                                                                CSW216
  
      C                   ENDIF
       *
@@ -1696,6 +1728,17 @@
      C                   EVAL      R2UTI3OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+                                                                                              CSW216
+     C                   IF        CSW216 <> 'Y'                                              CSW216
+     C                   IF        %SUBST(R2UTI3:21:10) <> *BLANKS                            CSW216
+     C                   EXSR      ResetErrs                                                  CSW216
+     C                   EVAL      FldNamXAr = 'R2UTI3'                                       CSW216
+     C                   EVAL      MsgIDXAr  = '5048669'                                      CSW216
+     C                   EVAL      R2UTI3OK  = 'N'                                            CSW216
+     C                   EXSR      UpdatErrs                                                  CSW216
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
+     C                   ELSE                                                                 CSW216
                                                                                               CSW214
      C                   IF        CSW214 <> 'Y'                                              CSW214
      C                   IF        %SUBST(R2UTI3:11:10) <> *BLANKS                            CSW214
@@ -1706,6 +1749,8 @@
      C                   EXSR      UpdatErrs                                                  CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
+                                                                                              CSW216
+     C                   ENDIF                                                                CSW216
  
      C                   ENDIF
       *
@@ -2234,6 +2279,17 @@
      C                   EVAL      R2UTI4OK  = 'N'
      C                   EXSR      UpdatErrs
      C                   ENDIF
+                                                                                              CSW216
+     C                   IF        CSW216 <> 'Y'                                              CSW216
+     C                   IF        %SUBST(R2UTI4:21:10) <> *BLANKS                            CSW216
+     C                   EXSR      ResetErrs                                                  CSW216
+     C                   EVAL      FldNamXAr = 'R2UTI4'                                       CSW216
+     C                   EVAL      MsgIDXAr  = '5048669'                                      CSW216
+     C                   EVAL      R2UTI4OK  = 'N'                                            CSW216
+     C                   EXSR      UpdatErrs                                                  CSW216
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
+     C                   ELSE                                                                 CSW216
                                                                                               CSW214
      C                   IF        CSW214 <> 'Y'                                              CSW214
      C                   IF        %SUBST(R2UTI4:11:10) <> *BLANKS                            CSW214
@@ -2244,6 +2300,8 @@
      C                   EXSR      UpdatErrs                                                  CSW214
      C                   ENDIF                                                                CSW214
      C                   ENDIF                                                                CSW214
+                                                                                              CSW216
+     C                   ENDIF                                                                CSW216
  
      C                   ENDIF
       *
@@ -3139,6 +3197,17 @@
      C                   ELSE                                                                 CSW214
      C                   EVAL      CSW214 = 'N'                                               CSW214
      C                   ENDIF                                                                CSW214
+                                                                                              CSW216
+      ** Check if SWIFT 2014 Changes is installed                                             CSW216
+                                                                                              CSW216
+     C                   CALL      'SWIF2016'                                                 CSW216
+     C                   PARM      *BLANKS       PRTCD                                        CSW216
+                                                                                              CSW216
+     C                   IF        PRTCD   = 'CSW2016'                                        CSW216
+     C                   EVAL      CSW216 = 'Y'                                               CSW216
+     C                   ELSE                                                                 CSW216
+     C                   EVAL      CSW216 = 'N'                                               CSW216
+     C                   ENDIF                                                                CSW216
       *
       ***  Key list definition
       *

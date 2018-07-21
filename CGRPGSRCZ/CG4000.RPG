@@ -16,8 +16,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. MD041695           Date 28Sep16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CSW214             Date 25Nov14               *
       *                 CDL096             Date 24Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSW213             Date 03Jun13               *
@@ -74,6 +76,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD041695 - No Trade Repository confirmation generated when   *
+      *             the print schedule of FXDL/SIRS/CIRS/FRA is       *
+      *             'DAILY'.                                          *
+      *           - Pattern fix from MD-23402 which adds a record for *
+      *             Trade Repository in CONEXCY.                      *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -213,6 +221,10 @@
      I/COPY CGCPYSRC,SRERRI
      IRUNDT     E DSRUNDAT                                                143058
       **  Data Area RUNDAT                                                143058
+     IDSSDY     E DSDSSDY                                                                   MD041695
+      ** Second DS for access programs, long data structure                                 MD041695
+     ISDCUST    E DSSDCUSTPD                                                                MD041695
+      ** External DS for customer details                                                   MD041695
      C/SPACE 5
       *****************************************************************
       * Process     :  MAINLINE                                       *
@@ -829,11 +841,25 @@
      C                     MOVELDLNO      KDLNO  16                                           CSW213
       *                                                                                       CSW213
      C           CSW213    IFEQ 'Y'                                                           CSW213
-     C           BGCFMT    ANDEQ'Y'                                                           CSW213
+     C********** BGCFMT    ANDEQ'Y'                                                  CSW213 MD041695
       *                                                                                       CSW213
      C           RPIFKY    CHAINDLRPIFL1             99                                       CSW213
       *                                                                                       CSW213
      C           *IN99     IFEQ '0'                                                           CSW213
+     C           RICFRQ    ANDEQ'Y'                                                         MD041695
+      *                                                                                     MD041695
+     C           RITRID    IFNE *BLANKS                                                     MD041695
+     C                     CALL 'AOCUSTR0'                                                  MD041695
+     C                     PARM '*MSG    'PRTCD   7                                         MD041695
+     C                     PARM '*KEY    'POPTN   7                                         MD041695
+     C                     PARM RITRID    PCNUM   6                                         MD041695
+     C                     PARM *BLANKS   PKEY    7                                         MD041695
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD041695
+      *                                                                                     MD041695
+     C           BBCSID    IFNE *BLANKS                                                     MD041695
+     C                     MOVEL'A'       RPTI                                              MD041695
+     C                     WRITECONEXCYF                                                    MD041695
+     C                     MOVEL*BLANKS   RPTI                                              MD041695
       *                                                                                       CSW213
      C           1         CHAINCONEXCZF             99                                       CSW213
       *                                                                                       CSW213
@@ -846,6 +872,37 @@
      C                     ADD  1         NORE1                                               CSW213
      C                     UPDATCONEXCZF                                                      CSW213
      C                     ENDIF                                                              CSW213
+      *                                                                                     MD041695
+     C                     ENDIF                                                            MD041695
+     C                     ENDIF                                                            MD041695
+      *                                                                                     MD041695
+     C           RIPRED    IFNE *BLANKS                                                     MD041695
+     C                     CALL 'AOCUSTR0'                                                  MD041695
+     C                     PARM '*MSG    'PRTCD                                             MD041695
+     C                     PARM '*KEY    'POPTN                                             MD041695
+     C                     PARM RIPRED    PCNUM                                             MD041695
+     C                     PARM *BLANKS   PKEY                                              MD041695
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD041695
+      *                                                                                     MD041695
+     C           BBCSID    IFNE *BLANKS                                                     MD041695
+     C                     MOVEL'B'       RPTI                                              MD041695
+     C                     WRITECONEXCYF                                                    MD041695
+     C                     MOVEL*BLANKS   RPTI                                              MD041695
+      *                                                                                     MD041695
+     C           1         CHAINCONEXCZF             99                                     MD041695
+      *                                                                                     MD041695
+     C           *IN99     IFEQ '1'                                                         MD041695
+      *                                                                                     MD041695
+     C                     MOVEL'T'       RECI                                              MD041695
+     C                     Z-ADD1         NORE1                                             MD041695
+     C                     WRITECONEXCZF                                                    MD041695
+     C                     ELSE                                                             MD041695
+     C                     ADD  1         NORE1                                             MD041695
+     C                     UPDATCONEXCZF                                                    MD041695
+     C                     ENDIF                                                            MD041695
+      *                                                                                     MD041695
+     C                     ENDIF                                                            MD041695
+     C                     ENDIF                                                            MD041695
       *                                                                                       CSW213
      C                     ENDIF                                                              CSW213
       *                                                                                       CSW213

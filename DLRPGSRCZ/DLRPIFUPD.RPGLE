@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD023231           Date 25Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. MD030983           Date 04Oct16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD023231           Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD023802           Date 26Nov13               *
       *                 MD022751           Date 11Oct13               *
       *                 MD022579           Date 02Oct13               *
@@ -22,6 +24,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030983 -  Generated messages still display previous trade  *
+      *              repository details upon reversal of the deal     *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD023231 - MT300 not generated when Trade Repo ID is changed *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD023802 - Missing MT340 CANC for Trade Repo ID              *
@@ -89,10 +94,14 @@
      D***ValdS1*                1    997                                                      CSW214
      D***ValdS2*             1002   1806                                                      CSW214
      D***ValdS3*             1818   1826                                                      CSW214
-     D  ValdS1                 1   1037                                                       CSW214
-     D  ValdS2              1042   1846                                                       CSW214
-     D  ValdS3              1858   1866                                                       CSW214
-     D  ValdS4              1898   1954                                                       CSW214
+     D***ValdS1                 1   1037                                               CSW214 CSW216
+     D***ValdS2              1042   1846                                               CSW214 CSW216
+     D***ValdS3              1858   1866                                               CSW214 CSW216
+     D***ValdS4              1898   1954                                               CSW214 CSW216
+     D  ValdS1                 1   1077                                                       CSW216
+     D  ValdS2              1082   1886                                                       CSW216
+     D  ValdS3              1898   1906                                                       CSW216
+     D  ValdS4              1938   1994                                                       CSW216
      D  WVTRRF                        6A   OVERLAY(RVTRRF)                                  MD022052
  
       ** Report Information details
@@ -100,10 +109,14 @@
      D***RPIFS1*                1    997                                                      CSW214
      D***RPIFS2*             1002   1806                                                      CSW214
      D***RPIFS3*             1818   1826                                                      CSW214
-     D  RPIFS1                 1   1037                                                       CSW214
-     D  RPIFS2              1042   1846                                                       CSW214
-     D  RPIFS3              1858   1866                                                       CSW214
-     D  RPIFS4              1898   1954                                                       CSW214
+     D***RPIFS1*                1   1037                                               CSW214 CSW216
+     D***RPIFS2*             1042   1846                                               CSW214 CSW216
+     D***RPIFS3*             1858   1866                                               CSW214 CSW216
+     D***RPIFS4*             1898   1954                                               CSW214 CSW216
+     D  RPIFS1                 1   1077                                                       CSW216
+     D  RPIFS2              1082   1886                                                       CSW216
+     D  RPIFS3              1898   1906                                                       CSW216
+     D  RPIFS4              1938   1994                                                       CSW216
  
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -290,6 +303,7 @@
      C                   Z-ADD     BJRDNB        RILCD
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    RITMST
+     C                   EVAL      RIPRED = *BLANKS                                         MD030983
  
      C                   UPDATE    DLRPIFD0
  

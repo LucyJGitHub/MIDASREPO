@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD031127           Date 13Feb15               *
+      *  Last Amend No. CSW218             Date 18Jun18               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD031127           Date 13Feb15               *
       *                 MD031141           Date 25Nov14               *
       *                 MD031098           Date 25Nov14               *
       *                 MD030373           Date 25Nov14               *
@@ -202,6 +203,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD031127 - CGL035/CER048/CER054 tax processing will not be   *
       *             executed for negative interest.                   *
@@ -686,6 +688,9 @@
      FDL1705AUO   F     132            PRINTER                            S01117
      FSDSTAAL1IF  E           K        DISK                                                   CDL013
       * Retail/Dealing WHT ICD extension update                                               CDL013
+      *                                                                                       CSW218
+     FMEBICDL2IF  E           K        DISK                                                   CSW218
+      ** BIC Directory table                                                                  CSW218
      F*                                                                   S01408
      F/COPY WNCPYSRC,DL1705FFP1                                           S01408
      F*                                                                   S01408
@@ -2333,6 +2338,20 @@
      C                     ELSE                                           CSW096
      C                     MOVE 'N'       CSW096                          CSW096
      C                     ENDIF                                          CSW096
+      *                                                                                       CSW218
+      ** Check if Swift 2018 changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM           PRTCD                                               CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C           KBICD     KLIST                                                              CSW218
+     C                     KFLD           WBICC                                               CSW218
+     C                     KFLD           WBICB                                               CSW218
      C/COPY WNCPYSRC,DL1705C010
       *                                                                                       CDL033
       ** Acces Midas General Ledger ICD details.                                              CDL033
@@ -7899,6 +7918,8 @@
      C           BBGSFM    COMP 'Y'                      80               S01194
      C/COPY WNCPYSRC,DL1705C025
       *                                                                   S01194
+     C           CSW218    IFEQ 'N'                                                           CSW218
+      *                                                                                       CSW218
       **   IF SWIFT ADDRESS BIC CODE DO NOT OUTPUT                        S01167
      C                     MOVE BBCSID    CSBIC   4                       S01194
      C                     MOVE *BLANKS   USCSID                          CSW096
@@ -7917,6 +7938,33 @@
      C           CSW096    ANDEQ'Y'                                       CSW096
      C                     SETOF                     80                   S01167
      C                     END                                            S01194
+      *                                                                                       CSW218
+     C                     ELSE                                                               CSW218
+      ** Check if SWIFT address is connected to SWIFTNet FIN when CSW218 is ON                CSW218
+     C                     MOVEL*BLANKS   WSID19  1                                           CSW218
+     C           BBCSID    IFNE *BLANKS                                                       CSW218
+     C                     MOVELBBCSID    WBICC   8                                           CSW218
+     C           3         SUBSTBBCSID:9  WBICB   3                                           CSW218
+     C           WBICB     IFEQ *BLANKS                                                       CSW218
+     C                     MOVEL'XXX'     WBICB                                               CSW218
+     C                     ENDIF                                                              CSW218
+     C           KBICD     CHAINMEBICDL2             20                                       CSW218
+     C           *IN20     IFEQ '0'                                                           CSW218
+     C           1         SUBSTBDXINF:19 WSID19                                              CSW218
+      *                                                                                       CSW218
+      ** BIC address indicates not connected if the                                           CSW218
+      ** Extra Information field position 19 is set to 'N'                                    CSW218
+     C           WSID19    IFEQ 'N'                                                           CSW218
+     C           BBGSFM    ANDEQ'Y'                                                           CSW218
+     C           SETP      ANDEQ08                                                            CSW218
+     C           BBTXA1    ANDEQ*BLANKS                                                       CSW218
+     C           BBSTAD    ANDEQ*BLANKS                                                       CSW218
+     C                     SETOF                     80                                       CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
      C                     END                                            S01167
      C/COPY WNCPYSRC,DL1705C060
       *                                                                   S01194

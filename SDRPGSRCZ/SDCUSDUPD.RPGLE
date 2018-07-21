@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030958           Date 17Jul15               *
-      *  Prev Amend No. CER070             Date 29Oct14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD030958           Date 17Jul15               *
+      *                 CER070             Date 29Oct14               *
       *                 CSW214             Date 29Oct14               *
       *                 MD030956           Date 09Oct14               *
       *                 MD028198           Date 08Sep14               *
@@ -126,6 +127,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD030958 - Condition SDCUSTXC updates on CGL132 feature.     *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *

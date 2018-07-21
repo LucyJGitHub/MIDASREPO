@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. BUG14840           Date 09Sep13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *                 BUG14840           Date 09Sep13               *
       *                 CLE134             Date 01Aug12               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  BUG14840 - Missing objects from Swift 2007 Delivery          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *

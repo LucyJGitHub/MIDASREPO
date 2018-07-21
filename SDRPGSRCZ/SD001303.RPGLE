@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027768           Date 25Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD027768           Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD022342           Date 12Sep13               *
       *                 MD022703           Date 04Oct13               *
       *                 MD022406           Date 16Sep13               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD027768 - Duplicate Clearing Threshold field is displayed   *
       *             on Default Reporting Information Report - Full    *
       *             List                                              *

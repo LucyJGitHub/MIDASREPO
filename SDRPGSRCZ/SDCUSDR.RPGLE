@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR316373           Date 03Jun15               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. AR316373           Date 03Jun15               *
+      *                 CER070             Date 19Aug14               *
       *                 CSW214             Date 25Nov14               *
       *                 CGL132             Date 01May13               *
       *                 MD022463           Date 27Sep13               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *
       *             java wrapped function. Retrieve the details from  *
       *             BYCUSTX0 to be passed to java.                    *

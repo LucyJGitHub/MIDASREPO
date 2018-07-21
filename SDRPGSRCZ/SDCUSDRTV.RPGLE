@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER070             Date 03Dec14               *
-      *  Prev Amend No. CSW214             Date 03Dec14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CER070             Date 03Dec14               *
+      *                 CSW214             Date 03Dec14               *
       *                 MD030956           Date 09Oct14               *
       *                 CER069             Date 03Jul14               *
       *                 MD025006           Date 19Aug14               *
@@ -133,6 +134,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  MD030956 - Additional changes to BFM-TI enhancement          *

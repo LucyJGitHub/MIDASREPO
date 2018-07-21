@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW214             Date 25Nov14               *
-      *  Prev Amend No. CFT050             Date 03Jun13               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214             Date 02Jun14               *
+      *                 CFT050             Date 03Jun13               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 261588             Date 02Sep09               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  CFT050 - SWIFTRef Directories upload                         *
       *  AR787620 - Hooks Incorporation                               *

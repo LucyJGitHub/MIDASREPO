@@ -17,10 +17,12 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSW214  *CREATE    Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. CSW214  *CREATE    Date 25Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  CSW214 - SWIFT Changes 2014                                  *
       *                                                               *
       *****************************************************************
@@ -93,8 +95,11 @@
       ** Work Variables
      D WExd            S             10A
      D I               S              3P 0
-     D DDIBEI          S             20A
+     D**DDIBEI**        S             20A                                                     CSW216
+     D DDIBEI          S             30A                                                      CSW216
      D OKDDIBEI        S              1A
+     D CSW214          S              1A                                                      CSW216
+     D CSW216          S              1A                                                      CSW216
  
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
@@ -127,7 +132,14 @@
       *
       ** Validation
       *
+     C     CSW216        IFEQ      'N'                                                        CSW216
+     C                   EXSR      SRNMSP2                                                    CSW216
+     C                   ENDIF                                                                CSW216
+      *                                                                                       CSW216
+     C     CSW214        IFEQ      'N'                                                        CSW216
+     C     OKDDIBEI      ANDEQ     'Y'                                                        CSW216
      C                   EXSR      SRNMSP
+     C                   ENDIF                                                                CSW216
       *
       ** If an error was found, set the return code appropriately
       *
@@ -161,6 +173,29 @@
  
      C                   ENDSR
  
+      *****************************************************************                       CSW216
+     C/EJECT                                                                                  CSW216
+      *****************************************************************                       CSW216
+      ** SRNMSP2 - Validate Namespace for SWIFT2016                                           CSW216
+      *****************************************************************                       CSW216
+     C     SRNMSP2       BEGSR                                                                CSW216
+                                                                                              CSW216
+     C                   IF        DDIBEI <> *BLANKS                                          CSW216
+                                                                                              CSW216
+      ** Check if Namespace field value exceeds 20A                                           CSW216
+                                                                                              CSW216
+     C                   EVAL      WExd = %SUBST(DDIBEI:21:10)                                CSW216
+                                                                                              CSW216
+     C                   IF        WExd <> *BLANKS                                            CSW216
+     C                   EVAL      OKDDIBEI = 'N'                                             CSW216
+     C                   EVAL      Idx = Idx + 1                                              CSW216
+     C                   EVAL      FldNamXAr(Idx) = 'DDIBEI'                                  CSW216
+     C                   EVAL      MsgIDXAr(Idx) = '5048670'                                  CSW216
+     C                   ENDIF                                                                CSW216
+     C                   ENDIF                                                                CSW216
+                                                                                              CSW216
+     C                   ENDSR                                                                CSW216
+                                                                                              CSW216
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -195,6 +230,10 @@
       ** Party Capacity Indicator - OK
       *
      C                   PARM                    OKDDIBEI
+      ** SWIFT2014 Flag                                                                       CSW216
+     C                   PARM                    CSW214                                       CSW216
+      ** SWIFT2016 Flag                                                                       CSW216
+     C                   PARM                    CSW216                                       CSW216
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================

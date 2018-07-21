@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037023           Date 12Jan16               *
-      *  Prev Amend No. MD036631           Date 27Nov15               *
+      *  Last Amend No. MD040178           Date 05Aug16               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD037023           Date 12Jan16               *
+      *                 MD036631           Date 27Nov15               *
       *                 MD036070           Date 19Oct15               *
       *                 MD029855           Date 25Nov14               *
       *                 MD029216           Date 25Nov14               *
@@ -84,6 +86,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040178 - Rollup key text is missing in Settlement Details  *
+      *             screen. Adjust the position of Rollup key text.   *
+      *             (Recompile)                                       *
+      *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD037023 - Incorrect function keys on 2nd Settlement Details *
       *             Interest screen (Recompile)                       *
       *  MD036631 - F11 displays Reporting screen instead of going    *
@@ -182,7 +188,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZASETINSDFCF   E             WORKSTN
-
+ 
      F/COPY WNCPYSRC,ZASETIN#F1
       *                                                                                       171873
       ** Table of field numbers and names                                                     171873
@@ -215,7 +221,7 @@
       *       88  Protect EMU payment fields                          *         CAP003
       *       80  System has multibranching flag set on               *
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -234,19 +240,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the ZA standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       * Added the following /copy members for new message handling.                           171873
      D/COPY ZACPYSRC,ERR_ARRAYS                                                               171873
                                                                                               171873
@@ -259,21 +265,21 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       * Constant to hold input parameter for AOSVALR0.                                      MD026923
      D PCUSTD          C                   Const('DspCustSettDtls')                         MD026923
                                                                                             MD026923
@@ -281,7 +287,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D*RER******       S              1    DIM(6)                                             CSW202
      D RER             S              1    DIM(7)                                             CSW202
      D PAR             S              1    DIM(28)
@@ -292,48 +298,48 @@
      D*@Z0*****        S              1    DIM(50) CTDATA PERRCD(50)            CAP003
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)            CAP003
      D WFldNameArr     S             10    DIM(75)                                            CRE008
-
+ 
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       * FILE RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       * FILE PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       **FILE*FRA/IRS*INSTRUCTIONS**************************************                       CSW212
       * FILE EXTENDED SETTLEMENT INSTRUCTIONS                                                 CSW212
-
+ 
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * SCREEN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * SCREEN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       **SCREEN*FRA/IRS*INSTRUCTIONS************************************                       CSW212
       * SCREEN EXTENDED SETTLEMENT INSTRUCTIONS                                               CSW212
-
+ 
      D ##RECE        E DS                  EXTNAME(SDESERPD)
       * ERRORS IN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYE        E DS                  EXTNAME(SDESEPPD)
       * ERRORS IN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIE        E DS                  EXTNAME(SDESEFPD)
       **ERRORS*IN*FRA/IRS*INSTRUCTIONS*********************************                       CSW212
       * ERRORS IN EXTENDED SETTLEMENT INSTRUCTIONS                                            CSW212
-
+ 
      D RUNDAT          DS            13
      D  DDRUNA                 1      7
      D  @MBIN                 13     13
-
-
+ 
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
                                                                                 CPB002
@@ -342,10 +348,10 @@
                                                                                 CPB002
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                    CPB002
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS                                  CPB002
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                 CPB002
@@ -359,17 +365,17 @@
      D SDACNT        E DS                  EXTNAME(ACCNTAB)                     CDL011
      D L_CD          E                     EXTFLD(LCD)                          CDL011
       **  External DS for Nostro details                                        CDL011
-
+ 
      D*@MORPI*****     DS                                                              179510 200400
       ***Midas*Our Receive / Pay  Instructions (for Settl Meth = 04 )                  179510 200400
      D**@@MORI****             1     12                                                179510 200400
      D**@@MOPI****            13     24                                                179510 200400
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WRSTM                          2S 0                                                    186433
      D WPSTM                          2S 0                                                    186433
                                                                                               186433
@@ -1351,7 +1357,7 @@
      C                   MOVEL     '800'         DBASE                          * DBERR 900 *
      C                   EXSR      *PSSR                                        *************
      C                   END
-
+ 
      C                   ENDSR
      C********************************************************************
       /EJECT

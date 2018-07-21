@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT162             Date 08Sep17               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. CSW218             Date 19Jun18               *
+      *  Prev Amend No. CFT162             Date 08Sep17               *
+      *                 CSW215             Date 06Apr15               *
       *                 AR986522           Date 19Aug14               *
       *                 AR972805           Date 27Feb13               *
       *                 260987A            Date 18Dec12               *
@@ -95,6 +96,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  CFT162 - MT900 and MT910 Message Generation (Recompile)      *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR986522 - Fix for field 33B: Wrong currency.                *
@@ -236,6 +238,8 @@
      FMGOEXTPDIF  E           K        DISK                      A                            CSW209
      FMGOREFL0IF  E           K        DISK                                                 BUG24736
      F            MGOREFD0                          KRENAMEMGOREFTR                         BUG24736
+     FMGOMSGL1IF  E           K        DISK                                                   CSW218
+     F            MGOMSGD0                          KRENAMEMGOMSGTR                           CSW218
      FMGOREFPDO   E                    DISK                      A        068242
      FMGOMSGPDO   E           K        DISK                      A        068242
      FFT0648AUO   E                    PRINTER      KINFDS SPOOLU         S01117
@@ -370,6 +374,14 @@
      I              CINDV                           RCINDV                                  BUG24801
      I              CLSS                            RCLSS                                   BUG24801
       *                                                                                     BUG24801
+     IMGOMSGTR                                                                                CSW218
+     I              MTAG                            OSMTAG                                    CSW218
+     I              MFLD                            OSMFLD                                    CSW218
+     I              CTRC                            OSCTRC                                    CSW218
+     I              TRNO                            OSTRNO                                    CSW218
+     I              PTDL                            OSPTDL                                    CSW218
+     I              MSEQ                            OSMSEQ                                    CSW218
+      *                                                                                       CSW218
      I/COPY WNCPYSRC,FT0648I001
      I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
      ICPYR@#      DS
@@ -835,6 +847,9 @@
      C*********************KFLD           KCUSNO                          S01310
      C*********************KFLD           KEYA                            S01310
      C*
+     C           KYOMSG    KLIST                                                              CSW218
+     C                     KFLD           M1RREF                                              CSW218
+     C                     KFLD           KTAG12  5                                           CSW218
      C*
      C*    INPUT OUTPUT PARAMETERS *
      C******************************
@@ -2779,6 +2794,18 @@
      C                     ELSE                                                               CSW215
      C                     MOVE 'N'       CSW215                                              CSW215
      C                     ENDIF                                                              CSW215
+      *                                                                                       CSW218
+      ** Check if switchable feature CSW218 is switched on                                    CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM *BLANKS   PRTCD                                               CSW218
+      *                                                                                       CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
      C/COPY WNCPYSRC,FTH00310
       *                                                                   CFT009
       *                                                                   CSW020
@@ -4791,6 +4818,23 @@
      C                     ENDIF                                                              CSW209
      C                     ENDIF                                                              CSW209
       *                                                                                       CSW209
+      ** Field :121: - Block 3 Data                                                           CSW218
+      *                                                                                       CSW218
+     C           CSW218    IFEQ 'Y'                                                           CSW218
+     C                     MOVEL':121:'   KTAG12                                              CSW218
+      *                                                                                       CSW218
+     C           KYOMSG    SETLLMGOMSGTR                                                      CSW218
+     C           KYOMSG    CHAINMGOMSGTR             98                                       CSW218
+      *                                                                                       CSW218
+     C           *IN98     IFEQ *OFF                                                          CSW218
+     C                     MOVEL':121:'   MTAG                                                CSW218
+     C                     MOVELOSMFLD    MFLD                                                CSW218
+     C                     ADD  1         M                                                   CSW218
+     C           M         OCUR MULT                                                          CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
      C                     MOVEL':20: '   MTAG                            S01310
      C                     MOVELTRNO      MFLD                            S01310
      C*********************MOVE ':20:'    M1TG20                          S01310

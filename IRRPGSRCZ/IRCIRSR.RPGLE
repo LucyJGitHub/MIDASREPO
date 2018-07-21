@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD035359           Date 06Aug15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD035359           Date 06Aug15               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD030454           Date 29Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR1014449          Date 11Feb13               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD035359 - Buffer issue in CIRS due to CDL094                *
       *  CSW214 - SWIFT Changes 2014                                  *
       *  MD030454 - Errors encountered during confirm authorise.      *
@@ -774,19 +776,31 @@
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:5559)+TPCSAST            CSW214 MD035359
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:558)                     CSW214 MD035359
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:10557)                   CSW214 MD035359
-      *                                                                                     MD035359
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1702)+OPDATEAST               MD035359
-     C                                      + TRDATEAST                                     MD035359
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2101)+TPDATEAST               MD035359
-     C                                         +OCFSAST                                     MD035359
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2500)                           MD035359
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12499)                          MD035359
-     C                                      + TCFSAST                                       MD035359
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9298)                           MD035359
-     C                                      + OPCSAST                                       MD035359
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6097)+TPCSAST                   MD035359
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1096)                           MD035359
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11095)                          MD035359
+      *                                                                              MD035359 CSW216
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1702)+OPDATEAST        MD035359 CSW216
+     C**********                            + TRDATEAST                              MD035359 CSW216
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2101)+TPDATEAST        MD035359 CSW216
+     C**********                               +OCFSAST                              MD035359 CSW216
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2500)                    MD035359 CSW216
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12499)                   MD035359 CSW216
+     C**********                            + TCFSAST                                MD035359 CSW216
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9298)                    MD035359 CSW216
+     C**********                            + OPCSAST                                MD035359 CSW216
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6097)+TPCSAST            MD035359 CSW216
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1096)                    MD035359 CSW216
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11095)                   MD035359 CSW216
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1662)+OPDATEAST                 CSW216
+     C                                      + TRDATEAST                                       CSW216
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2061)+TPDATEAST                 CSW216
+     C                                         +OCFSAST                                       CSW216
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2460)                             CSW216
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12459)                            CSW216
+     C                                      + TCFSAST                                         CSW216
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9258)                             CSW216
+     C                                      + OPCSAST                                         CSW216
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6057)+TPCSAST                     CSW216
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1056)                             CSW216
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11055)                            CSW216
      C                   ENDIF
  
      C                   EVAL      *INLR = *ON

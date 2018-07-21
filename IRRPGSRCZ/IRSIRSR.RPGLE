@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD031775           Date 09Jan15               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD031775           Date 09Jan15               *
+      *                 CSW214             Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CIR017             Date 10Apr14               *
       *                 245692             Date 11Dec13               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD031775 - Cannot insert transaction due to errors. Correct  *
       *             mapping to include CDL094 fields.                 *
       *  CSW214 - SWIFT Changes 2014                                  *
@@ -688,14 +690,23 @@
      C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2734)                    CSW214 MD031775
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12733)+PCSAST            CSW214 MD031775
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9532)                     CSW214 MD031775
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:928)+OPDATEAST           CSW214 MD031775
-     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:127)+TRDATEAST                MD031775
-     C                                         +TPDATEAST                                   MD031775
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:526)+OCFSAST                  MD031775
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5725)+TCFSAST                   MD031775
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2524)                           MD031775
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12523)+PCSAST                   MD031775
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9322)                            MD031775
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:928)+OPDATEAST           MD031775 CSW216
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:127)+TRDATEAST         MD031775 CSW216
+     C**********                               +TPDATEAST                            MD031775 CSW216
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:526)+OCFSAST           MD031775 CSW216
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5725)+TCFSAST            MD031775 CSW216
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2524)                    MD031775 CSW216
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12523)+PCSAST            MD031775 CSW216
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9322)                     MD031775 CSW216
+                                                                                              CSW216
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST                    CSW216
+     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST                   CSW216
+     C                                         +TPDATEAST                                     CSW216
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST                    CSW216
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST                     CSW216
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2484)                             CSW216
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST                     CSW216
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9282)                              CSW216
      C                   ENDIF
  
      C                   EVAL      *INLR = *ON

@@ -17,7 +17,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. CSW215             Date 13Jun18               *
       *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25235           Date 29Jul09               *
@@ -48,7 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSW215 - SWIFT Changes 2015                                  *      
+      *  CSW215 - SWIFT Changes 2015                                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG25235 - Beneficiary must not be a valid account if        *
       *             Generate OP Flag is set to 'Y'                    *
@@ -225,7 +225,6 @@
      D PKyst           S              7A                                                      CSW215
      D WCNum           S              6A                                                      CSW215
      D POptn           S              7A                                                      CSW215
-                                                                                              CSW215
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1060,7 +1059,7 @@
      C                   ENDIF                                                  CSW200
       ** Check if SWIFT 2015enhancement is installed                                          CSW215
       *                                                                                       CSW215
-     C                   CALL      'SWIF2015'                                                 CSW215 
+     C                   CALL      'SWIF2015'                                                 CSW215
      C                   PARM      *BLANKS       PRTCD                                        CSW215
                                                                                               CSW215
      C                   IF        PRTCD = 'CSW2015'                                          CSW215

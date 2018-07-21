@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT162             Date 25Sep17               *
-      *  Prev Amend No. MD021276           Date 31Jul13               *
+      *  Last Amend No. CSW218             Date 18Jun18               *
+      *  Prev Amend No. CFT162             Date 25Sep17               *
+      *                 MD021276           Date 31Jul13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR750736           Date 22Oct12               *
       *                 CSF011A            Date 28Nov11               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  CFT162 - MT900 and MT910 Message Generation                  *
       *  MD021276 - A Serious Midas Error occured when complete       *
       *             button is clicked for OPAY                        *
@@ -124,14 +126,14 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
      FACCNT     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
-
+ 
      FACNUMA    IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMAF)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -150,51 +152,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       /COPY FTCPYSRC,SFTVALCSLE
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       * Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       * Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       * Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       *                                                                                       240689
@@ -210,57 +212,57 @@
       *                                                                                       240689
       ** Array of Warning message data.                                                       240689
       *                                                                                       240689
-
+ 
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
-
+ 
       * Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
-
+ 
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
-
+ 
       * Address line Swift character check array
      D TST             S              1A   DIM(35)
-
+ 
       ** Array of valid swift characters
      D*SWCH*****       S              1    DIM(47) CTDATA PERRCD(47)                          255286
      D SWCH            S              1    DIM(73) CTDATA PERRCD(73)                          255286
-
+ 
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       * External DS for Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
-
+ 
       * External DS for Midas modules details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
-
+ 
       ** Midas Counterparty NOSTROS
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
-
+ 
       ** Midas BIC Directory
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
-
+ 
       ** External data structure for Nostro customer number
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
      D  NLOC                  29     31
-
+ 
       ** External data structure for Nostro customer number
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
-
+ 
       ** External data structure for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
      D DESTAN          DS           140
      D  #SDST1                 1     35
      D  #SDST2                36     70
      D  #SDST3                71    105
      D  #SDST4               106    140
-
+ 
      D  DRET                   1     10
      D  DCUS                   1     10
      D  NCUR                   1      3
@@ -274,7 +276,7 @@
      D**DCOD****              10     13                                                       CGL029
      D**DSEQ****              14     15                                                       CGL029
      D**DBRC****              16     18                                                       CGL029
-
+ 
      D  D05R                   6    140
      D  D06R                   7    140
      D  D10R                  11    140
@@ -282,7 +284,7 @@
      D  D18R                  25    140                                                       CGL029
      D**D15R****              16    140                                                       CGL029
      D**D18R****              19    140                                                       CGL029
-
+ 
       * Data structure redefining address fields
      DADDRSS           DS           175
      D ADCHK1                  1     35
@@ -290,7 +292,7 @@
      D ADCHK3                 71    105
      D ADCHK4                106    140
      D ADCHK5                141    175
-
+ 
       * Data structure redefining Account key fields
      D**********       DS            18                                                       CGL029
      D                 DS            24                                                       CGL029
@@ -310,7 +312,7 @@
      D*WACSQA***              14     15                                                       CGL029
      D*K#BRCA***              16     18                                                       CGL029
      D*AKEYF****               1     18                                                       CGL029
-
+ 
       *  Define full account to be passed for FT IMM update
      D***#DSTDS*          DS            18                                                    CGL029
      D#DSTDS           DS            24                                                       CGL029
@@ -328,12 +330,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       240689
@@ -341,7 +343,7 @@
       *                                                                                       240689
       ** Index for arrays of warning message ids etc.                                         240689
       *                                                                                       240689
-
+ 
      D*C#ACCD***       S              4                                                       CGL029
      D C#ACCD          S             10                                                       CGL029
      D C#ACSN          S              2
@@ -355,7 +357,7 @@
      D C#OPTN          S              7
      D C#PNOI          S              1
      D C#RTCD          S              7
-
+ 
      D K#ACNO          S                   LIKE(ACNO)
      D WFLD            S                   LIKE(ADCHK1)
      D WNCURR          S              3
@@ -366,11 +368,14 @@
      D WRETL           S             11P 0
      D R               S              2  0
      D CLSWTK          S             18                                                       CGL029
-
+ 
       * This prog only
      D ##CSID          S              1
      D SwiftOK         S              1
-
+ 
+     D WSId19          S              1A                                                      CSW218
+     D CSW218          S              1A                                                      CSW218
+     D PRtCd           S              7A                                                      CSW218
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -385,7 +390,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       * Initialization
      C                   Eval      RetCodeIn = *BlankS
      C                   Eval      FldNamXAr = *BlankS
@@ -396,10 +401,10 @@
      C                   Eval      WMsgDtaXAr = *Blanks                                       240689
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0                                                    240689
-
+ 
       * Order Customer
      C                   Exsr      VDESTIN
-
+ 
       * If an error was found, set the return code appropriately
      C                   If        OKDst1 = 'N'
      C                   Eval      RetCodeIn = 'Error'
@@ -408,9 +413,9 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
-
+ 
       * RETURN
-
+ 
      C                   RETURN
       ******************************************************************
       /EJECT
@@ -419,18 +424,18 @@
       ******************************************************************
      C*
      C     VDESTIN       BEGSR
-
+ 
       * Set up DESTAN data structure
      C                   Eval      #SDST1 = SDST1
      C                   Eval      #SDST2 = SDST2
      C                   Eval      #SDST3 = SDST3
      C                   Eval      #SDST4 = SDST4
-
+ 
       * Check for entry of '?'
-
+ 
      C                   Eval      *IN90 = *Off
      C     '?'           Scan      #SDST1                                 90
-
+ 
       * If '?' found....
      C                   If        *IN90 = *On
       * Send error to screen
@@ -439,19 +444,19 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0947'     MsgIdXAr(Idx)
      C                   End
-
+ 
      C                   If        OKDst1 = 'Y'
      C                   Eval      @DSTT = *Blank
      C                   Eval      @ACST1 = *Blank
      C                   Eval      @DSOPN = 0
-
+ 
       * If not entered move NOSTRO of pay currency
      C                   If        SPCCY <> *Blanks
      C                   Eval      WNCURR = SPCCY
      C                   Else
      C                   Eval      WNCURR = SSMCY
      C                   End
-
+ 
       * If settlement type 13 Destination must be NOSTRO.
      C                   If        SSTTP = '13' and
      C                             D05R <> *Blank
@@ -461,32 +466,32 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0946'     MsgIdXAr(Idx)
      C                   End
-
+ 
      C                   End
-
+ 
       * No errors
      C                   BITOFF    '01234567'    WRETB             1                          240689
      C                   If        OKDst1 = 'Y'
-
+ 
       * If more than 5 char have been entered cannot be a NOSTRO
      C                   If        D05R = *Blanks
      C                   Exsr      VNOSTRO
-
+ 
      C                   Else
       * If more than 6 char have been entered cannot be a CUST NUMBER
      C                   If        D06R = *Blanks
      C                   Exsr      VDESNUM
-
+ 
      C                   Else
       * If more than 10 char have been entered cannot be a RETAIL NO.
      C                   If        D10R = *Blanks
      C                   Exsr      VDESRET
-
+ 
      C                   Else
       * Therefore maybe is a full account
      C                   Exsr      VDESACC
      C                   End
-
+ 
      C                   End
      C                   End
      C                   End
@@ -576,20 +581,20 @@
      C                   ENDIF                                                                240689
       *                                                                                       240689
      C                   ENDIF                                                                240689
-
+ 
      C                   If        OKDst1 = 'Y'
      C                   Exsr      VDESEND
      C                   Endif
-
+ 
       * Set Screen fields
      C                   Eval      SDST1 = #SDST1
      C                   Eval      SDST2 = #SDST2
      C                   Eval      SDST3 = #SDST3
      C                   Eval      SDST4 = #SDST4
-
+ 
      C**********         If        OKDst1 = 'Y'                                          CFT162
      C                   If        OKDst1 <> 'N'                                         CFT162
-
+ 
       * Set up @DSTDS
      C                   If        @DSTT = 'F' or
      C                             @DSTT = 'R' or
@@ -601,9 +606,9 @@
      C                   Eval      IMBRCA = K#BRCA
      C                   Eval      @DSTDS = #DSTDS
      C                   End
-
+ 
      C                   End
-
+ 
      C                   ENDSR
      C************************************************************
      C* END OF DESTINATION VALIDATION
@@ -612,9 +617,9 @@
      C******************************************************************
      C* VNOSTRO - VALIDATION OF NOSTRO                                 *
       ******************************************************************
-
+ 
      C     VNOSTRO       BEGSR
-
+ 
      C                   CALLB     'AONOSTR0'
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
@@ -627,7 +632,7 @@
      C                   Parm      *Blanks       C#CSSN
      C                   Parm      *Blanks       C#PNOI
      C     SDNOST        Parm      SDNOST        DSFDY
-
+ 
      C                   If        C#RTCD = *Blanks
       * Move new SYNON field names to old field names
      C                   Move      A7CUST        K#CNUM
@@ -637,7 +642,7 @@
      C                   Else
      C                   Eval      *IN90 = *On
      C                   End
-
+ 
       * If settlement type 13 Destination must be NOSTRO.
      C                   If        SSTTP = '13' and
      C                             *IN90 = *On
@@ -647,14 +652,14 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0946'     MsgIdXAr(Idx)
      C                   End
-
+ 
       * No Errors
      C                   If        OKDst1 = 'Y'
-
+ 
       * Not a NOSTRO but maybe the name
      C                   If        *IN90 = *On
      C                   Exsr      VDESNAM
-
+ 
      C                   Else
       * Is a NOSTRO
       * Find if RETAIL
@@ -677,14 +682,14 @@
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689
      C                   End
-
+ 
      C                   Eval      @CCY = K#CCY
      C                   Eval      @ACST1 = ACST
-
+ 
      C                   If        ATYP = 'R'
      C                   Eval      @DSOPN = DACO
      C                   End
-
+ 
       * If Sender's Correspondent is blank curr must equal pay curr
      C                   If        SSNCO = *Blank and
      C                             NCUR <> WNCURR
@@ -693,14 +698,14 @@
      C                   Add       1             Idx
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0955'     MsgIdXAr(Idx)
-
+ 
      C                   Else
      C                   Eval      @DSTT = 'F'
      C                   End
-
+ 
      C                   End
      C                   End
-
+ 
      C                   ENDSR
      C************************************************************
      C* END OF NOSTRO VALIDATION
@@ -711,45 +716,45 @@
       ******************************************************************
      C*
      C     VDESNUM       BEGSR
-
+ 
      C**********         Movel     DNUM          WNUML                                        CSD027
      C**********         Movel     WNUML         WNUMA                                        CSD027
-
+ 
      C**********         If        DNUM = WNUMA                                               CSD027
      C                   Move      DNUM          K#CNUM
      C                   Move      DNUM          WCNUMA                                       CSD027
-
+ 
      C                   CALLB     'AOCUSTR0'
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm      WCNUMA        C#KEY1
      C                   Parm      *Blanks       C#KYST
      C     SDCUST        Parm      SDCUST        DSSDY
-
+ 
      C**********         End                                                                  CSD027
-
+ 
      C**********         If        DNUM <> WNUMA or                                           CSD027
      C**********                   C#RTCD <> *Blanks or                                       CSD027
      C**********                   C#KYST <> '*CNUM  '                                        CSD027
      C                   If        C#RTCD <> *Blanks or                                       CSD027
      C**********                   C#KYST <> ' *CNUM  '                                       CSD027
      C                             C#KYST <> '*CNUM  '                                        CSD027
-
+ 
       * Send error to screen
      C                   Move      'N'           OKDst1
      C                   Add       1             Idx
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0948'     MsgIdXAr(Idx)
-
+ 
      C                   Else
      C                   Eval      @DSTT = 'C'
       * Move new SYNON field names to old field names
      C                   MOVE      BBCUST        K#CNUM
      C                   MOVE      BBCSID        CSID             12
      C                   MOVE      BBCSSN        CSNM             10
-
+ 
      C                   End
-
+ 
      C                   ENDSR
      C*****************************************************************
      C* END OF CUSTOMER NUMBER VALIDATION
@@ -760,11 +765,11 @@
       ******************************************************************
      C*
      C     VDESRET       BEGSR
-
+ 
      C                   Movel     DRET          WRETL
      C                   Movel     WRETL         WRETA
      C                   If        DCUS = WRETA
-
+ 
       * Check to see whether a retail account number is allowed
      C                   If        BMRANR = 'N'
       * Send error to screen
@@ -773,12 +778,12 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0943'     MsgIdXAr(Idx)
      C                   Endif
-
+ 
       * No Errors
      C                   If        OKDst1 = 'Y'
      C                   Move      DRET          K#ACNO
      C     K#ACNO        CHAIN     ACNUMAF                            90
-
+ 
       * Error if not found or RECI <> D
      C                   If        *in90 = *ON or
      C                             RECI <> 'D'
@@ -788,10 +793,10 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0949'     MsgIdXAr(Idx)
      C                   End
-
+ 
      C                   Eval      @CCY = CCY
      C                   End
-
+ 
       * No Errors
      C                   If        OKDst1 = 'Y'
      C     SSNCO         IFEQ      *BLANKS                                                    240689
@@ -805,15 +810,15 @@
      C*******            Movel     'SDST1'       FldNamXAr(Idx)                       BUG4581 260862
      C*******            Movel     'FTM0019'     MsgIdXAr(Idx)                        BUG4581 260862
      C*******            End                                                          BUG4581 260862
-
+ 
       * Store value for use with sender's correspondent check
      C                   Eval      @COCYY = @CCY
-
+ 
       * If sender's correspondent is blank curr must equal pay curr.
      C                   If        SPCCY = *Blanks
      C                   Eval      SPCCY = SSMCY
      C                   End
-
+ 
      C                   If        SSNCO = *Blanks and
      C                             @CCY <> SPCCY
       * Send error to screen
@@ -822,31 +827,31 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0950'     MsgIdXAr(Idx)
      C                   End
-
+ 
      C                   End
-
+ 
      C                   If        OKDst1 = 'Y'
-
+ 
      C                   Eval      K#CNUM = CNUM
      C                   Eval      K#CCY= @CCY
      C                   Eval      K#ACOD = ACOD
      C                   Eval      K#ACSQ = ACSQ
      C                   Eval      K#BRCA = BRCA
-
+ 
      C                   Eval      @DSTT = 'R'
      C                   Eval      @ACST1 = ACST
-
+ 
      C                   If        ATYP = 'R'
      C                   Eval      @DSOPN = DACO
-
+ 
      C                   End
-
+ 
      C                   End
-
+ 
      C                   Else
      C                   Exsr      VDESNAM
      C                   End
-
+ 
      C                   ENDSR
      C*****************************************************************
      C* END OF RETAIL NUMBER VALIDATION
@@ -855,30 +860,30 @@
      C******************************************************************
      C* VDESRET - VALIDATION OF NAME                                   *
       ******************************************************************
-
+ 
      C     VDESNAM       BEGSR
-
+ 
       * CHECK IF NAME
      C                   Move      DCUS          CSNM
-
+ 
      C                   CALLB     'AOCUSTR0'
      C                   Parm      *BLANKS       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm      CSNM          C#KEY1
      C                   Parm      *BLANKS       C#KYST
      C     SDCUST        Parm      SDCUST        DSSDY
-
+ 
      C                   If        C#RTCD <> *Blanks or
      C**********                   C#KYST <> '*CSHT  '                                        241255
      C                             C#KYST = '*CSHT  '                                         241255
-
+ 
       * Check that it is not a SWIFT address
      C**********         Movel     #SDST1        CLSWTK           12                          CGL029
      C                   Movel     #SDST1        CLSWTK                                       CGL029
      C                   Movea     *IN(31)       ##002             2
-
+ 
      C                   Exsr      SWIFT
-
+ 
      C                   If        ##CSID = 'Y' and
      C                             *IN31 = *OFF and
      C                             *IN32 = *OFF
@@ -887,7 +892,7 @@
      C                   Else
      C                   Eval      SwiftOK = 'N'
      C                   End
-
+ 
      C                   Movea     ##002         *IN(31)
      C                   If        SwiftOK = 'N'
       * Send error to screen
@@ -896,19 +901,19 @@
      C                   Movel     'SDST1'       FldNamXAr(Idx)
 c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   End
-
+ 
      C                   Else
      C* Move new SYNON field names to old field names
      C                   Move      BBCUST        CNUM
      C                   Move      BBCUST        K#CNUM                                       195342
      C                   Move      BBCSID        CSID             12
      C                   Move      BBCSSN        CSNM             10
-
+ 
      C                   Eval      DESTAN = *Blanks
      C                   Movel     K#CNUM        DESTAN
      C                   Eval      @DSTT = 'C'
      C                   End
-
+ 
      C                   ENDSR
      C*****************************************************************
      C* END OF NAME VALIDATION
@@ -917,20 +922,20 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C******************************************************************
      C* VDESACC - VALIDATION FULL ACCOUNT                              *
       ******************************************************************
-
+ 
      C     VDESACC       BEGSR
-
+ 
       * Check that it is not a SWIFT address
       *
      C                   Movel     #SDST1        CLSWTK
      C                   Movea     *IN(31)       ##002
       *
      C                   Exsr      SWIFT
-
+ 
      C                   If        ##CSID = 'Y' and
      C                             *IN31 = *Off and
      C                             *IN32 = *Off or
-
+ 
       * If Swift Id not found, allow it and display warning message.
      C                             ##CSID = 'Y' and
      C                             *IN32 = *On
@@ -940,10 +945,10 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Eval      SwiftOK = 'Y'
      C                   Eval      @DSTT = 'S'
      C                   Movea     ##002         *IN(31)
-
+ 
      C                   Else
      C                   Movea     ##002         *IN(31)
-
+ 
       * If 18 chars have been entered and multi branched ,
       * or 15 long and single branch , is a full account.
      C                   If        @MBIN = 'Y'    and
@@ -958,7 +963,7 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   MOVEL     CODL          CODA             10                          CGL029
      C                   Movel     DSEQ          SEQL              3 0
      C                   Movel     SEQL          SEQA              2
-
+ 
      C                   If        DNUM = WNUMA and
      C                             DCOD = CODA and
      C                             DSEQ = SEQA
@@ -974,19 +979,19 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   End
      C     AKEY          CHAIN     ACCNTABF                           90
      C                   End
-
+ 
      C                   If        DNUM <> WNUMA or
      C                             DCOD <> CODA or
      C                             DSEQ <> SEQA or
      C                             RECI <> 'D' or
      C                             *IN90 = '1'
-
+ 
       * Send error to screen
      C                   Move      'N'           OKDst1
      C                   Add       1             Idx
      C                   Movel     'SDST1'       FldNamXAr(Idx)
      C                   Movel     'MMA0952'     MsgIdXAr(Idx)
-
+ 
      C                   Else
       **Check*for*block*credits*on*account*****************************               BUG4581 260862
      C*******            TESTB     '3'           RETB                     51          BUG4581 260862
@@ -996,12 +1001,12 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C*******            Movel     'SDST1'       FldNamXAr(Idx)                       BUG4581 260862
      C*******            Movel     'FTM0019'     MsgIdXAr(Idx)                        BUG4581 260862
      C*******            End                                                          BUG4581 260862
-
+ 
       * If sender's correspondent is blank curr must equal pay curr.
      C                   If        SPCCY = *Blanks
      C                   Eval      SPCCY = SSMCY
      C                   End
-
+ 
      C                   If        SSNCO = *Blanks and
      C                             @CCY <> SPCCY
       * Send error to screen
@@ -1019,14 +1024,14 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Eval      @ACST1 = ACST
      C                   If        ATYP = 'R'
      C                   Eval      @DSOPN = DACO
-
+ 
      C                   End
      C                   End
-
+ 
      C                   End
      C                   End
      C                   End
-
+ 
      C                   ENDSR
      C*****************************************************************
      C* END OF FULL ACCOUNT VALIDATION
@@ -1035,10 +1040,12 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C******************************************************************
      C* VDESEND - ADDRESS VALIDATION                                   *
       ******************************************************************
-
+ 
      C     VDESEND       BEGSR
-
+ 
       * If nothing else must be an address
+                                                                                              CSW218
+     C                   IF        CSW218 = 'N'                                               CSW218
      C                   Eval      WCSID8 = *Blanks                                          260987A
      C     1             SUBST     #SDST1:8      WCSID8            1                         260987A
      C**********         If        @DSTT = *Blanks                                           260987A
@@ -1047,19 +1054,33 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                             @DSTT = 'S'                                               260987A
      C                   Eval      @DSTT = 'A'
      C                   End
-
+                                                                                              CSW218
+     C                   ELSE                                                                 CSW218
+      ** SWIFT2018 is ON                                                                      CSW218
+      ** Check BIC address Extra Info field position 19                                       CSW218
+      ** If equal to 'N', set BIC address as not connected                                    CSW218
+                                                                                              CSW218
+     C                   EVAL      WSId19 = *BLANKS                                           CSW218
+     C                   EVAL      WSId19 = %SUBST(BDXINF:19:1)                               CSW218
+                                                                                              CSW218
+     C                   IF        @DSTT = *BLANKS OR                                         CSW218
+     C                             WSId19 = 'N' AND @DSTT = 'S'                               CSW218
+     C                   EVAL      @DSTT = 'A'                                                CSW218
+     C                   ENDIF                                                                CSW218
+     C                   ENDIF                                                                CSW218
+ 
       * Extra validation of address fields
      C                   If        @DSTT = 'A'
      C                   Movea     '0000'        *IN(91)
-
+ 
      C                   Eval      ADDRSS = *Blanks
      C                   Eval      ADCHK1 = #SDST1
      C                   Eval      ADCHK2 = #SDST2
      C                   Eval      ADCHK3 = #SDST3
      C                   Eval      ADCHK4 = #SDST4
-
+ 
      C                   Exsr      ADCHK
-
+ 
       * Depending on the indicators highlight the field in error
       * and output the error message
      C                   If        *IN92 = *On or
@@ -1072,7 +1093,7 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   End
      C
      C                   End
-
+ 
       * If destination is a NOSTRO set pay location to nostro location
       * Else use system location
      C                   If        @DSTT = 'G' or
@@ -1089,12 +1110,12 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Parm      *BLANKS       C#CSSN
      C                   Parm      *BLANKS       C#PNOI
      C     SDNOST        Parm      SDNOST        DSFDY
-
+ 
      C                   If        C#RTCD = *Blanks
      C                   Eval      @PLOC = NLOC
      C                   Eval      @NOWRK = 'N'
      C                   End
-
+ 
      C                   Else
      C                   If        @DSTT = 'F'
      C                   Eval      @PLOC = NLOC
@@ -1104,7 +1125,7 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Eval      @NOWRK = 'S'
      C                   End
      C                   End
-
+ 
      C                   ENDSR
      C************************************************************
      C* END OF ACCOUNT NUMBER VALIDATION
@@ -1115,48 +1136,48 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C*****************************************************************
      C*
      C     ADCHK         BEGSR
-
+ 
      C* There should be no embedded spaces
-
+ 
      C                   If        ADCHK1 = *Blanks  and
      C                             ADCHK2 <> *Blanks or
-
+ 
      C                             ADCHK1 = *Blanks  and
      C                             ADCHK3 <> *Blanks or
-
+ 
      C                             ADCHK1 = *Blanks  and
      C                             ADCHK4 <> *Blanks or
-
+ 
      C                             ADCHK1 = *Blanks  and
      C                             ADCHK5 <> *Blanks or
-
+ 
      C                             ADCHK2 = *Blanks  and
      C                             ADCHK3 <> *Blanks or
-
+ 
      C                             ADCHK2 = *Blanks  and
      C                             ADCHK4 <> *Blanks or
-
+ 
      C                             ADCHK2 = *Blanks  and
      C                             ADCHK5 <> *Blanks or
-
+ 
      C                             ADCHK3 = *Blanks  and
      C                             ADCHK4 <> *Blanks or
-
+ 
      C                             ADCHK3 = *Blanks  and
      C                             ADCHK5 <> *Blanks or
-
+ 
      C                             ADCHK4 = *Blanks  and
      C                             ADCHK5 <> *Blanks
-
+ 
      C                   Eval      *IN92 = *ON
      C                   End
-
+ 
      C** Check for non-valid Swift characters
-
+ 
      C                   If        ADCHK1 <> *Blanks
      C                   Eval      WFLD = ADCHK1
      C                   Exsr      SWSET
-
+ 
      C                   If        *IN94 = *Off
       * Send error to screen
      C**********         Move      'N'           OKDst1                                       CSD089
@@ -1169,11 +1190,11 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0938'     WMsgIdXAr(WIx)                               CSD089
      C                   End
      C                   End
-
+ 
      C                   If        ADCHK2 <> *Blanks
      C                   Eval      WFLD = ADCHK2
      C                   Exsr      SWSET
-
+ 
      C                   If        *IN94 = *Off
       * Send error to screen
      C**********         Move      'N'           OKDst1                                       CSD089
@@ -1186,11 +1207,11 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0939'     WMsgIdXAr(WIx)                               CSD089
      C                   End
      C                   End
-
+ 
      C                   If        ADCHK3 <> *Blanks
      C                   Eval      WFLD = ADCHK3
      C                   Exsr      SWSET
-
+ 
      C                   If        *IN94 = *Off
       * Send error to screen
      C**********         Move      'N'           OKDst1                                       CSD089
@@ -1203,11 +1224,11 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0940'     WMsgIdXAr(WIx)                               CSD089
      C                   End
      C                   End
-
+ 
      C                   If        ADCHK4 <> *Blanks
      C                   Eval      WFLD = ADCHK4
      C                   Exsr      SWSET
-
+ 
      C                   If        *IN94 = *Off
       * Send error to screen
      C**********         Move      'N'           OKDst1                                       CSD089
@@ -1220,11 +1241,11 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0941'     WMsgIdXAr(WIx)                               CSD089
      C                   End
      C                   End
-
+ 
      C                   If        ADCHK5 <> *Blanks
      C                   Eval      WFLD = ADCHK5
      C                   Exsr      SWSET
-
+ 
      C                   If        *IN94 = *Off
       * Send error to screen
      C**********         Move      'N'           OKDst1                                       CSD089
@@ -1237,7 +1258,7 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0942'     WMsgIdXAr(WIx)                               CSD089
      C                   End
      C                   End
-
+ 
      C                   ENDSR
      C*
      C************************************************************
@@ -1247,12 +1268,12 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C************************************************************
      C* SUBROUTINE SWSET CHECK FOR VALID SWIFT CHARACTER USED
      C************************************************************
-
+ 
      C     SWSET         BEGSR
-
+ 
      C                   Eval      R = 1
      C                   Eval      *IN94 = *On
-
+ 
      C                   If        WFLD <> *Blanks
      C                   Movea     WFLD          TST
      C                   Eval      R = 1
@@ -1263,7 +1284,7 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   If        TST(R) <> *Blanks
      C     TST(R)        LOOKUP    SWCH                                   94
      C                   End
-
+ 
      C                   Eval      R = R + 1
      C                   End
      C                   End
@@ -1278,16 +1299,16 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       * INPUTS
       ** Return Code
      C                   Parm                    RetCodeIn
-
+ 
       *  Screen fields
      C                   Parm                    TranInPrim
-
+ 
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -1297,14 +1318,14 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Parm                    WFldNmXAr                                    240689
      C                   Parm                    WMsgIDXAr                                    240689
      C                   Parm                    WMsgDtaXAr                                   240689
-
+ 
       * OK Flags
      C                   Parm                    OKFlagsDS
-
+ 
       *  Validation Work Fields
      C                   Parm                    Val@Fields
-
-
+ 
+ 
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -1346,7 +1367,18 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Parm      '*FIRST'      @OPTN
      C     SDRETL        Parm      SDRETL        DSFDY
      C                   End
-
+      *                                                                                       CSW218
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRtCd                                        CSW218
+      *                                                                                       CSW218
+     C     PRtCd         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
+ 
       * Key list for account validation
      C     AKEY          KLIST
      C                   KFLD                    K#CNUM
@@ -1359,9 +1391,9 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

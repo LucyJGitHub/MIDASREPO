@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CSW218             Date 18Jun18               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 260987             Date 06Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -88,6 +90,8 @@
      FACNUMA    IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACNUMAF)
  
+      ** Midas BIC Directory                                                                  CSW218
+     FMEBICDL2  IF   E           K DISK                                                       CSW218
  
       *****************************************************************
       ** +--------------------------------------+
@@ -228,6 +232,11 @@
      D C#RTCD          S              7
  
      D K#ACNO          S                   LIKE(ACNO)
+     D CSW218          S              1A                                                      CSW218
+     D PRtCd           S              7A                                                      CSW218
+     D KBicC           S              8A                                                      CSW218
+     D KBicB           S              3A                                                      CSW218
+     D WSId19          S              1A                                                      CSW218
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -255,6 +264,8 @@
      C                   Eval      WMsgDtaXAr = *Blanks
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0
+     C                   EVAL      WSId19 = *BLANKS                                           CSW218
+                                                                                              CSW218
  
       * Settlement Type
       *
@@ -329,6 +340,7 @@
      C                             OKDst1 = 'N'
      C                   Eval      WCSID = *Blanks
      C                   Eval      WCSID8 = *Blanks                                           260987
+     C                   EVAL      WSId19 = *BLANKS                                           CSW218
  
      C                   Else
       * If full NOSTRO(F)
@@ -393,7 +405,27 @@
      C                   If        C#RTCD = *Blanks
      C                   Move      BBCUST        WCNUM
      C                   Eval      WCSID = BBCSID
+                                                                                              CSW218
+     C                   IF        CSW218 = 'N'                                               CSW218
      C     1             SUBST     WCSID:8       WCSID8            1                          260987
+                                                                                              CSW218
+     C                   ELSE                                                                 CSW218
+      ** If CSW218 is ON, verify the network connectivity of the destination BIC              CSW218
+      ** retrieve the Extra Information of the BIC address                                    CSW218
+                                                                                              CSW218
+     C                   IF        BBCSID <> *BLANKS                                          CSW218
+     C                   MOVEL     BBCSID        KBicC                                        CSW218
+     C                   EVAL      KBicB = %SUBST(BBCSID:9:3)                                 CSW218
+     C                   IF        KBicB = *BLANKS                                            CSW218
+     C                   EVAL      KBicB = 'XXX'                                              CSW218
+     C                   ENDIF                                                                CSW218
+     C     KBicD         CHAIN     MEBICDL2                                                   CSW218
+     C                   IF        %FOUND                                                     CSW218
+     C                   EVAL      WSId19 = %SUBST(BDXINF:19:1)                               CSW218
+     C                   ENDIF                                                                CSW218
+     C                   ENDIF                                                                CSW218
+     C                   ENDIF                                                                CSW218
+                                                                                              CSW218
      C                   End
  
      C                   End
@@ -408,11 +440,17 @@
      C**********                   WCSID = *Blanks and                                 205679 260987
      C**********                   @SWIIND = '*NFND'                                   205679 260987
                                                                                               205679
+      ** With SWIFT2018, the BIC address indicates not connected if                           CSW218
+      ** Extra Information field position 19 is equal to 'N'                                  CSW218
+      *                                                                                       CSW218
      C                   If        WCSID = *Blanks and                                        260987
      C                             @DSTT <> 'S'  or                                           260987
      C                             WCSID = *Blanks and                                        260987
      C                             @SWIIND = '*NFND' or                                       260987
-     C                             WCSID8 = '1'                                               260987
+     C**********                   WCSID8 = '1'                                        260987 CSW218
+     C                             WCSID8 = '1' AND                                           CSW218
+     C                             CSW218 = 'N' OR                                            CSW218
+     C                             WSId19 = 'N' AND CSW218 = 'Y'                              CSW218
                                                                                               260987
      C                   Eval      @STTP = SSTTP
  
@@ -463,6 +501,20 @@
       *  Validation Work Fields
      C                   Parm                    Val@Fields
  
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+                                                                                              CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRtCd                                        CSW218
+                                                                                              CSW218
+     C     PRtCd         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
+                                                                                              CSW218
+     C     KBicD         KLIST                                                                CSW218
+     C                   KFLD                    KBicC                                        CSW218
+     C                   KFLD                    KBicB                                        CSW218
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================

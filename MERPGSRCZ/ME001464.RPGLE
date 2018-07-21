@@ -17,11 +17,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD022738           Date 08Oct13               *
-      *  Prev Amend No. CFT050  *CREATE    Date 03Jun13               *
+      *  Last Amend No. CSW218             Date 19Jun18               *
+      *  Prev Amend No. MD022738           Date 08Oct13               *
+      *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD022738 - The file MEBICDPD must only be loaded with records*
       *             having a SWIFT address.                           *
       *  CFT050 - SWIFTRef Directories upload                         *
@@ -124,6 +126,8 @@
       *
      D KREFKY          S              8A   INZ
      D KIBNKY          S              2A   INZ
+                                                                                              CSW218
+     D CSW218          S              1A                                                      CSW218
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -239,7 +243,11 @@
      C                   MOVEL(P)  B3STYP        D_BDSUBT
      C                   MOVEL(P)  B3SER1        D_BDADDS
      C                   MOVE      B3SER2        D_BDADDS
+     C                   IF        CSW218 = 'Y'                                               CSW218
+     C                   EVAL      %SUBST(D_BDXINF:19:1) = %SUBST(B3NWCY:1:1)                 CSW218
+     C                   ELSE                                                                 CSW218
      C                   MOVEL(P)  *BLANKS       D_BDXINF
+     C                   ENDIF                                                                CSW218
      C                   MOVEL(P)  B3ADD1        D_BDAPH1
      C                   MOVEL(P)  B3ADD2        D_BDAPH2
      C                   MOVEL(P)  B3ADD3        D_BDAPH3
@@ -638,6 +646,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                       CSW218
+      ** Check if Swift 2018 Changes is installed.                                            CSW218
+      *                                                                                       CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRTCD                                        CSW218
+      *                                                                                       CSW218
+     C     PRTCD         IFEQ      'CSW2018'                                                  CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ELSE                                                                 CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   ENDIF                                                                CSW218
       *
       ***  Key list definition
       *

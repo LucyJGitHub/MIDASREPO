@@ -20,12 +20,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
+      *  Last Amend No. CSW218             Date 19Jun18               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 246533             Date 22Mar07               *
+      *  Prev Amend No. 246533             Date 22Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 238594             Date 09Mar06               *
+      *                 238594             Date 09Mar06               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG3189 *Reopen    Date 10Jun04               *
       *                 BUG3189            Date 09Jun04               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  246533 - If PAPER message do not expand destination as it may*
       *           not be a normal BIC and TRAM can't match it up.     *
       *  238594 - Generate exception report when message limit of     *
@@ -68,7 +70,8 @@
       /EJECT
       /COPY MSCPYSRC,SRERRD
       *
-     D TAB1            S              5A   ctdata perrcd(1) dim(2)
+     D***TAB1            S              5A   ctdata perrcd(1) dim(2)                          CSW218
+     D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
       ** Table containing valid Block 3 Codes
       *
      D                 DS
@@ -775,3 +778,4 @@
 **CTDATA TAB1
 :103:
 :119:
+:121:                                                                                         CSW218

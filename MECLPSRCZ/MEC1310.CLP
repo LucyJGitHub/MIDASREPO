@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. MD050514           Date 18Jun18              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAP084             Date 08Jul03              */
-/*       Prev Amend No. CSF002             Date 11Aug03              */
+/*       Prev Amend No. CAP084             Date 08Jul03              */
+/*                      CSF002             Date 11Aug03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      197434             Date 09Oct01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050514 - ME_FT_IMM job in MSGW                            */
 /*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
 /*       CSF002 - Global layer.                                      */
 /*                - Replace previous key data with the new unique    */
@@ -44,6 +46,7 @@
 /* */
              DCL        VAR(&ERRCDE) TYPE(*DEC) LEN(1 0)
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)                                  /*MD050514*/
 /* */
 /* Global Monitor Message */
 /* */
@@ -92,6 +95,12 @@
 /************CALL       PGM(ZMUSER) PARM(&ERRCDE)                                         /*CAP084*/
              CALL       PGM(ZMUSER) PARM(&ERRCDE &ZMUSER)                                 /*CAP084*/
              IF         COND(&ERRCDE *EQ 1) THEN(GOTO CMDLBL(ABNORMAL))
+                                                                                        /*MD050514*/
+/** Create data area and update with the job user profile */                            /*MD050514*/
+                                                                                        /*MD050514*/
+             CRTDTAARA DTAARA(QTEMP/ZMUSER) TYPE(*CHAR) LEN(17)                         /*MD050514*/
+             RTVJOBA    USER(&USER)                                                     /*MD050514*/
+             CHGDTAARA  DTAARA(QTEMP/ZMUSER (1 10)) VALUE(&USER)                        /*MD050514*/
 /* */
 /* Set up other data ares   */
 /* */

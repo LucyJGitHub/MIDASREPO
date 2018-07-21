@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD034950           Date 08Jul15               *
-      *  Prev Amend No. MD034935           Date 08Jul15               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD034950           Date 08Jul15               *
+      *                 MD034935           Date 08Jul15               *
       *                 MD034866           Date 02Jul15               *
       *                 MD034877           Date 02Jul15               *
       *                 CFT051             Date 04Jun15               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD034950 - IBAN Details of ISO Country Code is not updated   *
       *             when a delta upload of the IBAN Structure         *
       *  MD034935 - IBAN National ID Length retains the previous value*
@@ -237,6 +239,18 @@
      FMEBICBL0  UF A E           K DISK    USROPN                                           MD034866
       ** IBAN Plus Directorry                                                               MD034866
       *                                                                                     MD034866
+      ***  PLoader = '5' : BIC Database 2018 Upload                                           CSW218
+      *                                                                                       CSW218
+     FMETIFIPD  IF   E             DISK    USROPN                                             CSW218
+     F                                     RENAME(@BICDPD:@BICDD0)                            CSW218
+     F                                     Prefix(FI_)                                        CSW218
+      ** BIC Database 2018 - Wrk                                                              CSW218
+      *                                                                                       CSW218
+     FMEBICDL0  UF A E           K DISK    USROPN                                             CSW218
+     F                                     RENAME(@BICDPD:MEBICDX)                            CSW218
+     F                                     Prefix(BI_)                                        CSW218
+      ** BIC Directory                                                                        CSW218
+      *                                                                                       CSW218
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -251,12 +265,12 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
-
+ 
       ** The Following /COPY Line Includes All The Defined Fields In
       ** The PSDS.  They Have Meaningful Names, Prefixed By 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays AND Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -324,6 +338,12 @@
      D TIELDS        E DS                  EXTNAME(METIELPD)                                  CFT051
      D IBELDS        E DS                  EXTNAME(MEIBELPD)                                  CFT051
      D                                     Prefix(EL_)                                        CFT051
+      *                                                                                       CSW218
+      * Formats for Loader '5' - BIC Database 2018                                            CSW218
+     D TBICDS        E DS                  EXTNAME(METIFIPD)                                  CSW218
+     D                                     Prefix(FI_)                                        CSW218
+     D BICDDS        E DS                  EXTNAME(MEBICDPD)                                  CSW218
+     D                                     Prefix(BI_)                                        CSW218
       *                                                                                       CFT051
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CFT051
       ** DS for Access Objects - short data structure                                         CFT051
@@ -425,6 +445,9 @@
      C                   WHEN      PLoader = '4'
      C                   EXSR      Loader4
       *
+     C                   WHEN      PLoader = '5'                                              CSW218
+     C                   EXSR      Loader5                                                    CSW218
+      *                                                                                       CSW218
      C                   ENDSL
       *
      C                   SETON                                        LR
@@ -823,12 +846,12 @@
      C                   EVAL      SV_B3FIL2 = B_B3FIL2
      C                   EVAL      BIB3DS    = TIB3DS
      C                   EVAL      B_B3UDAT  = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEBIB3L0)
      C                   MOVEL     OLDSEQ        B_B3FIL2
      C                   ADD       1             OLDSEQ
      C                   WRITE     BANKIDX
-
+ 
      C                   ELSEIF    B3FLAG = 'A'
      C                             OR B3FLAG = 'M'
      C                   EVAL      B_B3FIL2 = SV_B3FIL2
@@ -897,7 +920,7 @@
      C                             OR BCFLAG = 'M'
      C                             OR BCFLAG = 'U'
      C                   EVAL      BICCDS = TICCDS
-
+ 
      C                   IF        NOT %FOUND(MEBICCL0)
      C**********         WRITE     CTRYIDX                                                  MD022119
      C                   WRITE(E)  CTRYIDX                                                  MD022119
@@ -930,11 +953,11 @@
      C                             or BCFLAG = 'M' and %Eof(MEISOCL2)
      C                             or BCFLAG = 'U' and %Eof(MEISOCL2)
      C                   EVAL      M3ISOC = BCCNTC
-
+ 
      C**********         IF        NOT %EOF(MEISOCL2)                                       MD022873
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C**********         ENDIF                                                              MD022873
-
+ 
      C                   EVAL      M3SCHT = 'N'
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
@@ -976,29 +999,29 @@
      C                   IF        M3ISOD = '*** NOT FOUND ***'                             MD022873
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C                   ENDIF                                                              MD022873
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
-
+ 
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
@@ -1040,7 +1063,7 @@
      C                             OR BUFLAG = 'M'
      C                             OR BUFLAG = 'U'
      C                   EVAL      BICUDS = TICUDS
-
+ 
      C                   IF        NOT %FOUND(MEBICUL0)
      C                   WRITE     CURRIDX
      C                   ELSEIF    B3FLAG = 'A'
@@ -1071,7 +1094,7 @@
      C                             OR BHFLAG = 'M'
      C                             OR BHFLAG = 'U'
      C                   EVAL      BIHLDS = TIHLDS
-
+ 
      C                   IF        NOT %FOUND(MEBIHLL0)
      C                   WRITE     HLDIDX
      C                   ELSEIF    BHFLAG = 'A'
@@ -1436,7 +1459,7 @@
      C                             OR N3FLAG = 'U'
      C                   EVAL      IBN3DS   = TIIBDS
      C                   EVAL      I_N3UDAT = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEIBN3L0)
      C                   WRITE     IBN3IDX
      C                   ELSEIF    N3FLAG = 'A'
@@ -1512,7 +1535,7 @@
      C                             OR NSFLAG = 'U'
      C                   EVAL      IBNSDS   = TIISDS
      C                   EVAL      N_NSUDAT = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEIBNSL0)
      C                   WRITE     IBNSIDX
      C                   ELSEIF    NSFLAG = 'A'
@@ -1562,7 +1585,7 @@
      C                   EVAL      M3FATF = 'N'
      C                   EVAL      M3MFID = 'N'
      C                   EVAL      M3M205 = 'N'
-
+ 
      C     NSCCOD        CHAIN     MEIBN3L1                                                 MD022873
      C                   IF        %FOUND (MEIBN3L1)                                        MD022873
      C                   EVAL      M3ISOD = I2_N3CTY1                                       MD022873
@@ -1575,7 +1598,7 @@
      C                   ELSE
      C                   EVAL      M3IBAC = *Blanks
      C                   ENDIF
-
+ 
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
      C                             OR NSCCOD = 'BE'
@@ -1622,15 +1645,15 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
-
+ 
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
-
+ 
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
-
+ 
      C                   EVAL      M3SEPA = NSSEPA
                                                                                             MD022827
      C                   EVAL      CPOS1 = %SUBST(NSCPOS:1:1)                               MD022827
@@ -1781,39 +1804,39 @@
       *
      C                   WHEN      BCFLAG = 'M'
      C                             OR BCFLAG = 'U' AND WFound = 'Y'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
-
+ 
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
-
+ 
      C                   IF        NSCPOS <>  '00'
      C                   EVAL      M3IBAC = NSCCOD
      C                   ELSE
      C                   EVAL      M3IBAC = *Blanks
      C                   ENDIF
-
+ 
      C                   IF        M3IBAR  <> 'Y' AND M3IBAR <> 'N'
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
@@ -1861,16 +1884,16 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
-
+ 
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
-
+ 
      C                   EVAL      M3SEPA = NSSEPA
      C                   MOVE      NSCPOS        M3CCSP
      C                   MOVE      NSCLEN        M3CCLN
@@ -2220,6 +2243,77 @@
       *
      C                   ENDSR
       *
+      /EJECT                                                                                  CSW218
+      *****************************************************************                       CSW218
+      *   Loader5 - BIC Database 2018 Loader                          *                       CSW218
+      *****************************************************************                       CSW218
+      *                                                                                       CSW218
+     C     Loader5       BEGSR                                                                CSW218
+      *                                                                                       CSW218
+      ** Open Working files (2)                                                               CSW218
+      *                                                                                       CSW218
+     C                   OPEN      METIFIPD                             99                    CSW218
+     C     *IN99         IFEQ      *ON                                                        CSW218
+     C     *LOCK         IN        LDA                                                        CSW218
+     C                   EVAL      DBFILE =  'METIFIPD'                                       CSW218
+     C                   EVAL      DBKEY  =  'OPEN File'                                      CSW218
+     C                   EVAL      DBASE  =  34                                               CSW218
+     C                   EVAL      DBPROC =  'SR/Loader5'                                     CSW218
+     C                   OUT       LDA                                                        CSW218
+     C                   EXSR      *PSSR                                                      CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+     C                   OPEN      MEBICDL0                             99                    CSW218
+     C     *IN99         IFEQ      *ON                                                        CSW218
+     C     *LOCK         IN        LDA                                                        CSW218
+     C                   EVAL      DBFILE =  'MEBICDL0'                                       CSW218
+     C                   EVAL      DBKEY  =  'OPEN File'                                      CSW218
+     C                   EVAL      DBASE  =  35                                               CSW218
+     C                   EVAL      DBPROC =  'SR/Loader5'                                     CSW218
+     C                   OUT       LDA                                                        CSW218
+     C                   EXSR      *PSSR                                                      CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+      ** Do Updates according Modification Flag                                               CSW218
+      ** Insert/amend if 'A'dd                                                                CSW218
+      ** Amend/Insert if 'M'odified                                                           CSW218
+      ** Delete if 'D'eleted                                                                  CSW218
+      ** Insert if 'U'nchanged and not Found                                                  CSW218
+      *                                                                                       CSW218
+      ** 1) METIFIPD ==> output in MEBICDPD                                                   CSW218
+      *                                                                                       CSW218
+     C                   READ      @BICDD0                                                    CSW218
+     C                   DOW       NOT %EOF                                                   CSW218
+      *                                                                                       CSW218
+      ** Check if record already exists and create if not and necessary                       CSW218
+      *                                                                                       CSW218
+     C     KBICD         CHAIN     MEBICDL0                           99                      CSW218
+      *                                                                                       CSW218
+     C                   IF        FI_BDMODF = 'A'                                            CSW218
+     C                             OR FI_BDMODF = 'M'                                         CSW218
+     C                             OR FI_BDMODF = 'U'                                         CSW218
+     C                   EVAL      BICDDS   = TBICDS                                          CSW218
+     C                   EVAL      BI_BDUDAT = ODATE                                          CSW218
+     C                   IF        NOT %FOUND(MEBICDL0)                                       CSW218
+     C                   WRITE     MEBICDX                                                    CSW218
+     C                   ELSEIF    FI_BDMODF = 'A'                                            CSW218
+     C                             OR FI_BDMODF = 'M'                                         CSW218
+     C                   UPDATE    MEBICDX                                                    CSW218
+     C                   ENDIF                                                                CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+     C                   IF        FI_BDMODF = 'D'                                            CSW218
+     C                             AND %FOUND(MEBICDL0)                                       CSW218
+     C                   DELETE    MEBICDX                                                    CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+      ** Read Next                                                                            CSW218
+      *                                                                                       CSW218
+     C                   READ      @BICDD0                                                    CSW218
+     C                   ENDDO                                                                CSW218
+      *                                                                                       CSW218
+     C                   ENDSR                                                                CSW218
+      *                                                                                       CSW218
       /EJECT
       *****************************************************************
       *                                                               *
@@ -2320,6 +2414,10 @@
       *                                                                                       CFT051
      C     KBICF         KLIST                                                              MD034866
      C                   KFLD                    KREFKY                                     MD034866
+      *                                                                                       CSW218
+     C     KBICD         KLIST                                                                CSW218
+     C                   KFLD                    FI_BDBICC                                    CSW218
+     C                   KFLD                    FI_BDBICB                                    CSW218
       *
      C                   OPEN      MEBIB3L2                             99
      C     *IN99         IFEQ      *ON

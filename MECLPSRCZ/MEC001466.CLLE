@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME BIC Database 2018 Check Release Date/File')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management                                  */
+/*                                                                   */
+/*       MEC001466 - BIC Database 2018 Check Release Date/File       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CSW218  *CREATE    Date 19Mar18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSW218 - SWIFT Changes 2018                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ERRTYP &INHDR)
+ 
+ 
+             DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INHDR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FI) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&YY) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&MM) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&DD) TYPE(*DEC) LEN(2 0) VALUE(00)
+ 
+             DCLF       FILE(METXT5L0)
+ 
+/* Copyright statement                                               */
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2018')
+ 
+/* Global Monitor Message                                            */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&ERRTYP) VALUE('0')
+             CHGVAR     VAR(&INHDR) VALUE('      ')
+ 
+             CLRPFM     METXT5PD
+ 
+/* List all files of QGPL library                                    */
+             DSPFD      FILE(QGPL/*ALL) TYPE(*BASATR) OUTPUT(*OUTFILE) +
+                          OUTFILE(METXT5PD)
+ 
+/* Read METXT5L0 file                                                */
+ LOOP1:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                IF         COND(&FI *EQ 'Y') THEN(DO)
+                 GOTO       CMDLBL(ENDCLPGM)
+               ENDDO
+             GOTO       CMDLBL(ERROR3)
+             ENDDO
+ 
+/* Filenames starting with FI_                                       */
+             IF         COND((&PREF3 *EQ 'FI_') *AND (&DATE6 *GT &INHDR)) THEN(DO)
+               IF       COND(%SST(&ATFILE  9 1) *EQ ' ') THEN(DO)
+                  GOTO       CMDLBL(LOOP1)
+               ENDDO
+               IF       COND(%SST(&ATFILE 10 1) *EQ ' ') THEN(DO)
+                 IF     COND((&INHDR *EQ *BLANK) *OR (&DATE6 *GT +
+                          &INHDR)) THEN(DO)
+                    CHGVAR     VAR(&FI) VALUE(' ')
+                        CHGVAR     VAR(&YY) VALUE(%SST(&DATE6 1 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+                        CHGVAR     VAR(&MM) VALUE(%SST(&DATE6 3 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+                        CHGVAR     VAR(&DD) VALUE(%SST(&DATE6 5 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+ 
+                        IF         ((&MM *GT 12) *OR (&MM *EQ 00)) +
+                          THEN(DO)
+                            GOTO       CMDLBL(ERROR1)
+                          ENDDO
+                        IF         ((&DD *GT 31) *OR (&DD *EQ 00)) +
+                          THEN(DO)
+                            GOTO       CMDLBL(ERROR1)
+                          ENDDO
+                        CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+                 ENDDO
+ 
+                 CPYF       FROMFILE(QGPL/&ATFILE) TOFILE(MEDWFIPD) +
+                            MBROPT(*REPLACE) FMTOPT(*NOCHK)
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                    EXEC(DO)
+                      GOTO       CMDLBL(ERROR2)
+                    ENDDO
+ 
+                    CHGVAR     VAR(&FI) VALUE('Y')
+               ENDDO
+             ENDDO
+ 
+             IF         COND(&FI *NE 'Y') THEN(DO)
+                 GOTO       CMDLBL(ERROR1)
+               ENDDO
+ 
+             GOTO       CMDLBL(LOOP1)
+ 
+ ERROR1:
+             SNDPGMMSG  MSG('Incorrect date format, it must be in YYMMDD.') +
+                          TOMSGQ(MOPERQ)
+ 
+             CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+             CHGVAR     VAR(&ERRTYP) VALUE('1')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR2:
+             SNDPGMMSG  MSG('BIC DATABASE 2018 File (FI_' *CAT &INHDR *CAT ' is +
+                          empty. Nothing can be processed.') TOMSGQ(MOPERQ)
+ 
+             CHGVAR     VAR(&ERRTYP) VALUE('2')
+             CLRPFM     FILE(MEDWFIPD)
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR3:
+             SNDPGMMSG  MSG('The file being processed does not exist in QGPL. This +
+                          may be due to the following reasons 1.) File sent is not +
+                          complete. 2.) Error in filename used during FTP of +
+                          transfer process, filenames should begin with FI_') +
+                          TOMSGQ(MOPERQ)
+ 
+             IF         COND(&INHDR *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&INHDR) VALUE('YYMMDD')
+             ENDDO
+             CHGVAR     VAR(&ERRTYP) VALUE('3')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+/* Abnormal termination */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Error during Check of Incoming Data. Abnormal +
+                          termination. Ensure that FI_YYMMDD file exist in QGPL +
+                          with data of File Transfer (FTP).') TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&ERRTYP) VALUE('4')
+ 
+/* End program */
+ ENDCLPGM:
+ 
+             ENDPGM

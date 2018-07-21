@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD027477A          Date 25Nov14               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. CSW216             Date 14Mar16               *
+      *  Prev Amend No. MD027477A          Date 26Jun14               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW216 - SWIFT Changes 2016                                  *
       *  MD027477A - No MT565 generated in MMM after COB              *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -484,6 +486,7 @@
      D WBenAdd4        S             35                                                       CSW203
      D CSW203          S              1                                                       CSW203
                                                                                               CSW203
+     D CSW216          S              1                                                       CSW216
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1570,7 +1573,14 @@
      C                   EXSR      SRMTag
  
      C************       EVAL      WMDat = 'DECL//WITHHOLDING TAX'                            186790
+      *                                                                                       CSW216
+      ** If SWIFT 2016 is enabled, use CETI qualifier                                         CSW216
+      *                                                                                       CSW216
+     C                   IF        CSW216 = 'Y'                                               CSW216
+     C                   EVAL      WMDat = ':CETI//TAXR'                                      CSW216
+     C                   ELSE                                                                 CSW216
      C                   EVAL      WMDat = ':DECL//TAXR'                                      186790
+     C                   ENDIF                                                                CSW216
  
      C                   EXSR      SRTaxRate
  
@@ -3236,6 +3246,17 @@
      C                   ELSE                                                                 CSW203
      C                   MOVE      'N'           CSW203                                       CSW203
      C                   ENDIF                                                                CSW203
+      *                                                                                       CSW216
+      ** Check if Swift 2016 Standards Update is installed                                    CSW216
+      *                                                                                       CSW216
+     C                   CALL      'SWIF2016'                                                 CSW216
+     C                   PARM      *BLANKS       PRTCD                                        CSW216
+      *                                                                                       CSW216
+     C     PRTCD         IFEQ      'CSW2016'                                                  CSW216
+     C                   EVAL      CSW216 = 'Y'                                               CSW216
+     C                   ELSE                                                                 CSW216
+     C                   EVAL      CSW216 = 'N'                                               CSW216
+     C                   ENDIF                                                                CSW216
                                                                                               CSD015
       ** Report Work fields.
  

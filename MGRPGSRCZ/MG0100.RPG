@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. MD031087           Date 25Nov14               *
+      *  Last Amend No. CSW218             Date 19Mar18               *
+      *  Prev Amend No. MD050936           Date 16May18               *
+      *                 CSW215             Date 06Apr15               *
+      *                 MD031087           Date 25Nov14               *
       *                 MD026727           Date 26May14               *
       *                 MD023383           Date 12Nov13               *
       *                 MD022039           Date 27Aug13               *
@@ -99,6 +101,8 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
+      *  MD050936 - Field tag 53B has a defaulted value of '/'        *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  MD031087 - Recompile due to changes in SWIFTTRANS Table in   *
       *             order to avoid corruption of German Chars         *
@@ -416,6 +420,8 @@
      I              'CustNoFirstLineFld50'C         AOCAB                                   MD026727
       *                                                                                     MD026727
      I              'ACOUNTLINE'          C         CACNT1                                    250600
+      *                                                                                       CSW218
+     I              'MGC001802'           C         UIDPGM                                    CSW218
       *                                                                                       250600
       ** Outgoing message                                                                     250600
       *                                                                                       250600
@@ -1381,6 +1387,7 @@
       ** Format 53B when CMG001 is switched ON.
      C                     ELSE                                           CMG001
      C           CMG001    IFEQ 'Y'                                       CMG001
+     C           A7OACN    ANDNE*BLANKS                                                     MD050936
      C                     MOVE ':53B:'   MTAG                            CMG001
      C                     MOVE *BLANKS   MFLD                            CMG001
       *                                                                   CMG001 210796
@@ -2428,6 +2435,29 @@
      C                     EXSR *PSSR                                     CFT013
      C                     ENDIF                                          CFT013
      C                     ENDIF                                          CFT013
+      *                                                                                       CSW218
+      ** Field :121: - UETR (Unique End-to-end Transaction Reference)                         CSW218
+      *                                                                                       CSW218
+     C           CSW218    IFEQ 'Y'                                                           CSW218
+     C                     CALL UIDPGM                                                        CSW218
+     C                     PARM *BLANKS   PUUID  50                                           CSW218
+     C                     ADD  1         X                                                   CSW218
+     C           X         OCUR MULT                                                          CSW218
+     C                     MOVEL':121:'   MTAG                                                CSW218
+     C                     MOVEL*BLANK    MFLD                                                CSW218
+     C                     MOVELPUUID     MFLD                                                CSW218
+     C                     WRITEMGOMSGD0               06                                     CSW218
+     C                     MOVEL*BLANK    MTAG                                                CSW218
+     C                     MOVEL*BLANK    MFLD                                                CSW218
+     C           *IN06     IFEQ *ON                                                           CSW218
+     C           *LOCK     IN   LDA                                                           CSW218
+     C                     Z-ADD42        DBASE                                               CSW218
+     C                     MOVEL'*WRITE ' DBKEY                                               CSW218
+     C                     MOVEL'MGOMSGPD'DBFILE                                              CSW218
+     C                     OUT  LDA                                                           CSW218
+     C                     EXSR *PSSR                                                         CSW218
+     C                     ENDIF                                                              CSW218
+     C                     ENDIF                                                              CSW218
       *
       **  Write multiple occurrence data structure to MGOMSGPD
       *
@@ -4966,6 +4996,17 @@
      C                     ELSE                                                               CSW215
      C                     MOVE 'N'       CSW215                                              CSW215
      C                     ENDIF                                                              CSW215
+      *                                                                                       CSW218
+      ** Check if switchable feature CSW218 is switched on                                    CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM *BLANKS   PRTCD                                               CSW218
+      *                                                                                       CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
       *                                                                                       250600
       ** Parameter List for calling AOOUFMR0                                                  250600
       *                                                                                       250600

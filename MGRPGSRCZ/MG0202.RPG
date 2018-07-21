@@ -11,8 +11,11 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD050973           Date 19Jun18               *
+      *  Prev Amend No. MD050936           Date 19Jun18               *
+      *                 CSW218             Date 19Jun18               *
+      *                 CSW215             Date 06Apr15               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR1002987          Date 11Jul12               *
       *                 CSW212             Date 03Mau12               *
       *                 AR787620           Date 10Jun11               *
@@ -104,6 +107,9 @@
      F*                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050973 - Field tag 58 is missing in MT202                  *
+      *  MD050936 - Field tag 53B has a defaulted value of '/'        *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR1002987 - Various error in MT202COV output when BEN        *
@@ -511,6 +517,7 @@
      I            DS                                                                          140901
      I I            'NotIncFld57IfSame58 '    1  20 SVALK1                                    140901
       *                                                                                       140901
+     I              'MGC001802'           C         UIDPGM                                    CSW218
       *                                                                   S01408
      I/COPY WNCPYSRC,MG0202IIPG                                           S01408
       *                                                                   S01408
@@ -1224,6 +1231,16 @@
      C                     MOVE 'N'       CSW215                                              CSW215
      C                     ENDIF                                                              CSW215
       *                                                                                       CSW215
+      ** Check if switchable feature CSW218 is switched on                                    CSW218
+      *                                                                                       CSW218
+     C                     CALL 'SWIF2018'                                                    CSW218
+     C                     PARM *BLANKS   PRTCD                                               CSW218
+      *                                                                                       CSW218
+     C           PRTCD     IFEQ 'CSW2018'                                                     CSW218
+     C                     MOVEL'Y'       CSW218  1                                           CSW218
+     C                     ELSE                                                               CSW218
+     C                     MOVEL'N'       CSW218                                              CSW218
+     C                     ENDIF                                                              CSW218
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -2954,6 +2971,7 @@
      C/COPY WNCPYSRC,MG0202CCP5                                           S01408
       *                                                                   S01408
      C           CMG001    IFEQ 'Y'                                       CMG001
+     C           A7OACN    ANDNE*BLANKS                                                     MD050936
      C                     ADD  1         X                               CMG001
      C           X         OCUR MULT                                      CMG001
      C                     MOVE ':53B:'   MTAG                            CMG001
@@ -3951,6 +3969,8 @@
       **  Output the message to PF/MGOMSGPD if no error on format of FLD19
       *
      C           @ERR      IFNE 'Y'
+     C                     ADD  1         X                                                 MD050973
+     C           X         OCUR MULT                                                        MD050973
       *
       **  Write the message details to PF/MGOMSGPD
       *
@@ -3980,8 +4000,36 @@
       ** Reset print COV indicator after printing MT202 COV                                 BUG25355
       *                                                                                     BUG25355
      C                     MOVE 'N'       PRTCOV                                            BUG25355
+     C                     MOVEL'Y'       WCOV    1                                           CSW218
      C                     ENDIF                                                              CSW209
       *                                                                                       CSW209
+      ** Field :121: - UETR (Unique End-to-end Transaction Reference)                         CSW218
+      *                                                                                       CSW218
+     C           CSW218    IFEQ 'Y'                                                           CSW218
+     C           WCOV      IFEQ 'Y'                                                           CSW218
+     C                     MOVEL':121:'   MTAG                                                CSW218
+     C                     MOVELPUUID     MFLD                                                CSW218
+     C                     ELSE                                                               CSW218
+     C                     CALL UIDPGM                                                        CSW218
+     C                     PARM *BLANKS   PUUID  50                                           CSW218
+     C                     MOVEL':121:'   MTAG                                                CSW218
+     C                     MOVEL*BLANK    MFLD                                                CSW218
+     C                     MOVELPUUID     MFLD                                                CSW218
+     C                     ENDIF                                                              CSW218
+     C                     WRITEMGOMSGD0               06                                     CSW218
+     C           *IN06     IFEQ *ON                                                           CSW218
+     C           *LOCK     IN   LDA                                                           CSW218
+     C                     Z-ADD42        DBASE                                               CSW218
+     C                     MOVEL'*WRITE ' DBKEY                                               CSW218
+     C                     MOVEL'MGOMSGPD'DBFILE                                              CSW218
+     C                     OUT  LDA                                                           CSW218
+     C                     EXSR *PSSR                                                         CSW218
+     C                     ENDIF                                                              CSW218
+     C                     MOVEL*BLANK    MTAG                                                CSW218
+     C                     MOVEL*BLANK    MFLD                                                CSW218
+     C                     MOVEL'N'       WCOV                                                CSW218
+     C                     ENDIF                                                              CSW218
+      *                                                                                       CSW218
      C                     Z-ADD1         I
      C           I         OCUR MULT
       *
@@ -4985,6 +5033,12 @@
       *                                                                                       CSW209
      C           CVTRN     READEMGOMSGLA                 40                                   CSW209
      C           *IN40     DOWEQ*OFF                                                          CSW209
+      *                                                                                       CSW218
+      ** If :121: data is present, move data to UUID                                          CSW218
+      *                                                                                       CSW218
+     C           MTAG      IFEQ ':121:'                                                       CSW218
+     C                     MOVELMFLD      PUUID                                               CSW218
+     C                     ENDIF                                                              CSW218
       *                                                                                       CSW209
       ** If :33B: data is present, save data                                                  CSW209
       *                                                                                       CSW209

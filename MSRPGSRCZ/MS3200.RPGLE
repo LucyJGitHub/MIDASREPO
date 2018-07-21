@@ -18,11 +18,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 240269             Date 19Aug14               *
+      *  Last Amend No. CSW218             Date 20Jun18               *
+      *  Prev Amend No. 240269             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 244940             Date 17Jan07               *
+      *                 244940             Date 17Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
       *                 219242             Date 01Jul03               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  240269 - SWIFT skip a blank character when it falls on the   *
       *           50th position. Applied fix 221026 or 240192.        *
       *  244940 - Applied fix 233575.                                 *
@@ -90,7 +92,8 @@
       ** Array containing Copyright statement
       *
      D*TAB1************S              5A   ctdata perrcd(1) dim(1)                     CDL008 CFT014
-     D TAB1            S              5A   ctdata perrcd(1) dim(2)                            CFT014
+     D*TAB1************S              5A   ctdata perrcd(1) dim(2)                     CFT014 CSW218
+     D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
       ** Table containing valid Block 3 Codes                                                 CDL008
       *                                                                                       CDL008
      D dssdy         E DS                  extname(DSSDY)
@@ -694,3 +697,4 @@
 ** TAB1                                                                                       CDL008
 :103:                                                                                         CDL008
 :119:                                                                                         CFT014
+:121:                                                                                         CSW218

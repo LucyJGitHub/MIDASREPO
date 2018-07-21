@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MG COB Populate UUID')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management Module                           */
+/*                                                                   */
+/*       MGC001803 - Midas MG COB Populate UUID                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CSW218  *CREATE    Date 19Mar18              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*      CSW218 - SWIFT Changes 2018                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2018')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Reset job switch */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('MGC001803 - Midas MG COB Populate +
+                          UUID') TOMSGQ(MRUNQ)
+ 
+/** Call the program to populate UUID */
+ 
+             CALL       PGM(MGC001801)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program MGC001803 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

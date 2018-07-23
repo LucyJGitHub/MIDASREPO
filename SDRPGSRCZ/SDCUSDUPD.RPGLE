@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051393           Date 29Jun18               *
-      *  Prev Amend No. MD051206           Date 11Jun18               *
+      *  Last Amend No. MD051563           Date 19Jul18               *
+      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *                 MD051206           Date 11Jun18               *
       *                 MD051230           Date 08Jun18               *
       *                 MD041429           Date 22Sep16               *
       *                 CGL177             Date 11Jan16               *
@@ -139,6 +140,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051563 - On COB run, Component GOC0100 failed due to       *
+      *             Customer Related Duplicate Key Error              *
       *  MD051393 - Serious midas error                               *
       *  MD051206 - Time field in FATCA Information tab changes to    *
       *             asterisks after amendment authorisation           *
@@ -5001,6 +5004,7 @@
      C                   ENDDO                                                                CGL157
      C                   ENDIF                                                                CGL157
      C                   IF        CSD092 = 'Y'                                               CGL177
+     C                             AND (S01425 <> 'Y' OR CSD079 <> 'Y')                     MD051563
      C                   IF        CGL132 = 'Y'                                               CGL177
      C                   EVAL      PBefFTCS = SDFTCS2                                         CGL177
      C                   EVAL      PAftFTCS = SDFTCS                                          CGL177
@@ -8717,6 +8721,21 @@
      C                   UPDATE    @ACUSL0                                                    CSD079
                                                                                               CSD092
      C                   IF        CSD092 = 'Y'                                               CSD092
+      ** Ensure parameters are properly populated                                           MD051563
+     C                   IF        CGL132 = 'Y'                                             MD051563
+     C                   EVAL      PBefFTCS = SDFTCS2                                       MD051563
+     C                   EVAL      PAftFTCS = SDFTCS                                        MD051563
+     C                   ELSE                                                               MD051563
+     C                   EVAL      PBefFTCS = *BLANKS                                       MD051563
+     C                   EVAL      PAftFTCS = *BLANKS                                       MD051563
+     C                   ENDIF                                                              MD051563
+     C                   IF        CGL157 = 'N'                                             MD051563
+     C                   EVAL      PBefCRSH = *BLANKS                                       MD051563
+     C                   EVAL      PAftCRSH = *BLANKS                                       MD051563
+     C                   EVAL      PBefCRSD = *BLANKS                                       MD051563
+     C                   EVAL      PAftCRSD = *BLANKS                                       MD051563
+     C                   ENDIF                                                              MD051563
+      *                                                                                     MD051563
      C                   CALL      'SD009696'                                                 CSD092
      C                   PARM      E5CUST        PCUST                                        CSD092
      C                   PARM      B_CUSTD       PBefCUST                                     CSD092
@@ -8735,10 +8754,14 @@
      C                   PARM                    PAftCUXC                                   MD026957
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
-     C                   PARM      *BLANKS       PBefCRSH                                     CGL177
-     C                   PARM      *BLANKS       PAftCRSH                                     CGL177
-     C                   PARM      *BLANKS       PBefCRSD                                     CGL177
-     C                   PARM      *BLANKS       PAftCRSD                                     CGL177
+     C**********         PARM      *BLANKS       PBefCRSH                            CGL177 MD051563
+     C**********         PARM      *BLANKS       PAftCRSH                            CGL177 MD051563
+     C**********         PARM      *BLANKS       PBefCRSD                            CGL177 MD051563
+     C**********         PARM      *BLANKS       PAftCRSD                            CGL177 MD051563
+     C                   PARM                    PBefCRSH                                   MD051563
+     C                   PARM                    PAftCRSH                                   MD051563
+     C                   PARM                    PBefCRSD                                   MD051563
+     C                   PARM                    PAftCRSD                                   MD051563
      C                   ENDIF                                                                CSD092
                                                                                               CSD079
      C                   ENDIF                                                                CSD079

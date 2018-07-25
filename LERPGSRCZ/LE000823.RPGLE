@@ -14,14 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD049865           Date 10Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD048557           Date 27Nov17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD048557           Date 27Nov17               *
       *                 MD048558           Date 21Nov17               *
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD049865 - Component LEC000823 failed in COB                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048557 - Failing COB Component - LEC000471A                *
       *  MD048558 - Failing COB Component - LEC000823 00002           *
@@ -545,8 +543,7 @@
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
-     C**********         EVAL      L1NORE = L1NORE + 4                             MD048557 MD049865
-     C                   ADD       4             L1NORE                                     MD049865
+     C                   EVAL      L1NORE = L1NORE + 4                                      MD048557
 
      C                   ENDSR
 

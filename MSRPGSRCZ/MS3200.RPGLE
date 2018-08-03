@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051013           Date 24May18               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 240269             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051013 - File name is truncated and header is not printed. *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  240269 - SWIFT skip a blank character when it falls on the   *
@@ -550,9 +552,11 @@
      C                   out       msstat2
       *
      C/COPY WNCPYSRC,MS3200C014
-     C     ENSRFO        cat       '.':0         w@alfil          14
+     C*****ENSRFO        cat       '.':0         w@alfil          14                        MD051013
+     C     ENSRFO        cat       '.':0         w@alfil          30                        MD051013
      C                   cat       w@seqa:0      w@alfil
-     C     '#'           cat       w@alfil:0     w@#alfil         15
+     C*****'#'           cat       w@alfil:0     w@#alfil         15                        MD051013
+     C     '#'           cat       w@alfil:0     w@#alfil         31                        MD051013
      C/COPY WNCPYSRC,MS3200C015
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)

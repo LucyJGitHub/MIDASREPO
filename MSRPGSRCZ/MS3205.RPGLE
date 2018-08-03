@@ -18,13 +18,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051013           Date 24May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 244940             Date 29Jan07               *
+      *                 244940             Date 29Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 236012 (B          Date 29Mar05               *
+      *                 236012 (Bug 8951)  Date 29Mar05               *
       *                 Bug8952            Date 12Oct05               *
       *                 219242             Date 01Jul03               *
       *                 219241             Date 01Jul03               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051013 - File name is truncated and header is not printed. *
       *  MD046248 - Finastra Rebranding                               *
       *  244940 - Report should not be generated if there are no      *
       *           messages to report                                  *
@@ -118,6 +120,7 @@
      C     w@alfil       ifne      *blanks                                                    244940
      C                   if        not %open(ms3200au)                                        244940
      C                   open      ms3200au                                                   244940
+     C                   write     ms3200f1                                                 MD051013
      C                   endif                                                                244940
      C                   write     ms3200f6
      C                   endif                                                                244940
@@ -207,6 +210,7 @@
       *  Write the file name to the printer file                                             BUG8952
      C                   if        not %open(ms3200au)                                        244940
      C                   open      ms3200au                                                   244940
+     C                   write     ms3200f1                                                 MD051013
      C                   endif                                                                244940
      C                   write     ms3200f4                                                  BUG8952
       *                                                                                      BUG8952
@@ -242,6 +246,7 @@
       *
       ** Define all data areas
      C     *dtaara       define                  msstat2
+     C                   SETON                                        85                    MD051013
       *
       ** Access bank details
      C                   call      'AOBANKR0'

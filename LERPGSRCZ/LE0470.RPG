@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045890           Date 05Jul18               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036639           Date 02Jun16               *
       *                 MD035905A          Date 15Jan15               *
       *                 MD035905           Date 21Oct15               *
@@ -202,6 +203,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD045890 - COB: GLC0600 failed due to nonexistent trans Type *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036639 - Save fee sequence in posting file field TRST.     *
@@ -3402,6 +3404,51 @@
      C                     MOVE 'N'       CRE098                                              CRE098
      C                     ENDIF                                                              CRE098
       *                                                                                       CRE098
+      ** Check if 'CER049' is switched 'ON'                                                 MD045890
+      *                                                                                     MD045890
+     C                     CALL 'AOSARDR0'                                                  MD045890
+     C                     PARM *BLANKS   PRTCD                                             MD045890
+     C                     PARM '*VERIFY' POPTN                                             MD045890
+     C                     PARM 'CER049'  PSARD   6                                         MD045890
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD045890
+      *                                                                                     MD045890
+     C           PRTCD     IFNE *BLANKS                                                     MD045890
+     C           PRTCD     ANDNE'*NRF   '                                                   MD045890
+     C                     MOVEL'LE0470'  DBPGM                                             MD045890
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD045890
+     C                     MOVEL'CER049'  DBKEY                                             MD045890
+     C                     Z-ADD109       DBASE                                             MD045890
+     C                     ENDIF                                                            MD045890
+      *                                                                                     MD045890
+     C           PRTCD     IFEQ *BLANKS                                                     MD045890
+     C                     MOVE 'Y'       CER049  1                                         MD045890
+     C                     ELSE                                                             MD045890
+     C                     MOVE 'N'       CER049                                            MD045890
+     C                     ENDIF                                                            MD045890
+      *                                                                                     MD045890
+      *                                                                                     MD045890
+      ** Check if 'CLE031' is switched 'ON'                                                 MD045890
+      *                                                                                     MD045890
+     C                     CALL 'AOSARDR0'                                                  MD045890
+     C                     PARM *BLANKS   PRTCD                                             MD045890
+     C                     PARM '*VERIFY' POPTN                                             MD045890
+     C                     PARM 'CLE031'  PSARD   6                                         MD045890
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD045890
+      *                                                                                     MD045890
+     C           PRTCD     IFNE *BLANKS                                                     MD045890
+     C           PRTCD     ANDNE'*NRF   '                                                   MD045890
+     C                     MOVEL'LE0470'  DBPGM                                             MD045890
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD045890
+     C                     MOVEL'CLE031'  DBKEY                                             MD045890
+     C                     Z-ADD110       DBASE                                             MD045890
+     C                     ENDIF                                                            MD045890
+      *                                                                                     MD045890
+     C           PRTCD     IFEQ *BLANKS                                                     MD045890
+     C                     MOVE 'Y'       CLE031  1                                         MD045890
+     C                     ELSE                                                             MD045890
+     C                     MOVE 'N'       CLE031                                            MD045890
+     C                     ENDIF                                                            MD045890
+      *                                                                                     MD045890
      C                     MOVE *BLANKS   WFEEFL  1                                           CGL020
      C                     Z-ADD0         WFEEVA 130                                          CGL020
      C                     Z-ADD0         WFEEPC  52                                          CGL020
@@ -3772,7 +3819,13 @@
      C                     MOVE AKEY      @AMCD6  6                                           CER049
      C                     MOVEL@AMCD6    @AMCD9  2                                           CER049
      C                     MOVELAKEY      @AMCD3  3                                           CER049
+     C                     MOVE @AMCD3    @AMCD1  1                                         MD045890
      C                     MOVE 'N'       STTXKY  1                                           CER049
+     C           CER049    IFEQ 'Y'                                                         MD045890
+     C           CLE031    ANDEQ'N'                                                         MD045890
+     C           CER049    OREQ 'Y'                                                         MD045890
+     C           CLE031    ANDEQ'Y'                                                         MD045890
+     C           @AMCD1    ANDNE'S'                                                         MD045890
      C           @AMCD9    IFEQ 'FA'                                                          CER049
      C           @AMCD9    OREQ 'SA'                                                          CER049
      C           @AMCD9    OREQ 'FC'                                                          CER049
@@ -3788,9 +3841,12 @@
      C           @AMCD3    OREQ 'STV'                                                         CER049
      C                     MOVE 'Y'       STTXKY                                              CER049
      C                     ENDIF                                                              CER049
+     C                     ENDIF                                                            MD045890
      C           @AMCD9    IFNE 'FF'                                                          CER049
      C           @AMCD9    ANDNE'SF'                                                          CER049
      C           @AMCD3    ANDNE'STV'                                                         CER049
+     C           CER049    ANDEQ'Y'                                                         MD045890
+     C           CER049    OREQ 'N'                                                         MD045890
      C                     CALL 'AOLOANR0'                                146015
      C                     PARM '*MSG   ' @RTCD                           146015
      C                     PARM '*KEY   ' @OPTN                           146015

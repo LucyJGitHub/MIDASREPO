@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. AR1095148          Date 07May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL182             Date 11May17               *
       *                 MD040602           Date 19Aug16               *
       *                 MD025865           Date 20Mar14               *
       *                 CER059             Date 19Jul10               *
@@ -78,6 +79,11 @@
      FGLJEHQL0  UF A E           K DISK    INFSR(*PSSR)                                     MD025865
      F                                     PREFIX(Q_)                                       MD025865
       *
+     FGlJenSL1  IF   E           K DISK    Infsr(*Pssr)                                    AR1095148
+     F                                     Rename(@BSREAJ:@JensL1)                         AR1095148
+     F                                     Prefix(G_)                                      AR1095148
+      ** GL journal entry currency summary file                                            AR1095148
+      *                                                                                    AR1095148
       ** GL journal entry Report
      F***GL001600P1O    E             PRINTER INFSR(*PSSR)                                    CER059
      FGL001601P1O    E             PRINTER INFSR(*PSSR)                                       CER059
@@ -267,6 +273,10 @@
      D WTotalItemP     S              3P 0                                                  BUG23397
      D WTotalIntP      S             15P 0                                                  BUG23397
      D WTotalDecimalP  S              3P 0                                                  BUG23397
+                                                                                           AR1095148
+     D W_SavCcy        S                   Like(G_BsCyCd)                                  AR1095148
+     D W_TotDrAmt      S                   Like(G_BsDbTt)                                  AR1095148
+     D W_TotCrAmt      S                   Like(G_BsCrTt)                                  AR1095148
  
       ** Externally described DS for SAR details                                            BUG25187
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG25187
@@ -502,6 +512,66 @@
       *
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                               AR1095148
+      *****************************************************************                    AR1095148
+      *                                                               *                    AR1095148
+      *  SrCurrencies - Check currencies are in balance               *                    AR1095148
+      *                                                               *                    AR1095148
+      *  Called by: SrWrite                                           *                    AR1095148
+      *                                                               *                    AR1095148
+      *  Calls: None                                                  *                    AR1095148
+      *                                                               *                    AR1095148
+      *****************************************************************                    AR1095148
+     C     SrCurrencies  Begsr                                                             AR1095148
+                                                                                           AR1095148
+     C     KGlJenSL1r    KList                                                             AR1095148
+     C                   KFld                    G_BsBtNb                                  AR1095148
+                                                                                           AR1095148
+     C                   Clear                   W_SavCcy                                  AR1095148
+     C                   Clear                   W_TotDrAmt                                AR1095148
+     C                   Clear                   W_TotCrAmt                                AR1095148
+                                                                                           AR1095148
+     C                   Eval      G_BsBtNb = KBcNo                                        AR1095148
+     C     KGlJenSL1r    Setll     @JensL1                                                 AR1095148
+     C     KGlJenSL1r    Reade     @JensL1                                                 AR1095148
+     C                   If        Not %Eof(GlJensL1)                                      AR1095148
+                                                                                           AR1095148
+      * Initialise save currency                                                           AR1095148
+     C                   Eval      W_SavCcy = G_BsCyCd                                     AR1095148
+                                                                                           AR1095148
+     C                   DoU       %Eof(GlJensL1)                                          AR1095148
+                                                                                           AR1095148
+      * If debit credit not equal do not accept                                            AR1095148
+     C                   If        G_BsCyCd   <> W_SavCcy                                  AR1095148
+     C                   If        W_TotDrAmt <> W_TotCrAmt                                AR1095148
+     C                   Eval      ErrFlg(3) = 'Y'                                         AR1095148
+     C                   Eval      BrBtSf = 'H'                                            AR1095148
+     C                   Leave                                                             AR1095148
+     C                   Endif                                                             AR1095148
+                                                                                           AR1095148
+      * Reset work fields                                                                  AR1095148
+     C                   Eval      W_SavCcy = G_BsCyCd                                     AR1095148
+     C                   Clear                   W_TotDrAmt                                AR1095148
+     C                   Clear                   W_TotCrAmt                                AR1095148
+                                                                                           AR1095148
+     C                   Endif                                                             AR1095148
+                                                                                           AR1095148
+     C                   Eval      W_TotDrAmt =  W_TotDrAmt +  G_BsDbTt                    AR1095148
+     C                   Eval      W_TotCrAmt =  W_TotCrAmt +  G_BsCrTT                    AR1095148
+                                                                                           AR1095148
+     C     KGlJenSL1r    Reade     @JensL1                                                 AR1095148
+     C                   Enddo                                                             AR1095148
+                                                                                           AR1095148
+      * End of file with data - test again                                                 AR1095148
+     C                   If        W_TotDrAmt <> W_TotCrAmt                                AR1095148
+     C                   Eval      ErrFlg(3) = 'Y'                                         AR1095148
+     C                   Eval      BrBtSf = 'H'                                            AR1095148
+     C                   Endif                                                             AR1095148
+                                                                                           AR1095148
+     C                   Endif                                                             AR1095148
+                                                                                           AR1095148
+     C     ExCurrencies  Endsr                                                             AR1095148
+      *****************************************************************                    AR1095148
       /EJECT
       *****************************************************************
       *                                                               *
@@ -555,6 +625,13 @@
      C                   EVAL      BRBTSF = 'H'                                             BUG25452
      C                   ENDIF
  
+      *                                                                                    AR1095148
+      ** If to be accepted check currencies in balance                                     AR1095148
+      *                                                                                    AR1095148
+     C                   If        BrBtSf <> 'H'                                           AR1095148
+     C                   Exsr      SrCurrencies                                            AR1095148
+     C                   Endif                                                             AR1095148
+                                                                                           AR1095148
      C                   EVAL      G_BRBTNB = KBCNO
      C                   EVAL      G_BRBCDA = BRBCDA
      C                   EVAL      G_BRDPCD = BRDPCD

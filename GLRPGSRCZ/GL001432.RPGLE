@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD050696           Date 15May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050696 - Multicash extended narratives from BuN interface  *
+      *            postings not merged in field 86                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -437,7 +440,8 @@
       ** Batch Transaction
 
      C/COPY WNCPYSRC,GLH00418
-     C     '0123456789'  CHECK     GLSPOS        X
+     C*****'0123456789'  CHECK     GLSPOS        X                                          MD050696
+     C     ' '           SCAN      GLSPOS        X                                          MD050696
 
       ** If Source of Posting contains 6 numeric digits (batch number + batch item)
 

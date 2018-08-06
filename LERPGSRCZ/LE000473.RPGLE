@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD049078           Date 12Jan18               *
+      *  Last Amend No. MD049745A          Date 16Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD049078           Date 12Jan18               *
       *                 MD046080           Date 17Sep17               *    
       *                 MD035433           Date 02Sep15               *
       *                 MD033895           Date 15Apr15               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745A - Corruption of Original currency of Loans and     *
+      *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
@@ -710,6 +713,9 @@
      DCLE023           S              1
      DCLE025           S              1
      DCLE031           S              1                                                     MD046080
+     DWSCCY            S              3A                                                   MD049745A
+     DWSIND            S              1A                                                   MD049745A
+     DWSRATE           S             13P 8                                                 MD049745A
      DWKLNR            S              6
      DWKVDT            S              5  0
      DWKLSN            S              3  0
@@ -1022,6 +1028,20 @@
      D wPRFD           S              4A
      D ProcessingType  S              1A
      D ExistLEPRAT     S              1A   INZ(*OFF)
+     D WINAMT          S             15  0                                                 MD049745A
+     D WRATE           S             13  8                                                 MD049745A
+     D WSPRT1          S             13  8                                                 MD049745A
+     D WSPRT2          S             13  8                                                 MD049745A
+     D WMDIN           S              1A                                                   MD049745A
+     D WMDIN1          S              1A                                                   MD049745A
+     D WMDIN2          S              1A                                                   MD049745A
+     D WCCY1           S              3A                                                   MD049745A
+     D WCCY2           S              3A                                                   MD049745A
+     D WNBDP1          S              1  0                                                 MD049745A
+     D WNBDP2          S              1  0                                                 MD049745A
+     D WOUTAMT         S             15  0                                                 MD049745A
+     D WIND1           S              1A                                                   MD049745A
+     D WREV            S              1A                                                   MD049745A
                                                                                             MD022465
      D CurrKey         S                   LIKE (A6CYCD)                                    MD022465
      D CurrIdx         S              3  0 INZ(1)                                           MD022465
@@ -1445,6 +1465,9 @@
  
      C                   IF        %FOUND
      C     WFELNK2       CHAIN(N)  CLOANLF                            99
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      @CURR = LF_CCY                                          MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   EXSR      SRPDCLUP
      C                   ELSE
       *
@@ -1550,6 +1573,9 @@
      C                   MOVE      C_FTYP        WFTYP
      C                   MOVE      C_FSEQ        WFSEQ
      C                   EVAL      WLSEQ = WFSEQ
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      @CURR = C_CCY                                           MD049745A
+     C                   ENDIF                                                             MD049745A
      C     WFLNO         CHAIN     CLOANC
      C                   EVAL      RecordType = FeeLoan
      C                   ENDIF
@@ -1716,6 +1742,12 @@
      C                   MOVE      W@FSEQ        YESEQ
      C                   MOVE      W@LOAN        YPORG
      C                   Z-ADD     WCPAM         YPCPAM
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WCPAM                                          MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   Z-ADD     0             YPDINT
      C                   MOVE      AUFAMU        YPFAMU
      C                   MOVE      'N'           YPSIIN
@@ -1774,6 +1806,18 @@
      C                   MOVE      WPIIN         YPDCT
      C                   Z-ADD     WCPAM         YPCPAM
      C                   Z-ADD     WINT          YPDINT
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WCPAM                                          MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WINT                                           MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVE      AYFAMU        YPFAMU
      C                   MOVE      'N'           YDECRE
      C                   MOVE      AYSIIN        YPSIIN
@@ -1842,6 +1886,19 @@
       *
       ** Update the summary record
       *
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WREV = 'Y'                                              MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WINAMT = YPDINT                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = WOUTAMT                                        MD049745A
+     C                   EVAL      WREV = ' '                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   IF        WPIIN = 'P' OR WPIIN = 'T'
      C                   EVAL      YPCPAM = YPCPAM + WCPAM
      C                   ENDIF
@@ -1849,6 +1906,17 @@
      C                   EVAL      YPDINT = YPDINT + WINT
      C                   ENDIF
      C                   EVAL      YPFRNT= WPDCLSEQ
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WINAMT = YPDINT                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   UPDATE    LEPDUED0
  
       ** Create a new details record
@@ -1885,6 +1953,17 @@
      C                   PARM                    YPTMST
      C                   Z-ADD     W@LASN        YPOSEQ
      C                   EVAL      YPFRNT= WPDCLSEQ
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WINAMT = YPDINT                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   WRITE     LEPDUED0
  
       ** Fees
@@ -1893,7 +1972,21 @@
  
       ** Update the summary record
  
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WREV = 'Y'                                              MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   EVAL      WREV = ' '                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   EVAL      YPCPAM = YPCPAM + WCPAM
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   EVAL      YPFRNT= WPDCLSEQ
      C                   UPDATE    LEPDUFD0
  
@@ -1902,6 +1995,12 @@
  
      C                   EVAL      YRECI = 'P'
      C                   EVAL      YPCPAM = WCPAM
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   EVAL      YDECRE = 'N'
      C                   EVAL      YPSIIN = 'N'
      C                   EVAL      YPCIIN = 'N'
@@ -2305,6 +2404,12 @@
      C                   IF        @CURR <> *BLANKS                                         MD022465
      C                   EXSR      SrChkCurr
      C                   ENDIF                                                              MD022465
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WCPAM                                          MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      WCPAM = WOUTAMT                                         MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     WCPAM         ZFLD15
      C                   EXSR      SrConvAmt
      C                   EVAL      PFldData = %TRIM(ZOUT21)
@@ -3835,6 +3940,9 @@
      C                   PARM                    W@LASN
      C                   PARM                    W@AVDAT
      C                   PARM                    W@DCLTYP
+     C                   PARM                    WSCCY                                     MD049745A
+     C                   PARM                    WSIND                                     MD049745A
+     C                   PARM                    WSRATE                                    MD049745A
       *
       ** Output.
       *
@@ -4249,17 +4357,35 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WCPAM <> 0
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WCPAM                                          MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      WCPAM = WOUTAMT                                         MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     WCPAM         ZFLD15
      C                   EVAL      MQPDPR = WCPAM
      C                   EVAL      MQPDIN = 0
      C                   EVAL      MQAMNT = WCPAM
      C                   ELSE
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WINT                                           MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      WINT = WOUTAMT                                          MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     WINT          ZFLD15
      C                   EVAL      MQPDPR = 0
      C                   EVAL      MQPDIN = WINT
      C                   EVAL      MQAMNT = WINT
      C                   ENDIF
      C                   OTHER
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = WCPAM                                          MD049745A
+     C                   EVAL      WCCY2 = @CURR                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      WCPAM = WOUTAMT                                         MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     WCPAM         ZFLD15
      C                   EVAL      MQPDIN = 0
      C                   EVAL      MQPDPR = WCPAM
@@ -5994,6 +6120,80 @@
       *****************************************************************                     MD023203
       /EJECT                                                                                MD023203
       *****************************************************************                     MD023203
+      *****************************************************************                    MD049745A
+      *                                                               *                    MD049745A
+      * SrConvert - Convert Currency                                  *                    MD049745A
+      *                                                               *                    MD049745A
+      *****************************************************************                    MD049745A
+                                                                                           MD049745A
+     C     SrConvert     BEGSR                                                             MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WCCY1 = WSCCY                                           MD049745A
+     C                   IF        WSIND = 'M'                                             MD049745A
+     C                   EVAL      WMDIN = 'D'                                             MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMDIN = 'M'                                             MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   IF        WREV = 'Y'                                              MD049745A
+     C                   IF        WMDIN = 'M'                                             MD049745A
+     C                   EVAL      WMDIN = 'D'                                             MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMDIN = 'M'                                             MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   ENDIF                                                             MD049745A
+                                                                                           MD049745A
+      ** If one of currencies is blank, skip conversion                                    MD049745A
+                                                                                           MD049745A
+     C                   IF        WCCY1 = *BLANKS or WCCY2 = *BLANKS                      MD049745A
+     C                   EVAL      WOUTAMT = WINAMT                                        MD049745A
+     C                   ELSE                                                              MD049745A
+                                                                                           MD049745A
+      ** From currency                                                                     MD049745A
+                                                                                           MD049745A
+     C                   CALLB     'AOCURRR0'                                              MD049745A
+     C                   PARM      *BLANK        @RTCD                                     MD049745A
+     C                   PARM      '*KEY   '     @OPTN                                     MD049745A
+     C                   PARM                    WCCY1                                     MD049745A
+     C     SDCURR        PARM      SDCURR        DSSDY                                     MD049745A
+                                                                                           MD049745A
+      ** Save necessary details                                                            MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WSPRT1 = A6SPRT                                         MD049745A
+     C                   EVAL      WMDIN1 = A6MDIN                                         MD049745A
+     C                   EVAL      WNBDP1 = A6NBDP                                         MD049745A
+      ** To currency                                                                       MD049745A
+                                                                                           MD049745A
+     C                   CALLB     'AOCURRR0'                                              MD049745A
+     C                   PARM      *BLANK        @RTCD                                     MD049745A
+     C                   PARM      '*KEY   '     @OPTN                                     MD049745A
+     C                   PARM                    WCCY2                                     MD049745A
+     C     SDCURR        PARM      SDCURR        DSSDY                                     MD049745A
+                                                                                           MD049745A
+      ** Save necessary details                                                            MD049745A
+                                                                                           MD049745A
+     C                   EVAL      WSPRT2 = A6SPRT                                         MD049745A
+     C                   EVAL      WMDIN2 = A6MDIN                                         MD049745A
+     C                   EVAL      WNBDP2 = A6NBDP                                         MD049745A
+                                                                                           MD049745A
+      ** Convert amount                                                                    MD049745A
+                                                                                           MD049745A
+     C                   CALL      'ZCONVZ1'                                               MD049745A
+     C                   PARM                    WINAMT                                    MD049745A
+     C                   PARM                    WSRATE                                    MD049745A
+     C                   PARM                    WMDIN                                     MD049745A
+     C                   PARM                    WCCY1                                     MD049745A
+     C                   PARM                    WCCY2                                     MD049745A
+     C                   PARM                    WNBDP1                                    MD049745A
+     C                   PARM                    WNBDP2                                    MD049745A
+     C                   PARM                    WOUTAMT                                   MD049745A
+                                                                                           MD049745A
+     C                   ENDIF                                                             MD049745A
+                                                                                           MD049745A
+     C                   ENDSR                                                             MD049745A
+                                                                                           MD049745A
+      *****************************************************************                    MD049745A
+      /EJECT                                                                               MD049745A
+      *****************************************************************                    MD049745A
 **  CPY@
 (c) Finastra International Limited 2013
 **  POWR -- USED IN CURRENCY CONVERSION(FACILITY)

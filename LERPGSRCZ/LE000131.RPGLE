@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD049745A          Date 16Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046080           Date 17Sep17               *
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD022807H          Date 22Apr14               *
@@ -43,6 +44,8 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745A - Corruption of Original currency of Loans and     *
+      *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *    
@@ -218,6 +221,10 @@
      D w@OPdam         S             15P 0
      D w@OPdInt        S             15P 0
      D W@BCR           S              1A                                                   MK021423E
+     D WSCCY           S              3A                                                   MD049745A
+     D WSIND           S              1A                                                   MD049745A
+     D WSRATE          S             13P 8                                                 MD049745A
+     D WREV            S              1A                                                   MD049745A
  
      D ZS2             S              1    DIM(21)
      D                 DS
@@ -436,6 +443,9 @@
      C                   MOVE      'N'           WPastDue
      C                   MOVE      'N'           WReverse
      C                   MOVE      *BLANKS       WDrCr
+     C                   EVAL      WSCCY = *Blanks                                         MD049745A
+     C                   EVAL      WSIND = *Blanks                                         MD049745A
+     C                   EVAL      WSRATE = *ZERO                                          MD049745A
      C                   Z-ADD     LKEAMT        WRepaym
      C     WRepaym       IFLT      0
      C                   MULT      -1            WRepaym
@@ -639,6 +649,16 @@
      C     YTYLC         ANDNE     'R'
      C     W@TotPD       ANDLT     LKEAMT
  
+                                                                                           MD049745A
+      ** Convert amount to loan currency when CLE031 is *ON                                MD049745A
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WREV = 'Y'                                              MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      ORWAMT = YPCPAM                                         MD049745A
+     C                   EXSR      SRCvtAmt                                                MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   EVAL      WREV = ' '                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C     YPCPAM        IFLE      LKEAMT
      C                   ADD       YPCPAM        W@TotPD
      C                   ELSE
@@ -654,6 +674,14 @@
      C     W@TotPD       SUB       LKEAMT        W@EAMT
      C                   Z-ADD     W@EAMT        YPCPAM
      C                   ENDIF
+                                                                                           MD049745A
+      ** Convert amount to loan currency when CLE031 is *ON                                MD049745A
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WINAMT = YPCPAM                                         MD049745A
+     C                   EVAL      ORWAMT = YPCPAM                                         MD049745A
+     C                   EXSR      SRCvtAmt                                                MD049745A
+     C                   EVAL      YPCPAM = WOUTAMT                                        MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   UPDATE    LEPDUFD0
      C                   ENDIF
      C                   ENDDO
@@ -843,6 +871,9 @@
      C                   PARM      0             W@LASN
      C                   PARM                    W@AVDAT
      C                   PARM      'P'           W@Type
+     C                   PARM                    WSCCY                                     MD049745A
+     C                   PARM                    WSIND                                     MD049745A
+     C                   PARM                    WSRATE                                    MD049745A
  
       ** Output parm
  
@@ -973,12 +1004,22 @@
      C                   EVAL      WREXI = FEREXI                                           MD046080
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
+     C                   EVAL      WSCCY = WCCY1                                           MD049745A
+     C                   EVAL      WSIND = WREXI                                           MD049745A
+     C                   EVAL      WSRATE = WRATE                                          MD049745A
      C                   EVAL      WCCY2 = FEFCCY                                           MD046080
      C                   IF        WREXI = 'M'                                              MD046080
      C                   EVAL      WMDIN = 'D'                                              MD046080
      C                   ELSE                                                               MD046080
      C                   EVAL      WMDIN = 'M'                                              MD046080
      C                   ENDIF                                                              MD046080
+     C                   IF        WREV = 'Y'                                              MD049745A
+     C                   IF        WMDIN = 'M'                                             MD049745A
+     C                   EVAL      WMDIN = 'D'                                             MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMDIN = 'M'                                             MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   ENDIF                                                             MD049745A
                                                                                             MD046080
       ** If one of currencies is blank, skip conversion                                     MD046080
                                                                                             MD046080

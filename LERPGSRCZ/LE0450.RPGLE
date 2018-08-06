@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049444           Date 07Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049745A          Date 16Mar18               *
+      *  Prev Amend No. MD049745           Date 02Mar18               *
+      *                 MD049444           Date 07Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD049078           Date 12Jan18               *
       *                 MD048557           Date 27Nov17               *
       *                 MD048609           Date 22Nov17               *
@@ -382,6 +384,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745A - Corruption of Original currency of Loans and     *
+      *              PDCLs incorrect postings                         *
+      *  MD049745 - Corruption of Original currency of Loans and PDCLs*
+      *             incorrect postings                                *
       *  MD049444 - Allow negative input in Funding rate/spread.      *
       *             Partially applied MD034915 fix. Also corrected    *
       *             accrual processing based on MD034915 fix.         *
@@ -6558,6 +6564,8 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      *BLANKS       WPDCLA            1                          CLE134
      C                   MOVE      *BLANKS       WPDCLR            1                          CLE134
      C                   EVAL      WCLE134 = ' '                                            MD049078
+     C                   Z-ADD     0             WPKAMT           13 0                      MD049745
+     C                   Z-ADD     0             WIKAMT           13 0                      MD049745
       *                                                                                       CLE134
      C                   MOVE      '0'           *IN15                                         18004
 0959 C     NORA          ADD       1             NORA
@@ -7130,7 +7138,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on  call SR/SETTLE                                              CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   MOVE      OSACSV        OSAC
      C                   MOVE      SETPSV        SETP
      C                   EXSR      SETTLE
@@ -7516,7 +7524,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on call SR/SETTLE                                               CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -7775,6 +7783,10 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C                   ENDIF
      C  N89              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     *IN89         ANDEQ     '0'                                                      MD049745
+     C                   EVAL      WPKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
       *                                                                                       262967
       ** WORIGA = Y: Original Loan Repayment with PDCL generated in                           262967
       ** I/C and field DECRESE = 'Y' then generate an additional                              262967
@@ -7798,7 +7810,7 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -8213,7 +8225,7 @@ L118 I                             P   72   77 7RTSPL
       ** call SR/SETTLE then set work penalty to blanks                                       CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   MOVE      'P'           WPNLTY            1
      C                   EXSR      SETTLE
      C                   MOVE      *BLANKS       WPNLTY
@@ -8581,7 +8593,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on call SR/SETTLE                                               CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -8668,13 +8680,17 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
       *                                                                                       CLE031
 1346 C  N89              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     *IN89         ANDEQ     '0'                                                      MD049745
+     C                   EVAL      WPKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 is off then                                 CLE031
       ** call SR/SETTLE                                                                       CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   MOVE      OSACSV        OSAC
      C                   MOVE      SETPSV        SETP
      C                   EXSR      SETTLE
@@ -9719,13 +9735,17 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
 1535 C**N89*****           EXSR AKYOUT                                                      AR317587
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     *IN89         ANDEQ     *OFF                                                     MD049745
+     C                   EVAL      WPKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 is off then                                 CLE031
       ** set work type to 'end' and goto SR/SETTLE                                            CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -10033,12 +10053,15 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
 1584 C**N89*****           EXSR AKYOUT                                                      AR317587
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C                   EVAL      WPKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
       *                                                                                       CLE031
       ** If feature CLE031 is on and indicator 89 is off goto SR/SETTLE                       CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -12358,9 +12381,14 @@ L118 I                             P   72   77 7RTSPL
      C**********         Z-ADD     650           SEPCKM                              AR996719 CLE164
      C**********         Z-ADD     650           SEPCKT                                263074 CLE164
      C**********         Z-ADD     INTA          KEAMT                               263074 MD046080
-     C     CLE034        IFNE      'Y'                                                      MD049078
+     C*****CLE034        IFNE      'Y'                                             MD049078 MD049745
      C                   Z-ADD     INTA          KEAMT                                      MD048557
-     C                   ENDIF                                                              MD049078
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     WIKAMT        ANDNE     0                                                        MD049745
+     C                   EVAL      KEAMT = WIKAMT                                           MD049745
+     C                   EVAL      KIAMT = WIKAMT                                          MD049745A
+     C                   ENDIF                                                              MD049745
+     C**********         ENDIF                                                     MD049078 MD049745
      C*****CLE031        IFEQ      'Y'                                             MD046080 MD049078
      C*****CLE034        IFEQ      'Y'                                             MD046080 MD049078
      C*****STAL          ANDEQ     'Y'                                             MD046080 MD049078
@@ -12452,9 +12480,14 @@ L118 I                             P   72   77 7RTSPL
                                                                                               CLE164
      C                                                                                        CLE164
      C**********         Z-ADD     PRAM          KEAMT                               263074 MD046080
-     C     CLE034        IFNE      'Y'                                                      MD049078
+     C*****CLE034        IFNE      'Y'                                             MD049078 MD049745
      C                   Z-ADD     PRAM          KEAMT                                      MD048557
-     C                   ENDIF                                                              MD049078
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     WPKAMT        ANDNE     0                                                        MD049745
+     C                   EVAL      KEAMT = WPKAMT                                           MD049745
+     C                   EVAL      KPAMT = WPKAMT                                          MD049745A
+     C                   ENDIF                                                              MD049745
+     C**********         ENDIF                                                     MD049078 MD049745
      C*****CLE031        IFEQ      'Y'                                             MD046080 MD049078
      C*****CLE034        IFEQ      'Y'                                             MD046080 MD049078
      C*****STAL          ANDEQ     'Y'                                             MD046080 MD049078
@@ -12491,11 +12524,15 @@ L118 I                             P   72   77 7RTSPL
      C**********         MOVE      WWCCY         KECCY                             MD046080 MD049078
      C**********         ENDIF                                                     MD046080 MD049078
      C                   Z-ADD     PRAM          KPAMT                                        263074
+     C     CLE031        IFEQ      'Y'                                                     MD049745A
+     C     WPKAMT        ANDNE     0                                                       MD049745A
+     C                   EVAL      KPAMT = WPKAMT                                          MD049745A
+     C                   ENDIF                                                             MD049745A
 	                                                                                        MD049078
-     C     CLE034        IFEQ      'Y'                                                      MD049078
-     C     STAL          ANDEQ     'Y'                                                      MD049078
-     C                   Z-ADD     KEAMT         KPAMT                                      MD049078
-     C                   ENDIF                                                              MD049078
+     C*****CLE034        IFEQ      'Y'                                            MD049078 MD049745A
+     C*****STAL          ANDEQ     'Y'                                            MD049078 MD049745A
+     C**********         Z-ADD     KEAMT         KPAMT                            MD049078 MD049745A
+     C**********         ENDIF                                                    MD049078 MD049745A
      C                   Z-ADD     0             KIAMT                                        263074
                                                                                               CLE164
      C                   EXSR      SRRETRPKY                                                  CLE164
@@ -12835,9 +12872,17 @@ L118 I                             P   72   77 7RTSPL
 1742 C**N89*****           EXSR AKYOUT                                                        CLE028
      C     AMTP          IFEQ      'MA'
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C                   EVAL      WIKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
      C                   ELSE
      C  N89
 1742 CANN77              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD049745
+     C     *IN77         ANDEQ     '0'                                                      MD049745
+     C     *IN89         ANDEQ     '0'                                                      MD049745
+     C                   EVAL      WIKAMT = ACAMNT                                          MD049745
+     C                   ENDIF                                                              MD049745
      C                   ENDIF
       *                                                                                       262967
       ** WORIGA = Y: Original Loan Repayment must generate                                    262967
@@ -14337,7 +14382,7 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -14537,7 +14582,7 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   MOVE      'I'           WINT              1
      C                   EXSR      SETTLE
      C                   MOVE      *BLANKS       WINT
@@ -14876,7 +14921,7 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
-     C     WCLE134       ANDEQ     ' '                                                      MD049078
+     C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF
       *                                                                                       CLE034
@@ -17940,6 +17985,7 @@ C    C                   ENDIF                                                  
      C                   MOVEA     AKY           AKYSV            10
       *                                                                                       CLE031
      C     WPROC         IFEQ      'Y'
+     C     WCLE134       IFEQ      ' '                                                      MD049745
       *                                                                                       CLE031
      C                   MOVEA     AKY           OKEY
      C                   MOVE      'S'           AKY(3)
@@ -18042,6 +18088,8 @@ C    C                   ENDIF                                                  
      C                   MOVEA     ' S'          AKY(9)
      C                   MOVEA     WSCCY         AKY(6)
      C                   EXSR      AKYOUT
+                                                                                            MD049745
+     C                   ENDIF                                                              MD049745
       *                                                                                       CLE031
      C                   MOVEA     AKYSV         AKY
      C                   MOVE      CCYLSV        CCYL

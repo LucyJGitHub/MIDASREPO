@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048557           Date 27Nov17               *
+      *  Last Amend No. MD049745A          Date 16Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048557           Date 27Nov17               *
       *                 MD046080           Date 21Sep17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745A - Corruption of Original currency of Loans and     *
+      *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048557 - Failing COB Component - LEC000471A                *
       *  MD046080 - Gap between CLE031 and CLE134                     *      
@@ -142,6 +145,10 @@
      FLESTALLH  IF   E           K DISK    INFSR(*PSSR)                                     MD046080
      F                                     RENAME(LESTALD0:LESTALD1)                        MD046080
      F                                     PREFIX(H_)                                       MD046080
+      *                                                                                    MD049745A
+     FLEACT5L5  IF   E           K DISK    INFSR(*PSSR)                                    MD049745A
+     F                                     RENAME(LOAMSDKF:LOAMSDK1)                       MD049745A
+     F                                     PREFIX(L_)                                      MD049745A
       *
       ** Past Due Call Loans Account Keys Generated Report
      FLE000456P1O    E             PRINTER INFDS(SPOOL1)
@@ -367,6 +374,12 @@
      D CLE031          S              1A                                                    MD046080
      D CLE034          S              1A                                                    MD046080
      D WZCCY           S              3A                                                    MD046080
+     D WWEAMT          S             15P 0                                                 MD049745A
+     D WSCCY           S              3A                                                   MD049745A
+     D WSIND           S              1A                                                   MD049745A
+     D WSRATE          S             13P 8                                                 MD049745A
+     D WREV            S              1A                                                   MD049745A
+     D WMINUS          S              1A                                                   MD049745A
  
       ** Cache Work Variables and Storage
  
@@ -563,6 +576,10 @@
      C                   EVAL      WPastDue = 'N'
      C                   EVAL      WReverse = 'N'
      C                   EVAL      WDrCr = *BLANKS
+     C                   EVAL      WSCCY = *Blanks                                         MD049745A
+     C                   EVAL      WSIND = *Blanks                                         MD049745A
+     C                   EVAL      WSRATE = *ZERO                                          MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
  
  
      C                   IF        AUTO = 'C'
@@ -700,6 +717,16 @@
       ** Flag to ignore past due interest
       *
      C                   EVAL      WignoreI = *BLANKS
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WWEAMT = EAMT                                           MD049745A
+     C                   EVAL      EAMT = PAMT                                             MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      PAMT = EAMT                                             MD049745A
+     C                   EVAL      EAMT = IAMT                                             MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      IAMT = EAMT                                             MD049745A
+     C                   EVAL      EAMT = WWEAMT                                           MD049745A
+     C                   ENDIF                                                             MD049745A
       *
       ** Generate PDCL - CALL LEC000473
       *
@@ -738,6 +765,9 @@
      C                   PARM      ALASN         W@LASN
      C                   PARM                    W@AVDAT
      C                   PARM                    W@Type
+     C                   PARM                    WSCCY                                     MD049745A
+     C                   PARM                    WSIND                                     MD049745A
+     C                   PARM                    WSRATE                                    MD049745A
       *
       ** Output parm
       **  Past Due Principal
@@ -749,6 +779,18 @@
      C                   PARM      *BLANKS       w@FELN
      C                   PARM      'LEC000456'   W@PGNM
      C                   PARM      BlockCredit   W@BCR                                     MD021423E
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WREV = 'Y'                                              MD049745A
+     C                   EVAL      WWEAMT = EAMT                                           MD049745A
+     C                   EVAL      EAMT = PAMT                                             MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      PAMT = EAMT                                             MD049745A
+     C                   EVAL      EAMT = IAMT                                             MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      IAMT = EAMT                                             MD049745A
+     C                   EVAL      EAMT = WWEAMT                                           MD049745A
+     C                   EVAL      WREV = ' '                                              MD049745A
+     C                   ENDIF                                                             MD049745A
       *
       ** If Return code is NOINTPD, then ignore interest
       *
@@ -818,6 +860,9 @@
      C                   ENDIF
      C                   EVAL      EAMT = W@Opdam
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -829,6 +874,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
       *
       ** Write new account key: field xxRyy---DI
       *
@@ -842,6 +893,9 @@
      C                   EVAL      EAMT = W@OPdInt
      C                   EVAL      EAMT = EAMT * WMult
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -855,6 +909,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
       *
      C                   ELSE
@@ -869,6 +929,9 @@
      C                   IF        W@Opdam <> 0
      C                   EVAL      EAMT = W@Opdam
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -895,6 +958,9 @@
      C                   MOVEL     Wf10          AKEY
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
       *
      C                   UPDATE    LEPK1DPF
      C**********         EVAL      EAMT = WWWAMT                                   MD046080 MD048557
@@ -906,6 +972,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
       *
       ** If Total Past Due does not match original value of EAMT
@@ -917,6 +989,9 @@
      C                   IF        w@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = SEACCY                                           MD049745A
+     C                   ENDIF                                                             MD049745A
       *
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      ' B'          Wf10
@@ -967,6 +1042,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
       *
       ** Write Past Due Principal account key
       *
@@ -976,6 +1057,9 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XP'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -989,6 +1073,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
       *
       ** Past Due Interest
@@ -1002,6 +1092,9 @@
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
      C                   EXSR      SrConvert                                                MD046080
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = CCY                                              MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
@@ -1015,6 +1108,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
      C                   ENDIF
       *
@@ -1028,6 +1127,9 @@
      C                   IF        w@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      ECCY = SEACCY                                           MD049745A
+     C                   ENDIF                                                             MD049745A
       *
      C                   MOVEL     AKEY          Wf10
      C                   MOVE      ' B'          Wf10
@@ -1125,6 +1227,16 @@
  
      C                   IF        *IN87 = *OFF
      C                             AND YTYLC <> 'R'
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      WREV = 'Y'                                              MD049745A
+     C                   EVAL      EAMT = YPDINT                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = EAMT                                           MD049745A
+     C                   EVAL      EAMT = YPCPAM                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = EAMT                                           MD049745A
+     C                   EVAL      WREV = ' '                                              MD049745A
+     C                   ENDIF                                                             MD049745A
  
       ** Past due principal
  
@@ -1159,6 +1271,14 @@
      C                   SUB       W@TotPI       YPDINT
      C                   SUB       W@TotPD       YPCPAM
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                   EVAL      EAMT = YPDINT                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPDINT = EAMT                                           MD049745A
+     C                   EVAL      EAMT = YPCPAM                                           MD049745A
+     C                   EXSR      SrConvert                                               MD049745A
+     C                   EVAL      YPCPAM = EAMT                                           MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   UPDATE    LEPDUED0
      C                   ENDIF
      C                   ENDDO
@@ -1195,6 +1315,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
  
       ** Interest: write a new record on the account key file
@@ -1219,6 +1345,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ENDIF
  
       ** If total reversed out is different from Account key original
@@ -1295,6 +1427,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
  
       ** If total reversed out is different from Account key original
       ** amount, then create an account key xxRyy----B  with amount =
@@ -1316,6 +1454,12 @@
      C                   ELSE
      C                   EVAL      w@adjamt = w@adjamt - EAMT
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND w@adjamt < 1                                        MD049745A
+     C                   EVAL      WMINUS = 'Y'                                            MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMINUS = ' '                                            MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   ADD       1             W@NewRc
      C                   ENDIF
  
@@ -1347,6 +1491,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C     KACTN5        CHAIN     LEACT5L5                                                MD049745A
+     C                   IF        %FOUND(LEACT5L5)                                        MD049745A
+     C                   EVAL      SCCY = L_SCCY                                           MD049745A
+     C                   EVAL      REXR = L_REXR                                           MD049745A
+     C                   EVAL      REXI = L_REXI                                           MD049745A
+     C                   EVAL      PSCY = L_PSCY                                           MD049745A
+     C                   EVAL      PEXR = L_PEXR                                           MD049745A
+     C                   EVAL      PEXI = L_PEXI                                           MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   ENDIF                                                             MD049745A
      C                   EVAL      RECI = K_RECI
       *
      C                   ENDSR
@@ -1385,15 +1540,24 @@
      C                             AND PTYP <> 67                                           MD046080
      C                             AND PTYP <> 69                                           MD046080
      C                             AND PTYP <> 72                                           MD046080
-     C                   EVAL      WCCY1 = PSCY                                             MD046080
-     C                   EVAL      WRATE = PEXR                                             MD046080
-     C                   EVAL      WIND1 = PEXI                                             MD046080
+     C**********         EVAL      WCCY1 = PSCY                                   MD046080 MD049745A
+     C**********         EVAL      WRATE = PEXR                                   MD046080 MD049745A
+     C**********         EVAL      WIND1 = PEXI                                   MD046080 MD049745A
+     C                   EVAL      WCCY1 = SCCY                                            MD049745A
+     C                   EVAL      WRATE = REXR                                            MD049745A
+     C                   EVAL      WIND1 = REXI                                            MD049745A
      C                   ELSE                                                               MD046080
-     C                   EVAL      WCCY1 = SCCY                                             MD046080
-     C                   EVAL      WRATE = REXR                                             MD046080
-     C                   EVAL      WIND1 = REXI                                             MD046080
+     C**********         EVAL      WCCY1 = SCCY                                   MD046080 MD049745A
+     C**********         EVAL      WRATE = REXR                                   MD046080 MD049745A
+     C**********         EVAL      WIND1 = REXI                                   MD046080 MD049745A
+     C                   EVAL      WCCY1 = PSCY                                            MD049745A
+     C                   EVAL      WRATE = PEXR                                            MD049745A
+     C                   EVAL      WIND1 = PEXI                                            MD049745A
      C                   ENDIF                                                              MD046080
      C                   ENDIF                                                              MD046080
+     C                   EVAL      WSCCY = WCCY1                                           MD049745A
+     C                   EVAL      WSIND = WIND1                                           MD049745A
+     C                   EVAL      WSRATE = WRATE                                          MD049745A
      C                   EVAL      WCCY2 = CCY                                              MD046080
      C                   EVAL      WWWAMT = EAMT                                            MD046080
      C                   EVAL      WINAMT = EAMT                                            MD046080
@@ -1402,6 +1566,13 @@
      C                   ELSE                                                               MD046080
      C                   EVAL      WMDIN = 'M'                                              MD046080
      C                   ENDIF                                                              MD046080
+     C                   IF        WREV = 'Y'                                              MD049745A
+     C                   IF        WMDIN = 'M'                                             MD049745A
+     C                   EVAL      WMDIN = 'D'                                             MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMDIN = 'M'                                             MD049745A
+     C                   ENDIF                                                             MD049745A
+     C                   ENDIF                                                             MD049745A
                                                                                             MD046080
       ** If one of currencies is blank, skip conversion                                     MD046080
                                                                                             MD046080
@@ -1452,7 +1623,7 @@
      C                   ENDIF                                                              MD046080
      C                   EVAL      EAMT = WOUTAMT                                           MD046080
      C                   EVAL      WZCCY = ECCY                                             MD046080
-     C                   EVAL      ECCY = CCY                                               MD046080
+     C**********         EVAL      ECCY = CCY                                     MD046080 MD049745A
      C                   ELSE                                                               MD046080
      C                   EVAL      WWWAMT = EAMT                                            MD046080
      C                   EVAL      WZCCY = ECCY                                             MD046080
@@ -1493,7 +1664,12 @@
       *
      C                   Z-ADD     VLRF          ZZTOTI
      C                   Z-ADD     VLRL          ZZTOTD
+     C                   IF        CLE031 = 'Y'                                            MD049745A
+     C                             AND WMINUS = 'Y'                                        MD049745A
+     C                   EXSR      GLZSUB                                                  MD049745A
+     C                   ELSE                                                              MD049745A
      C                   EXSR      GLZADD
+     C                   ENDIF                                                             MD049745A
      C                   Z-ADD     ZZTOTI        VLRF
      C                   Z-ADD     ZZTOTD        VLRL
  
@@ -1905,6 +2081,11 @@
      C                   KFLD                    LNRF                                       MD046080
      C                   KFLD                    WSET                                       MD046080
                                                                                             MD046080
+     C     KACTN5        KLIST                                                             MD049745A
+     C                   KFLD                    LNNO                                      MD049745A
+     C                   KFLD                    AVDAT                                     MD049745A
+     C                   KFLD                    ALASN                                     MD049745A
+                                                                                           MD049745A
      C                   EVAL      RCDTT = 'A'
  
       ** Access General Ledger details

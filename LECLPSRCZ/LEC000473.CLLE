@@ -9,14 +9,17 @@
 /*                                                                 */
 /*       (c) Finastra International Limited 2012                   */
 /*                                                                 */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021423E          Date 12Sep13              */
+/*       Last Amend No. MD049745A          Date 16Mar18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021423E          Date 12Sep13              */
 /*                      AR1085742          Date 06Feb13              */
 /*                      AR796443           Date 15Jan13            */
 /*                      CLE134 *CREATE     Date 01Aug12            */
 /*                                                                 */
 /*******************************************************************/
 /*                                                                 */
+/*       MD049745A - Corruption of Original currency of Loans and    */
+/*                  PDCLs incorrect postings                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021423E - Deal date should be the deal date of the OL   */
 /*                   Pay instruction should be defaulted from rec. */
@@ -29,14 +32,19 @@
 /*       CLE134 - Past Due Call Loan Processing                    */
 /*                                                                 */
 /*******************************************************************/
-             PGM        PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ +
+/**********  PGM        PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ +
                            &W@FCOD &W@FACL &W@FBRC +
                            &W@CNU2 &W@EDATYP +
                            &W@PDAMT &W@INT &W@AV &W@ORIGP &W@ORIGI +
                            &W@LASN &W@AVDAT &WPDCLTYP &W@OPDAM +
-                           &W@OPDINT &WYPLNR &PGNM &WBCR)                              /*MD021423E*/
+                           &W@OPDINT &WYPLNR &PGNM &WBCR) */                 /*MD021423E MD049745A*/
 /**********                &W@OPDINT &WYPLNR &PGNM)                */        /*AR1085742 MD021423E*/
 /**********                &W@OPDINT &WYPLNR)    */                                    /*AR1085742*/
+             PGM        PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ &W@FCOD &W@FACL +
+                          &W@FBRC &W@CNU2 &W@EDATYP &W@PDAMT &W@INT &W@AV &W@ORIGP +
+                          &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP &WSCCY &WSIND +
+                          &WSRATE &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR) +
+                          /*MD049745A*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                            Finastra International Limited +
@@ -64,6 +72,9 @@
              DCL        VAR(&WYPLNR)   TYPE(*CHAR) LEN(  6)
              DCL        VAR(&PGNM)     TYPE(*CHAR) LEN( 10)                            /*AR1085742*/
              DCL        VAR(&WBCR)     TYPE(*CHAR) LEN(  1)                            /*MD021423E*/
+             DCL        VAR(&WSCCY)    TYPE(*CHAR) LEN(  3)                            /*MD049745A*/
+             DCL        VAR(&WSIND)    TYPE(*CHAR) LEN(  1)                            /*MD049745A*/
+             DCL        VAR(&WSRATE)   TYPE(*DEC ) LEN( 15)                            /*MD049745A*/
  
              DCL        VAR(&JOBTYPE)  TYPE(*CHAR) LEN(  1)
              DCL        VAR(&MEM)      TYPE(*CHAR) LEN( 50)
@@ -89,13 +100,17 @@
  
 /** Call PDCL creation/update */
  
-             CALL       PGM(LE000473) PARM(&WRETCD &W@TYPE &W@LOAN +
+/**********  CALL       PGM(LE000473) PARM(&WRETCD &W@TYPE &W@LOAN +
                            &W@FSEQ &W@FCOD &W@FACL &W@FBRC &W@CNU2 +
                            &W@EDATYP &W@PDAMT &W@INT &W@AV &W@ORIGP +
                            &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP +
-                           &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR)                     /*MD021423E*/
+                           &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR) */        /*MD021423E MD049745A*/
 /**********                &W@OPDAM &W@OPDINT &WYPLNR &PGNM)       */        /*AR1085742 MD021423E*/
 /**********                &W@OPDAM &W@OPDINT &WYPLNR)     */                          /*AR1085742*/
+             CALL       PGM(LE000473) PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ &W@FCOD +
+                          &W@FACL &W@FBRC &W@CNU2 &W@EDATYP &W@PDAMT &W@INT &W@AV +
+                          &W@ORIGP &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP &WSCCY +
+                          &WSIND &WSRATE &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR)       /*MD049745A*/
  
 /** For Database Errors Recover Data from LDA  */
  

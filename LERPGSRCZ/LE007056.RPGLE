@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD049745A          Date 16Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046080           Date 17Sep17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 18Aug14               *
       *                 MD020966           Date 20Jun13               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745A - Corruption of Original currency of Loans and     *
+      *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *     
@@ -2423,6 +2426,11 @@
      C                   EVAL      WWWAMT = DSRpyAmt                                        MD046080
      C                   EVAL      WINAMT = DSRpyAmt                                        MD046080
      C                   EVAL      WMDIN = WIND1                                            MD046080
+     C                   IF        WMDIN = 'M'                                             MD049745A
+     C                   EVAL      WMDIN = 'D'                                             MD049745A
+     C                   ELSE                                                              MD049745A
+     C                   EVAL      WMDIN = 'M'                                             MD049745A
+     C                   ENDIF                                                             MD049745A
                                                                                             MD046080
       ** If one of currencies is blank, skip conversion                                     MD046080
                                                                                             MD046080
@@ -2635,9 +2643,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD046080
      C                   EVAL      CLE031 = 'Y'                                             MD046080
                                                                                             MD046080
-     C                   ELSE                                                               MD046080
-     C                   EVAL      *INLR = *ON                                              MD046080
-     C                   RETURN                                                             MD046080
+     C**********         ELSE                                                     MD046080 MD049745A
+     C**********         EVAL      *INLR = *ON                                    MD046080 MD049745A
+     C**********         RETURN                                                   MD046080 MD049745A
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
       ** Determine if 'Settlement Allocation' is active                                     MD046080
@@ -2650,9 +2658,9 @@
      C                   IF        @RTCD = *BLANKS                                          MD046080
      C                   EVAL      CLE034 = 'Y'                                             MD046080
                                                                                             MD046080
-     C                   ELSE                                                               MD046080
-     C                   EVAL      *INLR = *ON                                              MD046080
-     C                   RETURN                                                             MD046080
+     C**********         ELSE                                                     MD046080 MD049745A
+     C**********         EVAL      *INLR = *ON                                    MD046080 MD049745A
+     C**********         RETURN                                                   MD046080 MD049745A
      C                   ENDIF                                                              MD046080
  
       ** Access Bank Details.

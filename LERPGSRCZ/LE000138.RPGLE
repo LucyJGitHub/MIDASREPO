@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049745A          Date 16Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051242           Date 29Jun18               *
+      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
@@ -44,11 +45,13 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
+      *             balance for fee with no settlement currency       *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *     
+      *             currency) and CLE134 (PDCL processing)            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -304,6 +307,8 @@
      D ORWAMT          S             15P 0                                                  MD046080
      D CLE031          S              1A                                                    MD046080
      D CLE034          S              1A                                                    MD046080
+     D w@adjamt        S             15P 0                                                  MD051242
+     D WMINUS          S              1A                                                    MD051242
                                                                                             MD046080
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -545,6 +550,29 @@
 
      C     WPastDue      WHENEQ    'Y'
      C                   EVAL      w@Pdamt = LKEAMT
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   EVAL      WINAMT = LKEAMT                                          MD051242
+     C                   EVAL      ORWAMT = LKEAMT                                          MD051242
+     C                   EXSR      SRCvtAmt                                                 MD051242
+     C                   EVAL      LKEAMT = WOUTAMT                                         MD051242
+     C                   EVAL      LKECCY = FEFCCY                                          MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   ENDIF                                                              MD051242
      C     W@Pdamt       IFLT      0
      C                   MULT      -1            w@Pdamt
      C                   ENDIF
@@ -566,10 +594,28 @@
      C                   EVAL      w@Pdamt = WRepaym - W@Avail
 
       ** update repayment amount = available amount
+                                                                                            MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
 
      C                   EVAL      LKEAMT = W@AVAIL
      C                   MULT      WMult         LKEAMT
      C                   UPDATE    LKEYFEDF
+
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
 
       ** write new account key: field xxRyy--nnD or fffR---nnD
 
@@ -584,6 +630,17 @@
      C                   EXSR      SRCvtAmt                                                 MD046080
      C                   EVAL      LKEAMT = WOUTAMT                                         MD046080
      C                   EVAL      LKECCY = FEFCCY                                          MD046080
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
      C                   MOVEL     LKAKEY        Wf10
@@ -776,13 +833,33 @@
       ** update trailer
 
      C     W@NewRc       IFNE      0
+     C     w@adjamt      ORNE      0                                                        MD051242
      C     1             SETLL     LEPK2ZZ
      C                   READ      LEPK2ZZ                                88
      C     *IN88         IFEQ      *OFF
      C                   ADD       W@NewRC       LKNORE
+     C                   IF        w@adjamt < 0                                             MD051242
+     C                   EVAL      W@adjamt = w@adjamt * - 1                                MD051242
+     C                   ENDIF                                                              MD051242
+     C     w@adjamt      DIV       1000          ZZAMT            15 3                      MD051242
+     C     ZZAMT         IFLT      *ZEROS                                                   MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C                   Z-ADD     LKVLRF        ZZTOTI                                     MD051242
+     C                   Z-ADD     LKVLRL        ZZTOTD                                     MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND WMINUS = 'Y'                                         MD051242
+     C                   EXSR      GLZSUB                                                   MD051242
+     C                   ELSE                                                               MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   ENDIF                                                              MD051242
+     C                   Z-ADD     ZZTOTI        LKVLRF                                     MD051242
+     C                   Z-ADD     ZZTOTD        LKVLRL                                     MD051242
      C                   UPDATE    LKEYFEZF
      C                   ENDIF
      C                   CLEAR                   W@NewRc
+     C                   CLEAR                   w@adjamt                                   MD051242
 
      C                   ENDIF
 
@@ -994,9 +1071,10 @@
       ** If one of currencies is blank, skip conversion                                     MD046080
                                                                                             MD046080
      C                   IF        WCCY1 = *BLANKS or WCCY2 = *BLANKS                       MD046080
-     C                   EVAL      WOUTAMT = 0                                              MD046080
-     C                   EVAL      WRATE = 0                                                MD046080
-     C                   EVAL      WMDIN = *BLANKS                                          MD046080
+     C**********         EVAL      WOUTAMT = 0                                     MD046080 MD051242
+     C**********         EVAL      WRATE = 0                                       MD046080 MD051242
+     C**********         EVAL      WMDIN = *BLANKS                                 MD046080 MD051242
+     C                   EVAL      WOUTAMT = WINAMT                                         MD051242
      C                   ELSE                                                               MD046080
                                                                                             MD046080
       ** From currency                                                                      MD046080
@@ -1100,6 +1178,207 @@
      C     SDBRCH        PARM                    DSSDY
 
      C                   ENDSR
+      *****************************************************************                     MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZSUB  -  Subtracts an amount (ZZAMT) from the total         *                     MD051242
+      *                                                               *                     MD051242
+      * Called by: *None                                              *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: GLZADD                                                 *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZSUB        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+      ***  Just reverse the 'sign' and add                                                  MD051242
+      *                                                                                     MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
+      *****************************************************************                     MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZADD  -  Adds an amount (ZZAMT) to the total (ZZTOTI,ZZTOTD)*                     MD051242
+      *                                                               *                     MD051242
+      * Called by: GLZSUB                                             *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: GLZSUM                                                 *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZADD        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+     C     ZZAMT         IFNE      *ZERO                                                    MD051242
+      *                                                                                     MD051242
+      ***  Split ZZAMT into integer and decimal fields                                      MD051242
+      *                                                                                     MD051242
+     C                   Z-ADD     ZZAMT         ZZAMTI           15 0                      MD051242
+     C                   MOVE      ZZAMT         ZZAMTD            3 0                      MD051242
+      *                                                                                     MD051242
+      ***  Both ZZAMTI and ZZAMTD contain a 'sign' zone now                                 MD051242
+      *                                                                                     MD051242
+     C                   EXSR      GLZSUM                                                   MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
+      ****************************************************************                      MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZSUM  -  Carries out the addition of the amounts            *                     MD051242
+      *                                                               *                     MD051242
+      * Called by: GLZADD                                             *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: *None                                                  *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZSUM        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+      ***  Save values of indicators to be used in the program                              MD051242
+      *                                                                                     MD051242
+     C                   MOVE      *IN91         WIN91             1                        MD051242
+     C                   MOVE      *IN92         WIN92             1                        MD051242
+     C                   MOVE      *IN93         WIN93             1                        MD051242
+     C                   MOVE      *IN94         WIN94             1                        MD051242
+     C                   MOVE      *IN95         WIN95             1                        MD051242
+     C                   MOVE      *IN96         WIN96             1                        MD051242
+     C                   SETOFF                                       919293                MD051242
+     C                   SETOFF                                       949599                MD051242
+      *                                                                                     MD051242
+      ***  Determine sign of ZZAMTI and ZZAMTD, 92 if neg                                   MD051242
+      *                                                                                     MD051242
+     C     ZZAMTI        COMP      0                                    9293                MD051242
+     C   93ZZAMTD        COMP      0                                    9293                MD051242
+     C   93              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  Determine sign of ZZTOTI and ZZTOTD, 91 if neg                                   MD051242
+      *                                                                                     MD051242
+     C     ZZTOTI        COMP      0                                    9193                MD051242
+     C   93ZZTOTD        COMP      0                                    9193                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOTAL is zero, return ZZAMOUNT                                              MD051242
+      *                                                                                     MD051242
+     C   93              Z-ADD     ZZAMTI        ZZTOTI           15 0                      MD051242
+     C   93              Z-ADD     ZZAMTD        ZZTOTD            3 0                      MD051242
+     C   93              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  If signs differ, bypass overflow checks                                          MD051242
+      *                                                                                     MD051242
+     C   91                                                                                 MD051242
+     CANN92                                                                                 MD051242
+     CORN91                                                                                 MD051242
+     CAN 92              GOTO      ZZOFPS                                                   MD051242
+     C*                                                                                     MD051242
+     C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0                      MD051242
+     C     ZZWK2         COMP      999                                93                    MD051242
+     C  N93ZZWK2         COMP      -999                                 93                  MD051242
+     C*                                                                                     MD051242
+     C   93                                                                                 MD051242
+     CANN92ZZAMTI        ADD       1             ZZWK3            15 0                      MD051242
+     C   93                                                                                 MD051242
+     CAN 92ZZAMTI        SUB       1             ZZWK3                                      MD051242
+     C   93ZZTOTI        ADD       ZZWK3         ZZWK3                                      MD051242
+     C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3                                      MD051242
+      *                                                                                     MD051242
+      ***  If the modulus of ZZWK3 is lt mod. ZZTOTI then O/F has occured                   MD051242
+      *                                                                                     MD051242
+     C  N92ZZWK3         COMP      ZZTOTI                               99                  MD051242
+     C   92ZZWK3         COMP      ZZTOTI                             99                    MD051242
+     C  N99              Z-ADD     ZZWK2         ZZTOTD                                     MD051242
+     C  N99              Z-ADD     ZZWK3         ZZTOTI                                     MD051242
+      *                                                                                     MD051242
+      ***  If O/F zeroise ZZAMT, Ind '99' set and ZZTOT fields left intact                  MD051242
+      *                                                                                     MD051242
+     C   99              Z-ADD     0             ZZAMT            15 3                      MD051242
+     C                   GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  The 'signs' are different                                                        MD051242
+      *                                                                                     MD051242
+     C     ZZOFPS        TAG                                                                MD051242
+      *                                                                                     MD051242
+      ***  If ZZAMT was negative, make it pos. to como with ZZTOT                           MD051242
+      *                                                                                     MD051242
+     C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0                      MD051242
+     C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0                      MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT was negative, make it pos. to comp with ZZAMT.                          MD051242
+      *                                                                                     MD051242
+     C   91              Z-SUB     ZZTOTI        ZZTOTI                                     MD051242
+     C   91              Z-SUB     ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Both ZZAMT and ZZTOT are now positive                                            MD051242
+      *                                                                                     MD051242
+     C     ZZTOTI        COMP      ZZAMTI                             93  95                MD051242
+     C   95ZZTOTD        COMP      ZZAMTD                             93  95                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT eq. ZZAMT return ZERO.                                                  MD051242
+      *                                                                                     MD051242
+     C   95              Z-ADD     0             ZZTOTI                                     MD051242
+     C   95              Z-ADD     0             ZZTOTD                                     MD051242
+     C   95              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT gt. ZZAMT.                                                              MD051242
+      *                                                                                     MD051242
+     C   93ZZAMTD        COMP      ZZTOTD                             94                    MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZTOTI        SUB       1             ZZTOTI                                     MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZTOTD        ADD       1000          ZZWK2                                      MD051242
+     C   93ZZTOTI        SUB       ZZAMTI        ZZTOTI                                     MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD                                     MD051242
+     C   93                                                                                 MD051242
+     CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  If ZZAMT gt. ZZTOT.                                                              MD051242
+      *                                                                                     MD051242
+     C  N93ZZTOTD        COMP      ZZAMTD                             94                    MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZAMTI        SUB       1             ZZWK3            15 0                      MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZAMTD        ADD       1000          ZZWK2                                      MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZWK3         SUB       ZZTOTI        ZZTOTI                                     MD051242
+     C  N93                                                                                 MD051242
+     CANN94ZZAMTI        SUB       ZZTOTI        ZZTOTI                                     MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD                                     MD051242
+     C  N93                                                                                 MD051242
+     CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Reverse sign of ZZTOT if larger I/P fields were negative                         MD051242
+      *                                                                                     MD051242
+     C                   SETOFF                                       94                    MD051242
+     C   93                                                                                 MD051242
+     CAN 91                                                                                 MD051242
+     CORN93                                                                                 MD051242
+     CAN 92              SETON                                        94                    MD051242
+     C   94              Z-SUB     ZZTOTI        ZZTOTI                                     MD051242
+     C   94              Z-SUB     ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Restore sign of ZZAMTI & ZZAMTD if it was reversed                               MD051242
+      *                                                                                     MD051242
+     C   92              Z-SUB     ZZAMTI        ZZAMTI                                     MD051242
+     C   92              Z-SUB     ZZAMTD        ZZAMTD                                     MD051242
+     C     ZZSEND        TAG                                                                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.                             MD051242
+      *                                                                                     MD051242
+     C                   SETOFF                                       96                    MD051242
+     C     ZZTOTD        COMP      0                                      91                MD051242
+     C   91ZZTOTI        COMP      0                                    96                  MD051242
+     C   96              MOVE      '.000-'       ZZNEGD            5                        MD051242
+      *                                                                                     MD051242
+      ***  Restore previous indicator values                                                MD051242
+      *                                                                                     MD051242
+     C                   MOVE      WIN91         *IN91                                      MD051242
+     C                   MOVE      WIN92         *IN92                                      MD051242
+     C                   MOVE      WIN93         *IN93                                      MD051242
+     C                   MOVE      WIN94         *IN94                                      MD051242
+     C                   MOVE      WIN95         *IN95                                      MD051242
+     C                   MOVE      WIN96         *IN96                                      MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
 
       *****************************************************************
      C/EJECT

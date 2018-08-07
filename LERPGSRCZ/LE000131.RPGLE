@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD049745A          Date 16Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051242           Date 29Jun18               *
+      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
@@ -44,11 +45,13 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
+      *             balance for fee with no settlement currency       *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *    
+      *             currency) and CLE134 (PDCL processing)            *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
@@ -127,23 +130,23 @@
       ** handler)
       ** and the following variables:
       ** RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error &
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -152,30 +155,30 @@
      D SFNUM1                123    124B 0
      D OFLLN1                188    189B 0
      D PRTLN1                367    368B 0
- 
+
       ** Data structure for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Data structure for Branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Data structure for Trade Details
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACCD1       E                     EXTFLD(QQACCD)
- 
+
       ** Data structure for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                            MD021423E
       ** Data Structure for Account Details                                                MD021423E
      D ACCNTB        E DS                  EXTNAME(ACCNTAB)                                MD021423E
- 
+
       ** Data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
- 
+
       ** Data structure for fees ICD details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
      D DSFDY         e ds
@@ -185,7 +188,7 @@
      D wFlnno                  8     13
      D wFefseq                15     16
      D wFefcod                18     19
- 
+
      D pReturnCode     s              7
      D CLE134          S              1
      D WRetcd          S              7
@@ -193,7 +196,7 @@
      D pCNAME          S             10
      D wPostR          S              1
      D WPARM           S             20A   INZ('LoanCustOriginPurch')
- 
+
       ** Account
      D wLoan           S              6
      D wcnu2           S              6
@@ -202,10 +205,10 @@
      D wFcod           S              2
      D wFcodN          S              2  0
      D wFbrcd          S              3
- 
+
      D wCurr           S              3
      D wBrca           S              3
- 
+
       ** Balance check
      D P@BLAF          S             15P 0
      D W@Avail         S             15P 0
@@ -225,13 +228,13 @@
      D WSIND           S              1A                                                   MD049745A
      D WSRATE          S             13P 8                                                 MD049745A
      D WREV            S              1A                                                   MD049745A
- 
+
      D ZS2             S              1    DIM(21)
      D                 DS
      D  WORK15                 1     15  0
      D  ZS1                    1     15  0
      D                                     DIM(15)
- 
+
       ** Additional Field Definitions
      D WPastDue        S              1
      D WReverse        S              1
@@ -273,7 +276,7 @@
      D  PAccCode       S             10S 0                                                 MD021423E
      D  PAccSeq        S              2S 0                                                 MD021423E
      D  PBranch        S              3A                                                   MD021423E
- 
+
      D WINAMT          S             15  0                                                  MD046080
      D WRATE           S             13  8                                                  MD046080
      D WREXI           S              1A                                                    MD046080
@@ -287,6 +290,8 @@
      D ORWAMT          S             15P 0                                                  MD046080
      D CLE031          S              1A                                                    MD046080
      D CLE034          S              1A                                                    MD046080
+     D w@adjamt        S             15P 0                                                  MD051242
+     D WMINUS          S              1A                                                    MD051242
                                                                                             MD046080
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
@@ -294,7 +299,7 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       *                M A I N  P R O C E S S I N G                   *
       *****************************************************************
@@ -340,32 +345,32 @@
       *                                                               *
       *****************************************************************
      C     SrPDCL        BEGSR
- 
+
       ** Check Account Balance
- 
+
      C                   EXSR      ChkBal
- 
+
       ** Update fee                                                                         MD046080
                                                                                             MD046080
      C                   EXSR      Chkfee                                                   MD046080
                                                                                             MD046080
       ** Update/create account key
- 
+
      C                   EXSR      Updack
- 
+
       ***Update*fee****************************************************                     MD046080
       **********                                                                            MD046080
      C**********         EXSR      Chkfee                                                   MD046080
- 
+
       ** Update a/ck trailer
- 
+
      C                   EXSR      Updfez
- 
+
       ** call function to update/generate PDCL
- 
+
      C                   EXSR      GenPdcl
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -437,8 +442,9 @@
       *                                                               *
       *****************************************************************
      C     ChkBal        BEGSR
+     C                   CLEAR                   w@adjamt                                   MD051242
      C                   MOVE      LKFCOD        WFCODN
- 
+
      C                   CLEAR                   W@NewRc
      C                   MOVE      'N'           WPastDue
      C                   MOVE      'N'           WReverse
@@ -450,11 +456,11 @@
      C     WRepaym       IFLT      0
      C                   MULT      -1            WRepaym
      C                   ENDIF
- 
+
      C                   EVAL      P@BLAF      = LKAAMT
- 
+
       ** set available balance flag
- 
+
      C                   MOVE      *BLANKS       WDrCr
      C                   EVAL      W@Avail = *ZERO
      C     P@BLAF        IFLT      0
@@ -464,65 +470,65 @@
      C                   EVAL      W@Avail = P@BLAF
      C                   EVAL      WDrCr = 'D'
      C                   ENDIF
- 
+
       ** if available balance sign is credit
- 
+
      C                   SELECT
- 
+
       ** if account key amount is zero, set past due flag = 'N'
- 
+
      C     LKEAMT        WHENEQ    0
      C                   MOVE      'N'           wPastDue
- 
+
       ** if account key amount is negative, no check is needed as event
       ** amount is going to increase the account balance
- 
+
      C     LKEAMT        WHENLT    0
      C     LKREVI        ANDEQ     0
      C                   MOVE      'N'           wPastDue
- 
+
       ** if account key amount is positive and a/c key is reversed,
       ** do not check balance as event amount is going to increase the
       ** account balance.
- 
+
      C     LKEAMT        WHENGT    0
      C     LKREVI        ANDEQ     1
      C                   MOVE      'N'           wPastDue
      C                   MOVE      'Y'           WReverse
- 
+
       ** if available balance is zero, set the WPastDue flag =Y
- 
+
      C     W@Avail       WHENEQ    0
      C                   MOVE      'Y'           wPastDue
- 
+
       ** if available balance is debit, set past due flag = Y
- 
+
      C     W@Avail       WHENGT    0
      C     WDrCr         ANDEQ     'D'
      C                   MOVE      'Y'           wPastDue
- 
+
       ** if available balance is credit and is less than event amount,
       ** set past due flag = 'P'
- 
+
      C     W@Avail       WHENGT    0
      C     WDrCr         ANDEQ     'C'
      C     WRepaym       ANDGT     0
      C     WRepaym       ANDGT     W@Avail
      C                   MOVE      'P'           wPastDue
- 
+
       ** if available balance is credit and is equal to event amount,
       ** set past due flag = 'N'
- 
+
      C     W@Avail       WHENGT    0
      C     WDrCr         ANDEQ     'C'
      C     WRepaym       ANDGT     0
      C     WREpaym       ANDEQ     W@Avail
      C                   MOVE      'N'           wPastDue
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -535,20 +541,43 @@
       *                                                               *
       *****************************************************************
      C     Updack        BEGSR
- 
+
      C                   EVAL      w@Pdamt = 0
      C                   EVAL      w@Origp = LKEAMT
      C                   EVAL      Lkaamt = P@BLAF
      C                   EVAL      LKIPFL = 'P'
      C                   Z-ADD     1             WMult
- 
+
      C                   SELECT
- 
+
       ** when the repayment is fully past due, update account key
       ** field xxRyy--nnD or fffR---nnD
- 
+
      C     WPastDue      WHENEQ    'Y'
      C                   EVAL      w@Pdamt = LKEAMT
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   EVAL      WINAMT = LKEAMT                                          MD051242
+     C                   EVAL      ORWAMT = LKEAMT                                          MD051242
+     C                   EXSR      SRCvtAmt                                                 MD051242
+     C                   EVAL      LKEAMT = WOUTAMT                                         MD051242
+     C                   EVAL      LKECCY = FEFCCY                                          MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   ENDIF                                                              MD051242
      C     W@Pdamt       IFLT      0
      C                   MULT      -1            w@Pdamt
      C                   ENDIF
@@ -556,27 +585,45 @@
      C                   MOVE      'D'           Wf10
      C                   MOVEL     Wf10          LKAKEY
      C                   UPDATE    LKEYFEDF
- 
+
       ** when the repayment is partly past due, update account key
       ** field xxRyy--nnD or fffR---nnD and create new account key
- 
+
      C
      C     WPastDue      WHENEQ    'P'
- 
+
      C     LKEAMT        IFLT      0
      C                   Z-ADD     -1            WMult
      C                   ENDIF
- 
+
      C                   EVAL      w@Pdamt = WRepaym - W@Avail
- 
+
       ** update repayment amount = available amount
- 
+                                                                                            MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+
      C                   EVAL      LKEAMT = W@AVAIL
      C                   MULT      WMult         LKEAMT
      C                   UPDATE    LKEYFEDF
- 
+                                                                                            MD051242
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
+
       ** write new account key: field xxRyy--nnD or fffR---nnD
- 
+
      C                   EVAL      LKEAMT = W@Pdamt
      C                   MULT      WMult         LKEAMT
                                                                                             MD046080
@@ -588,6 +635,17 @@
      C                   EXSR      SRCvtAmt                                                 MD046080
      C                   EVAL      LKEAMT = WOUTAMT                                         MD046080
      C                   EVAL      LKECCY = FEFCCY                                          MD046080
+     C                   IF        LKEAMT > 0                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      w@adjamt = w@adjamt - LKEAMT                             MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND w@adjamt < 1                                         MD051242
+     C                   EVAL      WMINUS = 'Y'                                             MD051242
+     C                   ELSE                                                               MD051242
+     C                   EVAL      WMINUS = ' '                                             MD051242
+     C                   ENDIF                                                              MD051242
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
      C                   EVAL      LKAAMT = 0
@@ -596,25 +654,25 @@
      C                   MOVEL     Wf10          LKAKEY
      C                   WRITE     LKEYFEDF
      C                   ADD       1             W@NewRc
- 
+
       ** Put back the original value before convert                                         MD046080
      C                   IF        CLE031 = 'Y'                                             MD046080
      C                   EVAL      LKEAMT = ORWAMT                                          MD046080
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
       ** when reverse
- 
+
      C
      C     WReverse      WHENEQ    'Y'
      C                   EXSR      SrReverse
- 
+
       ** if Repayment is not past due, set account key flag = processed
- 
+
      C                   OTHER
      C                   UPDATE    LKEYFEDF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -628,27 +686,27 @@
       *                                                               *
       *****************************************************************
      C     SrReverse     BEGSR
- 
+
      C                   CLEAR                   W@TotPD
      C                   Z-ADD     LKEAMT        W@EAMT
- 
+
       ** Read a/c keys file that contains a/c key subject to funds
       ** pre-check
- 
+
      C     KPDCL         SETLL     LEPDUFL5
      C                   MOVE      *OFF          *IN87
- 
+
       ** loop to read a/c keys on LEPDUFPD to retrieve the total past
       ** due that was accounted to the D  Account key
- 
+
      C     *IN87         DOWEQ     *OFF
- 
+
      C     KPDCLP        READE     LEPDUFL5                               87
- 
+
      C     *IN87         IFEQ      *OFF
      C     YTYLC         ANDNE     'R'
      C     W@TotPD       ANDLT     LKEAMT
- 
+
                                                                                            MD049745A
       ** Convert amount to loan currency when CLE031 is *ON                                MD049745A
      C                   IF        CLE031 = 'Y'                                            MD049745A
@@ -664,10 +722,10 @@
      C                   ELSE
      C                   ADD       LKEAMT        W@TotPD
      C                   ENDIF
- 
+
       ** if total past due is greater than the event amount, then
       ** subtract difference from LEPDUFPD
- 
+
      C     W@TotPD       IFLE      LKEAMT
      C                   MOVE      'R'           YTYLC
      C                   ELSE
@@ -685,33 +743,33 @@
      C                   UPDATE    LEPDUFD0
      C                   ENDIF
      C                   ENDDO
- 
+
       ** if Total Past Due is greater than zero then reverse out the
       ** amount using a/c key fffR---nnD instead of fffR---nnF
- 
+
      C     W@TotPD       IFNE      *ZEROS
- 
+
      C                   SELECT
- 
+
       ** if total past due is equal to the event amount, replace the
       ** account key fffR---nnF by fffR---nnD
- 
+
      C     W@TotPD       WHENEQ    LKEAMT
      C                   MOVEL     LKAKEY        Wf10
      C                   MOVE      'D'           Wf10
      C                   MOVEL     Wf10          LKAKEY
      C                   UPDATE    LKEYFEDF
- 
+
       ** if total past due is less than event amount, then subtract
       ** total past due from event amount and post the amount to
       ** account key fffR---nnF.
- 
+
      C     W@TotPD       WHENLT    LKEAMT
      C                   EVAL      LKEAMT  = LKEAMT  - W@TotPD
      C                   UPDATE    LKEYFEDF
- 
+
       ** create a/c key fffR---nnD to post the total past due
- 
+
      C                   EVAL      LKEAMT  = W@TotPD
                                                                                             MD046080
       ** Convert amount to loan currency when CLE031 is *ON                                 MD046080
@@ -729,7 +787,7 @@
      C                   MOVEL     Wf10          LKAKEY
      C                   WRITE     LKEYFEDF
      C                   ADD       1             W@NewRc
- 
+
       ** Put back the original value before convert                                         MD046080
      C                   IF        CLE031 = 'Y'                                             MD046080
      C                   EVAL      LKEAMT = ORWAMT                                          MD046080
@@ -737,7 +795,7 @@
                                                                                             MD046080
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -751,23 +809,23 @@
       *                                                               *
       *****************************************************************
      C     Chkfee        BEGSR
- 
+
       ** CHAIN Fee file
- 
+
      C     WPastDue      IFEQ      'P'
      C     WPastDue      OREQ      'Y'
      C     Kfee          CHAIN     lefeedlu
      C                   IF        not%found
      C     *LOCK         IN        LDA
      C                   MOVE      LKCNU2        wFcnu2
- 
+
      C                   IF        LKLOAN <> *BLANKS
      C                   MOVE      LKLOAN        wFlnno
      C                   ELSE
      C                   MOVE      LKFACL        wFlnno
      C                   ENDIF
      C                   MOVE      LKFACL        wFlnno
- 
+
      C                   MOVE      LKFSEQ        wFefseq
      C                   MOVE      LKFSE2        wFefseq
      C                   MOVE      LKFCOD        wFefcod
@@ -778,7 +836,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -792,20 +850,42 @@
       *                                                               *
       *****************************************************************
      C     Updfez        BEGSR
- 
+
       ** update trailer
- 
+
      C     W@NewRc       IFNE      0
+     C     w@adjamt      ORNE      0                                                        MD051242
      C     1             SETLL     LEPK3ZZ
      C                   READ      LEPK3ZZ                                88
      C     *IN88         IFEQ      *OFF
      C                   ADD       W@NewRC       lknore
+     C                   IF        w@adjamt < 0                                             MD051242
+     C                   EVAL      W@adjamt = w@adjamt * - 1                                MD051242
+     C                   ENDIF                                                              MD051242
+     C     w@adjamt      DIV       1000          ZZAMT            15 3                      MD051242
+     C     ZZAMT         IFLT      *ZEROS                                                   MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C                   Z-ADD     LKVLRF        ZZTOTI                                     MD051242
+     C                   Z-ADD     LKVLRL        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+     C                   IF        CLE031 = 'Y'                                             MD051242
+     C                             AND WMINUS = 'Y'                                         MD051242
+     C                   EXSR      GLZSUB                                                   MD051242
+     C                   ELSE                                                               MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C                   Z-ADD     ZZTOTI        LKVLRF                                     MD051242
+     C                   Z-ADD     ZZTOTD        LKVLRL                                     MD051242
      C                   UPDATE    lkeyfezf
      C                   ENDIF
      C                   CLEAR                   W@NewRc
- 
+     C                   CLEAR                   w@adjamt                                   MD051242
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -819,16 +899,16 @@
       *                                                               *
       *****************************************************************
      C     GenPdcl       BEGSR
- 
+
       ** move fields
- 
+
      C                   Z-ADD     W@Avail       W@Av
      C     WDrcr         IFEQ      'D'
      C                   Z-ADD     0             W@Av
      C                   ENDIF
- 
+
       ** set value date
- 
+
      C*****LKEDAT        IFGE      BJDNWD                                                  MD022807H
      C                   Z-ADD     LKEDAT        W@AVDAT
      C**********         ELSE                                                              MD022807H
@@ -850,7 +930,7 @@
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
       ** generate PDCL - call LEC000473
- 
+
      C     WPastDue      IFNE      'N'
      C                   CALL      'LEC000473'
      C                   PARM                    wRetcd
@@ -874,20 +954,20 @@
      C                   PARM                    WSCCY                                     MD049745A
      C                   PARM                    WSIND                                     MD049745A
      C                   PARM                    WSRATE                                    MD049745A
- 
+
       ** Output parm
- 
+
      C                   PARM      *ZERO         w@OPdam
      C                   PARM      *ZERO         w@OPdInt
- 
+
       ** Original fee - update PDCL reference
- 
+
      C                   PARM      *BLANKS       w@FPDCR
      C                   PARM      'LEC000131'   W@PGNM
      C                   PARM      BlockCredit   W@BCR                                     MK021423E
- 
+
       ** Error in LEC000473
- 
+
      C     wRetcd        IFNE      *BLANKS
      C     *INU7         OREQ      *ON
      C     *INU8         ANDEQ     *ON
@@ -905,11 +985,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** update reporting/basel II fields on original transaction
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -917,25 +997,25 @@
       *    SrRepo - Produce Report                                    *
       *****************************************************************
      C     SrRepo        BEGSR
- 
+
       ** Read a/c keys file that contains a/c key subject to funds
       ** pre-check
- 
+
      C                   CLEAR                   LKNORE
      C                   MOVE      *OFF          *IN88
      C                   MOVE      *BLANKS       WBrca
      C     *LOVAL        SETLL     LEPK3L3
- 
+
       ** loop to read a/c keys on LEPK3DPD
- 
+
      C     *IN88         DOWEQ     *OFF
      C                   READ      LEPK3L3                                88
      C     *IN88         IFEQ      *OFF
- 
+
      C                   ADD       1             LKNORE
- 
+
       ** access branch details
- 
+
      C     LKBRCD        IFNE      Wbrca
      C                   MOVE      LKBRCD        Branch
      C                   EXSR      GetBrca
@@ -943,20 +1023,20 @@
      C                   WRITE     LER131H2
      C                   MOVE      LKBRCD        WBRca
      C                   ENDIF
- 
+
       ** access ccy details
- 
+
      C     LKECCY        IFNE      Wcurr
      C                   EXSR      GetCcy
      C                   MOVE      lkeccy        Wcurr
      C                   ENDIF
- 
+
       ** Set fields
- 
+
      C                   EXSR      Setfield
- 
+
       ** print report
- 
+
      C     PRtlN1        IFGE      60
      C                   WRITE     LER131H1
      C                   WRITE     LER131H2
@@ -964,16 +1044,16 @@
      C                   WRITE     LER131D1
      C                   ENDIF
      C                   ENDDO
- 
+
       ** print end of report page
- 
+
      C     pRtlN1        IFGE      60
      C                   WRITE     LER131H1
      C                   ENDIF
      C                   WRITE     LER131T1
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                     MD046080
      C/EJECT                                                                                MD046080
       *****************************************************************                     MD046080
@@ -1073,38 +1153,38 @@
       *    GetCcy - Get Currency                                      *
       *****************************************************************
      C     GetCcy        BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*DBERR'      @rtcd
      C                   PARM      '*KEY'        @optn
      C                   PARM                    LKECCY
      C     sdcurr        PARM                    dssdy
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       *    Setfield - Set up Fields                                   *
       *****************************************************************
      C     Setfield      BEGSR
- 
+
      C                   MOVE      *ZEROS        ZFLD15
      C                   MOVE      LkEAMT        ZFLD15
      C                   Z-ADD     a6nbdp        Zdecs
      C                   MOVE      'J'           Zecode
      C                   EXSR      Zsedit
      C                   MOVE      ZOUT21        OEAMT
- 
+
      C                   MOVE      *ZEROS        ZFLD15
      C                   MOVE      LkAAMT        ZFLD15
      C                   Z-ADD     a6nbdp        Zdecs
      C                   MOVE      'J'           Zecode
      C                   EXSR      Zsedit
      C                   MOVE      ZOUT21        OAAMT
- 
+
       ** facility
- 
+
      C                   MOVEL     LKFACL        WFAC03
      C                   MOVE      LKFACL        WFAC02
      C                   MOVE      LKFSE2        LKFSEQ
@@ -1112,7 +1192,7 @@
      C     LKLNNO        IFNE      *BLANKS
      C                   MOVE      *ON           *IN34
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1120,36 +1200,236 @@
       *    getBRca - Get Branch                                       *
       *****************************************************************
      C     getBRca       BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      '*DBERR'      @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM                    BRANCH
      C     SDBRCH        PARM                    DSSDY
- 
+
      C                   ENDSR
- 
+      *****************************************************************                     MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZSUB  -  Subtracts an amount (ZZAMT) from the total         *                     MD051242
+      *                                                               *                     MD051242
+      * Called by: *None                                              *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: GLZADD                                                 *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZSUB        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+      ***  Just reverse the 'sign' and add                                                  MD051242
+      *                                                                                     MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   Z-SUB     ZZAMT         ZZAMT                                      MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
+      *****************************************************************                     MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZADD  -  Adds an amount (ZZAMT) to the total (ZZTOTI,ZZTOTD)*                     MD051242
+      *                                                               *                     MD051242
+      * Called by: GLZSUB                                             *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: GLZSUM                                                 *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZADD        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+     C     ZZAMT         IFNE      *ZERO                                                    MD051242
+      *                                                                                     MD051242
+      ***  Split ZZAMT into integer and decimal fields                                      MD051242
+      *                                                                                     MD051242
+     C                   Z-ADD     ZZAMT         ZZAMTI           15 0                      MD051242
+     C                   MOVE      ZZAMT         ZZAMTD            3 0                      MD051242
+      *                                                                                     MD051242
+      ***  Both ZZAMTI and ZZAMTD contain a 'sign' zone now                                 MD051242
+      *                                                                                     MD051242
+     C                   EXSR      GLZSUM                                                   MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
+      ****************************************************************                      MD051242
+      /EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      * GLZSUM  -  Carries out the addition of the amounts            *                     MD051242
+      *                                                               *                     MD051242
+      * Called by: GLZADD                                             *                     MD051242
+      *                                                               *                     MD051242
+      * Calls: *None                                                  *                     MD051242
+      *                                                               *                     MD051242
+      *****************************************************************                     MD051242
+     C     GLZSUM        BEGSR                                                              MD051242
+      *                                                                                     MD051242
+      ***  Save values of indicators to be used in the program                              MD051242
+      *                                                                                     MD051242
+     C                   MOVE      *IN91         WIN91             1                        MD051242
+     C                   MOVE      *IN92         WIN92             1                        MD051242
+     C                   MOVE      *IN93         WIN93             1                        MD051242
+     C                   MOVE      *IN94         WIN94             1                        MD051242
+     C                   MOVE      *IN95         WIN95             1                        MD051242
+     C                   MOVE      *IN96         WIN96             1                        MD051242
+     C                   SETOFF                                       919293                MD051242
+     C                   SETOFF                                       949599                MD051242
+      *                                                                                     MD051242
+      ***  Determine sign of ZZAMTI and ZZAMTD, 92 if neg                                   MD051242
+      *                                                                                     MD051242
+     C     ZZAMTI        COMP      0                                    9293                MD051242
+     C   93ZZAMTD        COMP      0                                    9293                MD051242
+     C   93              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  Determine sign of ZZTOTI and ZZTOTD, 91 if neg                                   MD051242
+      *                                                                                     MD051242
+     C     ZZTOTI        COMP      0                                    9193                MD051242
+     C   93ZZTOTD        COMP      0                                    9193                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOTAL is zero, return ZZAMOUNT                                              MD051242
+      *                                                                                     MD051242
+     C   93              Z-ADD     ZZAMTI        ZZTOTI           15 0                      MD051242
+     C   93              Z-ADD     ZZAMTD        ZZTOTD            3 0                      MD051242
+     C   93              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  If signs differ, bypass overflow checks                                          MD051242
+      *                                                                                     MD051242
+     C   91                                                                                 MD051242
+     CANN92                                                                                 MD051242
+     CORN91                                                                                 MD051242
+     CAN 92              GOTO      ZZOFPS                                                   MD051242
+     C*                                                                                     MD051242
+     C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0                      MD051242
+     C     ZZWK2         COMP      999                                93                    MD051242
+     C  N93ZZWK2         COMP      -999                                 93                  MD051242
+     C*                                                                                     MD051242
+     C   93                                                                                 MD051242
+     CANN92ZZAMTI        ADD       1             ZZWK3            15 0                      MD051242
+     C   93                                                                                 MD051242
+     CAN 92ZZAMTI        SUB       1             ZZWK3                                      MD051242
+     C   93ZZTOTI        ADD       ZZWK3         ZZWK3                                      MD051242
+     C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3                                      MD051242
+      *                                                                                     MD051242
+      ***  If the modulus of ZZWK3 is lt mod. ZZTOTI then O/F has occured                   MD051242
+      *                                                                                     MD051242
+     C  N92ZZWK3         COMP      ZZTOTI                               99                  MD051242
+     C   92ZZWK3         COMP      ZZTOTI                             99                    MD051242
+     C  N99              Z-ADD     ZZWK2         ZZTOTD                                     MD051242
+     C  N99              Z-ADD     ZZWK3         ZZTOTI                                     MD051242
+      *                                                                                     MD051242
+      ***  If O/F zeroise ZZAMT, Ind '99' set and ZZTOT fields left intact                  MD051242
+      *                                                                                     MD051242
+     C   99              Z-ADD     0             ZZAMT            15 3                      MD051242
+     C                   GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  The 'signs' are different                                                        MD051242
+      *                                                                                     MD051242
+     C     ZZOFPS        TAG                                                                MD051242
+      *                                                                                     MD051242
+      ***  If ZZAMT was negative, make it pos. to como with ZZTOT                           MD051242
+      *                                                                                     MD051242
+     C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0                      MD051242
+     C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0                      MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT was negative, make it pos. to comp with ZZAMT.                          MD051242
+      *                                                                                     MD051242
+     C   91              Z-SUB     ZZTOTI        ZZTOTI                                     MD051242
+     C   91              Z-SUB     ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Both ZZAMT and ZZTOT are now positive                                            MD051242
+      *                                                                                     MD051242
+     C     ZZTOTI        COMP      ZZAMTI                             93  95                MD051242
+     C   95ZZTOTD        COMP      ZZAMTD                             93  95                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT eq. ZZAMT return ZERO.                                                  MD051242
+      *                                                                                     MD051242
+     C   95              Z-ADD     0             ZZTOTI                                     MD051242
+     C   95              Z-ADD     0             ZZTOTD                                     MD051242
+     C   95              GOTO      ZZSEND                                                   MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOT gt. ZZAMT.                                                              MD051242
+      *                                                                                     MD051242
+     C   93ZZAMTD        COMP      ZZTOTD                             94                    MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZTOTI        SUB       1             ZZTOTI                                     MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZTOTD        ADD       1000          ZZWK2                                      MD051242
+     C   93ZZTOTI        SUB       ZZAMTI        ZZTOTI                                     MD051242
+     C   93                                                                                 MD051242
+     CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD                                     MD051242
+     C   93                                                                                 MD051242
+     CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  If ZZAMT gt. ZZTOT.                                                              MD051242
+      *                                                                                     MD051242
+     C  N93ZZTOTD        COMP      ZZAMTD                             94                    MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZAMTI        SUB       1             ZZWK3            15 0                      MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZAMTD        ADD       1000          ZZWK2                                      MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZWK3         SUB       ZZTOTI        ZZTOTI                                     MD051242
+     C  N93                                                                                 MD051242
+     CANN94ZZAMTI        SUB       ZZTOTI        ZZTOTI                                     MD051242
+     C  N93                                                                                 MD051242
+     CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD                                     MD051242
+     C  N93                                                                                 MD051242
+     CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Reverse sign of ZZTOT if larger I/P fields were negative                         MD051242
+      *                                                                                     MD051242
+     C                   SETOFF                                       94                    MD051242
+     C   93                                                                                 MD051242
+     CAN 91                                                                                 MD051242
+     CORN93                                                                                 MD051242
+     CAN 92              SETON                                        94                    MD051242
+     C   94              Z-SUB     ZZTOTI        ZZTOTI                                     MD051242
+     C   94              Z-SUB     ZZTOTD        ZZTOTD                                     MD051242
+      *                                                                                     MD051242
+      ***  Restore sign of ZZAMTI & ZZAMTD if it was reversed                               MD051242
+      *                                                                                     MD051242
+     C   92              Z-SUB     ZZAMTI        ZZAMTI                                     MD051242
+     C   92              Z-SUB     ZZAMTD        ZZAMTD                                     MD051242
+     C     ZZSEND        TAG                                                                MD051242
+      *                                                                                     MD051242
+      ***  If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.                             MD051242
+      *                                                                                     MD051242
+     C                   SETOFF                                       96                    MD051242
+     C     ZZTOTD        COMP      0                                      91                MD051242
+     C   91ZZTOTI        COMP      0                                    96                  MD051242
+     C   96              MOVE      '.000-'       ZZNEGD            5                        MD051242
+      *                                                                                     MD051242
+      ***  Restore previous indicator values                                                MD051242
+      *                                                                                     MD051242
+     C                   MOVE      WIN91         *IN91                                      MD051242
+     C                   MOVE      WIN92         *IN92                                      MD051242
+     C                   MOVE      WIN93         *IN93                                      MD051242
+     C                   MOVE      WIN94         *IN94                                      MD051242
+     C                   MOVE      WIN95         *IN95                                      MD051242
+     C                   MOVE      WIN96         *IN96                                      MD051242
+      *                                                                                     MD051242
+     C                   ENDSR                                                              MD051242
       *****************************************************************
      C/EJECT
       *****************************************************************
       *    *INZSR - Initialization Subroutine                         *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    pAPOS
      C                   PARM                    pCNAME
      C                   PARM                    pReturnCode
- 
+
      C                   EVAL      dbPgm       = PSProcPgm
- 
+
      C     Kfee          KLIST
      C                   KFLD                    lkfbrc
      C                   KFLD                    lkcnu2
      C                   KFLD                    lkfacl
      C                   KFLD                    lkloan
      C                   KFLD                    lkfse2
- 
+
      C     Kpdcl         KLIST
      C                   KFLD                    lkloan
      C                   KFLD                    lkcnu2
@@ -1157,14 +1437,14 @@
      C                   KFLD                    lkfseq
      C                   KFLD                    lkfbrc
      C                   KFLD                    lkedat
- 
+
      C     Kpdclp        KLIST
      C                   KFLD                    lkloan
      C                   KFLD                    lkcnu2
      C                   KFLD                    lkfacl
      C                   KFLD                    lkfseq
      C                   KFLD                    lkfbrc
- 
+
      C     KAllF         KLIST                                                              MD046080
      C                   KFLD                    LKCNU2                                     MD046080
      C                   KFLD                    LKLOAN                                     MD046080
@@ -1173,12 +1453,12 @@
      C                   KFLD                    LKOSAC                                     MD046080
                                                                                             MD046080
       ** Access General Ledger details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDGELRPD'    DBFILE
@@ -1187,9 +1467,9 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
       ** Retrieve trading data
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -1202,19 +1482,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR'      @rtcd
      C                   PARM      '*FIRST '     @optn
      C     sdbank        PARM      sdbank        dsfdy
- 
+
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
- 
+
      C                   MOVEL     WPARM         SVALK1
- 
+
       ** Call Access object:
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    WRetcd
      C                   PARM                    SVALK1
@@ -1237,15 +1517,15 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
- 
+
       ** If the system value is not found then default value to 'P'
- 
+
      C     WRetcd        IFNE      '        '
      C                   MOVE      'P'           PPCUST
      C                   ELSE
- 
+
       ** Isolate the first character of SVAL1 which = 'P' or 'O'.
- 
+
      C                   MOVEL     SVAL1         WRK01
      C     WRK01         IFEQ      'O'
      C                   MOVE      'O'           PPCUST
@@ -1253,7 +1533,7 @@
      C                   MOVE      'P'           PPCUST
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Determine if Freq Fee & Allocation, Sett Ccy, Roll Utilisation                     MD046080
                                                                                             MD046080
      C                   CALL      'AOSARDR0'                                               MD046080
@@ -1279,7 +1559,7 @@
      C     *LIKE         DEFINE    LKEAMT        WRepaym
      C     *LIKE         DEFINE    LKEAMT        W@EAMT
      C     *LIKE         DEFINE    FELOAN        w@FPDCR
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1287,19 +1567,19 @@
       *  *PSSR - Subroutine to handle abnormal error conditions       *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   ROLBK
      C                   IF        runBefore <> 'Y'
      C                   EVAL      runBefore   = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      pReturnCode = '*ERROR*'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
      C/COPY ZSRSRC,ZSEDITZ3LE

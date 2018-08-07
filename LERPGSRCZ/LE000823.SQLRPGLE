@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2017            *
       *                                                               *
-      *  Last Amend No. MD051242           Date 25Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049865           Date 06Aug18               *
+      *  Prev Amend No. MD051242           Date 25Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
       *                 MD048558           Date 21Nov17               *
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049865 - Component LEC000823 failed in COB                 *
       *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
       *             balance for fee with no settlement currency       *
       *  MD046248 - Finastra Rebranding                               *
@@ -637,8 +639,8 @@
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
-     C**********         EVAL      L1NORE = L1NORE + 4                             MD048557 MD051242
-     C                   ADD       4             L1NORE                                     MD051242
+     C**********         EVAL      L1NORE = L1NORE + 4                             MD048557 MD049865
+     C                   ADD       4             L1NORE                                     MD049865
 
      C                   ENDSR
 

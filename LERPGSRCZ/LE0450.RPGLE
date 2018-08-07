@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049745A          Date 16Mar18               *
-      *  Prev Amend No. MD049745           Date 02Mar18               *
+      *  Last Amend No. MD049745B          Date 29Jun18               *
+      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *                 MD049745           Date 02Mar18               *
       *                 MD049444           Date 07Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD049078           Date 12Jan18               *
@@ -384,6 +385,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049745B - FX account keys are not generated for loan start *
+      *              date events                                      *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD049745 - Corruption of Original currency of Loans and PDCLs*
@@ -6918,7 +6921,7 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        OREQ      'Y'                                                        CLE134
      C     AUTOX         ANDEQ     'C'                                                        CLE134
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
-     C                   EVAL      WCLE134 = 'Y'                                            MD049078
+     C**********         EVAL      WCLE134 = 'Y'                                  MD049078 MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
      C     LTYP1A        OREQ      'Y'                                                        CLE134
      C     LTYP1A        OREQ      'Z'                                                        CLE134
@@ -7432,7 +7435,7 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        OREQ      'Y'                                                        CLE134
      C     AUTOX         ANDEQ     'C'                                                        CLE134
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
-     C                   EVAL      WCLE134 = 'Y'                                            MD049078
+     C**********         EVAL      WCLE134 = 'Y'                                  MD049078 MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
      C     LTYP1A        OREQ      'Y'                                                        CLE134
      C     LTYP1A        OREQ      'Z'                                                        CLE134
@@ -7688,6 +7691,11 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
      C                   ENDIF                                                                CLE134
+      *                                                                                    MD049745B
+     C     WPDCLL        IFEQ      'Y'                                                     MD049745B
+     C     AUTO          ORNE      'C'                                                     MD049745B
+     C                   EVAL      WCLE134 = ' '                                           MD049745B
+     C                   ENDIF                                                             MD049745B
       *                                                                                       CLE134
       ** If Original Loan repayment, check whether a PDCL has been                            CLE134
       ** generated today in I/C with field "Decrease" (YDECRE) = 'Y'.                         CLE134
@@ -8344,6 +8352,7 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        OREQ      'Y'                                                        CLE134
      C     AUTOX         ANDEQ     'C'                                                        CLE134
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
+     C                   EVAL      WCLE134 = 'Y'                                           MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
      C     LTYP1A        OREQ      'Y'                                                        CLE134
      C     LTYP1A        OREQ      'Z'                                                        CLE134
@@ -12383,6 +12392,11 @@ L118 I                             P   72   77 7RTSPL
      C**********         Z-ADD     INTA          KEAMT                               263074 MD046080
      C*****CLE034        IFNE      'Y'                                             MD049078 MD049745
      C                   Z-ADD     INTA          KEAMT                                      MD048557
+     C                   IF        CLE031 = 'Y'                                            MD049745B
+     C                   Z-ADD     KEAMT         KOTHA                                     MD049745B
+     C                   Z-ADD     WCYEXR        KEXRT                                     MD049745B
+     C                   MOVEL     WCYXIN        KOTHC                                     MD049745B
+     C                   ENDIF                                                             MD049745B
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     WIKAMT        ANDNE     0                                                        MD049745
      C                   EVAL      KEAMT = WIKAMT                                           MD049745
@@ -12438,6 +12452,9 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
      C                   WRITE     LKEYF1DF                                                   CLE134
+     C                   CLEAR                   KOTHA                                     MD049745B
+     C                   CLEAR                   KEXRT                                     MD049745B
+     C                   CLEAR                   KOTHC                                     MD049745B
      C     KEAMT         IFGT      0                                                        MD048557
      C                   Z-ADD     KEAMT         WACAMT                                     MD048557
      C                   ELSE                                                               MD048557
@@ -12482,6 +12499,11 @@ L118 I                             P   72   77 7RTSPL
      C**********         Z-ADD     PRAM          KEAMT                               263074 MD046080
      C*****CLE034        IFNE      'Y'                                             MD049078 MD049745
      C                   Z-ADD     PRAM          KEAMT                                      MD048557
+     C                   IF        CLE031 = 'Y'                                            MD049745B
+     C                   Z-ADD     KEAMT         KOTHA                                     MD049745B
+     C                   Z-ADD     WCYEXR        KEXRT                                     MD049745B
+     C                   MOVEL     WCYXIN        KOTHC                                     MD049745B
+     C                   ENDIF                                                             MD049745B
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     WPKAMT        ANDNE     0                                                        MD049745
      C                   EVAL      KEAMT = WPKAMT                                           MD049745
@@ -12542,6 +12564,9 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      SETRID = SETRID + 1                                        CLE164
      C                   EVAL      SEOVRD = 0                                                 CLE164
      C                   WRITE     LKEYF1DF                                                   263074
+     C                   CLEAR                   KOTHA                                     MD049745B
+     C                   CLEAR                   KEXRT                                     MD049745B
+     C                   CLEAR                   KOTHC                                     MD049745B
      C     KEAMT         IFGT      0                                                        MD048557
      C                   Z-ADD     KEAMT         WACAMT                                     MD048557
      C                   ELSE                                                               MD048557

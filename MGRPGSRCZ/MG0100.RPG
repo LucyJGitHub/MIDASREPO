@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050972           Date 17May18               *
-      *  Prev Amend No. MD050936           Date 16May18               *
+      *  Last Amend No. MD050842           Date 25May18               *
+      *  Prev Amend No. MD050972           Date 17May18               *
+      *                 MD050936           Date 16May18               *
       *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -104,6 +105,7 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD050842 - Condition fields 33B and 36 by System Value.      *
       *  MD050972 - Field tag 32A has a blank Value Date for LDNI     *
       *  MD050936 - Field tag 53B has a defaulted value of '/'        *
       *  CSW218 - SWIFT Changes 2018                                  *
@@ -430,6 +432,10 @@
       *                                                                   CFT013
      I/COPY FTCPYSRC,FT0010I001                                           CFT013
      I*                                                                   S01408
+      **  System Values Constant                                                            MD050842
+      *                                                                                     MD050842
+     I              'Supprs33B36inFXMT103'C         P@DL                                    MD050842
+      *                                                                                     MD050842
      I              'CustNoFirstLineFld50'C         AOCAB                                   MD026727
       *                                                                                     MD026727
      I              'ACOUNTLINE'          C         CACNT1                                    250600
@@ -3986,6 +3992,24 @@
      C                     MOVELZSAMNT    SAMNT                           CFT013
      C                     ENDIF                                          CFT013
       *                                                                   CFT013
+      ** if transaction is dealing, check if FX                                             MD050842
+     C           MGMODI    IFEQ 'DL'                                                        MD050842
+     C           SPPRSF    ANDEQ'Y'                                                         MD050842
+     C                     MOVELMGTNUM    KYDLNO  60                                        MD050842
+     C           CDL099    IFEQ 'N'                                                         MD050842
+     C           OPDEAL    ANDEQ'N'                                                         MD050842
+     C                     OPEN DEALS                                                       MD050842
+     C                     MOVEL'Y'       OPDEAL                                            MD050842
+     C                     ENDIF                                                            MD050842
+     C           KYDLNO    CHAINDEALS                87                                     MD050842
+     C                     ENDIF                                                            MD050842
+      *                                                                                     MD050842
+      ** do not generate 33B if these conditions are met                                    MD050842
+     C           MGMODI    IFEQ 'DL'                                                        MD050842
+     C           SPPRSF    ANDEQ'Y'                                                         MD050842
+     C           *IN87     ANDEQ'0'                                                         MD050842
+     C                     ELSE                                                             MD050842
+      *                                                                                     MD050842
       **  Format :33B: Currency/Instructed Amount                         CFT013
       *                                                                   CFT013
      C                     ADD  1         X                               CFT013
@@ -4025,6 +4049,7 @@
      C                     MOVELFLD33B    MFLD                            CFT013
      C                     ENDIF                                          CFT013
       *                                                                   CFT013
+     C                     ENDIF                                                            MD050842
       **  Format :36: Exchange Rate                                       CFT013
       *                                                                   CFT013
      C           MGICCY    IFNE *BLANKS                                                       219243
@@ -5146,6 +5171,38 @@
      C                     MOVELP@VL01    PAOCAB                                            MD026727
      C                     ENDIF                                                            MD026727
       *                                                                                     MD026727
+      ** Access system value for Supprs33B36inFXMT103                                       MD050842
+      *                                                                                     MD050842
+     C                     CALL 'AOSVALR0'                                                  MD050842
+     C                     PARM *BLANKS   @RTCD                                             MD050842
+     C                     PARM P@DL      P@OP01 20                                         MD050842
+     C                     PARM *BLANKS   P@VL01200                                         MD050842
+     C                     PARM *BLANKS   P@OP02 20                                         MD050842
+     C                     PARM *BLANKS   P@VL02200                                         MD050842
+     C                     PARM *BLANKS   P@OP03 20                                         MD050842
+     C                     PARM *BLANKS   P@VL03200                                         MD050842
+     C                     PARM *BLANKS   P@OP04 20                                         MD050842
+     C                     PARM *BLANKS   P@VL04200                                         MD050842
+     C                     PARM *BLANKS   P@OP05 20                                         MD050842
+     C                     PARM *BLANKS   P@VL05200                                         MD050842
+     C                     PARM *BLANKS   P@OP06 20                                         MD050842
+     C                     PARM *BLANKS   P@VL06200                                         MD050842
+     C                     PARM *BLANKS   P@OP07 20                                         MD050842
+     C                     PARM *BLANKS   P@VL07200                                         MD050842
+     C                     PARM *BLANKS   P@OP08 20                                         MD050842
+     C                     PARM *BLANKS   P@VL08200                                         MD050842
+     C                     PARM *BLANKS   P@OP09 20                                         MD050842
+     C                     PARM *BLANKS   P@VL09200                                         MD050842
+     C                     PARM *BLANKS   P@OP10 20                                         MD050842
+     C                     PARM *BLANKS   P@VL10200                                         MD050842
+      *                                                                                     MD050842
+     C                     MOVEL'N'       SPPRSF  1                                         MD050842
+     C                     MOVEL'N'       OPDEAL  1                                         MD050842
+      *                                                                                     MD050842
+     C           @RTCD     IFEQ *BLANK                                                      MD050842
+     C                     MOVELP@VL01    SPPRSF                                            MD050842
+     C                     ENDIF                                                            MD050842
+      *                                                                                     MD050842
      C/COPY WNCPYSRC,MGH00083
      C                     ENDSR
      C/EJECT

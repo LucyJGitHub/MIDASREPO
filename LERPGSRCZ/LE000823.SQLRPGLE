@@ -1,7 +1,7 @@
      H DEBUG
-     H Copyright('(c) Finastra International Limited 2017')
+     H Copyright('(c) Misys International Banking Systems Ltd. 2017')
       *****************************************************************
-/*STD *  RPGBASEBND                                                   *
+/*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE PDCL creation of settlement account keys')    *
       *****************************************************************
       *                                                               *
@@ -14,12 +14,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048557           Date 27Nov17               *
+      *  Last Amend No. MD049865           Date 06Aug18               *
+      *  Prev Amend No. MD051242           Date 25Jun18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD048557           Date 27Nov17               *
       *                 MD048558           Date 21Nov17               *
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049865 - Component LEC000823 failed in COB                 *
+      *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
+      *             balance for fee with no settlement currency       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048557 - Failing COB Component - LEC000471A                *
       *  MD048558 - Failing COB Component - LEC000823 00002           *
@@ -31,16 +36,19 @@
       ** Midas LE Past Due Call Loans Account Keys
      FLEPK1L0   UF A E           K DISK
      F                                     PREFIX(L1_)
+     F                                     COMMIT                                           MD051242
 
       ** Midas LE Fee Past Due Call Loans Account Keys
      FLEPK2L0   UF A E           K DISK
      F                                     RENAME(LKEYFEDF:LKEY2DPF)
      F                                     PREFIX(L2_)
+     F                                     COMMIT                                           MD051242
 
       ** Midas LE Fee Past Due Call Loans Account Keys
      FLEPK3L0   UF A E           K DISK
      F                                     RENAME(LKEYFEDF:LKEY3DPF)
      F                                     PREFIX(L3_)
+     F                                     COMMIT                                           MD051242
 
       ** Midas LE Settlement Allocation File
      FLESTALLF  IF   E           K DISK
@@ -64,6 +72,17 @@
                                                                                             MD048557
      FLEPK1ZZ   UF A E             DISK    INFSR(*PSSR)                                     MD048557
      F                                     RENAME(LKEY1ZZF:LKEYF1ZF)                        MD048557
+     F                                     COMMIT                                           MD051242
+                                                                                            MD051242
+     FLEPK2ZZ   UF A E             DISK    INFSR(*PSSR)                                     MD051242
+     F                                     RENAME(LKEYFEZF:LKEYF2ZF)                        MD048557
+     F                                     PREFIX(L2_)                                      MD051242
+     F                                     COMMIT                                           MD051242
+                                                                                            MD051242
+     FLEPK3ZZ   UF A E             DISK    INFSR(*PSSR)                                     MD051242
+     F                                     RENAME(LKEYFEZF:LKEYF3ZF)                        MD051242
+     F                                     PREFIX(L3_)                                      MD051242
+     F                                     COMMIT                                           MD051242
 
       *****************************************************************
       /EJECT
@@ -157,6 +176,9 @@
      D                 DS
      D  AKY                    1     14
      D                                     DIM(14)
+     D                 DS                                                                   MD051242
+     D  AKP                    1     14                                                     MD051242
+     D                                     DIM(14)                                          MD051242
 
       ** Additional Field Definitions
      D @FECD           S              2
@@ -206,6 +228,14 @@
      D WIND1           S              1A
      D WRKFCY          S              3A
      D WSET            S             18A
+     D WFILE           S             10A                                                    MD051242
+     D PDCL            S              1N                                                    MD051242
+     D SqlStr          S           2000A   INZ(*BLANKS)                                     MD051242
+     D KeyStr          S             14A   INZ(*BLANKS)                                     MD051242
+     D QUO             C                   CONST('''')                                      MD051242
+     D Counter         S             10S 0 INZ(*ZEROS)                                      MD051242
+     D WKLPUR          S              3A                                                    MD051242
+     D WKLSAL          S              3A                                                    MD051242
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -218,13 +248,20 @@
       ** M A I N  P R O C E S S I N G                                 *
       *****************************************************************
 
-
       ** store existing trailers amount                                                     MD048557
                                                                                             MD048557
      C                   Z-ADD     0             L1VLRF                                     MD048557
      C                   Z-ADD     0             L1VLRL                                     MD048557
      C                   Z-ADD     0             L1NORE                                     MD048557
      C                   Z-ADD     0             WACAMT                                     MD048557
+                                                                                            MD051242
+     C                   Z-ADD     0             L2VLRF                                     MD051242
+     C                   Z-ADD     0             L2VLRL                                     MD051242
+     C                   Z-ADD     0             L2NORE                                     MD051242
+                                                                                            MD051242
+     C                   Z-ADD     0             L3VLRF                                     MD051242
+     C                   Z-ADD     0             L3VLRL                                     MD051242
+     C                   Z-ADD     0             L3NORE                                     MD051242
       *                                                                                     MD048557
      C     1             SETLL     LEPK1ZZ                                                  MD048557
      C                   READ      LEPK1ZZ                                88                MD048557
@@ -233,7 +270,23 @@
      C                   Z-ADD     VLRF          L1VLRF                                     MD048557
      C                   Z-ADD     VLRL          L1VLRL                                     MD048557
      C                   ENDIF                                                              MD048557
-
+      *                                                                                     MD051242
+     C     1             SETLL     LEPK2ZZ                                                  MD051242
+     C                   READ      LEPK2ZZ                                88                MD051242
+     C     *IN88         IFEQ      *OFF                                                     MD051242
+     C                   Z-ADD     L2_LKNORE     L2NORE                                     MD051242
+     C                   Z-ADD     L2_LKVLRF     L2VLRF                                     MD051242
+     C                   Z-ADD     L2_LKVLRL     L2VLRL                                     MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C     1             SETLL     LEPK3ZZ                                                  MD051242
+     C                   READ      LEPK3ZZ                                88                MD051242
+     C     *IN88         IFEQ      *OFF                                                     MD051242
+     C                   Z-ADD     L3_LKNORE     L3NORE                                     MD051242
+     C                   Z-ADD     L3_LKVLRF     L3VLRF                                     MD051242
+     C                   Z-ADD     L3_LKVLRL     L3VLRL                                     MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
       ** Read thru LEPK1DPD
 
      C                   EVAL      WTYPE = 'L'
@@ -274,6 +327,9 @@
      C                   IF        %SUBST(L2_LKAKEY:10:1) = 'F'
      C                             AND %SUBST(L2_LKAKEY:4:1) <> 'S'
      C                             AND L2_LKRECI = 'F'
+     C                             OR %SUBST(L2_LKAKEY:10:1) = 'F'                          MD051242
+     C                             AND %SUBST(L2_LKAKEY:3:1) <> 'S'                         MD051242
+     C                             AND L2_LKRECI = 'L'                                      MD051242
 
      C                   EXSR      SETTLE2
 
@@ -298,6 +354,9 @@
      C                   IF        %SUBST(L3_LKAKEY:10:1) = 'F'
      C                             AND %SUBST(L3_LKAKEY:4:1) <> 'S'
      C                             AND L3_LKRECI = 'F'
+     C                             OR %SUBST(L3_LKAKEY:10:1) = 'F'                          MD051242
+     C                             AND %SUBST(L3_LKAKEY:3:1) <> 'S'                         MD051242
+     C                             AND L3_LKRECI = 'L'                                      MD051242
 
      C                   EXSR      SETTLE3
 
@@ -340,18 +399,21 @@
      C                   Z-ADD     H_PEXR        WRATE
      C                   ENDIF
      C                   ELSE
-     C                   IF        PTYP <> 66
-     C                             AND PTYP <> 67
-     C                             AND PTYP <> 69
-     C                             AND PTYP <> 72
-     C                   EVAL      WCCY1 = PSCY
-     C                   EVAL      WRATE = PEXR
-     C                   EVAL      WIND1 = PEXI
-     C                   ELSE
-     C                   EVAL      WCCY1 = SCCY
-     C                   EVAL      WRATE = REXR
-     C                   EVAL      WIND1 = REXI
-     C                   ENDIF
+     C**********         IF        PTYP <> 66                                               MD051242
+     C**********                   AND PTYP <> 67                                           MD051242
+     C**********                   AND PTYP <> 69                                           MD051242
+     C**********                   AND PTYP <> 72                                           MD051242
+     C**********         EVAL      WCCY1 = PSCY                                             MD051242
+     C**********         EVAL      WRATE = PEXR                                             MD051242
+     C**********         EVAL      WIND1 = PEXI                                             MD051242
+     C**********         ELSE                                                               MD051242
+     C**********         EVAL      WCCY1 = SCCY                                             MD051242
+     C**********         EVAL      WRATE = REXR                                             MD051242
+     C**********         EVAL      WIND1 = REXI                                             MD051242
+     C                   EVAL      WCCY1 = L1_ECCY                                          MD051242
+     C                   EVAL      WRATE = L1_EXRT                                          MD051242
+     C                   MOVEL     L1_OTHC       WIND1                                      MD051242
+     C**********         ENDIF                                                              MD051242
      C                   ENDIF
 
      C                   ELSE
@@ -363,7 +425,8 @@
      C                   IF        %FOUND(LESTALLF)
      C                   EVAL      WCCY1 = F_RSCY
      C                   EVAL      WRATE = F_REXR
-     C                   EVAL      WREXI = F_REXI
+     C**********         EVAL      WREXI = F_REXI                                           MD051242
+     C                   EVAL      WIND1 = F_REXI                                           MD051242
      C                   ELSE
      C     *LOCK         IN        LDA
      C                   MOVEL     'LESTALLF'    DBFILE
@@ -376,7 +439,8 @@
      C                   ELSE
      C                   EVAL      WCCY1 = FESCCY
      C                   EVAL      WRATE = FEREXR
-     C                   EVAL      WREXI = FEREXI
+     C**********         EVAL      WREXI = FEREXI                                           MD051242
+     C                   EVAL      WIND1 = FEREXI                                           MD051242
      C                   ENDIF
      C                   ENDIF
 
@@ -451,7 +515,23 @@
 
      C     SETTLE1       BEGSR
 
-     C                   MOVEA     L1_AKEY       AKY
+     C                   EVAL      KRECI = 'D'                                              MD051242
+     C                   EVAL      KLOAN = L1_LNNO                                          MD051242
+     C     KLOANK        CHAIN     CLOANL4                                                  MD051242
+     C                   IF        NOT %FOUND                                               MD051242
+     C                   EVAL      KRECI = 'M'                                              MD051242
+     C     KLOANK        CHAIN     CLOANL4                                                  MD051242
+     C                   ENDIF                                                              MD051242
+     C                   IF        L1_ECCY = CCY                                            MD051242
+     C                   LEAVESR                                                            MD051242
+     C                   ENDIF                                                              MD051242
+     C                   EVAL      WKLPUR = L1_ECCY                                         MD051242
+     C                   EVAL      WKLSAL = CCY                                             MD051242
+                                                                                            MD051242
+     C                   Z-ADD     0             WACAMT                                     MD051242
+     C                   EVAL      WFILE = 'LEPK1DPD'                                       MD051242
+     C                   MOVEA     L1_AKEY       AKP                                        MD051242
+     C                   MOVEA     L1_AKEY       AKY                                        MD051242
 
      C                   MOVE      'S'           AKY(3)
      C                   MOVEA     '    '        AKY(6)
@@ -462,7 +542,8 @@
 
       ** Format xxSyybbbFB or xxSyybbbBB key for amount in purchase ccy
 
-     C     L1_ECCY       IFEQ      BJCYCD
+     C*****L1_ECCY       IFEQ      BJCYCD                                                   MD051242
+     C     WKLPUR        IFEQ      BJCYCD                                                   MD051242
      C                   MOVEA     'BB'          AKY(9)
      C                   ELSE
      C                   MOVEA     'FB'          AKY(9)
@@ -474,28 +555,41 @@
      C                   EXSR      SRHASH                                                   MD048557
 
      C                   MOVEA     L1_AKEY       AKY
-     C                   EVAL      KRECI = 'D'
-     C                   EVAL      KLOAN = L1_LNNO
-     C     KLOANK        CHAIN     CLOANL4
-     C                   IF        NOT %FOUND
+     C**********         EVAL      KRECI = 'D'                                              MD051242
+     C**********         EVAL      KLOAN = L1_LNNO                                          MD051242
+     C*****KLOANK        CHAIN     CLOANL4                                                  MD051242
+     C**********         IF        NOT %FOUND                                               MD051242
      C******LOCK         IN        LDA                                                      MD048558
      C**********         MOVE      L1_LNNO       Dbkey                                      MD048558
      C**********         MOVEL     'CLOANL4'     Dbfile                                     MD048558
      C**********         Z-ADD     004           Dbase                                      MD048558
      C**********         OUT       LDA                                                      MD048558
      C**********         EXSR      *PSSR                                                    MD048558
-     C                   EVAL      KRECI = 'M'                                              MD048558
+     C**********         EVAL      KRECI = 'M'                                     MD048558 MD051242
                                                                                             MD048558
-     C     KLOANK        CHAIN     CLOANL4                                                  MD048558
-     C                   ENDIF
+     C*****KLOANK        CHAIN     CLOANL4                                         MD048558 MD051242
+     C**********         ENDIF                                                              MD051242
 
      C                   EVAL      WINAMT = L1_EAMT
      C                   EXSR      SRCvtAmt
+     C                   CLEAR                   KeyStr                                     MD051242
+     C                   IF        L1_PAMT <> 0                                             MD051242
+     C                   MOVEA     'XP'          AKP(09)                                    MD051242
+     C                   ELSE                                                               MD051242
+     C                   MOVEA     'XI'          AKP(09)                                    MD051242
+     C                   ENDIF                                                              MD051242
+     C                   MOVEA     AKP           KeyStr                                     MD051242
+     C                   EXSR      CheckPDCL                                                MD051242
+     C                   IF        NOT(PDCL)                                                MD051242
+     C                   EVAL      L1_EAMT = L1_OTHA                                        MD051242
+     C                   ELSE                                                               MD051242
      C                   EVAL      L1_EAMT = WOUTAMT
+     C                   ENDIF                                                              MD051242
 
       ** Format xxSyybbbFC or xxSyybbbBC key for amount in purchase ccy
 
-     C     WCCY1         IFEQ      BJCYCD
+     C*****WCCY1         IFEQ      BJCYCD                                                   MD051242
+     C     WKLSAL        IFEQ      BJCYCD                                                   MD051242
      C                   MOVEA     'BC'          AKY(9)
      C                   ELSE
      C                   MOVEA     'FC'          AKY(9)
@@ -527,7 +621,8 @@
       ** a/c in purchase currency
       *
      C                   MOVEA     ' P'          AKY(9)
-     C                   MOVEA     PSCY          AKY(6)
+     C**********         MOVEA     PSCY          AKY(6)                                     MD051242
+     C                   MOVEA     WKLPUR        AKY(6)                                     MD051242
      C                   MOVE      BJCYCD        L1_ECCY
      C                   Z-ADD     BSAMT         L1_EAMT
      C                   MOVEA     AKY           L1_AKEY
@@ -539,11 +634,13 @@
 
      C                   MOVEA     L1_AKEY       AKY
      C                   MOVEA     ' S'          AKY(9)
-     C                   MOVEA     SCCY          AKY(6)
+     C**********         MOVEA     SCCY          AKY(6)                                     MD051242
+     C                   MOVEA     WKLSAL        AKY(6)                                     MD051242
      C                   MOVEA     AKY           L1_AKEY
      C                   WRITE     LKEY1DPF
      C                   EXSR      SRHASH                                                   MD048557
-     C                   EVAL      L1NORE = L1NORE + 4                                      MD048557
+     C**********         EVAL      L1NORE = L1NORE + 4                             MD048557 MD049865
+     C                   ADD       4             L1NORE                                     MD049865
 
      C                   ENDSR
 
@@ -561,6 +658,10 @@
       *****************************************************************
 
      C     SETTLE2       BEGSR
+
+     C                   Z-ADD     0             WACAMT                                     MD051242
+     C                   EVAL      WFILE = 'LEPK2DPD'                                       MD051242
+     C                   MOVEA     L2_LKAKEY     AKP                                        MD051242
 
      C     KFEE2         CHAIN     LEFEEDLU
      C                   IF        NOT%FOUND
@@ -585,8 +686,14 @@
 
      C                   MOVEA     L2_LKAKEY     AKY
 
-     C                   MOVE      'S'           AKY(4)
+     C**********         MOVE      'S'           AKY(4)                                     MD051242
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVE      'S'           AKY(3)                                     MD051242
+     C                   MOVEA     ' '           AKY(6)                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   MOVE      'S'           AKY(4)                                     MD051242
      C                   MOVEA     '  '          AKY(5)
+     C                   ENDIF                                                              MD051242
 
      C                   IF        PTFI <> ' '
      C                   MOVE      FEPSCY        WRKCCY
@@ -597,6 +704,10 @@
      C                   Z-ADD     FEREXR        WRKEXR
      C                   MOVE      FEREXI        WRKEXI
      C                   ENDIF
+      *                                                                                     MD051242
+     C                   IF        WRKCCY = *BLANKS                                         MD051242
+     C                   LEAVESR                                                            MD051242
+     C                   ENDIF                                                              MD051242
 
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'
@@ -622,6 +733,7 @@
      C                   MOVEA     AKY           L2_LKAKEY
 
      C                   WRITE     LKEY2DPF
+     C                   EXSR      SRHASH                                                   MD051242
 
      C                   MOVEA     L2_LKAKEY     AKY
      C                   MOVE      'C'           AKY(10)
@@ -634,11 +746,19 @@
 
      C                   EVAL      WINAMT = L2_LKEAMT
      C                   EXSR      SRCvtAmt
+     C                   MOVEA     'D'           AKP(10)                                    MD051242
+     C                   MOVEA     AKP           KeyStr                                     MD051242
+     C                   EXSR      CheckPDCL                                                MD051242
+     C                   IF        NOT(PDCL)                                                MD051242
+     C                   EVAL      L2_LKEAMT = L2_LKOTHA                                    MD051242
+     C                   ELSE                                                               MD051242
      C                   EVAL      L2_LKEAMT = WOUTAMT
+     C                   ENDIF                                                              MD051242
 
      C                   MOVE      WRKSCY        L2_LKECCY
      C                   MOVEA     AKY           L2_LKAKEY
      C                   WRITE     LKEY2DPF
+     C                   EXSR      SRHASH                                                   MD051242
 
      C                   MOVEA     L2_LKAKEY     AKY
      C                   CALL      'AOCURRR0'
@@ -657,7 +777,8 @@
      C                   PARM      FEFCCY        WCCY1
      C     SDCURR        PARM                    DSSDY
 
-     C     WRKFCY        IFEQ      BJCYCD
+     C*****WRKFCY        IFEQ      BJCYCD                                                   MD051242
+     C     FEFCCY        IFEQ      BJCYCD                                                   MD051242
      C                   Z-ADD     L2_LKEAMT     BSAMT
      C                   ELSE
 
@@ -678,20 +799,35 @@
       ** a/c in purchase currency
       *
      C                   MOVE      'P'           AKY(10)
-     C                   MOVEA     WRKPCY        AKY(6)
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVEA     WRKPCY        AKY(6)                                     MD051242
+     C                   MOVEA     ' '           AKY(9)                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   MOVEA     WRKPCY        AKY(5)
+     C                   MOVEA     '  '          AKY(8)                                     MD051242
+     C                   ENDIF                                                              MD051242
      C                   MOVE      BJCYCD        L2_LKECCY
      C                   Z-ADD     BSAMT         L2_LKEAMT
      C                   MOVEA     AKY           L2_LKAKEY
      C                   WRITE     LKEY2DPF
+     C                   EXSR      SRHASH                                                   MD051242
 
       ** Format xxsyybcccS key for Base Currency Equivalent of Spot Trade
       ** account in sale currency
 
      C                   MOVEA     L2_LKAKEY     AKY
      C                   MOVE      'S'           AKY(10)
-     C                   MOVEA     WRKSCY        AKY(6)
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVEA     WRKSCY        AKY(6)                                     MD051242
+     C                   MOVEA     ' '           AKY(9)                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   MOVEA     WRKSCY        AKY(5)
+     C                   MOVEA     '  '          AKY(8)                                     MD051242
+     C                   ENDIF                                                              MD051242
      C                   MOVEA     AKY           L2_LKAKEY
      C                   WRITE     LKEY2DPF
+     C                   EXSR      SRHASH                                                   MD051242
+     C                   ADD       4             L2NORE                                     MD051242
 
      C                   ENDSR
 
@@ -709,6 +845,10 @@
       *****************************************************************
 
      C     SETTLE3       BEGSR
+
+     C                   Z-ADD     0             WACAMT                                     MD051242
+     C                   EVAL      WFILE = 'LEPK3DPD'                                       MD051242
+     C                   MOVEA     L3_LKAKEY     AKP                                        MD051242
 
      C     KFEE          CHAIN     LEFEEDLU
      C                   IF        NOT%FOUND
@@ -733,8 +873,14 @@
 
      C                   MOVEA     L3_LKAKEY     AKY
 
-     C                   MOVE      'S'           AKY(4)
+     C**********         MOVE      'S'           AKY(4)                                     MD051242
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVE      'S'           AKY(3)                                     MD051242
+     C                   MOVEA     ' '           AKY(6)                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   MOVE      'S'           AKY(4)                                     MD051242
      C                   MOVE      ' '           AKY(5)
+     C                   ENDIF                                                              MD051242
 
      C                   IF        FEPYON = 'S'
      C                   MOVE      'S'           AKY(6)
@@ -749,6 +895,10 @@
      C                   Z-ADD     FEREXR        WRKEXR
      C                   MOVE      FEREXI        WRKEXI
      C                   ENDIF
+      *                                                                                     MD051242
+     C                   IF        WRKCCY = *BLANKS                                         MD051242
+     C                   LEAVESR                                                            MD051242
+     C                   ENDIF                                                              MD051242
 
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'
@@ -774,6 +924,7 @@
      C                   MOVEA     AKY           L3_LKAKEY
 
      C                   WRITE     LKEY3DPF
+     C                   EXSR      SRHASH                                                   MD051242
 
      C                   MOVEA     L3_LKAKEY     AKY
      C                   MOVE      'C'           AKY(10)
@@ -786,11 +937,19 @@
 
      C                   EVAL      WINAMT = L3_LKEAMT
      C                   EXSR      SRCvtAmt
+     C                   MOVEA     'D'           AKP(10)                                    MD051242
+     C                   MOVEA     AKP           KeyStr                                     MD051242
+     C                   EXSR      CheckPDCL                                                MD051242
+     C                   IF        NOT(PDCL)                                                MD051242
+     C                   EVAL      L3_LKEAMT = L3_LKOTHA                                    MD051242
+     C                   ELSE                                                               MD051242
      C                   EVAL      L3_LKEAMT = WOUTAMT
+     C                   ENDIF                                                              MD051242
 
      C                   MOVE      WKSALC        L3_LKECCY
      C                   MOVEA     AKY           L3_LKAKEY
      C                   WRITE     LKEY3DPF
+     C                   EXSR      SRHASH                                                   MD051242
 
      C                   MOVEA     L3_LKAKEY     AKY
      C                   CALL      'AOCURRR0'
@@ -830,26 +989,39 @@
       ** a/c in purchase currency
       *
      C                   MOVE      'P'           AKY(10)
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVEA     WKPURC        AKY(6)                                     MD051242
+     C                   MOVEA     ' '           AKY(9)                                     MD051242
+     C                   ELSE                                                               MD051242
      C                   MOVEA     WKPURC        AKY(5)
      C                   MOVEA     '  '          AKY(8)
+     C                   ENDIF                                                              MD051242
      C                   MOVE      BJCYCD        L3_LKECCY
      C                   Z-ADD     BSAMT         L3_LKEAMT
      C                   MOVEA     AKY           L3_LKAKEY
      C                   WRITE     LKEY3DPF
+     C                   EXSR      SRHASH                                                   MD051242
       *
       ** Format xxsyybcccS key for Base Currency Equivalent of Spot Trade
       ** account in sale currency
       *
      C                   MOVEA     L3_LKAKEY     AKY
      C                   MOVE      'S'           AKY(10)
+     C                   IF        FELOAN > *BLANKS                                         MD051242
+     C                   MOVEA     WKSALC        AKY(6)                                     MD051242
+     C                   MOVEA     ' '           AKY(9)                                     MD051242
+     C                   ELSE                                                               MD051242
      C                   MOVEA     WKSALC        AKY(5)
      C                   MOVEA     '  '          AKY(8)
+     C                   ENDIF                                                              MD051242
      C                   MOVEA     AKY           L3_LKAKEY
      C                   WRITE     LKEY3DPF
+     C                   EXSR      SRHASH                                                   MD051242
+     C                   ADD       4             L3NORE                                     MD051242
 
      C                   ENDSR
 
-      *****************************************************************                     MD048557
+      *****************************************************************
       *                                                               *                     MD048557
       *  STRAIL - Update trailer record on LEPK1ZZ                    *                     MD048557
       *                                                               *                     MD048557
@@ -875,17 +1047,53 @@
      C                   UPDATE    LKEYF1ZF                                                 MD048557
      C                   ENDIF                                                              MD048557
       *                                                                                     MD048557
+     C     1             SETLL     LEPK2ZZ                                                  MD051242
+     C                   READ      LEPK2ZZ                                88                MD051242
+     C                   Z-ADD     L2NORE        L2_LKNORE                                  MD051242
+     C                   Z-ADD     L2VLRF        L2_LKVLRF                                  MD051242
+     C                   Z-ADD     L2VLRL        L2_LKVLRL                                  MD051242
+     C     *IN88         IFEQ      *ON                                                      MD051242
+     C                   MOVE      'T'           L2_LKRECI                                  MD051242
+     C                   ADD       2             L2_LKNORE                                  MD051242
+     C                   WRITE     LKEYF2ZF                                                 MD051242
+     C                   ELSE                                                               MD051242
+     C     L2_LKNORE     IFEQ      0                                                        MD051242
+     C                   ADD       2             L2_LKNORE                                  MD051242
+     C                   MOVE      'T'           L2_LKRECI                                  MD051242
+     C                   END                                                                MD051242
+     C                   UPDATE    LKEYF2ZF                                                 MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
+     C     1             SETLL     LEPK3ZZ                                                  MD051242
+     C                   READ      LEPK3ZZ                                88                MD051242
+     C                   Z-ADD     L3NORE        L3_LKNORE                                  MD051242
+     C                   Z-ADD     L3VLRF        L3_LKVLRF                                  MD051242
+     C                   Z-ADD     L3VLRL        L3_LKVLRL                                  MD051242
+     C     *IN88         IFEQ      *ON                                                      MD051242
+     C                   MOVE      'T'           L3_LKRECI                                  MD051242
+     C                   ADD       2             L3_LKNORE                                  MD051242
+     C                   WRITE     LKEYF3ZF                                                 MD051242
+     C                   ELSE                                                               MD051242
+     C     L3_LKNORE     IFEQ      0                                                        MD051242
+     C                   ADD       2             L3_LKNORE                                  MD051242
+     C                   MOVE      'T'           L3_LKRECI                                  MD051242
+     C                   END                                                                MD051242
+     C                   UPDATE    LKEYF3ZF                                                 MD051242
+     C                   ENDIF                                                              MD051242
+      *                                                                                     MD051242
      C                   ENDSR                                                              MD048557
       *                                                                                     MD048557
       *****************************************************************                     MD048557
       *                                                               *                     MD048557
       *  SRHASH - Add amounts                                         *                     MD048557
       *                                                               *                     MD048557
-      *  Called from SETTLE1                                          *                     MD048557
+      *  Called from SETTLE1, SETTLE, SETTLE3                         *                     MD048557
       *                                                               *                     MD048557
       *****************************************************************                     MD048557
      C     SRHASH        BEGSR                                                              MD048557
                                                                                             MD048557
+     C                   SELECT                                                             MD051242
+     C                   WHEN      WFILE = 'LEPK1DPD'                                       MD051242
      C     L1_EAMT       IFGT      0                                                        MD048557
      C                   Z-ADD     L1_EAMT       WACAMT                                     MD048557
      C                   ELSE                                                               MD048557
@@ -898,7 +1106,35 @@
      C                   EXSR      GLZADD                                                   MD048557
      C                   Z-ADD     ZZTOTI        L1VLRF                                     MD048557
      C                   Z-ADD     ZZTOTD        L1VLRL                                     MD048557
-                                                                                            MD048557
+                                                                                            MD051242
+     C                   WHEN      WFILE = 'LEPK2DPD'                                       MD051242
+     C     L2_LKEAMT     IFGT      0                                                        MD051242
+     C                   Z-ADD     L2_LKEAMT     WACAMT                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   Z-SUB     L2_LKEAMT     WACAMT                                     MD051242
+     C                   ENDIF                                                              MD051242
+                                                                                            MD051242
+     C     WACAMT        DIV       1000          ZZAMT                  80                  MD051242
+     C                   Z-ADD     L2VLRF        ZZTOTI                                     MD051242
+     C                   Z-ADD     L2VLRL        ZZTOTD                                     MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   Z-ADD     ZZTOTI        L2VLRF                                     MD051242
+     C                   Z-ADD     ZZTOTD        L2VLRL                                     MD051242
+                                                                                            MD051242
+     C                   WHEN      WFILE = 'LEPK3DPD'                                       MD051242
+     C     L3_LKEAMT     IFGT      0                                                        MD051242
+     C                   Z-ADD     L3_LKEAMT     WACAMT                                     MD051242
+     C                   ELSE                                                               MD051242
+     C                   Z-SUB     L3_LKEAMT     WACAMT                                     MD051242
+     C                   ENDIF                                                              MD051242
+                                                                                            MD051242
+     C     WACAMT        DIV       1000          ZZAMT                  80                  MD051242
+     C                   Z-ADD     L3VLRF        ZZTOTI                                     MD051242
+     C                   Z-ADD     L3VLRL        ZZTOTD                                     MD051242
+     C                   EXSR      GLZADD                                                   MD051242
+     C                   Z-ADD     ZZTOTI        L3VLRF                                     MD051242
+     C                   Z-ADD     ZZTOTD        L3VLRL                                     MD051242
+     C                   ENDSL                                                              MD051242
                                                                                             MD048557
      C                   ENDSR                                                              MD048557
                                                                                             MD048557
@@ -1084,7 +1320,65 @@
      C                   MOVE      WIN96         *IN96                                      MD048557
       *                                                                                     MD048557
      C                   ENDSR                                                              MD048557
-                                                                                            MD048557
+      *****************************************************************                     MD051242
+     C/EJECT                                                                                MD051242
+      *****************************************************************                     MD051242
+      *    CheckPDCL                                                  *                     MD051242
+      *****************************************************************                     MD051242
+      /free
+       Begsr CheckPDCL;
+             Select;
+               When wFile = 'LEPK1DPD';
+                    SQLStr = 'select count(*)' +
+                    ' from ' +  wFile + 'where AKEY = ' +
+                             QUO + KeyStr + QUO + ' and ' +
+                             'LNNO =  ' + QUO + L1_LNNO + QUO + ' and ' +
+                             'CNUM = ' + QUO + L1_CNUM + QUO + ' and ' +
+                             'BRCA = ' + QUO + L1_BRCA + QUO + 'and ' +
+                             'ACSQ = ' + %CHAR(L1_ACSQ) + ' and ' +
+                             'OSAC = ' + QUO + %TRIM(L1_OSAC) + QUO;
+
+               When wFile = 'LEPK2DPD';
+                    SQLStr = 'select count(*)' +
+                             ' from ' +  wFile + 'where LKAKEY = ' +
+                             QUO + KeyStr + QUO + ' and ' +
+                             'LKLNNO =  ' + QUO + L2_LKLNNO + QUO + ' and ' +
+                             'LKCNUM = ' + QUO + L2_LKCNUM + QUO + ' and ' +
+                             'LKBRCD = ' + QUO + L2_LKBRCD + QUO +  ' and ' +
+                             'LKACSQ = ' + %CHAR(L2_LKACSQ) + ' and ' +
+                             'LKOSAC = ' + QUO + %TRIM(L2_LKOSAC) + QUO;
+               Other;
+                    SQLStr = 'select count(*)' +
+                             ' from ' +  wFile + 'where LKAKEY = ' +
+                             QUO + KeyStr + QUO + ' and ' +
+                             'LKLNNO =  ' + QUO + L3_LKLNNO + QUO + ' and ' +
+                             'LKCNUM = ' + QUO + L3_LKCNUM + QUO + ' and ' +
+                             'LKBRCD = ' + QUO + L3_LKBRCD + QUO +  ' and ' +
+                             'LKACSQ = ' + %CHAR(L3_LKACSQ) + ' and ' +
+                             'LKOSAC = ' + QUO + %TRIM( L3_LKOSAC) + QUO;
+             EndSl;
+
+             Exec Sql Prepare P1 from :SQLStr;
+             Exec Sql Declare P1 cursor for P1;
+             Exec Sql Open P1;
+             Exec Sql Fetch P1 into :Counter;
+
+            If Sqlcod <> 0 and SqlCod <> 100;
+               DbFile = %Trim(wFile);
+               Dbase  = 1;
+               DbKey  = %Trim(KeyStr);
+               DbPgm  = 'LE000823';
+               Exsr *Pssr;
+            Endif;
+            If Counter = 0;
+               PDCL = False;
+            Else;
+               PDCL = True;
+            Endif;
+             Exec Sql Close P1;
+       Endsr;
+      /end-free
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1094,10 +1388,15 @@
      C     *INZSR        BEGSR
 
      C                   EVAL      dbPgm       = PSProcPgm
-                                                                                            MD048557
      C     *LIKE         DEFINE    VLRF          L1VLRF                                     MD048557
      C     *LIKE         DEFINE    VLRL          L1VLRL                                     MD048557
      C     *LIKE         DEFINE    NORE          L1NORE                                     MD048557
+     C     *LIKE         DEFINE    L2_LKVLRF     L2VLRF                                     MD051242
+     C     *LIKE         DEFINE    L2_LKVLRL     L2VLRL                                     MD051242
+     C     *LIKE         DEFINE    L2_LKNORE     L2NORE                                     MD051242
+     C     *LIKE         DEFINE    L3_LKVLRF     L3VLRF                                     MD051242
+     C     *LIKE         DEFINE    L3_LKVLRL     L3VLRL                                     MD051242
+     C     *LIKE         DEFINE    L3_LKNORE     L3NORE                                     MD051242
 
      C     KAllF         KLIST
      C                   KFLD                    L2_LKCNU2

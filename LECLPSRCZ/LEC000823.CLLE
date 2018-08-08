@@ -9,11 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD046080 *CREATE   Date 17Sep17              */
+/*       Last Amend No. MD051242           Date 28Jun18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD046080 *CREATE   Date 17Sep17              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051242 -  CLE031: COB: GLC0340 failed with Currency out   */
+/*                   of balance for fee with no settlement currency  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD046080 - Gap between CLE031 (Settlement to different      */
 /*                  currency) and CLE134 (PDCL processing)           */
@@ -44,6 +47,10 @@
              SNDPGMMSG  MSG('PDCL creation of settlement account keys Amendments') +
                           TOMSGQ(MRUNQ)
 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)               /*MD051242*/                         
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) VALUE('N'))               /*MD051242*/  
+                          
+
 /** Check the current status of this component */
 
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
@@ -67,7 +74,10 @@
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_DIE)
-
+             
+/** Commit Database Changes */                                                          /*MD051242*/
+             COMMIT                                                                     /*MD051242*/
+             
              GOTO       CMDLBL(ENDPGM)
 
 /** Process Errors */
@@ -76,6 +86,9 @@ ERR_DIE:
              SNDPGMMSG  MSG('Job terminated, database in error.') +
                            TOMSGQ(MOPERQ MRUNQ)
 
+/** Rollback Database Changes */                                                        /*MD051242*/
+             ROLLBACK                                                                   /*MD051242*/ 
+             
              GOTO       CMDLBL(ENDPGM)
 
 /** Termination Process. */

@@ -34,6 +34,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1095148 - Verify that currencies are in balance.           *
+      *              Batches are accepted even though out of balance. *
+      *              (Child:AR1095149)                                *
+      *            - Applied for MD-50723.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *           (Recompile)                                         *
@@ -146,26 +150,26 @@
       *
       /COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -277,7 +281,7 @@
      D W_SavCcy        S                   Like(G_BsCyCd)                                  AR1095148
      D W_TotDrAmt      S                   Like(G_BsDbTt)                                  AR1095148
      D W_TotCrAmt      S                   Like(G_BsCrTt)                                  AR1095148
- 
+
       ** Externally described DS for SAR details                                            BUG25187
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG25187
      D L_CD          E                     EXTFLD(LCD)                                      BUG25187
@@ -460,7 +464,7 @@
       *
       ** If Branch is in Error, this cannot be repaired and therefore
       ** there is no need to write it on the file anymore
- 
+
      C                   IF        ErrFlg(1) <> 'Y'
      C                   EXSR      SRWrite
      C                   ENDIF
@@ -614,7 +618,7 @@
      C                   MOVE      WTotalItems   BRHINC                                     BUG23669
       *
       ** Override status with the system value
- 
+
      C                   IF        PSVal1 <> *BLANKS
      C**********                   and %LOOKUP('Y':ErrFlg) = 0                     BUG25452 BUG26086
      C                   EVAL      BRBTSF = PSVal1
@@ -624,7 +628,7 @@
      C                   IF        %LOOKUP('Y':ErrFlg) <> 0                                 BUG26086
      C                   EVAL      BRBTSF = 'H'                                             BUG25452
      C                   ENDIF
- 
+
       *                                                                                    AR1095148
       ** If to be accepted check currencies in balance                                     AR1095148
       *                                                                                    AR1095148
@@ -964,7 +968,7 @@
      C                   EXSR      *PSSR
       *
      C                   ENDIF
- 
+
      ** Access SAR details for Projected Movements Update Prior to Auth.                    BUG25187
                                                                                             BUG25187
      C                   MOVEL     'N'           CGL016                                     BUG25187

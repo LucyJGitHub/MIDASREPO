@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047319A          Date 19Dec17               *
+      *  Prev Amend No. MD047319           Date 15Sep17               *
+      *                 CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD034950           Date 08Jul15               *
       *                 MD034935           Date 08Jul15               *
@@ -38,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047319A - CFT050 (SWIFTRef Directories Upload) does not    *
+      *              properly update ISO countries file.              *
+      *  MD047319 - CFT050 (SWIFTRef Directories Upload) does not     *
+      *             properly update ISO countries file.               *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -143,6 +149,8 @@
       ** Update Link to *BLANK in case of deletion in MEBIB3PD
       *
      FMEISOCL2  UF A E           K DISK    USROPN
+     FMEISOCL3  UF A E           K DISK    USROPN                                          MD047319A
+     F                                     RENAME(MEISOCD0:MEISOCD1)                       MD047319A
       ** handle MEISOCPD details from MEBICCPD/MEIBNSPD amendments
       *
       ***  PLoader = '2' : IBAN Plus DIRECTORY Upload
@@ -397,6 +405,7 @@
      D ACNL2           S              1                                                     MD022827
      D IBNL1           S              1                                                     MD022827
      D IBNL2           S              1                                                     MD022827
+     D WISOC2          S              1                                                    MD047319A
      D @RTCD           S              7A                                                      CFT051
      D @OPTN           S              7A                                                      CFT051
      D @SARD           S              6A                                                      CFT051
@@ -953,7 +962,8 @@
       *
       ** Adding
       *
-     C                   WHEN      BCFLAG = 'A'
+     C**********         WHEN      BCFLAG = 'A'                                            MD047319A
+     C                   WHEN      BCFLAG = 'A' and %eof(MEISOCL2)                         MD047319A
      C                             or BCFLAG = 'M' and %Eof(MEISOCL2)
      C                             or BCFLAG = 'U' and %Eof(MEISOCL2)
      C                   EVAL      M3ISOC = BCCNTC
@@ -996,13 +1006,15 @@
       *
       ** Modification
       *
-     C                   WHEN      BCFLAG = 'M'
-     C                             OR BCFLAG = 'A' and not %Eof(MEISOCL2)
-     C                             OR BCFLAG = 'U' and not %Eof(MEISOCL2)
+     C**********         WHEN      BCFLAG = 'M'
+     C**********                   OR BCFLAG = 'A' and not %Eof(MEISOCL2)                  MD047319A
+     C**********                   OR BCFLAG = 'U' and not %Eof(MEISOCL2)                  MD047319A
+     C                   WHEN      BCFLAG = 'M' and not %Eof(MEISOCL2) or                  MD047319A
+     C                             BCFLAG = 'A' and not %Eof(MEISOCL2)                     MD047319A
                                                                                             MD022873
-     C                   IF        M3ISOD = '*** NOT FOUND ***'                             MD022873
+     C**********         IF        M3ISOD = '*** NOT FOUND ***'                   MD022873 MD047319A
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
-     C                   ENDIF                                                              MD022873
+     C**********         ENDIF                                                    MD022873 MD047319A
  
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
@@ -1332,6 +1344,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                    MD047319A
+     C                   OPEN      MEISOCL3                             99                 MD047319A
+     C     *IN99         IFEQ      *ON                                                     MD047319A
+     C     *LOCK         IN        LDA                                                     MD047319A
+     C                   EVAL      DBFILE =  'MEISOCL3'                                    MD047319A
+     C                   EVAL      DBKEY  =  'OPEN File'                                   MD047319A
+     C                   EVAL      DBASE  =  15                                            MD047319A
+     C                   EVAL      DBPROC =  'SR/Loader2'                                  MD047319A
+     C                   OUT       LDA                                                     MD047319A
+     C                   EXSR      *PSSR                                                   MD047319A
+     C                   ENDIF                                                             MD047319A
       *
      C                   OPEN      SDCTRYL2                             99
      C     *IN99         IFEQ      *ON
@@ -1557,27 +1580,45 @@
       ** ISO Country Code - Update MEISOCL2 File :Combination ISOC CTRY <> IBAN CTRY = '  '
       **                                       or Combination ISOC CTRY = IBAN CTRY
       *
-     C     NSCCOD        SETLL     MEISOCL2
-     C                   DOU       %EOF
-     C                             OR M3IBAC = '  '
-     C                             OR M3IBAC = M3ISOC
-     C     NSCCOD        READE     MEISOCD0
-     C                   ENDDO
+     C*****NSCCOD        SETLL     MEISOCL2                                                MD047319A
+     C**********         DOU       %EOF                                                    MD047319A
+     C**********                   OR M3IBAC = '  '                                        MD047319A
+     C**********                   OR M3IBAC = M3ISOC                                      MD047319A
+     C*****NSCCOD        READE     MEISOCD0                                                MD047319A
+     C**********         ENDDO                                                             MD047319A
+     C     NSCCOD        SETLL     MEISOCL3                                                MD047319A
+     C     NSCCOD        READE     MEISOCD1                                                MD047319A
+     C                   DOU       %EOF(MEISOCL3)                                          MD047319A
       *
-     C                   IF        %EOF(MEISOCL2)
+     C**********         IF        %EOF(MEISOCL2)                                          MD047319A
+     C                   IF        %EOF(MEISOCL3)                                          MD047319A
      C                   EVAL      WFound = 'N'
      C                   ELSE
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
       *
+      ** When M3IBAC is blank                                                              MD047319A
+     C                   EVAL      WISOC2 = 'N'                                            MD047319A
+     C                   IF        WFound = 'N'                                            MD047319A
+     C     NSCCOD        SETLL     MEISOCL2                                                MD047319A
+     C     NSCCOD        READE     MEISOCD0                                                MD047319A
+     C                   IF        NOT %EOF(MEISOCL2)                                      MD047319A
+     C                   EVAL      WFound = 'Y'                                            MD047319A
+     C                   EVAL      WISOC2 = 'Y'                                            MD047319A
+     C                   ENDIF                                                             MD047319A
+     C                   ENDIF                                                             MD047319A
+      *                                                                                    MD047319A
      C                   SELECT
       *
       ** Adding
       *
      C**********         WHEN      NSFLAG = 'A'                                             MD034950
      C**********                   OR NSFLAG = 'U' AND WFound = 'N'                         MD034950
-     C                   WHEN      (NSFLAG = 'A' OR NSFLAG = 'M')                           MD034950
-     C                             OR (NSFLAG = 'U' AND WFound = 'N')                       MD034950
+     C**********         WHEN      NSFLAG = 'A' OR NSFLAG = 'M'                   MD034950 MD047319A
+     C**********                   OR (NSFLAG = 'U' AND WFound = 'N')             MD034950 MD047319A     
+     C                   WHEN      NSFLAG = 'A' AND WFound = 'N' OR                        MD047319A
+     C                             NSFLAG = 'M' AND WFound = 'N' OR                        MD047319A
+     C                             NSFLAG = 'U' AND WFound = 'N'                           MD047319A     
      C                   EVAL      M3ISOC = NSCCOD
      C                   EVAL      M3SCHT = 'N'
      C                   EVAL      M3ACJN = PSJobName
@@ -1593,8 +1634,8 @@
      C     NSCCOD        CHAIN     MEIBN3L1                                                 MD022873
      C                   IF        %FOUND (MEIBN3L1)                                        MD022873
      C                   EVAL      M3ISOD = I2_N3CTY1                                       MD022873
-     C                   ELSE                                                               MD022873
-     C                   EVAL      M3ISOD = '*** NOT FOUND ***'                             MD022873
+     C**********         ELSE                                                     MD022873 MD047319A
+     C**********         EVAL      M3ISOD = '*** NOT FOUND ***'                   MD022873 MD047319A
      C                   ENDIF                                                              MD022873
                                                                                             MD022873
      C                   IF        NSCPOS <> '00'
@@ -1659,7 +1700,13 @@
      C                   ENDIF                                                                CFT051
  
      C                   EVAL      M3SEPA = NSSEPA
+                                                                                            MD047319
+     C**********         EVAL      M3TBLN = M3BILN + M3BRLN                       MD047319 MD047319A
+     C**********         IF        M3TBLN > 10                                    MD047319 MD047319A
+     C**********         EVAL      M3TBLN = M3BILN                                MD047319 MD047319A
+     C**********         ENDIF                                                    MD047319 MD047319A
                                                                                             MD022827
+     C                   EVAL      M3CCSP = 0                                              MD047319A
      C                   EVAL      CPOS1 = %SUBST(NSCPOS:1:1)                               MD022827
      C                   EVAL      CPOS2 = %SUBST(NSCPOS:2:1)                               MD022827
      C                   IF        CPOS2 = *BLANKS AND CPOS1 <> *BLANKS                     MD022827
@@ -1674,6 +1721,7 @@
                                                                                             MD022827
      C                   MOVE      NSCLEN        M3CCLN
                                                                                             MD022827
+     C                   EVAL      M3ICSP = 0                                              MD047319A
      C                   EVAL      DPOS1 = %SUBST(NSDPOS:1:1)                               MD022827
      C                   EVAL      DPOS2 = %SUBST(NSDPOS:2:1)                               MD022827
      C                   IF        DPOS2 = *BLANKS AND DPOS1 <> *BLANKS                     MD022827
@@ -1686,6 +1734,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3ICLN = 0                                              MD047319A
      C                   EVAL      DLEN1 = %SUBST(NSDLEN:1:1)                               MD022827
      C                   EVAL      DLEN2 = %SUBST(NSDLEN:2:1)                               MD022827
      C                   IF        DLEN2 = *BLANKS AND DLEN1 <> *BLANKS                     MD022827
@@ -1698,6 +1747,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3BISP = 0                                              MD047319A
      C                   EVAL      BIDP1 = %SUBST(NSBIDP:1:1)                               MD022827
      C                   EVAL      BIDP2 = %SUBST(NSBIDP:2:1)                               MD022827
      C                   IF        BIDP2 = *BLANKS AND BIDP1 <> *BLANKS                     MD022827
@@ -1710,6 +1760,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3BILN = 0                                              MD047319A
      C                   EVAL      BIDL1 = %SUBST(NSBIDL:1:1)                               MD022827
      C                   EVAL      BIDL2 = %SUBST(NSBIDL:2:1)                               MD022827
      C                   IF        BIDL2 = *BLANKS AND BIDL1 <> *BLANKS                     MD022827
@@ -1722,6 +1773,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3BRSP = 0                                              MD047319A
      C                   EVAL      BRCP1 = %SUBST(NSBRCP:1:1)                               MD022827
      C                   EVAL      BRCP2 = %SUBST(NSBRCP:2:1)                               MD022827
      C                   IF        BRCP2 = *BLANKS AND BRCP1 <> *BLANKS                     MD022827
@@ -1734,6 +1786,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3BRLN = 0                                              MD047319A
      C                   EVAL      BRCL1 = %SUBST(NSBRCL:1:1)                               MD022827
      C                   EVAL      BRCL2 = %SUBST(NSBRCL:2:1)                               MD022827
      C                   IF        BRCL2 = *BLANKS AND BRCL1 <> *BLANKS                     MD022827
@@ -1746,6 +1799,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3INLN = 0                                              MD047319A
      C                   EVAL      INAT1 = %SUBST(NSINAT:1:1)                               MD022827
      C                   EVAL      INAT2 = %SUBST(NSINAT:2:1)                               MD022827
      C                   IF        INAT2 = *BLANKS AND INAT1 <> *BLANKS                     MD022827
@@ -1764,6 +1818,7 @@
      C                   EVAL      M3TBLN =  M3INLN                                           CFT051
      C                   ENDIF                                                                CFT051
                                                                                               CFT051
+     C                   EVAL      M3ACSP = 0                                              MD047319A                                                                                         
      C                   EVAL      ACNP1 = %SUBST(NSACNP:1:1)                               MD022827
      C                   EVAL      ACNP2 = %SUBST(NSACNP:2:1)                               MD022827
      C                   IF        ACNP2 = *BLANKS AND ACNP1 <> *BLANKS                     MD022827
@@ -1776,6 +1831,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3ACLN = 0                                              MD047319A
      C                   EVAL      ACNL1 = %SUBST(NSACNL:1:1)                               MD022827
      C                   EVAL      ACNL2 = %SUBST(NSACNL:2:1)                               MD022827
      C                   IF        ACNL2 = *BLANKS AND ACNL1 <> *BLANKS                     MD022827
@@ -1788,6 +1844,7 @@
      C                   ENDIF                                                              MD022827
      C                   ENDIF                                                              MD022827
                                                                                             MD022827
+     C                   EVAL      M3TILN = 0                                              MD047319A
      C                   EVAL      IBNL1 = %SUBST(NSIBNL:1:1)                               MD022827
      C                   EVAL      IBNL2 = %SUBST(NSIBNL:2:1)                               MD022827
      C                   IF        IBNL2 = *BLANKS AND IBNL1 <> *BLANKS                     MD022827
@@ -1803,11 +1860,21 @@
      C                   MOVE      NSODAT        M3OCDT
      C                   MOVE      NSMDAT        M3MCDT
      C                   EVAL      M3BBLN = M3TILN - 4
+     C                   EVAL      M3TBLN = M3BILN + M3BRLN                                MD047319A
+     C                   IF        M3BBLN  > 0                                             MD047319A
+     C                   EVAL      M3BBSP = 5                                              MD047319A
+     C                   ELSE                                                              MD047319A
+     C                   EVAL      M3BBSP = 0                                              MD047319A
+     C                   ENDIF                                                             MD047319A
       *
       ** Modification
       *
-     C                   WHEN      BCFLAG = 'M'
-     C                             OR BCFLAG = 'U' AND WFound = 'Y'
+     C**********         WHEN      BCFLAG = 'M'                                             MD047319
+     C**********                   OR BCFLAG = 'U' AND WFound = 'Y'                         MD047319
+     C**********         WHEN      NSFLAG = 'M'                                   MD047319 MD047319A
+     C**********                   OR NSFLAG = 'U' AND WFound = 'Y'               MD047319 MD047319A
+     C                   WHEN      NSFLAG = 'A' AND WFound = 'Y' OR                        MD047319A
+     C                             NSFLAG = 'M' AND WFound = 'Y'                           MD047319A
  
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
@@ -1835,11 +1902,11 @@
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
  
-     C                   IF        NSCPOS <>  '00'
+     C**********         IF        NSCPOS <>  '00'                                         MD047319A
      C                   EVAL      M3IBAC = NSCCOD
-     C                   ELSE
-     C                   EVAL      M3IBAC = *Blanks
-     C                   ENDIF
+     C**********         ELSE                                                              MD047319A
+     C**********         EVAL      M3IBAC = *Blanks                                        MD047319A
+     C**********         ENDIF                                                             MD047319A
  
      C                   IF        M3IBAR  <> 'Y' AND M3IBAR <> 'N'
      C                   IF        NSCCOD = 'AD'
@@ -1899,21 +1966,161 @@
      C                   ENDIF                                                                CFT051
  
      C                   EVAL      M3SEPA = NSSEPA
+                                                                                            MD047319
+     C                   EVAL      M3CCSP = 0                                              MD047319A
+     C                   EVAL      CPOS1 = %SUBST(NSCPOS:1:1)                               MD047319
+     C                   EVAL      CPOS2 = %SUBST(NSCPOS:2:1)                               MD047319
+     C                   IF        CPOS2 = *BLANKS AND CPOS1 <> *BLANKS                     MD047319
+     C                   MOVE      CPOS1         M3CCSP                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSCPOS = '\N'                                            MD047319
+     C                   EVAL      M3CCSP = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSCPOS        M3CCSP
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
      C                   MOVE      NSCLEN        M3CCLN
+                                                                                            MD047319
+     C                   EVAL      M3ICSP = 0                                              MD047319A
+     C                   EVAL      DPOS1 = %SUBST(NSDPOS:1:1)                               MD047319
+     C                   EVAL      DPOS2 = %SUBST(NSDPOS:2:1)                               MD047319
+     C                   IF        DPOS2 = *BLANKS AND DPOS1 <> *BLANKS                     MD047319
+     C                   MOVE      DPOS1         M3ICSP                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSDPOS = '\N'                                            MD047319
+     C                   EVAL      M3ICSP = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSDPOS        M3ICSP
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3ICLN = 0                                              MD047319A
+     C                   EVAL      DLEN1 = %SUBST(NSDLEN:1:1)                               MD047319
+     C                   EVAL      DLEN2 = %SUBST(NSDLEN:2:1)                               MD047319
+     C                   IF        DLEN2 = *BLANKS AND DLEN1 <> *BLANKS                     MD047319
+     C                   MOVE      DLEN1         M3ICLN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSDLEN = '\N'                                            MD047319
+     C                   EVAL      M3ICLN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSDLEN        M3ICLN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3BISP = 0                                              MD047319A
+     C                   EVAL      BIDP1 = %SUBST(NSBIDP:1:1)                               MD047319
+     C                   EVAL      BIDP2 = %SUBST(NSBIDP:2:1)                               MD047319
+     C                   IF        BIDP2 = *BLANKS AND BIDP1 <> *BLANKS                     MD047319
+     C                   MOVE      BIDP1         M3BISP                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSBIDP = '\N'                                            MD047319
+     C                   EVAL      M3BISP = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSBIDP        M3BISP
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3BILN = 0                                              MD047319A
+     C                   EVAL      BIDL1 = %SUBST(NSBIDL:1:1)                               MD047319
+     C                   EVAL      BIDL2 = %SUBST(NSBIDL:2:1)                               MD047319
+     C                   IF        BIDL2 = *BLANKS AND BIDL1 <> *BLANKS                     MD047319
+     C                   MOVE      BIDL1         M3BILN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSBIDL = '\N'                                            MD047319
+     C                   EVAL      M3BILN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSBIDL        M3BILN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3BRSP = 0                                              MD047319A
+     C                   EVAL      BRCP1 = %SUBST(NSBRCP:1:1)                               MD047319
+     C                   EVAL      BRCP2 = %SUBST(NSBRCP:2:1)                               MD047319
+     C                   IF        BRCP2 = *BLANKS AND BRCP1 <> *BLANKS                     MD047319
+     C                   MOVE      BRCP1         M3BRSP                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSBRCP = '\N'                                            MD047319
+     C                   EVAL      M3BRSP = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   Move      NSBRCP        M3BRSP
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3BRLN = 0                                              MD047319A
+     C                   EVAL      BRCL1 = %SUBST(NSBRCL:1:1)                               MD047319
+     C                   EVAL      BRCL2 = %SUBST(NSBRCL:2:1)                               MD047319
+     C                   IF        BRCL2 = *BLANKS AND BRCL1 <> *BLANKS                     MD047319
+     C                   MOVE      BRCL1         M3BRLN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSBRCL = '\N'                                            MD047319
+     C                   EVAL      M3BRLN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSBRCL        M3BRLN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3INLN = 0                                              MD047319A
+     C                   EVAL      INAT1 = %SUBST(NSINAT:1:1)                               MD047319
+     C                   EVAL      INAT2 = %SUBST(NSINAT:2:1)                               MD047319
+     C                   IF        INAT2 = *BLANKS AND INAT1 <> *BLANKS                     MD047319
+     C                   MOVE      INAT1         M3INLN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSINAT = '\N'                                            MD047319
+     C                   EVAL      M3INLN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSINAT        M3INLN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3ACSP = 0                                              MD047319A
+     C                   EVAL      ACNP1 = %SUBST(NSACNP:1:1)                               MD047319
+     C                   EVAL      ACNP2 = %SUBST(NSACNP:2:1)                               MD047319
+     C                   IF        ACNP2 = *BLANKS AND ACNP1 <> *BLANKS                     MD047319
+     C                   MOVE      ACNP1         M3ACSP                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSACNP = '\N'                                            MD047319
+     C                   EVAL      M3ACSP = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSACNP        M3ACSP
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3ACLN = 0                                              MD047319A
+     C                   EVAL      ACNL1 = %SUBST(NSACNL:1:1)                               MD047319
+     C                   EVAL      ACNL2 = %SUBST(NSACNL:2:1)                               MD047319
+     C                   IF        ACNL2 = *BLANKS AND ACNL1 <> *BLANKS                     MD047319
+     C                   MOVE      ACNL1         M3ACLN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSACNL = '\N'                                            MD047319
+     C                   EVAL      M3ACLN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSACNL        M3ACLN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
+     C                   EVAL      M3TILN = 0                                              MD047319A
+     C                   EVAL      IBNL1 = %SUBST(NSIBNL:1:1)                               MD047319
+     C                   EVAL      IBNL2 = %SUBST(NSIBNL:2:1)                               MD047319
+     C                   IF        IBNL2 = *BLANKS AND IBNL1 <> *BLANKS                     MD047319
+     C                   MOVE      IBNL1         M3TILN                                     MD047319
+     C                   ELSE                                                               MD047319
+     C                   IF        NSIBNL = '\N'                                            MD047319
+     C                   EVAL      M3TILN = 0                                               MD047319
+     C                   ELSE                                                               MD047319
      C                   MOVE      NSIBNL        M3TILN
+     C                   ENDIF                                                              MD047319
+     C                   ENDIF                                                              MD047319
+                                                                                            MD047319
      C                   MOVE      NSODAT        M3OCDT
      C                   MOVE      NSMDAT        M3MCDT
      C                   EVAL      M3BBLN = M3TILN - 4
+     C                   EVAL      M3TBLN = M3BILN + M3BRLN                                MD047319A
+     C                   IF        M3BBLN  > 0                                             MD047319A
+     C                   EVAL      M3BBSP = 5                                              MD047319A
+     C                   ELSE                                                              MD047319A
+     C                   EVAL      M3BBSP = 0                                              MD047319A
+     C                   ENDIF                                                             MD047319A     
                                                                                               CFT051
      C                   IF        CFT051 = 'Y'                                               CFT051
      C                   EVAL      M3TBLN =  M3INLN                                           CFT051
@@ -1921,24 +2128,35 @@
       *
       ** Deletion
       *
-     C                   WHEN      BCFLAG = 'D'
-     C                             AND NOT %EOF(MEISOCL2)
+     C**********         WHEN      BCFLAG = 'D'                                             MD047319
+     C                   WHEN      NSFLAG = 'D'
+     C**********                   AND NOT %EOF(MEISOCL2)                                  MD047319A
+     C                             AND NOT %EOF(MEISOCL3)                                  MD047319A
       *
      C                   EVAL      M3ISOD = '****'
      C                   ENDSL
       *
+     C                   IF        WISOC2 = 'Y'                                            MD047319A
      C                   IF        NOT %EOF(MEISOCL2)
      C                   UPDATE    MEISOCD0
      C                   ELSEIF    BCFLAG <> 'D'
      C                   WRITE     MEISOCD0
      C                   ENDIF
+     C                   ELSE                                                              MD047319A
+     C                   IF        NOT %EOF(MEISOCL3)                                      MD047319A
+     C                   UPDATE    MEISOCD1                                                MD047319A
+     C                   ELSEIF    BCFLAG <> 'D'                                           MD047319A
+     C                   WRITE     MEISOCD1                                                MD047319A
+     C                   ENDIF                                                             MD047319A
+     C                   ENDIF                                                             MD047319A
       *
       ** Only amend existing Country using the ISO Country Code
       *
      C     M3ISOC        SETLL     SDCTRYL2
      C     M3ISOC        READE     SDCTRYL2
      C                   DOW       NOT %EOF(SDCTRYL2)
-     C                   IF        BCFLAG <> 'D'
+     C**********         IF        BCFLAG <> 'D'                                            MD047319
+     C                   IF        NSFLAG <> 'D'                                            MD047319
      C**********         EVAL      A4BBRL= M3BILN                                           MD023678
      C                   EVAL      A4BBRL= M3TBLN                                           MD023678
      C                   EVAL      A4BBAN = M3BBLN
@@ -1949,6 +2167,8 @@
      C                   UPDATE    SDCTRYD0
      C     M3ISOC        READE     SDCTRYL2
      C                   ENDDO
+     C     NSCCOD        READE     MEISOCD1                                                MD047319A
+     C                   ENDDO                                                             MD047319A
       *
       ** Read Next
       *

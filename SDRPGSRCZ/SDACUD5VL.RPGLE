@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL157             Date 17Aug15               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD048703           Date 23Nov17               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 MD026629           Date 09May14               *
       *                 MD026540           Date 12May14               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048703 - Cannot amend Base II Past Due Customer field      *
       *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
@@ -138,7 +140,8 @@
      D                                     PREFIX(W_)                                         CGL157
  
      D TranWrk         DS
-     D  TranWFill                  1316
+     D***TranWFill                  1316                                                    MD048703
+     D  TranWFill                  1425                                                     MD048703
      D  TranWDets5                         LIKE(TrnDets5)
  
       ** Transaction Details OK indicators

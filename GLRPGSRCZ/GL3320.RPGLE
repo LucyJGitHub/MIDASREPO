@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042411           Date 18Nov16               *
+      *  Last Amend No. MD048980           Date 15Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042411           Date 18Nov16               *
       *                 MD033583           Date 03Jun15               *
       *                 253181             Date 26Apr16               *
       *                 MD031642           Date 15Dec14               *
@@ -84,6 +85,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD048980 - Dumps in GLC3320                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *
       *             totals can be more than 15 digits                 *
@@ -1002,7 +1004,8 @@
       *                                                                                     MD033737
      C                   ENDIF                                                              MD033737
                                                                                            MD024120A
-     C                   Z-ADD     0             NoRec             5 0                      MD031642
+     C**********         Z-ADD     0             NoRec             5 0             MD031642 MD048980
+     C                   Z-ADD     0             NoRec             7 0                      MD048980
      C**********         DOW       NOT %EOF(ACCNTAB) AND RRN <= GLTERN              CGL120 MD024120A
      C                   DOW       NOT %EOF(ACCNTAB) AND RRN <= LastRRN                    MD024120A
      C                             AND NOT PerformLRPrc                                    MD024120A

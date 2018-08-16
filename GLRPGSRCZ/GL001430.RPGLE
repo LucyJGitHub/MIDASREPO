@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR549926           Date 19Aug14               *
+      *  Last Amend No. MD045952           Date 06Jul17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR549926           Date 19Aug14               *
       *                 MD026137           Date 04Apr14               *
       *                 MD025973           Date 25Mar14               *
       *                 MD025766           Date 13Mar14               *
@@ -52,6 +53,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045952 - Ensure that COB MT940s only generated if          *
+      *             calling pgm is GLC001430.                         *
+      *           - Recompile due to changes to CGL146_043, CGL146_044*
+      *             CGL146_047, CGL146_068, CGL146_070. CGL146_074    *
+      *             CGL146_076, CGL146_077                            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR549926 - GLPOSTPD and MGX950PD tables have a total size    *
       *             of about 1.4GB. These tables hold  records printed*

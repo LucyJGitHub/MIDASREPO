@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD027367           Date 04Jun14               *
+      *  Last Amend No. MD045952           Date 06Jul17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD027367           Date 04Jun14               *
       *                 MD025973           Date 25Mar14               *
       *                 CGL146A            Date 10Jul13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045952 - Ensure that COB MT940s only generated if          *
+      *             calling pgm is GLC001430.                         *
+      *           - Recompile due to changes to CGL146_125, CGL146_127*
       *  MD046248 - Finastra Rebranding                               *
       *  MD027367 - Generate MT940 on Transit Accounts.               *
       *             Ensure not flagged as Duplicate.                  *

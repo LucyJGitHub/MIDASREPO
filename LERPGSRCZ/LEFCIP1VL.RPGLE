@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CLE160             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD034007           Date 17Jun15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE160 - Remove Default for Revolving Credit Indicator       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD034007 - Make sure that CLE147 changes was implemented     *
@@ -101,8 +103,8 @@
       *  CLE147 - Aggregate Facility                                  *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,LEH00088                                 *
-/*    *  AR747727 - Two Monthly Frequency is not accepted             *
-/*    *             (Child: AR747728)                                 *
+      *  AR747727 - Two Monthly Frequency is not accepted             *
+      *             (Child: AR747728)                                 *
       *  CLE064 - Enhancement of Lending Frequencies                  *
       *  AR740355 - Incorrect values in Previous and Penultimate Date *
       *             (Child: AR740356)                                 *
@@ -294,6 +296,9 @@
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
  
+      ** Constant to hold input parameter for AOSVALR0                                        CLE160
+     D DftRevCRInd     C                   CONST('DftRevolvingCRInd')                         CLE160
+                                                                                              CLE160
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -526,6 +531,9 @@
      D CLE034          S              1A                                                      CLE034
      D CLE106          S              1A                                                      CLE106
      D CLE147          S              1A                                                      CLE147
+     D CLE160          S              1A                                                      CLE160
+      *                                                                                       CLE160
+     D DftCRInd        S              1A                                                      CLE160
      D W#NANM          S              6A                                                      CLE147
      D W#NAFT          S              3  0                                                    CLE147
      D W#NAFN          S              2  0                                                    CLE147
@@ -537,6 +545,28 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
+      ** Parameters for call to AOSVALR0                                                      CLE160
+     D PSysVal01       S             20A                                                      CLE160
+     D PCurSet01       S            200A                                                      CLE160
+     D PSysVal02       S             20A                                                      CLE160
+     D PCurSet02       S            200A                                                      CLE160
+     D PSysVal03       S             20A                                                      CLE160
+     D PCurSet03       S            200A                                                      CLE160
+     D PSysVal04       S             20A                                                      CLE160
+     D PCurSet04       S            200A                                                      CLE160
+     D PSysVal05       S             20A                                                      CLE160
+     D PCurSet05       S            200A                                                      CLE160
+     D PSysVal06       S             20A                                                      CLE160
+     D PCurSet06       S            200A                                                      CLE160
+     D PSysVal07       S             20A                                                      CLE160
+     D PCurSet07       S            200A                                                      CLE160
+     D PSysVal08       S             20A                                                      CLE160
+     D PCurSet08       S            200A                                                      CLE160
+     D PSysVal09       S             20A                                                      CLE160
+     D PCurSet09       S            200A                                                      CLE160
+     D PSysVal10       S             20A                                                      CLE160
+     D PCurSet10       S            200A                                                      CLE160
+                                                                                              CLE160
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -965,9 +995,22 @@
  
       ** Value must be 'Y','N' or ' '
       ** or 'T' for a 'Credit Agreement' facility.
+      ** If CLE160 is ON, default RVCR field to the value in                                  CLE160
+      ** system value DftRevolvingCrInd                                                       CLE160
      C     DDRVCR        IFEQ      *BLANKS
+     C     CLE160        ANDEQ     'N'                                                        CLE160
+     C     DDRVCR        OREQ      *BLANKS                                                    CLE160
+     C     CLE160        ANDEQ     'Y'                                                        CLE160
+     C     DftCRInd      ANDNE     *BLANKS                                                    CLE160
+      *                                                                                       CLE160
+     C     CLE160        IFEQ      'Y'                                                        CLE160
+     C                   MOVEL     DftCRInd      DDRVCR                                       CLE160
+     C                   ELSE                                                                 CLE160
      C                   MOVE      'N'           DDRVCR
-     C                   ELSE
+     C                   ENDIF                                                                CLE160
+      *                                                                                       CLE160
+     C                   ENDIF                                                                CLE160
+     C**********         ELSE                                                                 CLE160
       *
      C                   SELECT
       *
@@ -981,7 +1024,13 @@
      C                   Move      'N'           DDRVCROK
      C                   Add       1             Idx
      C                   Movel     'DDRVCR'      FldNamXAr(Idx)
+      *                                                                                       CLE160
+     C     CLE160        IFEQ      'Y'                                                        CLE160
+     C                   MOVEL     '5049113'     MsgIDXAr(Idx)                                CLE160
+     C                   ELSE                                                                 CLE160
      C                   Movel     'LEF0350'     MsgIDXAr(Idx)
+     C                   ENDIF                                                                CLE160
+                                                                                              CLE160
      C                   ENDIF
       *
      C                   OTHER
@@ -989,13 +1038,24 @@
      C     DDRVCR        IFNE      'Y'
      C     DDRVCR        ANDNE     'N'
      C     DDRVCR        ANDNE     ' '
+     C     CLE160        ANDEQ     'N'                                                        CLE160
      C                   Move      'N'           DDRVCROK
      C                   Add       1             Idx
      C                   Movel     'DDRVCR'      FldNamXAr(Idx)
      C                   Movel     'LEF0026'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                       CLE160
+     C     DDRVCR        IFNE      'Y'                                                        CLE160
+     C     DDRVCR        ANDNE     'N'                                                        CLE160
+     C     CLE160        ANDEQ     'Y'                                                        CLE160
+     C                   Move      'N'           DDRVCROK                                     CLE160
+     C                   Add       1             Idx                                          CLE160
+     C                   Movel     'DDRVCR'      FldNamXAr(Idx)                               CLE160
+     C                   Movel     '5049112'     MsgIDXAr(Idx)                                CLE160
+     C                   ENDIF                                                                CLE160
+      *                                                                                       CLE160
      C                   ENDSL
-     C                   ENDIF
+     C**********         ENDIF                                                                CLE160
       *
      C                   ENDSR
       *****************************************************************
@@ -3186,6 +3246,54 @@ E4   C                   ENDIF
      C                   EXSR      *PSSR                                                      CLE147
      C                   ENDIF                                                                CLE147
      C                   ENDIF                                                                CLE147
+      *                                                                                       CLE160
+      ** Access Switchable SAR details for the existence of CLE160                            CLE160
+      *                                                                                       CLE160
+     C                   EVAL      CLE160 = 'N'                                               CLE160
+     C                   CALLB     'AOSARDR0'                                                 CLE160
+     C                   PARM      *BLANKS       PRTCD                                        CLE160
+     C                   PARM      '*VERIFY'     POPTN                                        CLE160
+     C                   PARM      'CLE160'      PSARD                                        CLE160
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE160
+      *                                                                                       CLE160
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE160
+     C                   EVAL      CLE160 = 'Y'                                               CLE160
+     C                   ENDIF                                                                CLE160
+      *                                                                                       CLE160
+      ** Check for Revolving Credit Indicator default system value                            CLE160
+      *                                                                                       CLE160
+     C                   CALLB     'AOSVALR0'                                                 CLE160
+     C                   PARM      *BLANKS       PRTCD                                        CLE160
+     C                   PARM      DftRevCrInd   PSysVal01                                    CLE160
+     C                   PARM      *BLANKS       PCurSet01                                    CLE160
+     C                   PARM                    PSysVal02                                    CLE160
+     C                   PARM                    PCurSet02                                    CLE160
+     C                   PARM                    PSysVal03                                    CLE160
+     C                   PARM                    PCurSet03                                    CLE160
+     C                   PARM                    PSysVal04                                    CLE160
+     C                   PARM                    PCurSet04                                    CLE160
+     C                   PARM                    PSysVal05                                    CLE160
+     C                   PARM                    PCurSet05                                    CLE160
+     C                   PARM                    PSysVal06                                    CLE160
+     C                   PARM                    PCurSet06                                    CLE160
+     C                   PARM                    PSysVal07                                    CLE160
+     C                   PARM                    PCurSet07                                    CLE160
+     C                   PARM                    PSysVal08                                    CLE160
+     C                   PARM                    PCurSet08                                    CLE160
+     C                   PARM                    PSysVal09                                    CLE160
+     C                   PARM                    PCurSet09                                    CLE160
+     C                   PARM                    PSysVal10                                    CLE160
+     C                   PARM                    PCurSet10                                    CLE160
+      *                                                                                       CLE160
+     C                   IF        PRTCD <> *BLANKS                                           CLE160
+     C                   Eval      DBFILE = 'SDSVALPD'                                        CLE160
+     C                   Eval      DBASE = 900                                                CLE160
+     C                   Eval      DBKEY = '*KEY    '                                         CLE160
+     C                   EXSR      *PSSR                                                      CLE160
+     C                   ENDIF                                                                CLE160
+      *                                                                                       CLE160
+     C                   MOVEL     PCurSet01     DftCRInd                                     CLE160
+      *                                                                                       CLE160
      C/COPY WNCPYSRC,LEH01208
       *                                                                                       CER020
       ** Key list for facility                                                                CER020

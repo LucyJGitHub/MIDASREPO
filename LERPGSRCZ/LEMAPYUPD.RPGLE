@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1002234          Date 12Jan17               *
+      *  Last Amend No. MD049571           Date 06Feb18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1002234          Date 12Jan17               *
       *                 MD040186           Date 13Sep16               *
       *                 MD045010           Date 05Apr17               *
       *                 AR943686           Date 23Sep16               *
@@ -110,6 +111,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049571 - Value date of Manual Repayment in Projected       *
+      *             Account movement is incorrect                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR1002234 - FCOOB in LE0320 when an MR with a 13-digit       *
       *              amount is inserted (Child: AR1002235).           *
@@ -3044,6 +3047,10 @@
      C                   PARM                    TimeStamp
      C                   EVAL      TMST=TimeStamp
      C                   UPDATE    CLOANCLF
+                                                                                            MD049571
+      ** Move Manual Repayment field values                                                 MD049571
+                                                                                            MD049571
+     C                   MOVE      LeVMapy       CMapyFilFmt                                MD049571
      C                   ENDIF
       *
      C                   ENDIF

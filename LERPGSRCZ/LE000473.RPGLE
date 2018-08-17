@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049745A          Date 16Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049572           Date 18Feb18               *      
+      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD049078           Date 12Jan18               *
       *                 MD046080           Date 17Sep17               *    
       *                 MD035433           Date 02Sep15               *
@@ -98,6 +99,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049572 - Error in spread rate during creation of PDCL      *      
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -3824,6 +3826,18 @@
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE025
      C                   ENDIF
+                                                                                            MD049572
+      ** Check if CLE036 is installed                                                       MD049572
+                                                                                            MD049572
+     C                   MOVE      'N'           CLE036            1                        MD049572
+     C                   CALLB     'AOSARDR0'                                               MD049572
+     C                   PARM      *BLANKS       @RTCD                                      MD049572
+     C                   PARM      '*VERIFY'     @OPTN                                      MD049572
+     C                   PARM      'CLE036'      @SARD                                      MD049572
+                                                                                            MD049572
+     C     @RTCD         IFEQ      *BLANKS                                                  MD049572
+     C                   MOVE      'Y'           CLE036                                     MD049572
+     C                   ENDIF                                                              MD049572
       *
      C                   MOVE      'N'           CLE031                                     MD046080
      C                   CALLB     'AOSARDR0'                                               MD046080
@@ -4629,11 +4643,16 @@
      C                   ENDSL
      C**********         ENDIF                                                     MD031225 MD031851
       *                                                                                     MD031225
+     C                   IF        CLE036 = 'Y'                                             MD049572
      C                   IF        RATESPFL = 'N'                                           MD031851
      C                   EVAL      PFldData  = ZFIELD
      C                   ELSE                                                               MD031851
      C                   EVAL      PFldData = *BLANKS                                       MD031851
      C                   ENDIF                                                              MD031851
+     C                   ELSE                                                               MD049572
+     C                   EVAL      PFldData  = ZFIELD                                       MD049572
+     C                   ENDIF                                                              MD049572
+                                                                                            MD049572
      C                   MOVEL     ZFIELD        RTSPX            16
  
      C                   EVAL      PFldTag  = 'DDRTSP'
@@ -4874,7 +4893,11 @@
      C                   EXSR      SRFmtWMsg
  
      C                   IF        RATESPFL = 'Y'
+     C                   IF        CLE036 = 'Y'                                             MD049572
      C                   EVAL      PFldData  = RTSPX
+     C                   ELSE                                                               MD049572
+     C                   EVAL      PFldData  = *BLANK                                       MD049572
+     C                   ENDIF                                                              MD049572
      C                   EVAL      PFldTag  = 'DDFXRT'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK

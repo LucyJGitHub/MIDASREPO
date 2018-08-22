@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD024079           Date 12Dec13              */
+/*       Last Amend No. MD046675           Date 27Jul17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD024079           Date 12Dec13              */
 /*                      CAP090A            Date 04Nov13              */
 /*                      CAP090   *CREATE   Date 10Jul13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046675 - Use a different jobq for GLC000585.              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024079 - CAP090 Invalid parameter.                        */
 /*       CAP090A - Initiate Batch Process API                        */
@@ -172,23 +174,33 @@
              ENDDO                                                                       /*CAP090A*/
                                                                                          /*CAP090A*/
              CHGVAR     VAR(&PCMD) VALUE(&PCMD *TCAT ')')                                /*CAP090A*/
- 
- 
+
+             RTVJOBD    JOBD(MBATCH) JOBQ(&WJOBQ)                                       /*MD046675*/
+             IF         COND(&INPROGRAM *EQ 'GLC000585') THEN(DO)                       /*MD046675*/
+             CHGVAR     VAR(&WJOBQ) VALUE('DIJOBQ')                                     /*MD046675*/
+             ENDDO                                                                      /*MD046675*/
+
 /** Submit program to batch **/
  
              IF         COND(&APUSERID *EQ '          ') THEN(DO)
-             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) +
+/**********  SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) + */                   /*MD046675*/
+/**********               USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +*/                   /*MD046675*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)              */                   /*MD046675*/
+             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(&WJOBQ) +
                           USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +
-                          INLLIBL(*JOBD) MSGQ(MOPERQ)
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD046675*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
              ENDDO
  
              ELSE       DO
-             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) +
-                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +
-                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                    /*CAP090A*/
+/**********  SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(*JOBD) + */                   /*MD046675*/
+/**********               USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +*/                   /*MD046675*/
+/**********               INLLIBL(*JOBD) MSGQ(MOPERQ)              */       /*CAP090A*/ /*MD046675*/
 /**********               USER(&APUSERID) RTGDTA(*JOBD) +            */                  /*CAP090A*/
 /**********               RQSDTA(&PCMD) INLLIBL(*JOBD) MSGQ(MOPERQ)  */                  /*CAP090A*/
+             SBMJOB     JOB(&INPROGRAM) JOBD(MBATCH) JOBQ(&WJOBQ) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA(&PCMD) +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ)                                   /*MD046675*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
              ENDDO
  

@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD049231           Date 08Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD025828A *CREATE  Date 13Jun14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049231 - GOC0100 00213 failed during COB                   *      
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD025828 - [ENGINEERING] Listview of Maintain Customer       *
@@ -39,8 +41,10 @@
      D G_SDCSSWL0    E DS                  EXTNAME(GZSDCSSWPD)
      D                                     PREFIX(G_)
  
-B    D BR              S              3    DIM(99)
-B    D SL              S             27    DIM(99)
+B    D***BR*****         S              3    DIM(99)                                        MD049231
+B    D***SL****          S             27    DIM(99)                                        MD049231
+     D BR              S              3    DIM(999)                                         MD049231
+     D SL              S             27    DIM(999)                                         MD049231
 B
 B    D SYNLOGREC       DS
 B    D  BSCNTW                 1      9S 0
@@ -119,7 +123,8 @@ B    C   02              EVAL      G_CSBRCA      = CSBRCA
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
  
-B    C                   Z-ADD     1             I                 2 0
+B    C**********         Z-ADD     1             I                 2 0                   MD049231
+     C                   Z-ADD     1             I                 3 0                   MD049231
 B    C   01CSBRCA        LOOKUP    BR(I)                                  99
 B    C   02G_CSBRCA      LOOKUP    BR(I)                                  99
 B    C     *IN99         IFEQ      *OFF
@@ -177,7 +182,8 @@ B    C                   MOVEL     SYNLOGREC     SL(I)
      C                   WRITE     GPSBLOGD0
  
 B     * Write branch totals
-B    C                   Z-ADD     1             I                 2 0
+B    C**********         Z-ADD     1             I                 2 0                MD049231
+     C                   Z-ADD     1             I                 3 0                MD049231
 B    C     BR(I)         DOWNE     '***'
 B    C                   MOVEL     BR(I)         BSBRCA
 B    C                   MOVEL     SL(I)         SYNLOGREC

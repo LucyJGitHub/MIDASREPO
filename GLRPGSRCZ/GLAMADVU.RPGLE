@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051247           Date 17Jul18               *      
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044546           Date 20Mar17               *
       *                 MD043890           Date 06Feb17               *
       *                 MD042713           Date 05Dec16               *
@@ -134,6 +135,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051247 - SP15_CUSD API issue                               *
+      *           - Code improvement                                  *      
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
@@ -358,6 +361,7 @@
      F/COPY WNCPYSRC,GLAMADJF01
       *                                                                                      LLN022A
      FBYACCTY0  IF   E           K DISK    INFSR(*pssr)                                      LLN022A
+     F                                     USROPN                                           MD051247
       *                                                                                      LLN022A
       *****************************************************************
       ** +--------------------------------------+
@@ -1125,6 +1129,9 @@
      C                   CLOSE     PMPORTLL
      C                   ENDIF
       *
+     C     LLN007        IFEQ      'Y'                                                      MD051247
+     C                   CLOSE     BYACCTY0                                                 MD051247
+     C                   ENDIF                                                              MD051247
      C                   RETURN
  
       *****************************************************************
@@ -3358,6 +3365,7 @@
       *                                                                                      LLN022A
      C                   IF        @RTCD = *Blanks                                           LLN022A
      C                   EVAL      LLN007 = 'Y'                                              LLN022A
+     C                   OPEN      BYACCTY0                                                 MD051247
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
       * Set up the names of the message files from which the message handler

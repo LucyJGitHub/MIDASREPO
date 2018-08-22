@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *  Last Amend No. MD051247           Date 16Jul18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046635           Date 10Aug17               *
       *                 MD037025           Date 10Feb16               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051247 - SP15_CUSD API issue                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
       *             the user inserting an account is always validated *
@@ -1243,11 +1245,12 @@
      C                   GOTO      EVALAD                                       CFT004
      C                   END                                                    CFT004
       *                                                                                     MD037025
-     C                   READ      INPAYIB                                44                MD037025
+     C**********         READ      INPAYIB                                44       MD037025 MD051247
+     C     A1IBAN        READE     INPAYIB                                44                MD051247
       *                                                                                     MD037025
-     C     A1IBAN        IFNE      BNC34                                                    MD037025
-     C                   MOVE      '1'           *IN44                                      MD037025
-     C                   ENDIF                                                              MD037025
+     C*****A1IBAN        IFNE      BNC34                                           MD037025 MD051247
+     C**********         MOVE      '1'           *IN44                             MD037025 MD051247
+     C**********         ENDIF                                                     MD037025 MD051247
       *                                                                                     MD037025
      C                   ENDDO                                                              MD037025
       *                                                                                     MD037025

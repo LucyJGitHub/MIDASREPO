@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051247           Date 17Jul18               *      
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042407           Date 07Nov16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD034317           Date 17Jul15               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051247 - SP15 CUSD API Issue                               *      
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042407 - Creation Date field is missing when CGL132 is     *
@@ -441,24 +443,24 @@
      C                   EXSR      VCLICD
       /COPY WNCPYSRC,SDCUDPV033
       *
-      ** Check if Bank of England extract is switched on                                     LLN022A
-      *                                                                                      LLN022A
-     C     LLN007        Ifeq      *BLANK                                                    LLN022A
-      *                                                                                      LLN022A
-     C                   Callb     'AOSARDR0'                                                LLN022A
-     C                   Parm      *BLANKS       @RTCD                                       LLN022A
-     C                   Parm      '*VERIFY'     @OPTN                                       LLN022A
-     C                   Parm      'LLN007'      @SARD                                       LLN022A
-      *                                                                                      LLN022A
-      ** Set switchable feature indicator                                                    LLN022A
-      *                                                                                      LLN022A
-     C     @RTCD         Ifeq      *BLANK                                                    LLN022A
-     C                   Movel     'Y'           LLN007            1                         LLN022A
-     C                   Else                                                                LLN022A
-     C                   Movel     'N'           LLN007                                      LLN022A
-     C                   Endif                                                               LLN022A
-      *                                                                                      LLN022A
-     C                   Endif                                                               LLN022A
+      ***Check if Bank of England extract is switched on                            LLN022A MD051247
+      **********                                                                    LLN022A MD051247
+     C*****LLN007        Ifeq      *BLANK                                           LLN022A MD051247
+      **********                                                                    LLN022A MD051247
+     C**********         Callb     'AOSARDR0'                                       LLN022A MD051247
+     C**********         Parm      *BLANKS       @RTCD                              LLN022A MD051247
+     C**********         Parm      '*VERIFY'     @OPTN                              LLN022A MD051247
+     C**********         Parm      'LLN007'      @SARD                              LLN022A MD051247
+      **********                                                                    LLN022A MD051247
+      ***Set switchable feature indicator                                           LLN022A MD051247
+      **********                                                                    LLN022A MD051247
+     C*****@RTCD         Ifeq      *BLANK                                           LLN022A MD051247
+     C**********         Movel     'Y'           LLN007            1                LLN022A MD051247
+     C**********         Else                                                       LLN022A MD051247
+     C**********         Movel     'N'           LLN007                             LLN022A MD051247
+     C**********         Endif                                                      LLN022A MD051247
+      **********                                                                    LLN022A MD051247
+     C**********         Endif                                                      LLN022A MD051247
       *                                                                                      LLN022A
       ** Call additional BOE validation program                                              LLN022A
       *                                                                                      LLN022A
@@ -2253,6 +2255,22 @@
      C                   EVAL      CSW207 = 'N'                                               CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
+      *                                                                                     MD051247
+      ** Check if Bank of England extract is switched on                                    MD051247
+      *                                                                                     MD051247
+     C                   Callb     'AOSARDR0'                                               MD051247
+     C                   Parm      *BLANKS       @RTCD                                      MD051247
+     C                   Parm      '*VERIFY'     @OPTN                                      MD051247
+     C                   Parm      'LLN007'      @SARD                                      MD051247
+      *                                                                                     MD051247
+      ** Set switchable feature indicator                                                   MD051247
+      *                                                                                     MD051247
+     C     @RTCD         Ifeq      *BLANK                                                   MD051247
+     C                   Movel     'Y'           LLN007            1                        MD051247
+     C                   Else                                                               MD051247
+     C                   Movel     'N'           LLN007                                     MD051247
+     C                   Endif                                                              MD051247
+      *                                                                                     MD051247
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.

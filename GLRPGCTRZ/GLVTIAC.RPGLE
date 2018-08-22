@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034725           Date 27Jul16               *
+      *  Last Amend No. MD051247           Date 17Jul18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034725           Date 27Jul16               *
       *                 230445             Date 03Nov14               *
       *                 MD030198           Date 30Aug14               *
       *                 TI010206           Date 06May13               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051247 - SP15_CUSD API issue                               *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  230445 - Do not accept 'Y' as TI account flag if the customer*
@@ -75,7 +77,7 @@
      FSDACODL1  IF   E           K DISK    INFSR(*PSSR)
  
       ** SD Customer Detail Retrieval                                                         230445
-     FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                                       230445
+     F***SDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                           230445 MD051247
                                                                                               230445
       ** SD Trade innovation account types retrieval                                         BUG3365
      FSDTIACL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG3365
@@ -171,6 +173,10 @@
       ** TI ICD details                                                                      BUG3365
      D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                 BUG3365
                                                                                              BUG3365
+      ** SD Customer Details                                                                MD051247
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                MD051247
+     D SDCUSTDFAC    E                     EXTFLD(QQDFAC)                                   MD051247
+                                                                                            MD051247
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -499,18 +505,26 @@
       *                                                                                       230445
       ** Validate TI account flag based on the account customer                               230445
       *                                                                                       230445
-     C     DDCUSN        CHAIN     SDCUSTL1                           81                      230445
+     C*****DDCUSN        CHAIN     SDCUSTL1                           81             230445 MD051247
+     C                   CALLB     'AOCUSTR1'                                               MD051247
+     C                   PARM      *BLANKS       @RTCD                                      MD051247
+     C                   PARM      '*KEY   '     @OPTN                                      MD051247
+     C                   PARM      DDCUSN        @KEY1            10                        MD051247
+     C                   PARM      *BLANKS       @KYST             7                        MD051247
+     C     SDCUST        Parm      SDCUST        DSSDY                                      MD051247
       *                                                                                       230445
-     C     *IN81         IFEq      *Off                                                       230445
+     C******IN81         IFEq      *Off                                              230445 MD051247
       *                                                                                       230445
-     C     BBTICS        IFNE      'Y'                                                        230445
+     C*****BBTICS        IFNE      'Y'                                               230445 MD051247
+     C     @RTCD         IFEQ      *BLANKS                                                  MD051247
+     C     BBTICS        ANDNE     'Y'                                                      MD051247
      C     A8BICN        ANDNE     DDCUSN                                                     230445
      C                   Move      'N'           DDTIACOk                                     230445
      C                   Add       1             Idx                                          230445
      C                   MoveL     'DDTIAC'      FldNamXAr(Idx)                               230445
      C                   MoveL     'RE71878'     MsgIDXAr(Idx)                                230445
      C                   ENDIF                                                                230445
-     C                   ENDIF                                                                230445
+     C**********         ENDIF                                                       230445 MD051247
       *
       ** TI Account Number can be any value except 000000,
       *

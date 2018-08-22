@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD049048           Date 20Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD024884A          Date 04Jul17               *
       *                 MD044873           Date 23Mar17               *
       *                 MD042711           Date 22Nov16               *
@@ -133,6 +134,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049048 - LDNI inserted through SOAP cannot be amended due  *
+      *             to Front Office ID being blank.                   *      
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD024884A - Incorrect Payment and Receipt accounts           *
@@ -1120,6 +1123,7 @@
       * MMLDRXPD    ¦ 1917    ¦ 1956    ¦   40     ¦                                          CSF011
       * MMLDEXPD    ¦ 1957    ¦ 2006    ¦   50     ¦                                          CSF011
                                                                                              BUG9827
+     C                   Eval      APFOTranID = DDFOID                                      MD049048
       * Extract the CDL006 fields from buffer and buffer2                                    BUG9827
      C                   If        CDL006 = 'Y'                                              BUG9827
      C**********         Eval      FIDTScnRstN = %SUBST(Buffer:2484:240)              BUG9827 CSF011

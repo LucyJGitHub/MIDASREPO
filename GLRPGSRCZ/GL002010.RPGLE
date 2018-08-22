@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046682           Date 14Jul17               *
+      *  Last Amend No. MD045538           Date 06Jun17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046682           Date 14Jul17               *
       *                 MD039988           Date 08Aug16               *
       *                 MD039702           Date 14Jul16               *
       *                 MD029074           Date 21Nov14               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045538 - Batch duplicate view. Ensure that CLEARPD records *
+      *             will only be shown once on screen.                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046682 - Credit amount should not be displayed with '-'.   *
       *  MD039988 - Discrepancy of Balances between enquiry screens.  *
@@ -624,8 +627,13 @@
      C     *IN99         DOWEQ     '0'
  
       * Only include postings with a value date prior to today
+      * or real time postings with a value date today                                       MD045538
  
-     C     VALD          IFLT      BJRDNB
+     C*****VALD          IFLT      BJRDNB
+     C*****VALD          IFLE      BJRDNB                                          MD039988 MD045538
+     C     VALD          IFLT      BJRDNB                                                   MD045538
+     C     VALD          OREQ      BJRDNB                                                   MD045538
+     C     PSTD          ANDGE     BJRDNB                                                   MD045538
  
       * Format Extended Narrative
  

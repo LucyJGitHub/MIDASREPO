@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048056           Date 16Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045515           Date 02Jul17               *
+      *  Prev Amend No. MD037555           Date 24Feb15               *
+      *                 MD048056           Date 16Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 CGL154             Date 13Oct14               *
       *                 256758             Date 21Jun16               *
@@ -182,6 +184,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045515 - Real-time postings resulted in duplicate movements* 
+      *             in Midas. Remove fix MD037555.                    * 
+      *  MD037555 - Correction of MD028392.  This fix cause the loss  *
+      *             of posting in Clearpd  with future value of more  *
+      *             than 1 day after next working date.  The change is*
+      *             to use TEST on RIND instead of TESTB 4. RIND is   *
+      *             the value in REC3065 to skip copy of real time    *
+      *             entries from CLEARPD because Real time post does  *
+      *             not set it to 1. Records from MANPOPD have the    *
+      *             indicator set up.                                 *
+      *             The advantage of this is that DEPT and NITMS value*
+      *             are preserved also.                               *
       *  MD048056 - GPAMT of REOUTLPD should also be updated when     *
       *             holiday is before next working day                *
       *  MD046248 - Finastra Rebranding                               *
@@ -1232,6 +1246,7 @@
      I                                 81   81 0DRCR
      I                                 96  102  SPOS
      I                                103  105  BRCDP             05
+     I**********                      106  106 0RIND                               MD037555 MD045515
      I                                124  124  ATYPP
      I                                128  128  PRIN
      I                                129  129  GETP
@@ -1933,7 +1948,14 @@
       *                                                                                     MD037046
       ** Check if already posted to Ledger and Cleared Balance                              MD037046
       *                                                                                     MD037046
-     C                   TESTB     '6'           PRIN                 22                    MD037046
+     C**********         TESTB     '6'           PRIN                 22           MD037046 MD037555
+     C                   SETOFF                                       22                    MD045515
+     C     VALD          IFGT      RUND                                                     MD045515
+     C     VALD          ANDLE     BKAPDT                                                   MD045515
+     C     *IN60         ANDEQ     *OFF                                                     MD045515
+     C     *IN27         ANDEQ     *ON                                                      MD045515
+     C                   SETON                                        22                    MD045515
+     C                   ENDIF                                                              MD045515
      C/COPY WNCPYSRC,GL0600C008
      C   20VALD          COMP      NWKD                                 61
      C   20
@@ -1960,8 +1982,12 @@
      CAN 05
      CANN27LDBL          ADD       PSTA          LDBL
      C   61
-     CAN 05
-     CANN27CLBL          ADD       PSTA          CLBL
+     CAN 05     
+     C***ANN27CLBL          ADD       PSTA          CLBL                                    MD045515
+     CANN27                                                                                 MD045515
+     COR 61                                                                                 MD045515
+     CAN 05                                                                                 MD045515
+     CAN 22              ADD       PSTA          CLBL                                       MD045515
      C/COPY WNCPYSRC,GL0600C010
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
@@ -1991,7 +2017,11 @@
      CANN27LDBL          SUB       PSTA          LDBL
      C   61
      CAN 05
-     CANN27CLBL          SUB       PSTA          CLBL
+     C***ANN27CLBL          SUB       PSTA          CLBL                                    MD045515
+     CANN27                                                                                 MD045515
+     COR 61                                                                                 MD045515
+     CAN 05                                                                                 MD045515
+     CAN 22              SUB       PSTA          CLBL                                       MD045515
      C/COPY WNCPYSRC,GL0600C011
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
@@ -2090,15 +2120,28 @@
       ** Set BIT 6 off on CLEARPD to enable future CLBL Update.
 
      C                   BITOFF    '6'           PRIN
+      **RIND*from*CLEARPD*is*not*set*to*1*to*avoid*duplicate*entry*in*Retail*historMD037555 MD045515
+      **Use*it*to*not*output*in*CLEARPD*for*in*following*days.**Record*from*MANPOPDMD037555 MD045515
+      **will*be*used*instead*******************************************            MD037555 MD045515
+     C*****RIND          IFEQ      1                                               MD037555 MD045515
+     C**********         SETON                                        22           MD037555 MD045515
+     C**********         ELSE                                                      MD037555 MD045515
+     C**********         SETOFF                                       22           MD037555 MD045515
+     C**********         END                                                       MD037555 MD045515
 
       ** Output Retail to clear, only if balance posting
 
      C                   MOVE      *OFF          *IN88                                        CRE095
+     C     *IN27         IFEQ      *OFF                                                     MD045515
+     C     *IN60         OREQ      *ON                                                      MD045515
+      *                                                                                     MD045515
      C  N61
      CAN 20
-     C***AN*05**            SETON                                        88                 MD028392
-     CAN 05                                                                                 MD028392
-     CAN 22              SETON                                        88                    MD028392
+     C***AN*05**         SETON                                        88                    MD028392
+     C***AN*05**                                                                   MD028392 MD045515
+     C***AN*22**         SETON                                        88           MD028392 MD045515
+     CAN 05              SETON                                        88                    MD045515
+     C                   ENDIF                                                              MD045515
      C/COPY WNCPYSRC,GL0600C019
      C   88              SETON                                        53
      C   88TNPIC         ADD       1             TNPIC

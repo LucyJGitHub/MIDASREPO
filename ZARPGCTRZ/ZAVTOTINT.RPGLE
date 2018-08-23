@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR814519           Date 09Mar15               *
+      *  Last Amend No. MD047719           Date 24Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR814519           Date 09Mar15               *
       *                 MD000091           Date 23May13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23140           Date 10Mar09               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047719 - Skip validation on amend. Reverse part of         *
+      *             AR814519. Apply fix for MD-51582.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR814519 - Allow negative base rate. Apply fix AR399874.     *
       *             Applied for MD033488                              *
@@ -72,7 +75,7 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -91,41 +94,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External data structure for access programs (long)                                   CER043
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER043
                                                                                               CER043
@@ -136,7 +139,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Switchable feature                                                                   CER043
      D CER043          S              1A                                                      CER043
                                                                                               CER043
@@ -147,139 +150,139 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** ==========
       ** Parameters
- 
+
       ** Message ID
      D MsgID1          S                   LIKE(#MsgID)
- 
+
       ** Message data
      D MsgData1        S                   LIKE(#MsgData)
- 
+
       ** Action Code (1A, from caller)                                          164565
      D DDACTN          S              1A                                        164565
- 
+
       ** Interest amount returned from this module
      D IKMTTI          S             15P 0
- 
+
       ** Total interest amount
      D DDTOTI          S             14A
- 
+
       ** Default interest for CL and CD deals with zero notice days
       ** feature flag
      D S01468          S              1A
- 
+
       ** Deal notice days
      D DDNTCE          S              3A
- 
+
       ** Deal type
      D DDTYPE          S              2A
- 
+
       ** Interest rate
      D IKINTR          S             11P 7
- 
+
       ** Deal amount
      D IKAMNP          S             15P 0
- 
+
       ** Interest calculation method
      D DDICMT          S              1A
- 
+
       ** Deal value date in Midas day number format
      D @VDYNO          S              5P 0
- 
+
       ** Currency OK flag
      D CurrOK          S              1A
- 
+
       ** Number of decimal places in deal currency
      D A6NBDP          S              1S 0
- 
+
      ** Value date field OK
      D ValDateOK       S              1A
- 
+
      ** Notice days field OK
      D NotDaysOK       S              1A
- 
+
      ** Amount field OK
      D AmountOK        S              1A
- 
+
      ** Base Rate field OK
      D BaseRateOK      S              1A
- 
+
      ** Spread/Rate field OK
      D SpreadOK        S              1A
- 
+
      ** Calculation method field OK
      D CalcMethOK      S              1A
- 
+
      ** Maturity date
      D DDMDAT          S              6A
- 
+
      ** Maturity date in Midas day number format (5,0P, from caller)
      D @MDYNO          S                   LIKE(@VDYNO)
- 
+
      ** Maturity date field OK
      D MatDateOK       S              1A
- 
+
      ** Notice days
      D @NTCNM          S              3S 0
- 
+
       ** First and last day interest flag
      D DDFLID          S              1A
- 
+
       ** Round-down interest flag
      D DDRDFC          S              1A
- 
+
       ** Decimal separator
      D BNDCSP          S              1A
- 
+
       ** End of parameters
       ** =================
- 
+
       ** Beginning of interest period
      D ZZBEG           S                   LIKE(@VDYNO)
- 
+
       ** End of interest period
      D ZZEND           S                   LIKE(@VDYNO)
- 
+
       ** Interest work field
      D @@INTR          S                   LIKE(IKAMNP)
- 
+
       ** Interest work field
      D @TOTIN          S                   LIKE(IKAMNP)
- 
+
       ** Alpha field for numeric validation
      D @@ALPH          S             16A
- 
+
       ** Number of integers in amount
      D @@IINT          S              3P 0
- 
+
       ** Millions/Thousands id (Y=function on)
      D @@MTID          S              1A
- 
+
       ** Error code for ZA0840
      D @@ERCD          S              1P 0
- 
+
       ** Amount after numeric checking
      D @@AMT           S             15P 0
- 
+
       ** Difference between input and calculated rate
      D @DIFI           S             15P 0
- 
+
       ** 13,0P amount field for passing into ZA0920
      D Amount13        S             13P 0
- 
+
       ** Packed version of number of decimal places for passing into ZA0920
      D NbrDecPl1       S              1P 0
- 
+
       ** Packed version of number of decimal places for passing into ZA0840
      D NbrDecPl3       S              3P 0
- 
+
       ** Formatted amount returned from ZA0920
      D AmountOut       S             14A
                                                                                 CDL006
      D CDL006          S              1A   IMPORT                               CDL006
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -299,7 +302,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C*
      C* If the total interest has NOT been entered...
@@ -349,7 +352,7 @@
      C                   PARM                    IKINTR
      C                   PARM                    DDRDFC
      C                   PARM                    @@INTR
- 
+
      C                   Z-ADD     @@INTR        @TOTIN
      C                   GOTO      SKIPV
      C                   END
@@ -375,7 +378,7 @@
      C     DDTOTI        IFEQ      '*'
      C                   Z-ADD     *ZERO         @@ERCD
      C                   ELSE
- 
+
      C     13            SUB       A6NBDP        @@IINT
      C                   MOVE      'N'           @@MTID
       *
@@ -385,7 +388,7 @@
      C                   EVAL      @@ALPH = DDTOTI
      C                   EVAL      NbrDecPl3 = A6NBDP
      C                   CLEAR                   ReturnCode
- 
+
       * Only for Call Deposit/Loans allow entry of -ve interest amounts.                      208051
      C**********         CALLB     'ZA0840'                                                   208051
      C                   CALLB     'ZA0841'                                                   208051
@@ -501,6 +504,7 @@
       *
      C     DDTOTI        IFEQ      '*'
      C*****DDACTN        OREQ      'A'                                               164565 AR814519
+     C     DDACTN        OREQ      'A'                                                      MD047719
      C                   Z-ADD     @@INTR        @TOTIN
      C                   END
      C*
@@ -512,6 +516,7 @@
       ****will*be*correctly*calculated*)*******************************              164565 AR814519
       *                                                                      164565
      C*****DDACTN        IFEQ      'I'                                               164565 AR814519
+     C     DDACTN        IFEQ      'I'                                                      MD047719
       *                                                                      164565
      C     @TOTIN        SUB       @@INTR        @DIFI
      C*
@@ -533,14 +538,14 @@
      C                   EVAL      Amount13 = @@INTR
      C                   EVAL      NbrDecPl1 = A6NBDP
      C                   CLEAR                   ReturnCode
- 
+
      C                   CALLB     'ZA0920'
      C                   PARM                    ReturnCode
      C                   PARM                    Amount13
      C                   PARM                    NbrDecPl1
      C                   PARM                    BNDCSP
      C                   PARM                    AmountOut
- 
+
      C                   MOVE      *BLANKS       MsgData1
      C**********         MOVEL     AmountOut     MsgData1                                   MD000091
      C                   EVAL      BLen = %Len(%Trim(AmountOut))                            MD000091
@@ -549,6 +554,7 @@
      C                   END
      C**********         END                                                         164565 AR814519
      C***********        END                                               164565
+     C                   END                                                                MD047719
      C                   END
      C                   END
      C                   END
@@ -568,32 +574,32 @@
      C     ErrorFound    ANDEQ     'N'
      C*
      C                   Z-ADD     @TOTIN        IKMTTI
- 
+
      C**  Reformat the interest value for display
- 
+
       ** Copy the amount into a 13,0P field for passing to ZA0920
       ** Put number of decimal places into a packed field for call
- 
+
      C                   EVAL      Amount13 = @TOTIN
      C                   EVAL      NbrDecPl1 = A6NBDP
      C                   CLEAR                   ReturnCode
- 
+
      C                   CALLB     'ZA0920'
      C                   PARM                    ReturnCode
      C                   PARM                    Amount13
      C                   PARM                    NbrDecPl1
      C                   PARM                    BNDCSP
      C                   PARM                    AmountOut
- 
+
      C                   MOVE      AmountOut     DDTOTI
      C*
      C                   END
       *
       ** Return code set in /COPY
      C/COPY ZACPYSRC,SETRETCDE
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -605,9 +611,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
       ** Incoming return code (10A)
      C                   PARM                    ReturnCode
@@ -666,7 +672,7 @@
      C                   PARM                    DDRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    BNDCSP
- 
+
       *                                                                                       CER043
       ** Check if CER043 is switched on                                                       CER043
                                                                                               CER043
@@ -692,14 +698,14 @@
                                                                                               CER043
      C                   EndIf                                                                CER043
                                                                                               CER043
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

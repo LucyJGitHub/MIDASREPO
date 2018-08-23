@@ -12,8 +12,9 @@
       *  (c) Finastra International Limited 2001                      *
 0009 F*      1990,1993                                                *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030959A          Date 17Jun15               *
+      *  Last Amend No. MD043946           Date 08Feb17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030959A          Date 17Jun15               *
       *                 MD031950           Date 17Jun15               *
       *                 CGL120             Date 06Aug12               *
       *                 AR894859           Date 13Nov12               *
@@ -80,6 +81,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD043946 - Post to suspense account when the dr/cr account   *
+      *             is flagged as Blocked debit/credit.               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030959A - Project values when requested during I/C.        *
       *  MD031950 - Recompiled due to changed PF/CUSEXZ1.             *
@@ -648,6 +651,8 @@
      I                                      171 180 DBPGM                 S01117
      I                                      181 1830DBASE                 S01117
      I*                                                                   S01408
+     I                                        1  62 SBCI                                    MD043946
+     I                                        1   6 SBICN                                   MD043946
      I/COPY WNCPYSRC,RE0350IIPG                                           S01408
      I*                                                                   S01408
      I********************************************************************S01522
@@ -833,6 +838,17 @@
      C                     OUT  LDA                        ***************S01117
      C                     GOTO TOTAL                                     S01117
      C                     END                              *E1           S01117
+      *
+     C                     MOVE BKACCD    CSACD  10                                         MD043946
+     C                     CALL 'AOACODR0'                                                  MD043946
+     C                     PARM *BLANKS   @RTCD                                             MD043946
+     C                     PARM '*KEY    '@OPTN                                             MD043946
+     C                     PARM           CSACD                                             MD043946
+     C           SDACOD    PARM SDACOD    DSSDY                                             MD043946
+     C           @RTCD     IFEQ *BLANKS                                                     MD043946
+     C                     MOVE ATYP      CSTYP   1                                         MD043946
+     C                     MOVE ACSC      CSSEC   2                                         MD043946
+     C                     ENDIF                                                            MD043946
       *                                                                                       CGL020
       ** Check if Compliance Watch Additional A/C Postings Information                        CGL020
       ** is installed                                                                         CGL020
@@ -1387,6 +1403,65 @@
      C*                                                                   CAC001
      C                     SETOF                     3435                 CAC001
      C*                                                                   CAC001
+      *                                                                                     MD043946
+      ** check for blocked dr indicator                                                     MD043946
+      *                                                                                     MD043946
+     C                     MOVELDRBR      WBRC                                              MD043946
+     C                     MOVE DCUS      WCUS                                              MD043946
+     C                     MOVELDRCY      WCCY                                              MD043946
+     C                     Z-ADDDCOD      WACD                                              MD043946
+     C                     Z-ADDDACS      WACS                                              MD043946
+     C           ACKEY     CHAINACCBR                37                                     MD043946
+     C           *IN37     IFEQ '0'                                                         MD043946
+     C                     TESTB'2'       RETB           44                                 MD043946
+      *                                                                                     MD043946
+     C           *IN44     IFEQ '1'                                                         MD043946
+     C                     Z-ADDSTIX      IX                                                MD043946
+     C           DRBR      LOKUPBCC,IX                   10                                 MD043946
+     C   10                MOVE BCT,IX    SBCI                                              MD043946
+     C                     MOVE SBICN     DCUS                                              MD043946
+     C                     MOVE BKACCD    DCOD                                              MD043946
+     C                     MOVE '01'      DACS                                              MD043946
+     C                     MOVE DCUS      WCUS                                              MD043946
+     C                     Z-ADDDCOD      WACD                                              MD043946
+     C                     Z-ADDDACS      WACS                                              MD043946
+     C           ACKEY     CHAINACCBR                37                                     MD043946
+     C           *IN37     IFEQ '0'                                                         MD043946
+     C                     Z-ADDACNO      DRAN                                              MD043946
+     C                     ENDIF                                                            MD043946
+     C                     ENDIF                                                            MD043946
+      *                                                                                     MD043946
+     C                     ENDIF                                                            MD043946
+      *                                                                                     MD043946
+      ** check for blocked cr indicator                                                     MD043946
+      *                                                                                     MD043946
+     C                     MOVELCBRC      WBRC                                              MD043946
+     C                     MOVE CCUS      WCUS                                              MD043946
+     C                     MOVELCRCY      WCCY                                              MD043946
+     C                     Z-ADDCCOD      WACD                                              MD043946
+     C                     Z-ADDCACS      WACS                                              MD043946
+     C           ACKEY     CHAINACCBR                37                                     MD043946
+     C           *IN37     IFEQ '0'                                                         MD043946
+     C                     TESTB'3'       RETB           44                                 MD043946
+      *                                                                                     MD043946
+     C           *IN44     IFEQ '1'                                                         MD043946
+     C                     Z-ADDSTIX      IX                                                MD043946
+     C           CBRC      LOKUPBCC,IX                   10                                 MD043946
+     C   10                MOVE BCT,IX    SBCI                                              MD043946
+     C                     MOVE SBICN     CCUS                                              MD043946
+     C                     MOVE BKACCD    CCOD                                              MD043946
+     C                     MOVE '01'      CACS                                              MD043946
+     C                     MOVE CCUS      WCUS                                              MD043946
+     C                     Z-ADDCCOD      WACD                                              MD043946
+     C                     Z-ADDCACS      WACS                                              MD043946
+     C           ACKEY     CHAINACCBR                37                                     MD043946
+     C           *IN37     IFEQ '0'                                                         MD043946
+     C                     Z-ADDACNO      CRAN                                              MD043946
+     C                     ENDIF                                                            MD043946
+     C                     ENDIF                                                            MD043946
+      *                                                                                     MD043946
+     C                     ENDIF                                                            MD043946
+      *
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C           DCIN      ANDEQ'D'                                       CAC001
      C                     SETON                     34                   CAC001

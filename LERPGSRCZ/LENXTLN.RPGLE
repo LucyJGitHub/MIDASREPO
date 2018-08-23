@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1021136          Date 24Apr13               *
+      *  Last Amend No. MD049420           Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1021136          Date 24Apr13               *
       *                 AR1077185          Date 18Jan13               *
       *                 AR1077185          Date 11Jan13               *
       *                 AR1070602A         Date 23Dec12               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049420 - Next available loan reference is incorrect.       *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR1021136 - CLE148: Loan with reference '000000' can be      *
       *              created. Recalculate for next loan reference if  *
@@ -589,6 +591,7 @@
  
      C**********         IF        PValid = '      '                                       AR1021136
      C                   IF        PValid = '      ' AND NextLoan <> '000000'              AR1021136
+     C                             and @data <> 'EX'                                        MD049420
      C                   EVAL      *IN88 = *OFF
      C                   ELSE
      C                   EVAL      *IN88 = *ON

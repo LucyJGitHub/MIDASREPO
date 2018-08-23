@@ -16,13 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1019833          Date 25Mar13               *
+      *  Last Amend No. MD049420           Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1019833          Date 25Mar13               *
       *                 AR1071068          Date 10Jan13               *
       *                 CLE148  *CREATE    Date 23Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049420 - Next available loan reference is incorrect.       *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR1019833 - Performance issue. Put call of AOSVAL to *INZSR  *
       *              and prevent setting on of *INLR for normal end   *
@@ -53,11 +55,15 @@
       *                                                               *
       *****************************************************************
       *
-      ** Midas Le Loans File by Loan Reference                                             AR1071068
-     FLECLIPL2  IF   E           K DISK    INFSR(*PSSR)                                    AR1071068
-     F                                     RENAME(CLOANCKF:CLOANCKLN)                      AR1071068
-     F                                     RENAME(CLOANCLF:CLOANCLLN)                      AR1071068
- 
+      ***Midas*Le*Loans*File*by*Loan*Reference                                    AR1071068 MD049420
+     F**********LECLIPL2  IF   E           K DISK    INFSR(*PSSR)                 AR1071068 MD049420
+     F**********                                     RENAME(CLOANCKF:CLOANCKLN)   AR1071068 MD049420
+     F**********                                     RENAME(CLOANCLF:CLOANCLLN)   AR1071068 MD049420
+      ** Midas LE Logical on CLOANCL and MCLONCL by LNRF                                    MD049420
+     FMCLONCL1  IF   E           K DISK    INFSR(*PSSR)                                     MD049420
+     F                                     RENAME(CLOANCLF:CLOANCLLN)                       MD049420
+     F                                     RENAME(MLOANCLF:MLOANCLLN)                       MD049420
+
       ** +--------------------------------------+
       ** ! D-specs                              !
       ** ! =======                              !
@@ -362,11 +368,15 @@
       ** Check if loan reference is existing in loans file                                 AR1071068
       *                                                                                    AR1071068
      C                   EVAL      NewLoan = 'N'                                           AR1071068
-     C     Loan          CHAIN(N)  CLOANCLLN                          99                   AR1071068
-     C     Loan          CHAIN(N)  CLOANCKLN                          99                   AR1071068
+     C*****Loan          CHAIN(N)  CLOANCLLN                          99          AR1071068 MD049420
+     C*****Loan          CHAIN(N)  CLOANCKLN                          99          AR1071068 MD049420
+     C     Loan          CHAIN(N)  MCLONCL1                           99                    MD049420
                                                                                            AR1071068
      C                   IF        *IN99 = '1'                                             AR1071068
      C                   EVAL      NewLoan = 'Y'                                           AR1071068
+     C                   ELSE                                                               MD049420
+      ** Flag as EX if already existing in CLOANCL and MCLONCL                              MD049420
+     C                   EVAL      @data = 'EX'                                             MD049420
      C                   ENDIF                                                             AR1071068
  
       ** Handle the CheckDigit

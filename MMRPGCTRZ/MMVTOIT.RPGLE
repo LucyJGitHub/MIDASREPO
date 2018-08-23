@@ -518,6 +518,8 @@
      C                   PARM                    ReturnCode
       ** Message ID (10A)
      C                   PARM                    MsgID1
+      ** Action Code (1A, from caller)                                                      MD047719
+     C                   PARM                    DDACTN                                     MD047719
       ** Message data (45A)
      C                   PARM                    MsgData1
       ** Total interest amount returned from this module (15,0P)

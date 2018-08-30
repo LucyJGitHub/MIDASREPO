@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033488           Date 12Mar15               *
+      *  Last Amend No. MD051346           Date 17Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033488           Date 12Mar15               *
       *                 CIR018             Date 11Aug14               *
       *                 MD026686           Date 08May14               *
       *                 CIR017             Date 10Apr14               *
@@ -94,6 +95,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051346 - The system does not allow to change the maturity  *
+      *             date in OIS deal.                                 *
+      *           - Ensure zero short term rate is accepted by the    *
+      *             system during amend of OIS deals inserted in the  *
+      *             past.                                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033488 - Allow negative rates. Remove last parameter of    *
       *             program IRVSTERMRT to match entry parameter.      *
@@ -2353,6 +2359,8 @@
      C                   PARM                    BNDCSP                                       245692
       ***Transaction*currency******************************************            BUG11457 MD033488
      C**********         PARM                    SUCUCY                            BUG11457 MD033488
+     C                   PARM                    RXORED                                     MD051346
+     C                   PARM                    SACCD                                      MD051346
  
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -3331,6 +3339,8 @@
      C                   PARM                    BNDCSP                                       245692
       ***Transaction*currency******************************************            BUG11457 MD033488
      C**********         PARM                    STCUCY                            BUG11457 MD033488
+     C                   PARM                    RXORED                                     MD051346
+     C                   PARM                    SACCD                                      MD051346
  
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx

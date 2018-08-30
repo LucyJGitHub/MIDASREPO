@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030847           Date 03Dec14               *
+      *  Last Amend No. MD051346           Date 17Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030847           Date 03Dec14               *
       *                 CIR018             Date 25Nov14               *
       *                 CIR017             Date 10Apr14               *
       *                 245692             Date 11Dec13               *
@@ -88,6 +89,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051346 - The system does not allow to change the maturity  *
+      *             date in OIS deal.                                 *
+      *           - Ensure zero short term rate is accepted by the    *
+      *             system during amend of inserted OIS deals in the  *
+      *             past.                                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030847 - BFM2.1SP4.2_T2-Bug (critical): SIRS Input: THEIR  *
       *             short term rate 0 not able to release/authorise   *
@@ -2417,6 +2423,8 @@
       ** Sign of Our Short Term Rate                                                         BUG6472
      C                   PARM                    SUSSGN                                      BUG6472
      C                   PARM                    BNDCSP                                       245692
+     C                   PARM                    RSORED                                     MD051346
+     C                   PARM                    SACCD                                      MD051346
  
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
@@ -2929,6 +2937,8 @@
       ** Sign of Their Short Term Rate                                                       BUG6472
      C                   PARM                    STSSGN                                      BUG6472
      C                   PARM                    BNDCSP                                       245692
+     C                   PARM                    RSORED                                     MD051346
+     C                   PARM                    SACCD                                      MD051346
  
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx

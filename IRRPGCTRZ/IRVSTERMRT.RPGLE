@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033488           Date 11Mar15               *
+      *  Last Amend No. MD051346           Date 17Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033488           Date 11Mar15               *
       *                 245692             Date 10Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051346 - The system does not allow to change the maturity  *
+      *             date in OIS deal.                                 *
+      *           - Ensure zero short term rate is accepted by the    *
+      *             system during amend of OIS deals inserted in the  *
+      *             past.                                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033488 - Allow negative rates. Use program ZA0841 instead  *
       *             ZA0840. To accept a '-' sign to indicate input    *
@@ -232,6 +238,12 @@
       ** Decimal separator                                                                    245692
      D BNDCSP          S              1A                                                      245692
                                                                                               245692
+      ** Deal's original entry date.                                                        MD051346
+     D   WORED         S              5P 0                                                  MD051346
+                                                                                            MD051346
+      ** Deal's action code.                                                                MD051346
+     D   WACCD         S              1A                                                    MD051346
+                                                                                            MD051346
       ***Parameter*list*for*ZA0840*************************************              245692 MD033488
       ** Parameter list for ZA0841                                                          MD033488
       ** =========================                                                            245692
@@ -343,8 +355,10 @@
      C     CIR005        OREQ      'Y'                                          CIR005
      C     ZRFDT         ANDLT     BJRDNB                                       CIR005
      C     WValBDC       ANDEQ     'Y'                                          CIR005
+     C                   IF        PDealTyp <> 'RS' AND PRatChgFq <> 'O'                    MD051346
      C                   MOVE      'MMA0032'     Msgid1
      C                   MOVE      'Y'           ErrorFound
+     C                   ENDIF                                                              MD051346
      C                   END
      C                   END
      C                   ELSE
@@ -411,14 +425,19 @@
                                                                                               CIR007
       ** If CIR007 is on , Deal Type is 'RS' and Rate Change Frequency                        CIR007
       ** Code is 'O' and the deal is "Back-Valued", a Short Term Rate                         CIR007
-      ** must be entered and must not be equal to zero.                                       CIR007
+      ** must be entered.                                                                   MD051346
+      ** must*be*entered*and*must*not*be*equal*to*zero.****************              CIR007 MD051346
                                                                                               CIR007
      C                   IF        ErrorFound <> 'Y'                                          CIR007
                                                                                               CIR007
-     C                   IF        CIR007 = 'Y' AND PDealTyp = 'RS'                           CIR007
-     C                             AND PRatChgFq = 'O' AND VDATX < BJRDNB                     CIR007
+     C**********         IF        CIR007 = 'Y' AND PDealTyp = 'RS'                  CIR007 MD051346
+     C**********                   AND PRatChgFq = 'O' AND VDATX < BJRDNB            CIR007 MD051346
+     C                   IF        ((CIR007 = 'Y' AND PDealTyp = 'RS'                       MD051346
+     C                             AND PRatChgFq = 'O' AND VDATX < BJRDNB)                  MD051346
+     C                             AND (WORED = BJRDNB OR WACCD = 'I'))                     MD051346
                                                                                               CIR007
-     C                   IF        SUEINR = *BLANKS OR UEINRX = 0                             CIR007
+     C**********         IF        SUEINR = *BLANKS OR UEINRX = 0                    CIR007 MD051346
+     C                   IF        SUEINR = *BLANKS                                         MD051346
      C                   MOVE      'Y'           ErrorFound                                   CIR007
      C                   MOVE      'MMA1180'     Msgid1                                       CIR007
      C                   ENDIF                                                                CIR007
@@ -527,6 +546,8 @@
      C                   PARM                    SAVRAM                                       CAP055
      C                   PARM                    SUSSGN            1                         BUG6472
      C                   PARM                    BNDCSP                                       245692
+     C                   PARM                    WORED                                      MD051346
+     C                   PARM                    WACCD                                      MD051346
                                                                                 CIR005
       ** Access SAR details file to determine if FRA/IRS Business Day           CIR005
       ** Day Convention is switched on.                                         CIR005

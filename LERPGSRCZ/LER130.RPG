@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051242           Date 25Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE159             Date 18Jul18               *
+      *  Prev Amend No. MD051242           Date 25Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 MD046294           Date 28Jun17               *
       *                 MD029938A          Date 08May15               *
@@ -196,6 +197,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE159 - Lending Fee Amortisation Enhancement                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
@@ -1528,6 +1530,7 @@
      I                                        1   20WWDT1                 33591
      I                                        3   40WWDT2                 33591
      I                                        5   60WWDT3                 33591
+     IFHS2      E DSLEFHS2TD                                                                  CLE159
      ISTLNS1      DS                            110                                           CGL020
       ** Set work fields                                                                      CGL020
       *                                                                                       CGL020
@@ -3555,6 +3558,12 @@
      C                     Z-ADDWWORK     WWORK2 229H                     184594
      C           WWORK     MULT WACTDY    WWORK
      C           WWORK     SUB  FEADAT    LKEAMT    H
+      *                                                                                       CLE159
+     C           CLE159    IFEQ 'Y'                                                           CLE159
+     C           FECALT    ANDEQ*BLANKS                                                       CLE159
+     C           FELOAN    ANDEQ*BLANKS                                                       CLE159
+     C                     EXSR SRAMTZ                                                        CLE159
+     C                     ENDIF                                                              CLE159
       *                                                                   090939
       ** STORE VALUE OF DAILY ACCRUED FEE AMOUNT FOR LATER UPDATE TO FILE 090939
      C                     Z-ADDLKEAMT    DAYACR                          090939
@@ -6566,6 +6575,20 @@
      C                     KFLD           ZFEFCL  50                                          CLE134
      C                     KFLD           ZFSEQ   20                                          CLE134
       *                                                                                       CLE134
+      *                                                                                       CLE159
+      ** Check if CLE159 is installed                                                         CLE159
+      *                                                                                       CLE159
+     C                     MOVEL'N'       CLE159  1                                           CLE159
+     C                     CALL 'AOSARDR0'                                                    CLE159
+     C                     PARM *BLANKS   WRTCD                                               CLE159
+     C                     PARM '*VERIFY 'WOPTN                                               CLE159
+     C                     PARM 'CLE159'  WSARD                                               CLE159
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE159
+      *                                                                                       CLE159
+     C           WRTCD     IFEQ *BLANKS                                                       CLE159
+     C                     MOVEL'Y'       CLE159                                              CLE159
+     C                     ENDIF                                                              CLE159
+      *                                                                                       CLE159
       ***Key*list*for*LEACCNL6*****************************************              AR574425 CLE164
       *****************************************************************              AR574425 CLE164
      C********** ZLEACC    KLIST                                                     AR574425 CLE164
@@ -7849,6 +7872,37 @@
       *                                                                                       CLE164
      C                     ENDSR                                                              CLE164
       *****************************************************************                       CLE164
+      *****************************************************************                       CLE159
+      *                                                               *                       CLE159
+      *  SRAMTZ - Retrieve Daily accrual amt from Fee Amortisation    *                       CLE159
+      *           Extract - Detailcility file.                        *                       CLE159
+      *                                                               *                       CLE159
+      *  CALLED FROM: ACCRUE                                          *                       CLE159
+      *                                                               *                       CLE159
+      *  CALLS: NONE                                                  *                       CLE159
+      *                                                               *                       CLE159
+      *****************************************************************                       CLE159
+     C           SRAMTZ    BEGSR                                                              CLE159
+      *                                                                                       CLE159
+     C           *LIKE     DEFN F2DAFA    TODAFA                                              CLE159
+     C                     Z-ADD*ZEROS    TODAFA                                              CLE159
+      *                                                                                       CLE159
+     C/EXEC SQL                                                                               CLE159
+     C+ SELECT SUM(F2DAFA) INTO :TODAFA                                                       CLE159
+     C+   FROM LEFHS2TD                                                                       CLE159
+      ** Midas LE Fee Amortization Extract                                                    CLE159
+     C+   WHERE F2BRCA = :FEBRCA AND                                                          CLE159
+     C+   F2CNUM = :FECNUM AND                                                                CLE159
+     C+   F2FACL = :FEFACL AND                                                                CLE159
+     C+   F2FSEQ = :FEFSEQ AND                                                                CLE159
+     C+   F2DATE = :WAPDAT                                                                    CLE159
+     C/END-EXEC                                                                               CLE159
+      *                                                                                       CLE159
+      * Use recalculated daily accrual fee                                                    CLE159
+     C                     Z-ADDTODAFA    LKEAMT                                              CLE159
+      *                                                                                       CLE159
+     C                     ENDSR                                                              CLE159
+      *****************************************************************                       CLE159
       /TITLE SR/ZCONV
      C/COPY ZSRSRC,ZCONVZ1
       /TITLE SR/ZXRATEZ1

@@ -1,0 +1,88 @@
+000100180830/*********************************************************************/
+000200180830/*STD    CLPBASEBND                                                  */
+000300180830/*EXI    TEXT('Midas LE Lending Fee Amortisation Driver')            */
+000400180830/*********************************************************************/
+000500180830/*                                                                   */
+000600180830/*       Midas - Customer Lending Module                             */
+000700180830/*                                                                   */
+000800180830/*       LEC000159 - LE Fee Amortisation Driver                      */
+000900180830/*                                                                   */
+001000180830/*       (c) Finastra International Limited 2018                     */
+001100180830/*                                                                   */
+001200180830/*       Last Amend No. CLE159  *Create    Date 18Jul18              */
+001300180830/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+001400180830/*                                                                   */
+001500180830/*********************************************************************/
+001600180830/*                                                                   */
+001700180830/*       CLE159 - LE Fee Amortisation Enhancement                    */
+001800180830/*                                                                   */
+001900180830/*********************************************************************/
+002000180830             PGM        PARM(&CNAM &CSEQ)
+002100180830
+002200180830             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+002300180830             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+002400180830             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+002500180830             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+002600180830
+002700180830             COPYRIGHT TEXT('(c) Finastra International Limited 2018')
+002800180830
+002900180830/* Global monitor message */
+003000180830
+003100180830             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+003200180830                          CMDLBL(ABNOR))
+003300180830
+003400180830             SNDPGMMSG  MSG('LEC000159 - Midas LE Fee Amortisation Driver') +
+003500180830                            TOMSGQ(MRUNQ)
+003600180830
+003700180830             CHGJOB     SWS(00000000)
+003800180830
+003900180830/* Create data area LDA */
+004000180830
+004100180830             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+004200180830             MONMSG     MSGID(CPF1023)
+004300180830
+004400180830             CHGVAR     VAR(&STAT) VALUE('Y')
+004500180830
+004600180830/* Call CB0150 to update restart indicator */
+004700180830
+004800180830             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+004900180830
+005000180830             CLRPFM     FILE(LEFHISTD)
+005100180830             CLRPFM     FILE(LEFHS2TD)
+005200180830
+005300180830             CALL       PGM(LE000159)
+005400180830             
+005500180830             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+005600180830             CALL       PGM(LE000160)
+005700180830
+005800180830             ENDDO
+005900180830
+006000180830/* If no error occured in the program */
+006100180830
+006200180830             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+006300180830
+006400180830/* Call CB0150 to update restart indicator. */
+006500180830
+006600180830                CHGVAR     VAR(&STAT) VALUE('N')
+006700180830                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+006800180830             ENDDO
+006900180830
+007000180830/* Database error processing */
+007100180830
+007200180830             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+007300180830                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+007400180830                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+007500180830                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+007600180830             ENDDO
+007700180830
+007800180830             GOTO       CMDLBL(END)
+007900180830
+008000180830ABNOR:
+008100180830
+008200180830             CHGJOB     SWS(XXXXXX11)
+008300180830             SNDPGMMSG  MSG('LEC000159 Midas LE Fee Amortisation Driver Ended +
+008400180830                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+008500180830             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+008600180830
+008700180830END:
+008800180830             ENDPGM

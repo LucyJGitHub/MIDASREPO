@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD025212           Date 10May14              */
+/*       Last Amend No. CLE159             Date 18Jul18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD025212           Date 10May14              */
 /*                      263074             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /*                      AR817264           Date 09Feb12              */
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CLE159 - LE Fee Amortisation Enhancement                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD025212 - Close of Business: LERC13 - file control         */
 /*                  out of balance                                   */
@@ -151,7 +153,9 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
 /* If RERUN use security copy of fee files */
  
      IF COND(&STAT *EQ 'Y') THEN(DO)
-       IF COND((&CSEQ = 1) *OR (&CSEQ = 2)) THEN(DO)
+/******IF COND((&CSEQ = 1) *OR (&CSEQ = 2)) THEN(DO) */                                   /*CLE159*/
+       IF COND((&CSEQ = 1) *OR (&CSEQ = 2) *OR +
+        (&CSEQ = 5) *OR (&CSEQ = 6)) THEN(DO)                                             /*CLE159*/
           CPYF       FROMFILE(XLKEYFED) TOFILE(LKEYFED) +
                      MBROPT(*REPLACE) CRTFILE(*YES)                                     /*MD025212*/
           MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -219,7 +223,9 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
 /*/COPY WNCPYSRC,LERC13MP1                                           */
    ENDDO
    ELSE CMD(DO)
-     IF COND((&CSEQ = 1) *OR (&CSEQ = 2)) THEN(DO)
+/***IF COND((&CSEQ = 1) *OR (&CSEQ = 2)) THEN(DO) */                                      /*CLE159*/
+    IF COND((&CSEQ = 1) *OR (&CSEQ = 2) *OR +
+        (&CSEQ = 5) *OR (&CSEQ = 6)) THEN(DO)                                             /*CLE159*/
         CPYF       FROMFILE(LKEYFED) TOFILE(&DPLIB/XLKEYFED) +
                    MBROPT(*REPLACE) CRTFILE(*YES)                                       /*MD025212*/
         MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
@@ -299,8 +305,9 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
 /* If the component is part of the ANWD phase switch on U2                                /*262573*/
                                                                                           /*262573*/
 /*           IF         COND(&CSEQ = 2) THEN(CHGJOB SWS(X1XXXXXX)) */        /*262573*/ /*AR817264*/
-             IF         COND((&CSEQ = 2) *OR (&CSEQ = 4)) +
-                          THEN(CHGJOB SWS(X1XXXXXX))                                    /*AR817264*/
+/**********  IF         COND((&CSEQ = 2) *OR (&CSEQ = 4)) +    */           /*AR817264*/  /*CLE159*/
+             IF         COND((&CSEQ = 2) *OR (&CSEQ = 4) *OR (&CSEQ = 6)) +          
+                          THEN(CHGJOB SWS(X1XXXXXX))                                      /*CLE159*/   
                                                                                           /*262573*/
   /* Call FEE ACCRUAL UPDATE & ACCOUNT KEY GERERATION Program */
  

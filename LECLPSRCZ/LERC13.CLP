@@ -307,7 +307,7 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
 /*           IF         COND(&CSEQ = 2) THEN(CHGJOB SWS(X1XXXXXX)) */        /*262573*/ /*AR817264*/
 /**********  IF         COND((&CSEQ = 2) *OR (&CSEQ = 4)) +    */           /*AR817264*/  /*CLE159*/
              IF         COND((&CSEQ = 2) *OR (&CSEQ = 4) *OR (&CSEQ = 6)) +          
-                          THEN(CHGJOB SWS(X1XXXXXX))                                      /*CLE159*/   
+                          THEN(CHGJOB SWS(X1XXXXXX))                                    /*AR817264*/   
                                                                                           /*262573*/
   /* Call FEE ACCRUAL UPDATE & ACCOUNT KEY GERERATION Program */
  

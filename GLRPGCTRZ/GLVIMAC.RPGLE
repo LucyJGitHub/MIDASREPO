@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031707           Date 02Jul15               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031707           Date 02Jul15               *
       *                 MD024136           Date 08Jan14               *
       *                 CGL135A            Date 20Sep13               *
       *                 MD000091           Date 07May13               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031707 - Review account validation type as Customer Number *
       *             may not be numeric anymore.                       *
@@ -886,6 +889,12 @@
      C     DDAccdOk      ANDEQ     'Y'
      C     DDAcsnOk      ANDEQ     'Y'
      C     DDIbcaOk      ANDEQ     'Y'
+     C     CGL148        OrEQ      'Y'                                                        CGL148
+     C     DDAcidOk      AndNE     'N'                                                        CGL148
+     C     DDCycdOk      AndNE     'N'                                                        CGL148
+     C     DDAccdOk      AndNE     'N'                                                        CGL148
+     C     DDAcsnOk      AndNE     'N'                                                        CGL148
+     C     DDIbcaOk      AndNE     'N'                                                        CGL148
       *
       ** Retrieve and validate Account details.
       *
@@ -956,18 +965,22 @@
      C     CEU013        IFEQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'R'
+     C     CGL148        AndNE     'Y'                                                        CGL148
       *
      C     CEU013        OREQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2RNBE        ANDEQ     'Y'
+     C     CGL148        AndNE     'Y'                                                        CGL148
       *
      C     CEU013        OREQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'N'
+     C     CGL148        AndNE     'Y'                                                        CGL148
       *
      C     CEU013        OREQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2NNBI        ANDNE     *BLANKS
+     C     CGL148        AndNE     'Y'                                                        CGL148
       *
       ** Issue warning message for the non-existing Account.
       *
@@ -997,6 +1010,21 @@
       **---------------------------------------------------------------
       *
      C                   ELSE
+                                                                                              CGL148
+      ** If CGL148 is installed and it is not a retail, nostro or                             CGL148
+      ** a title-only account - issue a warning message but allow acct.                       CGL148
+      ** generation; otherwise - use the existing error logic.                                CGL148
+                                                                                              CGL148
+     C     CGL148        IfEQ      'Y'                                                        CGL148
+     C     W2ACTY        AndNE     'R'                                                        CGL148
+     C     W2ACTY        AndNE     'N'                                                        CGL148
+     C     A5TOIN        AndNE     'Y'                                                        CGL148
+     C                   Move      'W'           DDAcidOK                                     CGL148
+     C                   Add       1             WIdx                                         CGL148
+     C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148
+     C                   Eval      WMsgIDXAr(WIdx) = 'GLX0407'                                CGL148
+                                                                                              CGL148
+     C                   ELSE                                                                 CGL148
                                                                                              CGL135A
       /COPY OFCPYSRCZ,CGL135_007                                                             CGL135A
       *
@@ -1009,6 +1037,7 @@
       *
       /COPY OFCPYSRCZ,CGL135_008                                                             CGL135A
                                                                                              CGL135A
+     C                   ENDIF                                                                CGL148
      C                   ENDIF
      C                   ENDIF
       *
@@ -1143,10 +1172,12 @@
      C     CEU013        IFEQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'R'
+     C     CGL148        ANDNE     'Y'                                                        CGL148
       *
      C     CEU013        OREQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'N'
+     C     CGL148        ANDNE     'Y'                                                        CGL148
       *
       ** Issue warning message for the non-existing Account.
       *
@@ -1162,6 +1193,21 @@
       **---------------------------------------------------------------
       *
      C                   ELSE
+                                                                                              CGL148
+      ** If CGL148 is installed and it is not a retail, nostro or                             CGL148
+      ** a title-only account - issue a warning message but allow acct.                       CGL148
+      ** generation; otherwise - use the existing error logic.                                CGL148
+                                                                                              CGL148
+     C     CGL148        Ifeq      'Y'                                                        CGL148
+     C     W2ACTY        ANDNE     'R'                                                        CGL148
+     C     W2ACTY        ANDNE     'N'                                                        CGL148
+     C     A5TOIN        ANDNE     'Y'                                                        CGL148
+     C                   MOVE      'W'           DDAcidOK                                     CGL148
+     C                   Add       1             WIdx                                         CGL148
+     C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148
+     C                   Eval      WMsgIDXAr(WIdx) = 'GLX0407'                                CGL148
+                                                                                              CGL148
+     C                   ELSE                                                                 CGL148
       *
       ** Issue error message for the non-existing Account.
       *
@@ -1169,6 +1215,8 @@
      C                   ADD       1             Idx
      C                   MOVEL     'DDACID'      FldNamXAr(Idx)
      C                   MOVEL     'GLX0054'     MsgIdXAr(Idx)
+                                                                                              CGL148
+     C                   ENDIF                                                                CGL148
       *
      C                   ENDIF
      C                   ENDIF
@@ -1290,10 +1338,12 @@
      C     CEU013        IFEQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'R'
+     C     CGL148        ANDNE     'Y'                                                        CGL148
       *
      C     CEU013        OREQ      'Y'
      C     PINCY         ANDEQ     'Y'
      C     W2ACTY        ANDEQ     'N'
+     C     CGL148        ANDNE     'Y'                                                        CGL148
       *
      C                   MOVE      'N'           DDAcidOK
      C                   ADD       1             Idx
@@ -1301,6 +1351,21 @@
      C                   MOVEL     'GLX0407'     MsgIdXAr(Idx)
       *
      C                   ELSE
+                                                                                              CGL148
+      ** If CGL148 is installed and it is not a retail, nostro or                             CGL148
+      ** a title-only account - issue a warning message but allow acct.                       CGL148
+      ** generation; otherwise - use the existing error logic.                                CGL148
+                                                                                              CGL148
+     C     CGL148        Ifeq      'Y'                                                        CGL148
+     C     W2ACTY        ANDNE     'R'                                                        CGL148
+     C     W2ACTY        ANDNE     'N'                                                        CGL148
+     C     A5TOIN        ANDNE     'Y'                                                        CGL148
+     C                   MOVE      'W'           DDAcidOK                                     CGL148
+     C                   Add       1             WIdx                                         CGL148
+     C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148
+     C                   Eval      WMsgIDXAr(WIdx) = 'GLX0407'                                CGL148
+                                                                                              CGL148
+     C                   ELSE                                                                 CGL148
       *
       ** Issue error message.
       *
@@ -1314,6 +1379,8 @@
       ** set Account flag to *DIFF'.
       *
      C                   MOVEL     '*DIFF'       PAccount
+                                                                                              CGL148
+     C                   ENDIF                                                                CGL148
       *
      C                   ENDIF
      C                   ENDIF
@@ -1482,6 +1549,9 @@
                                                                                               237621
       ** Account Access Security                                                              237621
      C                   PARM                    CGL037            1                          237621
+                                                                                              CGL148
+      ** Automatic Opening of GL accounts                                                     CGL148
+     C                   PARM                    CGL148            1                          CGL148
       *
       ** OUTPUT
       ** ======

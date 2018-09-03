@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD029791           Date 25Aug14              */
+/*       Last Amend No. CMC004             Date 13Jul18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD029791           Date 25Aug14              */
 /*                      MD029611           Date 08Aug14              */
 /*                      MD021155           Date 11Jul13              */
 /*                      CSC056             Date 06Aug12              */
@@ -82,6 +83,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CMC004 - Update MC Control groups after FC Transfer         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD029791 - Remove calling of EMC09 and move it in SCC41119  */
 /*       MD029611 - EMCEXX1 Exposure Header file was corrupted       */
@@ -194,11 +196,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
 /* Initial processing                                              */
- 
+
 /*/COPY WNCPYSRC,SCC0411INT                                        */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -219,27 +221,27 @@
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
 /**********  DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)                          */ /*CSE009 MD021155*/
 /**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                       */ /*CSE009 MD021155*/
- 
+
              DCL        VAR(&CSW208) TYPE(*CHAR) LEN(1) VALUE('N')                      /*BUG21251*/
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                  /*BUG21251*/
              DCL        VAR(&CRE041) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CRE041*/
 /**********  DCL        VAR(&EMSTAT) TYPE(*CHAR) LEN(256)                      /*MD029611 MD029791*/
 /*/COPY WNCPYSRC,SCC0411014                                          */
- 
+
 /* Global MONMSG */                                                                       /*CSC056*/
                                                                                           /*CSC056*/
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO ABNOR)
- 
+
 /* Reset position 60 of dtaara DLSTAT                              */
 /* Reset flag used to check if cm0240 has been previously run      */
 /* during this eod                                                 */
- 
+
              CHGDTAARA  DTAARA(DLSTAT (60 1)) VALUE('N')
- 
+
 /*/COPY WNCPYSRC,SCC0411007                                          */
- 
+
              RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
                                                                                           /*CIR007*/
 /* Send the message to MRUNQ                                       */                     /*CSC056*/
@@ -252,12 +254,12 @@
 /**********  RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                        */ /*CIR007 MD021155*/
 /**********  CHGVAR     VAR(&PRE) VALUE(%SUBSTRING(&SDSTAT 6 2))              */ /*CIR007 MD021155*/
 /**********  CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')                 */ /*CIR007 MD021155*/
- 
+
 /*/COPY WNCPYSRC,SCC0411016                                          */
- 
+
 /* Skip to Treasury Management I/C updates when TSTATUS is         */
 /* 'DRSRECOV'                                                      */
- 
+
              RTVDTAARA  DTAARA(TSTATUS) RTNVAR(&TSTATUS)
              IF         COND(&TSTATUS *EQ 'DRSRECOV') THEN(DO)
                                                                                           /*CSC056*/
@@ -272,7 +274,7 @@
              CHGDTAARA  DTAARA(TSTATUS) VALUE('NORMAL  ')                                 /*CSC056*/
              GOTO       CMDLBL(THEEND)                                                    /*CSC056*/
              ENDDO
- 
+
 /* Check if CSW208 is switched on */                                                    /*BUG21251*/
              CALL       PGM(SWIF2008) PARM(&PRTCD)                                      /*BUG21251*/
              IF         COND(&PRTCD *EQ 'CSW2008')  THEN(DO)                            /*BUG21251*/
@@ -282,11 +284,11 @@
 /*/COPY WNCPYSRC,SCC0411022                                          */
 TAGI:                                                                                   /*BUG27549*/
 /*/COPY WNCPYSRC,SCC0411024                                          */
- 
- 
+
+
 /*/COPY WNCPYSRC,SCC0411029                                          */
 /* If CSC001 then save in use SCC1716 always                       */
- 
+
              CHGVAR     VAR(&RTN) VALUE('       ')
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')
              CHGVAR     VAR(&SARD) VALUE('CSC001')
@@ -294,10 +296,10 @@ TAGI:                                                                           
              IF         COND(&RTN *EQ '       ') THEN(DO)
              ENDDO
              ELSE       CMD(DO)
- 
+
 /* Save journal receivers - Program SDC1715                        */
 /* If database backup is *DISK call SCC1716                        */
- 
+
              CHGVAR     VAR(%SST(&CB_AUTO 1 10)) VALUE('*TODAY    ')
              CALL       PGM(CB0602X) PARM(&CB_RTN_CDE &CB_AUTO)
              IF         COND(%SST(&CB_AUTO 88 5) *EQ '*DISK') THEN(DO)
@@ -314,7 +316,7 @@ TAGI:                                                                           
              ENDDO
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                           CMDLBL(ENDCLPGM))
- 
+
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                                                /*BUG21251*/
              IF         COND(&CSW208 *EQ 'Y') THEN(DO)                                  /*BUG21251*/
@@ -335,7 +337,51 @@ TAGI:                                                                           
 /**********  CALL       PGM(EMC09)                                             /*MD029611 MD029791*/
 /**********  ENDDO                                                             /*MD029611 MD029791*/
 /**********  ENDDO                                                             /*MD029611 MD029791*/
- 
+                                                                                          /*CMC004*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CMC004*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CMC004*/
+             CHGVAR     VAR(&SARD) VALUE('CMC004')                                        /*CMC004*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CMC004*/
+             IF         COND(&RTN *EQ '       ') THEN(DO)                                 /*CMC004*/
+             CPYF       FROMFILE(GEAA2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GECL2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEDL2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEFF2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEIC2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEIER2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)     /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GELE2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEPC2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GESF2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GESP2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(CLEAR2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)     /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEFP2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEST1PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEHM2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GENA2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GESC1PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEPM2PD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)      /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             CPYF       FROMFILE(GEXBPD) TOFILE(GLEODPTD) MBROPT(*ADD) FMTOPT(*MAP)       /*CMC004*/
+             MONMSG     MSGID(CPF2817 CPF2972)                                            /*CMC004*/
+             ENDDO                                                                        /*CMC004*/
+                                                                                          /*CMC004*/
+
 /*/COPY WNCPYSRC,SCH00043                                            */
 /*/COPY WNCPYSRC,SCC0411030                                          */
 /*/COPY WNCPYSRC,SCH00047                                            */
@@ -343,13 +389,13 @@ TAGI:                                                                           
 /*/COPY WNCPYSRC,SCH00044                                            */
 /*/COPY WNCPYSRC,SCH00042                                            */
 /*/COPY WNCPYSRC,SCH00045                                            */
- 
+
              GOTO       ENDCLPGM
- 
+
 DBETAG:
- 
+
 /* Retrieve database error information from LDA                    */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
              SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
@@ -361,36 +407,36 @@ DBETAG:
                            MBROPT(*REPLACE)                                             /*BUG21251*/
              ENDDO                                                                      /*BUG21251*/
              ENDDO
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 /*/COPY WNCPYSRC,SCC0411005                                          */
- 
+
              SNDPGMMSG  MSG('I/C Initiation  ENDED ABNORMALLY') +
                           TOMSGQ(MOPERQ)
- 
+
 /*/COPY WNCPYSRC,SCC0411006                                          */
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 /* If front office DRS installed, call CA0080 to ensure that the   */
 /* after hours flag is set in CAAHFDPP so that PCS can continue    */
- 
+
              IF         COND(%SST(&MMOD 12 1) *EQ 'Y') THEN(DO)
                CHGJOB     SWS(00000000)
                MONMSG     MSGID(CPF0000)
                CALL       PGM(CA0080) PARM(' ')
                MONMSG     MSGID(CPF0000)
              ENDDO
- 
+
              GOTO       THEEND
                                                                                           /*CRE041*/
 ENDCLPGM:                                                                                 /*CSC056*/
 /*/COPY WNCPYSRC,SCH00049                                            */
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 THEEND:      ENDPGM

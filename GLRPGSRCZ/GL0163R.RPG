@@ -12,8 +12,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  Last Amend No. MD050992           Date 26Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD050992           Date 26Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD027587           Date 19Jun14               *
       *                 MD026748           Date 09May13               *
       *                 AR782538           Date 03Jun11               *
@@ -62,6 +63,8 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD028234                               *
       *  MD050992 - SP17: General Ledger Errors CLE051 Switched OFF   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
@@ -1169,6 +1172,14 @@
      C                     MOVEL'Y'       ZAFSMS  1
       * Reset global error indicator
      C                     SETOF                         99*
+     C           WWERF     IFEQ 'Y'                                                           CGL148
+     C                     SETOF                     383940                                   CGL148
+     C                     SETOF                     41                                       CGL148
+     C                     ENDIF                                                              CGL148
+     C           WWERT     IFEQ 'Y'                                                           CGL148
+     C                     SETOF                     464748                                   CGL148
+     C                     SETOF                     49                                       CGL148
+     C                     ENDIF                                                              CGL148
       *================================================================
      CSR         CBEXIT    ENDSR
       /EJECT
@@ -1190,6 +1201,10 @@
      C                     EXSR DCVLDL
       * QUIT if error:
      C   99                GOTO CFEXIT
+     C           WWERF     IFEQ 'Y'                                                           CGL148
+     C           WWERT     OREQ 'Y'                                                           CGL148
+     C                     GOTO CFEXIT                                                        CGL148
+     C                     ENDIF                                                              CGL148
       * Defer confirm/update requested
      C           W0DCF     CABEQ'Y'       CFEXIT
       * No error: update record
@@ -3310,6 +3325,8 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+     C           WUAPRC    OREQ '*CUSCLS'                                                     CGL148
+     C           WUAPRC    OREQ '*CUSDEL'                                                     CGL148
      C                     MOVEL'N'       WUVCNB           Valid Customer
      C                     ELSE
       * CASE: *OTHERWISE
@@ -3661,6 +3678,84 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+      *                                                                                       CGL148
+      ** Check if:                                                                            CGL148
+      **  -- account does not exist but all fields are valid and                              CGL148
+      **  -- account type is not retail or nostro                                             CGL148
+      **  -- account is not "Title Only"                                                      CGL148
+      **  -- if CGL148 is on                                                                  CGL148
+      ** then allow the entry (system will open the account during COB)                       CGL148
+      *                                                                                       CGL148
+     C           A5ACTY    IFNE 'R'                                                           CGL148
+     C           A5ACTY    ANDNE'N'                                                           CGL148
+      *                                                                                       CGL148
+     C           A5TOIN    IFNE 'Y'                                                           CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+      *                                                                                       CGL148
+     C                     MOVEL#DACID    WUCUSF                                              CGL148
+     C                     MOVEL#1CYCF    WUCYCF                                              CGL148
+     C                     MOVEL#1ACCF    WUACCF                                              CGL148
+     C                     MOVEL#1ACSF    WUACSF                                              CGL148
+     C                     MOVEL#1IBCF    WUIBCF                                              CGL148
+     C                     MOVELA5ACTY    WUACTY                                              CGL148
+     C                     MOVEL*BLANKS   WUBPST                                              CGL148
+     C                     MOVEL*BLANKS   WUACCS                                              CGL148
+     C                     MOVEL*BLANKS   WUDACO                                              CGL148
+     C                     MOVEL*BLANKS   WUACNM                                              CGL148
+     C                     MOVEL*BLANKS   WURACF                                              CGL148
+     C                     MOVEL*BLANKS   WURRNM                                              CGL148
+     C                     MOVEL*BLANKS   WURETB                                              CGL148
+      * Save account details                                                                  CGL148
+     C           WWERF     IFEQ *BLANKS                                                       CGL148
+     C                     MOVELWUCUSF    W@CUSF  6                                           CGL148
+     C                     MOVELWUCYCF    W@CYCF  3                                           CGL148
+     C                     MOVELWUACCF    W@ACCF 10                                           CGL148
+     C                     MOVELWUACSF    W@ACSF  2                                           CGL148
+     C                     MOVELWUIBCF    W@IBCF  3                                           CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
+     C           WWERF     IFEQ 'Y'                                                           CGL148
+     C           WUCUSF    ANDEQW@CUSF                                                        CGL148
+     C           WUCYCF    ANDEQW@CYCF                                                        CGL148
+     C           WUACCF    ANDEQW@ACCF                                                        CGL148
+     C           WUACSF    ANDEQW@ACSF                                                        CGL148
+     C           WUIBCF    ANDEQW@IBCF                                                        CGL148
+     C                     MOVE *BLANKS   WWERF                                               CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVELWUCUSF    W@CUSF                                              CGL148
+     C                     MOVELWUCYCF    W@CYCF                                              CGL148
+     C                     MOVELWUACCF    W@ACCF                                              CGL148
+     C                     MOVELWUACSF    W@ACSF                                              CGL148
+     C                     MOVELWUIBCF    W@IBCF                                              CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#DACID    ZA0037                                              CGL148
+     C                     MOVEL#1CYCF    ZA0038                                              CGL148
+     C                     MOVEL#1ACCF    ZA0039                                              CGL148
+     C                     MOVEL#1ACSF    ZA0040                                              CGL148
+      * Send Warning - GL Account not open                                                    CGL148
+     C                     MOVEL'GLW0054' ZAMSID                                              CGL148
+     C                     MOVE 'Y'       WWERF   1                                           CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     3839                                     CGL148
+     C                     SETON                     4041                                     CGL148
+     C                     ENDIF                                                              CGL148
+     C                     ELSE                                                               CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#DACID    ZA0037                                              CGL148
+     C                     MOVEL#1CYCF    ZA0038                                              CGL148
+     C                     MOVEL#1ACCF    ZA0039                                              CGL148
+     C                     MOVEL#1ACSF    ZA0040                                              CGL148
+      * Send message 'Account number not valid'                                               CGL148
+     C                     MOVEL'GLX0054' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     993839                                   CGL148
+     C                     SETON                     4041                                     CGL148
+     C                     ENDIF                                                              CGL148
+     C                     ENDIF                                                              CGL148
+      **                                                                                      CGL148
+     C           A5ACTY    IFEQ 'R'                                                           CGL148
+     C           A5ACTY    OREQ 'N'                                                           CGL148
+      **                                                                                      CGL148
       * Setup message data for message
      C                     MOVEL#DACID    ZA0037           Account Identif
      C                     MOVEL#1CYCF    ZA0038           Currency Code
@@ -3671,6 +3766,7 @@
      C                     EXSR ZASNMS
      C                     SETON                     993839*
      C                     SETON                     4041  *
+     C                     ENDIF                                                              CGL148
       *
      C                     ELSE
       * CASE: *OTHERWISE
@@ -3896,6 +3992,8 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+     C           WUAPRC    OREQ '*CUSCLS'                                                     CGL148
+     C           WUAPRC    OREQ '*CUSDEL'                                                     CGL148
      C                     MOVEL'N'       WUVCNT           Valid Customer
      C                     ELSE
       * CASE: *OTHERWISE
@@ -4259,6 +4357,83 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+      *                                                                                       CGL148
+      ** Check if:                                                                            CGL148
+      **  -- account does not exist but all fields are valid and                              CGL148
+      **  -- account type is not retail or nostro                                             CGL148
+      **  -- account is not "Title Only"                                                      CGL148
+      **  -- if CGL148 is on                                                                  CGL148
+      ** then allow the entry (system will open the account during COB)                       CGL148
+      *                                                                                       CGL148
+     C           A5ACTY    IFNE 'R'                                                           CGL148
+     C           A5ACTY    ANDNE'N'                                                           CGL148
+      *                                                                                       CGL148
+     C           A5TOIN    IFNE 'Y'                                                           CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+      *                                                                                       CGL148
+     C                     MOVEL#DAIDT    WUCNAT                                              CGL148
+     C                     MOVEL#1CYCT    WUCYCT                                              CGL148
+     C                     MOVEL#1ACCT    WUACCT                                              CGL148
+     C                     MOVEL#1ASNT    WUASNT                                              CGL148
+     C                     MOVEL#1IBCT    WUIBCT                                              CGL148
+     C                     MOVELA5ACTY    WUACTY                                              CGL148
+     C                     MOVEL*BLANKS   WUBPST                                              CGL148
+     C                     MOVEL*BLANKS   WUACCS                                              CGL148
+     C                     MOVEL*BLANKS   WUDACO                                              CGL148
+     C                     MOVEL*BLANKS   WUACNM                                              CGL148
+     C                     MOVEL*BLANKS   WURACT                                              CGL148
+     C                     MOVEL*BLANKS   WURRNM                                              CGL148
+     C                     MOVEL*BLANKS   WURETB                                              CGL148
+      * Save account details                                                                  CGL148
+     C           WWERT     IFEQ *BLANKS                                                       CGL148
+     C                     MOVELWUCNAT    W@CUST  6                                           CGL148
+     C                     MOVELWUCYCT    W@CYCT  3                                           CGL148
+     C                     MOVELWUACCT    W@ACCT 10                                           CGL148
+     C                     MOVELWUASNT    W@ACST  2                                           CGL148
+     C                     MOVELWUIBCT    W@IBCT  3                                           CGL148
+     C                     ENDIF                                                              CGL148
+     C           WWERT     IFEQ 'Y'                                                           CGL148
+     C           WUCNAT    ANDEQW@CUST                                                        CGL148
+     C           WUCYCT    ANDEQW@CYCT                                                        CGL148
+     C           WUACCT    ANDEQW@ACCT                                                        CGL148
+     C           WUASNT    ANDEQW@ACST                                                        CGL148
+     C           WUIBCT    ANDEQW@IBCT                                                        CGL148
+     C                     MOVE *BLANKS   WWERT                                               CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVELWUCNAT    W@CUST                                              CGL148
+     C                     MOVELWUCYCT    W@CYCT                                              CGL148
+     C                     MOVELWUACCT    W@ACCT                                              CGL148
+     C                     MOVELWUASNT    W@ACST                                              CGL148
+     C                     MOVELWUIBCT    W@IBCT                                              CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#DAIDT    ZA0058                                              CGL148
+     C                     MOVEL#1CYCT    ZA0059                                              CGL148
+     C                     MOVEL#1ACCT    ZA0060                                              CGL148
+     C                     MOVEL#1ASNT    ZA0061                                              CGL148
+      * Send Warning - GL Account not open                                                    CGL148
+     C                     MOVEL'GLW0054' ZAMSID                                              CGL148
+     C                     MOVE 'Y'       WWERT   1                                           CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     4647                                     CGL148
+     C                     SETON                     4849                                     CGL148
+     C                     ENDIF                                                              CGL148
+     C                     ELSE                                                               CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#DAIDT    ZA0058                                              CGL148
+     C                     MOVEL#1CYCT    ZA0059                                              CGL148
+     C                     MOVEL#1ACCT    ZA0060                                              CGL148
+     C                     MOVEL#1ASNT    ZA0061                                              CGL148
+      * Send message 'Account number not valid'                                               CGL148
+     C                     MOVEL'GLX0054' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     994647                                   CGL148
+     C                     SETON                     4849                                     CGL148
+     C                     ENDIF                                                              CGL148
+     C                     ENDIF                                                              CGL148
+      **                                                                                      CGL148
+     C           A5ACTY    IFEQ 'R'                                                           CGL148
+     C           A5ACTY    OREQ 'N'                                                           CGL148
+      **                                                                                      CGL148
       * Setup message data for message
      C                     MOVEL#DAIDT    ZA0065           Account Identif
      C                     MOVEL#1CYCT    ZA0066           Currency Code
@@ -4269,6 +4444,7 @@
      C                     EXSR ZASNMS
      C                     SETON                     994647*
      C                     SETON                     4849  *
+     C                     ENDIF                                                              CGL148
       *
      C                     ELSE
       * CASE: *OTHERWISE
@@ -5161,6 +5337,19 @@
      C                     MOVE 'N'       CGL008                          CGL008
      C                     END                                            CGL008
       *                                                                   CGL008
+      **  Access SAR details file to see if CGL008 SAR is installed.                          CGL148
+      *                                                                                       CGL148
+     C                     CALL 'AOSARDR0'                                                    CGL148
+     C                     PARM *BLANKS   @RTCD                                               CGL148
+     C                     PARM '*VERIFY' @OPTN                                               CGL148
+     C                     PARM 'CGL148'  @SARD                                               CGL148
+      *                                                                                       CGL148
+     C           @RTCD     IFEQ *BLANK                                                        CGL148
+     C                     MOVE 'Y'       CGL148  1                                           CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVE 'N'       CGL148                                              CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
       ****Access*SAR*details*file*to*see*if*CAP032*SAR*is*installed.***************   186206 BUG2798
       **********                                                                      186206 BUG2798
      C**********           CALL 'AOSARDR0'                                            186206 BUG2798

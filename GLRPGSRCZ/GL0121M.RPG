@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038989           Date 11Jul16               *
+      *  Last Amend No. CGL150             Date 13Jul18               *
+      *  Prev Amend No. CGL149             Date 13Jul18               *
+      *                 CGL148             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD038989           Date 11Jul16               *
       *                 CGL154             Date 13Oct14               *
       *                 LLN022A            Date 03Jun15               *
       *                 MD027587           Date 19Jun14               *
@@ -165,6 +168,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL150 - Value date to back value date if prior to           *
+      *           backvalue period                                    *
+      *  CGL149 - Allow postings to be valued prior to the date       *
+      *           account opened                                      *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038989 - Journal Entry is allowed for Blocked Nostro a/c.  *
       *             Ensure that RETB will be validated for nostro a/cs*
@@ -1707,6 +1716,12 @@
       * End of Fix LN0315
       * CASE: WRK.Access Pgm Return Code is *No Errors
      C           WUAPRC    IFEQ *BLANK                     *IF
+      *                                                                                       CGL148
+      ** If account NOT found and CGL148 is on,                                               CGL148
+      ** convert the Midas day number for value date                                          CGL148
+      *                                                                                       CGL148
+     C           WUAPRC    OREQ '*NRF'                                                        CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
      C*                                                                   CEU013
      C* If CEU013 switchable function is installed, the batch is from     CEU013
      C*   external interface, account currency is an 'In' currency,       CEU013
@@ -2713,6 +2728,63 @@
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
      C/COPY WNCPYSRC,GL0121MC17
+      *                                                                                       CGL148
+      ** Check if:                                                                            CGL148
+      **  -- if account does not exist but all fields are valid and                           CGL148
+      **  -- account type is not retail or nostro                                             CGL148
+      **  -- account is not "Title Only"                                                      CGL148
+      **  -- if CGL148 is On                                                                  CGL148
+      ** then allow the entry (system will open the account during COB)                       CGL148
+      *                                                                                       CGL148
+     C           A5ACTY    IFNE 'R'                                                           CGL148
+     C           A5ACTY    ANDNE'N'                                                           CGL148
+      *                                                                                       CGL148
+     C           A5TOIN    IFNE 'Y'                                                           CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+      *                                                                                       CGL148
+     C                     MOVEL#RACID    WUCUST                                              CGL148
+     C                     MOVEL#1CYCD    WUCYCD                                              CGL148
+     C                     MOVEL#1ACCD    WUACCD                                              CGL148
+     C                     MOVEL#1ACSN    WUACSN                                              CGL148
+     C                     MOVEL#1IBCA    WUIBCA                                              CGL148
+     C                     MOVELA5ACTY    WUACTY                                              CGL148
+     C                     MOVEL*BLANKS   WUBPST                                              CGL148
+     C                     MOVEL*BLANKS   WUACCS                                              CGL148
+     C                     MOVEL*BLANKS   WUDACO                                              CGL148
+     C                     MOVEL*BLANKS   WUACNM                                              CGL148
+     C                     MOVEL*BLANKS   WURACN                                              CGL148
+     C                     MOVEL*BLANKS   WURRNM                                              CGL148
+     C                     MOVEL*BLANKS   WURETB                                              CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#RACID    ZA0047                                              CGL148
+     C                     MOVEL#1CYCD    ZA0048                                              CGL148
+     C                     MOVEL#1ACCD    ZA0049                                              CGL148
+     C                     MOVEL#1ACSN    ZA0050                                              CGL148
+      * Send warning message                                                                  CGL148
+     C                     MOVEL'GLW0054' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     3233                                     CGL148
+     C                     SETON                     3435                                     CGL148
+     C                     EXSR UISUBR                                                        CGL148
+      *                                                                                       CGL148
+     C                     ELSE                                                               CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#RACID    ZA0047                                              CGL148
+     C                     MOVEL#1CYCD    ZA0048                                              CGL148
+     C                     MOVEL#1ACCD    ZA0049                                              CGL148
+     C                     MOVEL#1ACSN    ZA0050                                              CGL148
+      * Send message 'Account number not valid'                                               CGL148
+     C                     MOVEL'GLX0054' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     983233                                   CGL148
+     C                     SETON                     3435                                     CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
+     C           A5ACTY    IFEQ 'R'                                                           CGL148
+     C           A5ACTY    OREQ 'N'                                                           CGL148
+      **                                                                                      CGL148
       * Setup message data for message
      C                     MOVEL#RACID    ZA0047           Account Identif
      C                     MOVEL#1CYCD    ZA0048           Currency code
@@ -2751,6 +2823,7 @@
      C                     SETON                     983233*
      C                     SETON                     3435  *
      C/COPY WNCPYSRC,GL0121MC18
+     C                     ENDIF                                                              CGL148
       *
      C                     ELSE
       * CASE: *OTHERWISE
@@ -6659,6 +6732,12 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVELPRFC      WUPRFC           Profit Centre  CAC001
      C                     ENDIF                                          CEU013
      C/COPY WNCPYSRC,GL0121MC19
+      *                                                                                       CGL148
+      ** If account not found and CGL148 is on, use saved account type.                       CGL148
+     C           WUAPRC    IFNE *BLANK                                                        CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+     C                     MOVEL#1ACTY    WUACTY                                              CGL148
+     C                     ENDIF                                                              CGL148
      C*
       * End of Fix LN0315
       * CASE: WRK.Access Pgm Return Code is *No Errors
@@ -7786,6 +7865,14 @@ E1   C                     ENDIF                                          CGL016
      C                     END                               END 2
      C                     END                               END 1
      C/COPY WNCPYSRC,GL0121MC20
+      *                                                                                       CGL148
+      ** If CGL148 is on and Rundate <> Value date, OR                                        CGL148
+      **    CGL148 is not On:                                                                 CGL148
+      ** Test the date account opened                                                         CGL148
+      *                                                                                       CGL148
+     C           WURDNO    IFNE #1VLDT                                                        CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+     C           CGL148    ORNE 'Y'                                                           CGL148
      C*
      C**   CHECK AGAINST DATE THE ACCOUNT WAS OPENED
      C*
@@ -7793,6 +7880,7 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE '*DTOPER' W0RTN
      C                     END                               END 1
      C/COPY WNCPYSRC,GL0121MC21
+     C                     ENDIF                                                              CGL148
      C*
      C* RESTORE INDICATORS
      C*
@@ -7811,12 +7899,16 @@ E1   C                     ENDIF                                          CGL016
      C                     END                             *FI
       * CASE: PGM.*Return code is VDate Bef Back Value Date
      C           W0RTN     IFEQ '*BVLDER'                  *IF
+     C           CGL150    IFEQ 'Y'                                                           CGL150
+     C                     Z-ADDUUBRUN    #1VLDT                                              CGL150
+     C                     ELSE                                                               CGL150
       * Setup message data for message
      C                     MOVEL#RVDDS    ZA0081           Value date (dis
       * Send message 'Value Date not valid 5'
      C                     MOVEL'GLX0113' ZAMSID
      C                     EXSR ZASNMS
      C                     SETON                     9842  *
+     C                     ENDIF                                                              CGL150
       *
      C                     END                             *FI
       * CASE: PGM.*Return code is VDate Before Last CR Int
@@ -8736,16 +8828,37 @@ E1   C                     ENDIF                                          CGL016
      C**   CHECK AGAINST DATE THE BACK VALUE PERIOD
      C*
      C           #1VLDT    IFLT UUBRUN
+     C           CGL150    IFEQ 'Y'                                                           CGL150
+     C                     Z-ADDUUBRUN    #1VLDT                                              CGL150
+     C                     ELSE                                                               CGL150
      C                     MOVE '*BVLDER' W0RTN
+     C                     ENDIF                                                              CGL150
      C                     END
      C/COPY WNCPYSRC,GL0121MC22
+      *                                                                                       CGL148
+      ** If CGL148 is on and run date <> value date, OR                                       CGL148
+      **    CGL148 is NOT on :                                                                CGL148
+      ** Test the date account opened                                                         CGL148
+      *                                                                                       CGL148
+     C           WURDNO    IFNE #1VLDT                                                        CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+     C           CGL148    ORNE 'Y'                                                           CGL148
      C*
      C**   CHECK AGAINST DATE THE ACCOUNT WAS OPENED
      C*
      C           DACO      IFGT #1VLDT                       IF 1
+     C           CGL149    ANDEQ'N'                                                           CGL149
+     C           DACO      ORGT #1VLDT                                                        CGL149
+     C           UUBRUN    ANDGT#1VLDT                                                        CGL149
+     C           CGL149    ANDEQ'Y'                                                           CGL149
+     C           CGL149    IFEQ 'N'                                                           CGL149
      C                     MOVE '*DTOPER' W0RTN
+     C                     ELSE                                                               CGL149
+     C                     MOVE '*BVLDER' W0RTN                                               CGL149
+     C                     ENDIF                                                              CGL149
      C                     END                               END 1
      C/COPY WNCPYSRC,GL0121MC23
+     C                     ENDIF                                                              CGL148
       * CASE: PGM.*Return code is Value Date Before Ac Open
      C           W0RTN     IFEQ '*DTOPER'                  *IF
       * Setup message data for message
@@ -11453,7 +11566,47 @@ E1   C                     ENDIF                                          CGL016
      C                     MOVE 'N'       CGL014                                              CGL014
      C                     ENDIF                                                              CGL014
       *                                                                   CGL016
+     C                     CALL 'AOSARDR0'                                                    CGL148
+     C                     PARM *BLANKS   WRTCD                                               CGL148
+     C                     PARM '*VERIFY' WOPTN                                               CGL148
+     C                     PARM 'CGL148'  WSARD                                               CGL148
+     C           D@SARD    PARM D@SARD    UUFDY                                               CGL148
+      *                                                                                       CGL148
+     C           WRTCD     IFEQ *BLANKS                                                       CGL148
+     C                     MOVE 'Y'       CGL148  1                                           CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVE 'N'       CGL148                                              CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
      C/COPY WNCPYSRC,GL0121MC08
+      *                                                                                       CGL149
+      ** Check if enhancement CGL149 is on                                                    CGL149
+      *                                                                                       CGL149
+     C                     CALL 'AOSARDR0'                                                    CGL149
+     C                     PARM *BLANKS   WRTCD                                               CGL149
+     C                     PARM '*VERIFY' WOPTN                                               CGL149
+     C                     PARM 'CGL149'  WSARD                                               CGL149
+     C           D@SARD    PARM D@SARD    UUFDY                                               CGL149
+      *                                                                                       CGL149
+     C           WRTCD     IFEQ *BLANKS                                                       CGL149
+     C                     MOVE 'Y'       CGL149  1                                           CGL149
+     C                     ELSE                                                               CGL149
+     C                     MOVE 'N'       CGL149                                              CGL149
+     C                     ENDIF                                                              CGL149
+      *                                                                                       CGL150
+      ** Check if enhancement CGL150 is on                                                    CGL150
+      *                                                                                       CGL150
+     C                     CALL 'AOSARDR0'                                                    CGL150
+     C                     PARM *BLANKS   WRTCD                                               CGL150
+     C                     PARM '*VERIFY' WOPTN                                               CGL150
+     C                     PARM 'CGL150'  WSARD                                               CGL150
+     C           D@SARD    PARM D@SARD    UUFDY                                               CGL150
+      *                                                                                       CGL150
+     C           WRTCD     IFEQ *BLANKS                                                       CGL150
+     C                     MOVE 'Y'       CGL150  1                                           CGL150
+     C                     ELSE                                                               CGL150
+     C                     MOVE 'N'       CGL150                                              CGL150
+     C                     ENDIF                                                              CGL150
       *                                                                                      LLN022A
       ** Check if Profit / Loss feature is installed                                         LLN022A
       *                                                                                      LLN022A

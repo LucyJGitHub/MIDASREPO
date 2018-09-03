@@ -27,8 +27,10 @@
       *================================================================
      F*****************************************************************
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048429           Date 30Oct17               *
+      *  Last Amend No. MD051798           Date 31Aug18               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD048429           Date 30Oct17               *
       *                 MD038989           Date 11Jul16               *
       *                 MD027587           Date 19Jun14               *
       *                 AR1093096          Date 30Sep13               *
@@ -88,6 +90,12 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD051798 - Non-existing accounts are not allowed during      *
+      *             insert even if CGL148 is switched on.             *
+      *             Incorrect RETB value processed when previous      *
+      *             record is not existing.                           *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246, MD026357                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048429 - Batch item cannot be deleted. Recompiled.         *
       *  MD038989 - Journal Entry is allowed for Blocked Nostro a/c.  *
@@ -1352,7 +1360,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: WRK.Access Pgm Return Code is Access Error
@@ -1535,7 +1547,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: WRK.Access Pgm Return Code is Access Error
@@ -1716,6 +1732,8 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+     C           WUAPRC    OREQ '*CUSCLS'                                                     CGL148
+     C           WUAPRC    OREQ '*CUSDEL'                                                     CGL148
       * Setup message data for message
      C                     MOVEL#1ACNB    ZA0059           Assoc. Customer
       * Send message 'Assoc.Cust.No. not found'
@@ -1812,6 +1830,8 @@
      C           WUAPRC    OREQ '*SELECT'
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
+     C           WUAPRC    OREQ '*CUSCLS'                                                     CGL148
+     C           WUAPRC    OREQ '*CUSDEL'                                                     CGL148
      C                     MOVEL'N'       WUVCNB           Valid Customer
      C                     ELSE
       * CASE: *OTHERWISE
@@ -2282,7 +2302,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: WRK.Account type is Retail
@@ -2676,7 +2700,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: WRK.Account type is Retail
@@ -3190,7 +3218,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: WRK.Access Pgm Return Code is Access Error
@@ -3207,6 +3239,104 @@
      C           WUAPRC    OREQ '*NOSEL'
      C           WUAPRC    OREQ '*ID'
      C/COPY WNCPYSRC,GL0122MC05
+      *                                                                                       CGL148
+      ** Check if:                                                                            CGL148
+      **  -- Account does not exist but all fields are valid and                              CGL148
+      **  -- account type is not retail or nostro                                             CGL148
+      **  -- account is not "Title Only"                                                      CGL148
+      **  -- if CGL148 is on                                                                  CGL148
+      ** then allow the entry (system will open the account during COB)                       CGL148
+      **-----------------------------------------------------------------                     CGL148
+      *                                                                                       CGL148
+      * Access Account Codes. - Account Codes  *                                              CGL148
+      *                                                                                       CGL148
+      *  Access Account codes file for the following fields                                   CGL148
+      *  A/c Type, A/c Name, Account Section, Account Subtype                                 CGL148
+      *                                                                                       CGL148
+     C                     MOVEL#1ACCD    UUACCD                                              CGL148
+     C                     CALL 'AOACODR0'                                                    CGL148
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7                                           CGL148
+     C                     PARM '*KEY'    UUAPOP  7                                           CGL148
+     C                     PARM           UUACCD                                              CGL148
+     C           D@ACOD    PARM *BLANK    UUSDY                                               CGL148
+      *                                                                                       CGL148
+      * Assign work field to file field values.                                               CGL148
+      *                                                                                       CGL148
+     C                     MOVELA5ACCD    WUACCD                                              CGL148
+     C                     MOVELA5ACTY    WUACTY                                              CGL148
+      *                                                                                       CGL148
+     C           WUAPRC    IFEQ '*CLOSE'                                                      CGL148
+     C           WUAPRC    OREQ '*ERROR'                                                      CGL148
+     C           WUAPRC    OREQ '*OPEN'                                                       CGL148
+     C           WUAPRC    OREQ '*KEY'                                                        CGL148
+     C           WUAPRC    OREQ '*NRF'                                                        CGL148
+     C           WUAPRC    OREQ '*EMPTY'                                                      CGL148
+     C           WUAPRC    OREQ '*EOF'                                                        CGL148
+     C           WUAPRC    OREQ '*OPTION'                                                     CGL148
+     C           WUAPRC    OREQ '*CALL'                                                       CGL148
+     C           WUAPRC    OREQ '*SELECT'                                                     CGL148
+     C           WUAPRC    OREQ '*NOSEL'                                                      CGL148
+     C           WUAPRC    OREQ '*ID'                                                         CGL148
+     C                     MOVEL#1ACCD    ZA0056                                              CGL148
+      * Send message 'Account Code not found'                                                 CGL148
+     C                     MOVEL'GLX0046' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     9834                                     CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVELWUACCD    #1ACCD                                              CGL148
+     C                     MOVELA5ACTY    #1ACTY                                              CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
+     C           #1ACTY    IFNE 'R'                                                           CGL148
+     C           #1ACTY    ANDNE'N'                                                           CGL148
+      *                                                                                       CGL148
+     C           A5TOIN    IFNE 'Y'                                                           CGL148
+     C           CGL148    ANDEQ'Y'                                                           CGL148
+      *                                                                                       CGL148
+     C                     MOVEL#RACID    WUCUST                                              CGL148
+     C                     MOVEL#1CYCD    WUCYCD                                              CGL148
+     C                     MOVEL#1ACCD    WUACCD                                              CGL148
+     C                     MOVEL#1ACSN    WUACSN                                              CGL148
+     C                     MOVEL#1IBCA    WUIBCA                                              CGL148
+     C                     MOVEL#1ACTY    WUACTY                                              CGL148
+     C                     MOVEL*BLANKS   WUBPST                                              CGL148
+     C                     MOVEL*BLANKS   WUACCS                                              CGL148
+     C                     MOVEL*BLANKS   WUDACO                                              CGL148
+     C                     MOVEL*BLANKS   WUACNM                                              CGL148
+     C                     MOVEL*BLANKS   WURACN                                              CGL148
+     C                     MOVEL*BLANKS   WURRNM                                              CGL148
+     C                     MOVEL*BLANKS   WURETB                                              CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#RACID    ZA0030                                              CGL148
+     C                     MOVEL#1CYCD    ZA0031                                              CGL148
+     C                     MOVEL#1ACCD    ZA0032                                              CGL148
+     C                     MOVEL#1ACSN    ZA0033                                              CGL148
+      * Send message 'GL ACCOUNT NOT OPEN.'                                                   CGL148
+     C                     MOVEL'GLW0053' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C           W0PMD     IFNE 'ADD'                                                       MD051798
+     C                     SETON                     98                                       CGL148
+     C                     ENDIF                                                            MD051798
+     C                     SETON                     3233                                     CGL148
+     C                     SETON                     3435                                     CGL148
+     C                     ELSE                                                               CGL148
+      * Setup message data for message                                                        CGL148
+     C                     MOVEL#RACID    ZA0030                                              CGL148
+     C                     MOVEL#1CYCD    ZA0031                                              CGL148
+     C                     MOVEL#1ACCD    ZA0032                                              CGL148
+     C                     MOVEL#1ACSN    ZA0033                                              CGL148
+      * Send message 'Account number not valid'                                               CGL148
+     C                     MOVEL'GLX0054' ZAMSID                                              CGL148
+     C                     EXSR ZASNMS                                                        CGL148
+     C                     SETON                     983233                                   CGL148
+     C                     SETON                     3435                                     CGL148
+     C                     ENDIF                                                              CGL148
+      **                                                                                      CGL148
+     C                     ENDIF                                                              CGL148
+      **                                                                                      CGL148
+     C           #1ACTY    IFEQ 'R'                                                           CGL148
+     C           #1ACTY    OREQ 'N'                                                           CGL148
+      **                                                                                      CGL148
       * Setup message data for message
      C                     MOVEL#RACID    ZA0030           Account Identif
      C                     MOVEL#1CYCD    ZA0031           Currency code
@@ -3218,6 +3348,7 @@
      C                     SETON                     983233*
      C                     SETON                     3435  *
      C/COPY WNCPYSRC,GL0122MC06
+     C                     ENDIF                                                              CGL148
       *
      C                     ELSE
       * CASE: *OTHERWISE
@@ -3337,7 +3468,11 @@
      C                     MOVELANAM      WUACNM           Account Name
      C                     MOVELACNO      WURACN           Retails Account Num
      C                     MOVELRRNM      WURRNM           Relative rec No Memos
+     C           WUAPRC    IFEQ *BLANKS                                                     MD051798
      C                     MOVELRETB      WURETB           Retail Indic'trLN0315
+     C                     ELSE                                                             MD051798
+     C                     BITOF'01234567'WURETB                                            MD051798
+     C                     ENDIF                                                            MD051798
      C*
       * End of Fix LN0315
       * CASE: PGM.*Program mode is *ADD
@@ -4509,6 +4644,20 @@
       *                                                                   S01408
      C/COPY WNCPYSRC,GL0122MCP1                                           S01408
       *                                                                   S01408
+      *                                                                                       CGL148
+      ** Check if CGL148 is insalled                                                          CGL148
+     C                     CALL 'AOSARDR0'                                                    CGL148
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7                                           CGL148
+     C                     PARM '*VERIFY' UUAPOP  7                                           CGL148
+     C                     PARM 'CGL148'  UUSARN  6                                           CGL148
+     C           D@SARD    PARM *BLANKS   UUFDY                                               CGL148
+      *                                                                                       CGL148
+     C           WUAPRC    IFEQ *BLANKS                                                       CGL148
+     C                     MOVE 'Y'       CGL148  1                                           CGL148
+     C                     ELSE                                                               CGL148
+     C                     MOVE 'N'       CGL148                                              CGL148
+     C                     ENDIF                                                              CGL148
+      *                                                                                       CGL148
      C                     MOVE *BLANK    P0RTN
      C                     MOVE *BLANK    W0RTN   7
      C                     MOVEL*BLANK    W0RSL   1

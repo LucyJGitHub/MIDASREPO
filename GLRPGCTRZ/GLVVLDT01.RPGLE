@@ -18,8 +18,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 08May13               *
+      *  Last Amend No. CGL150             Date 13Jul18               *
+      *  Prev Amend No. CGL149             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD000091           Date 08May13               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +40,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL150 - Value date to back value date if prior to           *
+      *           backvalue period                                    *
+      *  CGL149 - Allow postings to be valued prior to the date       *
+      *           account opened                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -186,6 +192,12 @@
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
       *
+     C     CGL150        IFEQ      'Y'                                                        CGL150
+     C                   EVAL      ZDAYNO = WVLDT                                             CGL150
+     C                   EXSR      ZDATE2                                                     CGL150
+     C                   EVAL      DDVLDT = *BLANKS                                           CGL150
+     C                   MOVEL     ZDATE         DDVLDT                                       CGL150
+     C                   ENDIF                                                                CGL150
      C                   Z-ADD     WVLDT         B2VLDT
       *
      C                   RETURN
@@ -357,6 +369,10 @@
      C                   MOVEL     'Y'           WNRFD
      C                   ENDIF
       *
+     C     CGL150        IFEQ      'Y'                                                        CGL150
+     C     WVLDT         ANDLT     WBRUN                                                      CGL150
+     C                   Z-ADD     WBRUN         WVLDT                                        CGL150
+     C                   ENDIF                                                                CGL150
      C                   SELECT
       *
       ** If CEU013 is installed, Currency is an In Ccy,
@@ -371,6 +387,11 @@
       ** Value Date is before Date Account Opened.
       *
      C     F1DACO        WHENGT    WVLDT
+     C     CGL149        ANDEQ     'N'                                                        CGL149
+     C     F1DACO        ORGT      WVLDT                                                      CGL149
+     C     WBRUN         ANDGT     WVLDT                                                      CGL149
+     C     CGL149        ANDEQ     'Y'                                                        CGL149
+     C     CGL149        IFEQ      'N'                                                        CGL149
      C                   MOVE      'N'           DDVldtOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDVLDT'      FldNamXAr(Idx)
@@ -378,6 +399,15 @@
      C**********         MOVEL     DDVLDT        MsgDtaXAr(Idx)                             MD000091
      C                   EVAL      BLen = %Len(%Trim(DDVLDT))                               MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(DDVLDT)                   MD000091
+     C                   ELSE                                                                 CGL149
+     C     CGL150        IFEQ      'N'                                                        CGL150
+     C                   MOVE      'N'           DDVldtOK                                     CGL149
+     C                   ADD       1             Idx                                          CGL149
+     C                   MOVEL     'DDVLDT'      FldNamXAr(Idx)                               CGL149
+     C                   MOVEL     'GLX0113'     MsgIdXAr(Idx)                                CGL149
+     C                   MOVEL     DDVLDT        MsgDtaXAr(Idx)                               CGL149
+     C                   ENDIF                                                                CGL150
+     C                   ENDIF                                                                CGL149
       *
       ** Value Date is before computed backvalue date.
       *
@@ -474,6 +504,36 @@
      C                   ELSE                                                   CGL010
      C                   EVAL      CGL010 = 'N'                                 CGL010
      C                   ENDIF                                                  CGL010
+      *                                                                                       CGL149
+      ** Access Switchable Features file to check if CGL149 is                                CGL149
+      ** installed.                                                                           CGL149
+      *                                                                                       CGL149
+     C                   CALL      'AOSARDR0'                                                 CGL149
+     C                   PARM      *Blanks       @Rtcd                                        CGL149
+     C                   PARM      '*KEY   '     @Optn                                        CGL149
+     C                   PARM      'CGL149'      WSard                                        CGL149
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL149
+      *                                                                                       CGL149
+     C                   IF        @Rtcd = *Blank                                             CGL149
+     C                   MOVE      'Y'           CGL149            1                          CGL149
+     C                   ELSE                                                                 CGL149
+     C                   MOVE      'N'           CGL149                                       CGL149
+     C                   ENDIF                                                                CGL149
+      *                                                                                       CGL150
+      ** Access Switchable Features file to check if CGL150 is                                CGL150
+      ** installed                                                                            CGL150
+      *                                                                                       CGL150
+     C                   CALL      'AOSARDR0'                                                 CGL150
+     C                   PARM      *Blanks       @Rtcd                                        CGL150
+     C                   PARM      '*KEY   '     @Optn                                        CGL150
+     C                   PARM      'CGL150'      WSard                                        CGL150
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL150
+      *                                                                                       CGL150
+     C                   IF        @Rtcd = *Blank                                             CGL150
+     C                   MOVE      'Y'           CGL150            1                          CGL150
+     C                   ELSE                                                                 CGL150
+     C                   MOVE      'N'           CGL150                                       CGL150
+     C                   ENDIF                                                                CGL150
       *                                                                         CGL010
       ** Access General Ledger details                                          CGL010
       *                                                                         CGL010

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CGL135A            Date 10Jul13               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -387,33 +389,33 @@
      C                   ENDIF                                                               BUG6979
       *                                                                                      BUG6979
       /COPY WNCPYSRC,GLBITPV003
- 
+
       ** Validate Account.
       ***Validate*non-retail*account*if*CGL037*is*on*******************                BG9009 237621
- 
+
       /COPY WNCPYSRC,GLBITPV004
- 
+
      C                   EXSR      SRACID
      C**********         If        CGL037 = 'Y'                                        BG9009 237621
      C**********         ExSr      ChkRetAc                                            BG9009 237621
      C**********         EndIf                                                         BG9009 237621
- 
+
       /COPY WNCPYSRC,GLBITPV005
- 
+
       ** Validate Posting Amount.
- 
+
       /COPY WNCPYSRC,GLBITPV006
- 
+
      C                   EXSR      SRPTAM
- 
+
       /COPY WNCPYSRC,GLBITPV007
- 
+
       ** Validate Debit/Credit Indicator.
- 
+
       /COPY WNCPYSRC,GLBITPV008
       *
      C                   EXSR      SRDRCR
- 
+
       /COPY WNCPYSRC,GLBITPV009
                                                                                               CGL014
       ** Validate for Sufficient Funds                                                        CGL014
@@ -433,75 +435,75 @@
       /COPY WNCPYSRC,GLBITPV041                                                               CGL014
                                                                                               CGL014
      C                   ENDIF                                                                CGL014
- 
+
       ** Validate Narrative.
- 
+
       /COPY WNCPYSRC,GLBITPV010
- 
+
      C                   EXSR      SRNARR
- 
+
       /COPY WNCPYSRC,GLBITPV011
- 
+
       ** Validate Transaction Type/Subtype.
- 
+
       /COPY WNCPYSRC,GLBITPV012
- 
+
      C                   EXSR      SRTTYP
- 
+
       /COPY WNCPYSRC,GLBITPV013
- 
+
       ** Validate Value Date.
- 
+
       /COPY WNCPYSRC,GLBITPV014
- 
+
      C                   EXSR      SRVDAT
      C/COPY OFCPYSRCZ,CGL135_068                                                             CGL135A
- 
+
       /COPY WNCPYSRC,GLBITPV015
- 
+
       ** Validate Cheque Number.
- 
+
       /COPY WNCPYSRC,GLBITPV016
- 
+
      C                   EXSR      SRCQNB
- 
+
       /COPY WNCPYSRC,GLBITPV017
- 
+
       ** For Swift Reference input, no need to validate.  If not
       ** blanks, move value to Valid file field.
- 
+
       /COPY WNCPYSRC,GLBITPV018
- 
+
      C     DDSWCR        IFNE      *BLANKS
      C                   MOVE      DDSWCR        B2SWCR
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITPV019
- 
+
       ** Validate Profit Centre.
- 
+
       /COPY WNCPYSRC,GLBITPV020
- 
+
      C     BKPRCU        IFEQ      'Y'
      C                   EXSR      SRPRCN
      C                   ELSE
      C                   MOVEL     *BLANKS       DDPRCN
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITPV021
- 
+
       ** Validate Error Overrides.
- 
+
       /COPY WNCPYSRC,GLBITPV022
- 
+
      C                   EXSR      SREROV
- 
+
       /COPY WNCPYSRC,GLBITPV023
- 
+
       ** Validate Associated Customer.
- 
+
       /COPY WNCPYSRC,GLBITPV024
- 
+
       ** Check if Profit / Loss feature is installed                                         LLN022A
       *                                                                                      LLN022A
      C     LLN021        IFEQ      'Y'                                                       LLN022A
@@ -542,49 +544,49 @@
      C                   ENDIF                                                               LLN022A
       *                                                                                      LLN022A
      C                   EXSR      SRACUS
- 
+
       /COPY WNCPYSRC,GLBITPV025
- 
+
       ** Validate Book Code.
- 
+
       /COPY WNCPYSRC,GLBITPV026
- 
+
      C                   EXSR      SRBKCD
- 
+
       /COPY WNCPYSRC,GLBITPV027
- 
+
       ** Validate Reverse/Void Indicator.
- 
+
       /COPY WNCPYSRC,GLBITPV028
- 
+
      C                   EXSR      SRRVIN
- 
+
       /COPY WNCPYSRC,GLBITPV029
- 
+
       ** Validate No. of Items.
- 
+
       /COPY WNCPYSRC,GLBITPV030
- 
+
      C     PCMTR         IFEQ      'Y'
      C                   EXSR      SRNITM
      C                   ELSE
      C                   MOVEL     *BLANKS       DDNITM
      C                   Z-ADD     1             B2NITM
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITPV031
- 
+
       ** Validate Original Currency/Amount.
- 
+
       /COPY WNCPYSRC,GLBITPV032
- 
+
      C     CEU013        IFEQ      'Y'
      C                   EXSR      SRORCA
      C                   ELSE
      C                   MOVEL     *BLANKS       DDOCCY
      C                   MOVEL     *BLANKS       DDOAMT
      C                   ENDIF
- 
+
       ** If MidasPlus user then it's possible to edit or delete a batch item                  CAP084
       ** therefore need to set up the batch item number                                       CAP084
                                                                                               CAP084
@@ -644,28 +646,28 @@
      C                   ENDIF                                                                CAP084
                                                                                               CAP084
       /COPY WNCPYSRC,GLBITPV033
- 
+
       ** For non-existing Nostro, if CEU013 is *ON and Currency
       ** is an 'In' Currency, then default Account Type to 'N'.
- 
+
       /COPY WNCPYSRC,GLBITPV034
- 
+
      C     PInvAct       IFEQ      '*NOSTRO'
      C                   MOVEL     'N'           B2ACTY
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITPV035
- 
+
       ** For non-existing Retail A/c No., if CEU013 is *ON and
       ** Currency is an 'In' Currency, then default Account
       ** Type to 'R'.
- 
+
       /COPY WNCPYSRC,GLBITPV036
- 
+
      C     PInvAct       IFEQ      '*RETAIL'
      C                   MOVEL     'R'           B2ACTY
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITPV037
       *                                                                                       CRE023
       ** Call Two O'clock validation if CRE023 is on.                                         CRE023
@@ -769,7 +771,7 @@
       *                                                                                     BUG23742
      C                   ENDIF                                                              BUG23742
      C/COPY OFCPYSRCZ,CGL135_069                                                             CGL135A
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -843,6 +845,9 @@
                                                                                               237621
       ** Account Access Security                                                              237621
      C                   PARM                    CGL037                                       237621
+                                                                                              CGL148
+      ** Automatic Opening of GL accounts                                                     CGL148
+     C                   PARM                    CGL148                                       CGL148
       *
       ** OUTPUT
       ** ======
@@ -2216,6 +2221,21 @@
      C                   MOVE      'N'           CGL064                                       CGL064
      C                   MOVE      'N'           PCGL064                                      CGL064
      C                   END                                                                  CGL064
+      *                                                                                       CGL148
+      ** Access SAR details file to determine if CGL148 is on.                                CGL148
+      *                                                                                       CGL148
+     C                   CALLB     'AOSARDR0'                                                 CGL148
+     C                   PARM      *BLANKS       @RTCD                                        CGL148
+     C                   PARM      '*VERIFY'     @OPTN                                        CGL148
+     C                   PARM      'CGL148'      @SARD                                        CGL148
+     C     SCSARD        PARM      SCSARD        UUFDY                                        CGL148
+      *                                                                                       CGL148
+     C     @RTCD         IFEQ      *BLANK                                                     CGL148
+     C                   MOVE      'Y'           CGL148            1                          CGL148
+     C                   ELSE                                                                 CGL148
+     C                   MOVE      'N'           CGL148                                       CGL148
+     C                   ENDIF                                                                CGL148
+      *                                                                                       CGL148
       *                                                                                       CGL064
      C/COPY OFCPYSRCZ,CGL135_072                                                             CGL135A
      C                   ENDSR

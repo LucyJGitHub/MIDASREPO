@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD045032           Date 07Apr18               *
-      *  Prev Amend No. CLE169             Date 07Apr18               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD045032           Date 07Apr18               *
+      *                 CLE169             Date 07Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD023117           Date 13Jan15               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246                               *
       *  MD045032 - No account movement for new attached facility     *
       *             Renamed FCCU, FACT and FCNO fields of ACCNTJ*     *
       *             files to generate movement to correct facility.   *
@@ -415,6 +418,7 @@
      D PACOD           S             10
      D CLE023          S              1
      D CLE169          S              1                                                       CLE169
+     D CGL148          S              1                                                       CGL148
 
       ** Key Field Variables
 
@@ -2921,10 +2925,45 @@
       ** Database error
 
      C                   IF        *IN15 = *ON
+     C     CGL148        Ifeq      'Y'                                                        CGL148
+     C     TRYP          andeq     'ME'                                                       CGL148
+                                                                                              CGL148
+      ** Access Account Code details                                                          CGL148
+     C                   move      ACDE          PACOD                                        CGL148
+     C                   Callb     'AOACODR0'                                                 CGL148
+     C                   Parm      *BLANKS       PRTCD                                        CGL148
+     C                   Parm      '*KEY   '     POPTN                                        CGL148
+     C                   Parm                    PACOD                                        CGL148
+     C     SDACOD        Parm      SDACOD        DSSDY                                        CGL148
+                                                                                              CGL148
+      ** Database error                                                                       CGL148
+     C                   If        Prtcd <> *Blanks                                           CGL148
+     C                   eval      DBFile = 'SDACODPD'                                        CGL148
+     C                   eval      DBase = 12                                                 CGL148
+     C                   eval      DBKey = PACOD                                              CGL148
+     C                   exsr      *PSSR                                                      CGL148
+     C                   Endif                                                                CGL148
+                                                                                              CGL148
+     C     A5ACTY        Ifne      'R'                                                        CGL148
+     C     A5ACTY        andne     'N'                                                        CGL148
+     C                   EVAL      ACFCCU  = *BLANKS                                          CGL148
+     C                   EVAL      ACFACT  = 0                                                CGL148
+     C                   EVAL      ACFCNO  = 0                                                CGL148
+     C                   EVAL      WCUST = *BLANKS                                            CGL148
+     C                   EVAL      WFCLT = 0                                                  CGL148
+     C                   EVAL      WFCSQ = 0                                                  CGL148
+     C                   else                                                                 CGL148
+     C                   EVAL      DBFILE = 'ACCNTAB'                                         CGL148
+     C                   EVAL      DBASE = 9                                                  CGL148
+     C                   EVAL      DBKEY = WDBKEY2                                            CGL148
+     C                   EXSR      *PSSR                                                      CGL148
+     C                   Endif                                                                CGL148
+     C                   Else                                                                 CGL148
      C                   EVAL      DBFILE = 'ACCNTAB'
      C                   EVAL      DBASE = 9
      C                   EVAL      DBKEY = WDBKEY2
      C                   EXSR      *PSSR
+     C                   EndIf                                                                CGL148
      C                   ELSE
 
      C**********         EVAL      WCUST = FCCU                                     BUG3035 MD045032
@@ -5445,6 +5484,19 @@
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CLE023 = 'Y'
      C                   ENDIF
+      *                                                                                       CGL148
+      ** Check if CGL148 is switched on                                                       CGL148
+      *                                                                                       CGL148
+     C                   EVAL      CGL148 = 'N'                                               CGL148
+     C                   Callb     'AOSARDR0'                                                 CGL148
+     C                   Parm      *BLANKS       PRTCD                                        CGL148
+     C                   Parm      '*VERIFY'     POPTN                                        CGL148
+     C                   Parm      'CGL148'      PSARD                                        CGL148
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CGL148
+                                                                                              CGL148
+     C                   If        PRtcd = *Blanks                                            CGL148
+     C                   eval      CGL148 = 'Y'                                               CGL148
+     C                   Endif                                                                CGL148
       *                                                                                       CLE169
       ** Check if CLE169 is switched on                                                       CLE169
       *                                                                                       CLE169

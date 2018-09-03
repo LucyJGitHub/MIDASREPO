@@ -34,7 +34,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051689           Date 10Aug18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. AR659451           Date 29Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -54,6 +55,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+     F*  MD051689 - Additional Fix for CGL148. Added an error message *
+     F*             when a batch with a closed/non-existent account   *
+     F*             is submitted for Real Time Posting.               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR659451 - Search mechanism with scan limit is misleading to *
       *             users. Remove the scanning limitation and scan    *
@@ -125,9 +129,16 @@
      IDSFDY     E DSDSFDY                                                 CGL010
       ** DS for Access Object Programs                                    CGL010
       *                                                                   CGL010
+     IDSSDY     E DSDSSDY                                                                   MD051689
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                 MD051689
+     I*                                                                                     MD051689
      IINFDS#    E DSY2I#DSP
       * Display file information data structure
       *
+     IACCNT     E DSACCNTAB                                                                 MD051689
+      **  EXTERNAL DS FOR ACCOUNT DETAILS                                                   MD051689
+     I              LCD                             WLCD                                    MD051689
+      *                                                                                     MD051689
      IINFDS1    E DSY2I1DSP
       * File information data structure
       *
@@ -1011,6 +1022,48 @@
       * Submit Batch for Posting
       * CASE: RCD.*SFLSEL is Submit Batch for Posting
      C           #1SEL     IFEQ 'S'                        *IF
+      *                                                                                     MD051689
+      ** If CGL148 is installed, and batch selected has an Account that                     MD051689
+      ** is closed or not existing, send error message                                      MD051689
+      *                                                                                     MD051689
+     C           CGL148    IFEQ 'Y'                                                         MD051689
+     C                     MOVE 'N'       WADNE   1                                         MD051689
+     C           #1BTNB    SETLLGLJENPL4                                                    MD051689
+     C                     READEGLJENPL4                 90                                 MD051689
+     C           *IN90     DOWEQ*OFF                                                        MD051689
+     C           WADNE     ANDEQ'N'                                                         MD051689
+      *                                                                                     MD051689
+      ** Non-Retail account type                                                            MD051689
+      *                                                                                     MD051689
+     C                     CALL 'AOACCTR0'                                                  MD051689
+     C                     PARM *BLANKS   WRTCD                                             MD051689
+     C                     PARM '*KEY   ' WOPTN                                             MD051689
+     C                     PARM *BLANKS   WRETL  10                                         MD051689
+     C                     PARM BTCUST    WCNUM   6                                         MD051689
+     C                     PARM BTCYCD    WCCY    3                                         MD051689
+     C                     PARM BTACCD    WACCD  10                                         MD051689
+     C                     PARM BTACSN    WACSQ   2                                         MD051689
+     C                     PARM BTIBCA    WBRCA   3                                         MD051689
+     C           ACCNT     PARM ACCNT     DSSDY                                             MD051689
+      *                                                                                     MD051689
+     C           WRTCD     IFNE *BLANKS                                                     MD051689
+     C           WRTCD     OREQ *BLANKS                                                     MD051689
+     C           DACC      ANDNE0                                                           MD051689
+     C                     MOVE 'Y'       WADNE                                             MD051689
+     C                     END                                                              MD051689
+      *                                                                                     MD051689
+     C                     READEGLJENPL4                 90                                 MD051689
+     C                     ENDDO                                                            MD051689
+      *                                                                                     MD051689
+     C           WADNE     IFEQ 'Y'                                                         MD051689
+     C                     MOVEL'GLW0055' ZAMSID                                            MD051689
+     C                     EXSR ZASNMS                                                      MD051689
+     C                     MOVE *ON       *IN98                                             MD051689
+     C                     MOVE *ON       *IN38                                             MD051689
+     C                     MOVE 'Y'       WUERRS                                            MD051689
+     C                     GOTO DCEXIT                                                      MD051689
+     C                     ENDIF                                                            MD051689
+     C                     ENDIF                                                            MD051689
       *                                                                   CGL010
       ** If CGL010 is installed, and batch selected has a future valued   CGL010
       ** non-retail journal entry, send error message                     CGL010
@@ -1615,6 +1668,21 @@
      C                     ELSE                                           CGL010
      C                     MOVE 'N'       CGL010                          CGL010
      C                     ENDIF                                          CGL010
+      *                                                                                     MD051689
+      ** Access Switchable Features file to check if CGL148 is                              MD051689
+      ** installed.                                                                         MD051689
+      *                                                                                     MD051689
+     C                     CALL 'AOSARDR0'                                                  MD051689
+     C                     PARM *BLANKS   WRTCD   7                                         MD051689
+     C                     PARM '*VERIFY' WOPTN   7                                         MD051689
+     C                     PARM 'CGL148'  WSARD   6                                         MD051689
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD051689
+      *                                                                                     MD051689
+     C           WRTCD     IFEQ *BLANK                                                      MD051689
+     C                     MOVEL'Y'       CGL148  1                                         MD051689
+     C                     ELSE                                                             MD051689
+     C                     MOVE 'N'       CGL148                                            MD051689
+     C                     ENDIF                                                            MD051689
      C                     MOVEL'N'       WUERRS           Error on screen
       * Initialise subfile control
      C                     EXSR MEIZ#2

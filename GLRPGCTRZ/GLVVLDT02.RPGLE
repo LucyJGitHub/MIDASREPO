@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026695           Date 12May14               *
+      *  Last Amend No. CGL150             Date 13Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026695           Date 12May14               *
       *                 MD000091           Date 08May13               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL150 - Value date to back value date if prior to           *
+      *           backvalue period                                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026695 - Warning message not accurate / complete.          *
       *           - Correct the format of replacement data to display *
@@ -142,6 +145,11 @@
       *
       ** Index for arrays of warning  message ids, etc.
      D WIx             S              3P 0
+      ** Switchable Features Details File                                                     CGL150
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL150
+      *                                                                                       CGL150
+      ** DS for Access Object Programs                                                        CGL150
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CGL150
       *
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -178,6 +186,10 @@
      C                   EVAL      RetCodeIn = 'ERROR'
      C                   ENDIF
       *
+     C     CGL150        IFEQ      'Y'                                                        CGL150
+     C                   EVAL      PDaynoIn = WVLDT                                           CGL150
+     C                   EXSR      SRDat2                                                     CGL150
+     C                   ENDIF                                                                CGL150
      C                   Z-ADD     WVLDT         B2VLDT
       *
      C                   RETURN
@@ -398,6 +410,10 @@
      C                   MOVEL     'Y'           WNRFD
      C                   ENDIF
       *
+     C     CGL150        IFEQ      'Y'                                                        CGL150
+     C     WVLDT         ANDLT     WBRUN                                                      CGL150
+     C                   Z-ADD     WBRUN         WVLDT                                        CGL150
+     C                   ENDIF                                                                CGL150
      C                   SELECT
       *
       ** If CEU013 is installed, Currency is an In Ccy,
@@ -643,6 +659,21 @@
       *
       ** Valid JE Item (DS) - for file update
      C                   PARM                    PVBITP
+      *                                                                                       CGL150
+      ** Access Switchable Features file to check if CGL150 is                                CGL150
+      ** installed                                                                            CGL150
+      *                                                                                       CGL150
+     C                   CALL      'AOSARDR0'                                                 CGL150
+     C                   PARM      *Blanks       @Rtcd                                        CGL150
+     C                   PARM      '*KEY   '     @Optn                                        CGL150
+     C                   PARM      'CGL150'      @SARD                                        CGL150
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL150
+      *                                                                                       CGL150
+     C                   IF        @Rtcd = *Blank                                             CGL150
+     C                   MOVE      'Y'           CGL150            1                          CGL150
+     C                   ELSE                                                                 CGL150
+     C                   MOVE      'N'           CGL150                                       CGL150
+     C                   ENDIF                                                                CGL150
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

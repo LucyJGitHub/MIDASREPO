@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046060           Date 21Jun17               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
       *                 MD046910           Date 25Jul17               *
       *                 MD042261           Date 07Jun17               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046060 - GLBTNOPD is not defined with COMMIT               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -594,6 +597,7 @@
       *
      C     BRBIUF        IFNE      'Y'
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
+     C     CGL148        AndEQ     'N'                                                        CGL148
      C     BRBTSF        ORNE      'H'
      C     CGL182        ANDEQ     'N'                                                        CGL182
      C     BRWSID        ORNE      *BLANKS
@@ -799,7 +803,7 @@
                                                                                              BUG7426
      C/COPY WNCPYSRC,GLH00766
      C                   ELSE                                                                 CAP084
- 
+
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C**********         MOVE      B1BTSF        BRBTSF                                CAP084 239155
      C     CGL016        IFEQ      'Y'                                                     AR792734A
@@ -1505,6 +1509,21 @@
      C                   MOVE      'N'           CGL013                                     BUG26246
      C                   ENDIF                                                              BUG26246
       *                                                                                     BUG26246
+      ** Check if CGL148 is installed                                                         CGL148
+      *                                                                                       CGL148
+     C                   CallB     'AOSARDR0'                                                 CGL148
+     C                   Parm      *BLANKS       PRTNC                                        CGL148
+     C                   Parm      '*VERIFY'     POPTN                                        CGL148
+     C                   Parm      'CGL148'      PSARD                                        CGL148
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CGL148
+                                                                                              CGL148
+     C                   If        PRTNC = *BLANKS                                            CGL148
+     C                   move      'Y'           CGL148            1                          CGL148
+     C                   Else                                                                 CGL148
+     C                   Eval      CGL148 = 'N'                                               CGL148
+     C                   EndIf                                                                CGL148
+                                                                                              CGL148
+      *                                                                                       CGL148
       ** Access SAR details file to see if CGL125 is installed.                               CSC054
       *                                                                                       CSC054
      C                   CALLB     'AOSARDR0'                                                 CSC054

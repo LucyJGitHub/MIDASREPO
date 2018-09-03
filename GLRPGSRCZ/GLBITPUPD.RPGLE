@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047741           Date 31Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CGL148             Date 13Jul18               *
+      *  Prev Amend No. MD025083           Date 13Jul18               *
+      *                 MD047741           Date 31Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
       *                 MD043023           Date 25Jul17               *
@@ -87,6 +89,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL148 - Automatic Opening of GL accounts                    *
+      *         - Includes fix MD024246 and MD025083                  *
+      *  MD025083 - Hash integer input for Journal entry sent         *
+      *             via API are changed add validation for JAVAUSER.  *
       *  MD047741 - (1) apply MD020761                                *
       *             (2) in case of update, take into account whether  *
       *             the record was found during CHAIN                 *
@@ -1408,6 +1414,7 @@ E1   C                   ENDIF                                                  
       *
      C     BRBIUF        IFNE      'Y'
      C     JAVAUSER      ANDEQ     'N'                                                        CAP084
+     C     CGL148        andeq     'N'                                                        CGL148
      C     BRBTSF        ORNE      'H'
      C     CGL182        ANDEQ     'N'                                                        CGL182
      C     BRWSID        ORNE      *BLANKS
@@ -1468,6 +1475,10 @@ E1   C                   ENDIF                                                  
       ** Reduce Hash Item No. calculated by 1.                                                CAP084
       *                                                                                       CAP084
      C                   SUB       1             BRHINC                                       CAP084
+                                                                                              CGL148
+     C     CGL148        Ifeq      'Y'                                                        CGL148
+     C                   z-add     BRHINC        BRHINI                                       CGL148
+     C                   Endif                                                                CGL148
                                                                                               CAP084
       ** Else Add to the totals....                                                           CAP084
                                                                                               CAP084
@@ -1489,6 +1500,11 @@ E1   C                   ENDIF                                                  
       ** Increment Hash Item No. calculated by 1.
       *
      C                   ADD       1             BRHINC
+                                                                                              CGL148
+     C     CGL148        Ifeq      'Y'                                                        CGL148
+     C     JAVAUSER      ANDEQ     'Y'                                                      MD025083
+     C                   z-add     BRHINC        BRHINI                                       CGL148
+     C                   Endif                                                                CGL148
       *                                                                                       CAP084
       ** If it is an update then delete the original amount from the calculated               CAP084
       ** amount as the new amount has now been added to it.                                   CAP084
@@ -2565,6 +2581,21 @@ E1   C                   ENDIF                                                  
      C                   EXSR      *PSSR                                                    BUG23742
       *                                                                                     BUG23742
      C                   ENDIF                                                              BUG23742
+      *                                                                                       CGL148
+      ** Check if CGL148 is installed                                                         CGL148
+      *                                                                                       CGL148
+     C                   CallB     'AOSARDR0'                                                 CGL148
+     C                   Parm      *BLANKS       PRTNC                                        CGL148
+     C                   Parm      '*VERIFY'     POPTN                                        CGL148
+     C                   Parm      'CGL148'      PSARD                                        CGL148
+     C     SCSARD        Parm      SCSARD        DSFDY                                        CGL148
+                                                                                              CGL148
+     C                   If        PRTNC = *BLANKS                                            CGL148
+     C                   move      'Y'           CGL148            1                          CGL148
+     C                   Else                                                                 CGL148
+     C                   Eval      CGL148 = 'N'                                               CGL148
+     C                   EndIf                                                                CGL148
+                                                                                              CGL148
       *                                                                                       CSC054
       ***Access*SAR*details*file*to*see*if*CGL125*is*installed.                      CSC054 MD039859
       ** Access SAR details file to see if CAP209 is installed.                             MD039859

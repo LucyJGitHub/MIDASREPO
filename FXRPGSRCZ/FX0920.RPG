@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049836           Date 08Mar18               *
-      *  Prev Amend No. MD048795           Date 15Jan18               *
+      *  Last Amend No. MD049756           Date 10Mar18               *      
+      *  Prev Amend No. MD049836           Date 08Mar18               *
+      *                 MD048795           Date 15Jan18               *
       *                 MD049118           Date 29Jan18               *
       *                 MD048346           Date 20Dec17               *
       *                 MD048077           Date 07Nov17               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049756 - FX Netting improvements.                          *      
       *  MD049836 - When settlement is '00' check if split settlements*
       *             exist. If so, populate with 'Multiple Settlements'*
       *  MD048795 - When settlement is retail, account number is not  *
@@ -508,7 +510,8 @@
       *                                                                                       CSD015
       **  Watch List Fields Storage Data Structure.                                           CSD015
      IWBC         DS                                                                          CSD015
-     I                                        1  12 BCOURN                                    CSD015
+     I**********                              1  12 BCOURN                           CSD015 MD049756
+     I                                        1  12 XXOURN                                  MD049756
      I                                       13  20 BCIBNK                                    CSD015
      I**********                             21  260BCOBNK                             CSD015 CSD027
      I**********                             27  320BCORDC                             CSD015 CSD027
@@ -522,6 +525,7 @@
      I                                      100 134 BCDTP2                                    CSD015
      I                                      135 169 BCDTP3                                    CSD015
      I                                      170 204 BCDTP4                                    CSD015
+     I                                      205 222 BCOURN                                  MD049756
       *
       **  Subfile options - Enquire, Delete, View, Print or Amend.
      I              'E, D, V, P or A.'    C         SFOPT
@@ -1598,6 +1602,9 @@
       * Reverse old projections before fields are updated.                                  MD045437
       *                                                                                     MD045437
      C           PMRONS    IFNE AMOURN                                                      MD045437
+     C           AMBSIN    ANDEQ'B'                                                         MD049756
+     C           PMPONS    ORNE AMOURN                                                      MD049756
+     C           AMBSIN    ANDEQ'S'                                                         MD049756
      C                     EXSR RSCRV2                                                      MD045437
      C                     ENDIF                                                            MD045437
       *
@@ -3224,6 +3231,7 @@
      C                     ENDIF                                                            MD048346
      C                     ENDIF                                                            MD048346
      C                     ENDIF                                                            MD048346
+     C                     MOVELAMBRCA    NWBRCA                                            MD049756
       *                                                                                     MD044815
       ** Get branch internal customer.                                                      MD044815
       *                                                                                     MD044815
@@ -3715,16 +3723,17 @@
       *                                                                                     MD021333
       ** Move account details                                                               MD021333
       *                                                                                     MD021333
+     C                     MOVE *BLANKS   D#RTL                                             MD049756
      C                     MOVE A7CYCD    D#CCY   3                                         MD021333
      C                     MOVE A7ACCD    D#ACOD 10                                         MD021333
      C                     MOVE A7CUST    D#CNUM  6                                         MD021333
      C                     MOVE A7ACSN    D#ACSQ                                            MD021333
      C                     MOVE A7BRCD    D#BRCA  3                                         MD021333
-     C                     MOVE A7CYCD    NCCY                                              MD023887
-     C                     MOVE A7ACCD    ACOD                                              MD023887
-     C                     MOVE A7CUST    CNUM                                              MD023887
-     C                     MOVE A7ACSN    ACSQ                                              MD023887
-     C                     MOVE A7BRCD    NBRCA                                             MD023887
+     C**********           MOVE A7CYCD    NCCY                                     MD023887 MD049756
+     C**********           MOVE A7ACCD    ACOD                                     MD023887 MD049756
+     C**********           MOVE A7CUST    CNUM                                     MD023887 MD049756
+     C**********           MOVE A7ACSN    ACSQ                                     MD023887 MD049756
+     C**********           MOVE A7BRCD    NBRCA                                    MD023887 MD049756
       *                                                                                     MD023887
      C                     ENDIF                                                            MD021333
       *                                                                                     MD021333
@@ -3967,19 +3976,22 @@
      C           AMSETM    IFEQ 4                                                           MD045437
      C           AMSETM    OREQ 5                                                           MD045437
      C                     MOVEL'P'       C#ATYP                                            MD045437
-     C                     MOVELAMOURN    ##SETA                                            MD045437
+     C**********           MOVELAMOURN    ##SETA                                   MD045437 MD049756
      C                     ENDIF                                                            MD045437
      C                     ENDIF                                                            MD045437
      C                     ENDIF                                                            MD045437
      C                     MOVE AMCCYD    C#CCY                                             MD045437
      C                     MOVELAMOURN    ##SETA                                            MD045437
+     C                     MOVELAMONOB    ##BRCA                                            MD049756
      C                     EXSR CHKACT                                                      MD045437
       *                                                                                     MD045437
      C           NRECI     IFEQ 'D'                                                         MD045437
      C                     MOVELAMNETR    AMNET  20                                         MD045437
      C                     MOVE 'N'       EXTFLG                                            MD045437
-     C           AMNET     SETLLRSACMTLG                                                    MD045437
-     C           AMNET     READERSACMTLG            N    12                                 MD045437
+     C********** AMNET     SETLLRSACMTLG                                           MD045437 MD049756
+     C********** AMNET     READERSACMTLG            N    12                        MD045437 MD049756
+     C           AMNET     SETGTRSACMTLG                                                    MD049756
+     C           AMNET     REDPERSACMTLG            N    12                                 MD049756
      C           *IN12     DOWEQ'0'                                                         MD045437
      C           EXTFLG    ANDEQ'N'                                                         MD045437
       *                                                                                     MD045437
@@ -3995,14 +4007,21 @@
       *                                                                                     MD045437
       ** Reverse the Debit/Credit Indicator                                                 MD045437
       *                                                                                     MD045437
-     C           DORC      IFEQ 1                                                           MD045437
-     C                     Z-ADD0         DORC                                              MD045437
-     C                     ELSE                                                             MD045437
-     C                     Z-ADD1         DORC                                              MD045437
-     C                     ENDIF                                                            MD045437
+     C********** DORC      IFEQ 1                                                  MD045437 MD049756
+     C**********           Z-ADD0         DORC                                     MD045437 MD049756
+     C**********           ELSE                                                    MD045437 MD049756
+     C**********           Z-ADD1         DORC                                     MD045437 MD049756
+     C**********           ENDIF                                                   MD045437 MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C                     Z-ADD1         DORC                                              MD049756
+     C                     ELSE                                                             MD049756
+     C                     Z-ADD0         DORC                                              MD049756
+     C                     ENDIF                                                            MD049756
       *                                                                                     MD045437
      C                     Z-ADDBJRDNB    PTDT                                              MD045437
      C                     MOVELAMNETR    OTR1                                              MD045437
+     C                     MOVE 'R'       OTR1                                              MD049756
+     C                     MOVE '*'       NRTD                                              MD049756
       *                                                                                     MD045437
      C                     WRITEQACMTLG                                                     MD045437
       *                                                                                     MD045437
@@ -4015,10 +4034,155 @@
      C                     MOVE 'Y'       EXTFLG                                            MD045437
      C                     ENDIF                                                            MD045437
       *                                                                                     MD045437
-     C           AMNET     READERSACMTLG            N    12                                 MD045437
+     C********** AMNET     READERSACMTLG            N    12                        MD045437 MD049756
+     C           AMNET     REDPERSACMTLG            N    12                                 MD049756
       *                                                                                     MD045437
      C                     ENDDO                                                            MD045437
      C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+      ** Set the branch for retrieving internal customer FX netting ICD                     MD049756
+      *                                                                                     MD049756
+     C           SVBRCA    IFNE *BLANKS                                                     MD049756
+     C                     MOVELSVBRCA    ODBRCA  3                                         MD049756
+     C                     ELSE                                                             MD049756
+     C           AMONOB    IFNE *BLANKS                                                     MD049756
+     C                     MOVELAMONOB    ODBRCA                                            MD049756
+     C                     ELSE                                                             MD049756
+     C                     MOVELBBBRCD    ODBRCA                                            MD049756
+     C                     ENDIF                                                            MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C           SVBRCA    IFNE *BLANKS                                                     MD049756
+     C                     MOVELSVBRCA    NWBRCA  3                                         MD049756
+     C                     ELSE                                                             MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C           PMROBR    ANDNE*BLANKS                                                     MD049756
+     C                     MOVELPMROBR    NWBRCA                                            MD049756
+     C                     ELSE                                                             MD049756
+     C           AMBSIN    IFEQ 'S'                                                         MD049756
+     C           PMPOBR    ANDNE*BLANKS                                                     MD049756
+     C                     MOVELPMPOBR    NWBRCA                                            MD049756
+     C                     ELSE                                                             MD049756
+     C                     MOVELBBBRCD    NWBRCA                                            MD049756
+     C                     ENDIF                                                            MD049756
+     C                     ENDIF                                                            MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+      ** Get branch internal customer.                                                      MD049756
+      *                                                                                     MD049756
+     C                     CALL 'AOBRCHR1'                                                  MD049756
+     C                     PARM *BLANKS   @RTCD                                             MD049756
+     C                     PARM '*KEY   ' @OPTN                                             MD049756
+     C                     PARM ODBRCA    @BRCA                                             MD049756
+     C           SDBRCH    PARM SDBRCH    SDSSDY                                            MD049756
+      *                                                                                     MD049756
+     C           @RTCD     IFNE *BLANK                                                      MD049756
+     C                     Z-ADD6         DBASE                                             MD049756
+     C                     MOVEL'SDBRCHPD'DBFILE                                            MD049756
+     C                     MOVELODBRCA    DBKEY                                             MD049756
+     C                     OUT  LDA                                                         MD049756
+     C                     EXSR *PSSR                                                       MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C                     MOVELA8BICN    ODCNUM  6                                         MD049756
+     C                     MOVELAMCCYD    ODCCY   3                                         MD049756
+     C                     MOVELBNNEAC    ODACOD 100                                        MD049756
+      *                                                                                     MD049756
+      ** Reverse projection for FX netting ICD                                              MD049756
+      *                                                                                     MD049756
+     C           ODBRCA    IFNE NWBRCA                                                      MD049756
+      *                                                                                     MD049756
+     C                     MOVELODCNUM    CUSN                                              MD049756
+     C                     MOVELODCCY     CCYD                                              MD049756
+     C                     MOVEL'01'      ASNC                                              MD049756
+     C                     MOVELODBRCA    BRCA                                              MD049756
+     C                     MOVELODACOD    ACDE                                              MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C                     Z-ADD0         DORC                                              MD049756
+     C                     ELSE                                                             MD049756
+     C                     Z-ADD1         DORC                                              MD049756
+     C                     ENDIF                                                            MD049756
+     C                     MOVEL'NT'      TRYP                                              MD049756
+     C                     MOVELAMNETR    NRTD                                              MD049756
+     C                     MOVEL'000000'  TNMR                                              MD049756
+     C                     Z-ADDAMDBUY    MVAM                                              MD049756
+     C                     Z-ADDAMVALD    VUDT                                              MD049756
+     C                     Z-ADDBJRDNB    PTDT                                              MD049756
+     C                     MOVELAMNETR    OTR1                                              MD049756
+     C                     MOVE 'R'       OTR1                                              MD049756
+     C                     MOVE '*'       NRTD                                              MD049756
+      *Check if account exists before writing                                               MD049756
+     C                     EXSR EXIST                                                       MD049756
+     C           *OFF      IFEQ *IN85                                                       MD049756
+     C                     WRITEQACMTLF                                                     MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C                     EXSR UPDMEM                                                      MD049756
+     C                     EXSR UPDPRN                                                      MD049756
+     C                     EXSR UPDOLP                                                      MD049756
+      *                                                                                     MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C           AMNETR    SETLLDLDEALL1                                                    MD049756
+     C           AMNETR    READEDLDEALL1                 82                                 MD049756
+     C                     ELSE                                                             MD049756
+     C           AMNETR    SETLLDLDEALL2                                                    MD049756
+     C           AMNETR    READEDLDEALL2                 82                                 MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C           *IN82     DOWEQ'0'                                                         MD049756
+     C                     MOVELDLNO      @TNMR                                             MD049756
+     C                     MOVELODCCY     @CCYD                                             MD049756
+      *                                                                                     MD049756
+      ** Read through RSACMTPD file until correct projection for the                        MD049756
+      ** deal is determined.                                                                MD049756
+      *                                                                                     MD049756
+     C                     MOVE 'N'       EXTFLG                                            MD049756
+     C           RSACKY    SETLLRSACMTLF                                                    MD049756
+     C           RSACKY    READERSACMTLF                 11                                 MD049756
+      *                                                                                     MD049756
+     C           *IN11     DOWEQ*OFF                                                        MD049756
+     C           EXTFLG    ANDEQ'N'                                                         MD049756
+      *                                                                                     MD049756
+     C           DTYP      IFEQ TRYP                                                        MD049756
+     C           CUSN      ANDEQODCNUM                                                      MD049756
+     C           CCYD      ANDEQODCCY                                                       MD049756
+     C           ACDE      ANDEQODACOD                                                      MD049756
+     C           ASNC      ANDEQ01                                                          MD049756
+     C           BRCA      ANDEQODBRCA                                                      MD049756
+      *                                                                                     MD049756
+     C           DORC      IFEQ 0                                                           MD049756
+     C                     Z-ADD1         DORC                                              MD049756
+     C                     ELSE                                                             MD049756
+     C                     Z-ADD0         DORC                                              MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C                     Z-ADDBJRDNB    PTDT                                              MD049756
+     C                     MOVELAMNETR    OTR1                                              MD049756
+     C                     MOVE 'R'       OTR1                                              MD049756
+     C                     MOVE '*'       NRTD                                              MD049756
+      *                                                                                     MD049756
+     C                     WRITEQACMTLG                                                     MD049756
+      *                                                                                     MD049756
+      ** Update MEMOS, PRONO, OLPOS                                                         MD049756
+      *                                                                                     MD049756
+     C                     EXSR UPDMEM                                                      MD049756
+     C                     EXSR UPDPRN                                                      MD049756
+     C                     EXSR UPDOLP                                                      MD049756
+     C                     MOVE 'Y'       EXTFLG                                            MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C           RSACKY    READERSACMTLF                 11                                 MD049756
+     C                     ENDDO                                                            MD049756
+      *                                                                                     MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C           AMNETR    READEDLDEALL1                 82                                 MD049756
+     C                     ELSE                                                             MD049756
+     C           AMNETR    READEDLDEALL2                 82                                 MD049756
+     C                     ENDIF                                                            MD049756
+     C                     ENDDO                                                            MD049756
+      *                                                                                     MD049756
+     C                     ENDIF                                                            MD049756
       *                                                                                     MD045437
      C                     ENDSR                                                            MD045437
       *****************************************************************                     MD045437
@@ -4032,6 +4196,8 @@
       *****************************************************************                     MD045437
      C           RSCNT2    BEGSR                                                            MD045437
       *                                                                                     MD045437
+     C                     MOVEL*BLANKS   NRTD                                              MD049756
+     C                     MOVEL*BLANKS   OTR1                                              MD049756
      C                     MOVEL'NT'      TRYP                                              MD045437
      C                     MOVELAMNETR    NRTD                                              MD045437
      C                     MOVEL'000000'  TNMR                                              MD045437
@@ -4046,6 +4212,7 @@
      C                     Z-ADD1         DORC                                              MD045437
      C                     ENDIF                                                            MD045437
       *                                                                                     MD045437
+     C           AMSETM    IFNE 0                                                           MD049756
      C           AMSETM    IFEQ 1                                                           MD045437
      C           AMSETM    OREQ 2                                                           MD045437
      C           AMSETM    OREQ 7                                                           MD045437
@@ -4065,6 +4232,7 @@
      C                     ENDIF                                                            MD045437
      C                     MOVELAMCCYD    C#CCY                                             MD045437
      C                     MOVELAMOURN    ##SETA                                            MD045437
+     C                     MOVELAMONOB    ##BRCA                                            MD049756
      C                     EXSR CHKACT                                                      MD045437
       *                                                                                     MD045437
      C           NRECI     IFEQ 'D'                                                         MD045437
@@ -4082,37 +4250,109 @@
      C                     EXSR UPDPRN                                                      MD045437
      C                     EXSR UPDOLP                                                      MD045437
      C                     ENDIF                                                            MD045437
+     C                     ENDIF                                                            MD049756
       *                                                                                     MD045437
       ** If settlement method is 00, use netting account.                                   MD045437
       *                                                                                     MD045437
-     C           AMSETM    IFEQ 0                                                           MD045437
+     C********** AMSETM    IFEQ 0                                                  MD045437 MD049756
+      *                                                                                     MD049756
+      ** Insert new FX netting ICD                                                          MD049756
+      *                                                                                     MD049756
+     C           NWBRCA    IFNE ODBRCA                                                      MD049756
      C                     CALL 'AOBRCHR1'                                                  MD045437
      C                     PARM *BLANKS   @RTCD                                             MD045437
      C                     PARM '*KEY   ' @OPTN                                             MD045437
-     C                     PARM AMBRCA    @BRCA                                             MD045437
+     C**********           PARM AMBRCA    @BRCA                                    MD045437 MD049756
+     C                     PARM NWBRCA    @BRCA                                             MD049756
      C           SDBRCH    PARM SDBRCH    SDSSDY                                            MD045437
       *                                                                                     MD045437
      C           @RTCD     IFNE *BLANK                                                      MD045437
-     C                     Z-ADD5         DBASE                                             MD045437
+     C**********           Z-ADD5         DBASE                                    MD045437 MD049756
+     C                     Z-ADD7         DBASE                                             MD049756
      C                     MOVEL'SDBRCHPD'DBFILE                                            MD045437
-     C                     MOVELNBRCA     DBKEY                                             MD045437
+     C**********           MOVELNBRCA     DBKEY                                    MD045437 MD049756
+     C                     MOVELNWBRCA    DBKEY                                             MD049756
      C                     OUT  LDA                                                         MD045437
      C                     EXSR *PSSR                                                       MD045437
      C                     ELSE                                                             MD045437
      C                     MOVELA8BICN    CUSN                                              MD045437
      C                     MOVELAMCCYD    CCYD                                              MD045437
      C                     MOVEL'01'      ASNC                                              MD045437
-     C                     MOVELAMBRCA    BRCA                                              MD045437
+     C**********           MOVELAMBRCA    BRCA                                     MD045437 MD049756
+     C                     MOVELNWBRCA    BRCA                                              MD049756
      C                     MOVELBNNEAC    ACDE                                              MD045437
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C                     Z-ADD1         DORC                                              MD049756
+     C                     ELSE                                                             MD049756
+     C                     Z-ADD0         DORC                                              MD049756
+     C                     ENDIF                                                            MD049756
       *Check if account exists before writing                                               MD049118
      C                     EXSR EXIST                                                       MD049118
      C           *OFF      IFEQ *IN85                                                       MD049118
      C                     WRITEQACMTLF                                                     MD045437
-     C                     ENDIF                                                            MD049118
+     C**********           ENDIF                                                   MD049118 MD049756
      C*                                                                                     MD049118
      C                     EXSR UPDMEM                                                      MD045437
      C                     EXSR UPDPRN                                                      MD045437
      C                     EXSR UPDOLP                                                      MD045437
+      *                                                                                     MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C           AMNETR    SETLLDLDEALL1                                                    MD049756
+     C           AMNETR    READEDLDEALL1                 82                                 MD049756
+     C                     ELSE                                                             MD049756
+     C           AMNETR    SETLLDLDEALL2                                                    MD049756
+     C           AMNETR    READEDLDEALL2                 82                                 MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C           *IN82     DOWEQ'0'                                                         MD049756
+     C                     MOVELDLNO      @TNMR                                             MD049756
+     C                     MOVELODCCY     @CCYD                                             MD049756
+      *                                                                                     MD049756
+      ** Read through RSACMTPD file until correct projection for the                        MD049756
+      ** deal is determined.                                                                MD049756
+      *                                                                                     MD049756
+     C                     MOVE 'N'       EXTFLG                                            MD049756
+     C           RSACKY    SETLLRSACMTLF                                                    MD049756
+     C           RSACKY    READERSACMTLF                 11                                 MD049756
+      *                                                                                     MD049756
+     C           *IN11     DOWEQ*OFF                                                        MD049756
+     C           EXTFLG    ANDEQ'N'                                                         MD049756
+      *                                                                                     MD049756
+     C           DTYP      IFEQ TRYP                                                        MD049756
+     C           CUSN      ANDEQODCNUM                                                      MD049756
+     C           CCYD      ANDEQODCCY                                                       MD049756
+     C           ACDE      ANDEQODACOD                                                      MD049756
+     C           ASNC      ANDEQ01                                                          MD049756
+     C           BRCA      ANDEQODBRCA                                                      MD049756
+     C                     MOVELA8BICN    CUSN                                              MD049756
+     C                     MOVELAMCCYD    CCYD                                              MD049756
+     C                     MOVEL'01'      ASNC                                              MD049756
+     C                     MOVELNWBRCA    BRCA                                              MD049756
+     C                     MOVELBNNEAC    ACDE                                              MD049756
+     C                     Z-ADDBJRDNB    PTDT                                              MD049756
+     C                     Z-ADDAMVALD    VUDT                                              MD049756
+      *                                                                                     MD049756
+     C                     WRITEQACMTLG                                                     MD049756
+      *                                                                                     MD049756
+      ** Update MEMOS, PRONO, OLPOS                                                         MD049756
+      *                                                                                     MD049756
+     C                     EXSR UPDMEM                                                      MD049756
+     C                     EXSR UPDPRN                                                      MD049756
+     C                     EXSR UPDOLP                                                      MD049756
+     C                     MOVE 'Y'       EXTFLG                                            MD049756
+     C                     ENDIF                                                            MD049756
+      *                                                                                     MD049756
+     C           RSACKY    READERSACMTLF                 11                                 MD049756
+     C                     ENDDO                                                            MD049756
+      *                                                                                     MD049756
+     C           AMBSIN    IFEQ 'B'                                                         MD049756
+     C           AMNETR    READEDLDEALL1                 82                                 MD049756
+     C                     ELSE                                                             MD049756
+     C           AMNETR    READEDLDEALL2                 82                                 MD049756
+     C                     ENDIF                                                            MD049756
+     C                     ENDDO                                                            MD049756
+      *                                                                                     MD049756
+     C                     ENDIF                                                            MD049756
      C                     ENDIF                                                            MD045437
      C                     ENDIF                                                            MD045437
      C                     ENDSR                                                            MD045437

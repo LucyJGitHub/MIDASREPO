@@ -9,9 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD050391           Date 09Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG25207           Date 28Jul09              */
+/*                      BUG25207           Date 28Jul09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD050391 - Include purge processing for NTRANDQD            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG25207 - FTC0100 00001 failed                             */
 /*       CFT008 - Funds Transfer/Swift Messages MT102                */
@@ -130,6 +132,8 @@
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DLIB/NTRANDDX)
              MONMSG     MSGID(CPF2105)
+             DLTF       FILE(&DLIB/NTRANDQDX)                                           /*MD050391*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD050391*/
              DLTF       FILE(&DLIB/NTRANZZX)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DLIB/FT102DPDX)                         /*CFT008*/
@@ -209,6 +213,10 @@
                           TOFILE(&DLIB/NTRANZZX) MBROPT(*ADD) +
                           CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(&DMLIB/NTRANDQD) +
+                          TOFILE(&DLIB/NTRANDQDX) MBROPT(*ADD) +
+                          CRTFILE(*YES)                                                 /*MD050391*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD050391*/
 /*                                                                   */
              CPYF       FROMFILE(&DMLIB/FT102DPD) +
                           TOFILE(&DLIB/FT102DPDX) MBROPT(*ADD) +
@@ -302,6 +310,10 @@
                           TOFILE(&DMLIB/NTRANZZ) MBROPT(*REPLACE) +
                           CRTFILE(*NO)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(&DLIB/NTRANDQDX) +
+                          TOFILE(&DMLIB/NTRANDQD) MBROPT(*REPLACE) +
+                          CRTFILE(*NO)                                                  /*MD050391*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD050391*/
              CPYF       FROMFILE(&DLIB/FT102DPDX) +
                           TOFILE(&DMLIB/FT102DPD) MBROPT(*REPLACE) +
                           CRTFILE(*NO)                                /*CFT008*/
@@ -351,6 +363,9 @@
                           TOMSGQ(MOPERQ MRUNQ)
                GOTO     ABNORMAL
              ENDDO
+                                                                                        /*MD050391*/
+             SCRUNSQL   SQL('Delete from NTRANDQD where not exists +
+                    (Select * from NTRANDD where TFRF= NVTFRF)')                        /*MD050391*/
 /**/
 /** .. CHECK FOR FILE CONTROL ERRORS TRAPPED BY THE PROGRAM    **/
 /**/
@@ -414,6 +429,8 @@
              MONMSG     MSGID(CPF2105)                               /*065746*/
              DLTF       FILE(&DLIB/NTRANZZX)                         /*065746*/
              MONMSG     MSGID(CPF2105)                               /*065746*/
+             DLTF       FILE(&DLIB/NTRANDQDX)                                           /*MD050391*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD050391*/
              DLTF       FILE(&DLIB/FT102DPDX)                         /*CFT008*/
              MONMSG     MSGID(CPF2105)                                /*CFT008*/
              DLTF       FILE(&DLIB/FT102HPDX)                         /*CFT008*/

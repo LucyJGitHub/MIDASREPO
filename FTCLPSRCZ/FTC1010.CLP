@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR829688           Date 14Nov12              */
+/*       Last Amend No. MD050391           Date 09Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR829688           Date 14Nov12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG24691           Date 30Jul09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -33,6 +34,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD050391 - Include purge and reorganisation processing for  */
+/*                  PF/NTRANDQD                                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR829688 - Include PF/OTPAYDQD and PF/INPAYDQD              */
 /*                  in the reorganization. (Child: AR829689)         */
@@ -163,6 +166,8 @@
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DLIB/NTRANZZX)
              MONMSG     MSGID(CPF2105)
+             DLTF       FILE(&DLIB/NTRANDQDX)                                           /*MD050391*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD050391*/
              DLTF       FILE(&DLIB/CQREGDDX)
              MONMSG     MSGID(CPF2105)
              DLTF       FILE(&DLIB/CQREGZZX)
@@ -253,6 +258,10 @@
                           TOFILE(&DLIB/NTRANZZX) MBROPT(*ADD) +
                           CRTFILE(*YES)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(&DMLIB/NTRANDQD) +
+                          TOFILE(&DLIB/NTRANDQDX) MBROPT(*ADD) +
+                          CRTFILE(*YES)                                                 /*MD050391*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD050391*/
              CPYF       FROMFILE(&DMLIB/CQREGDD) +
                           TOFILE(&DLIB/CQREGDDX) MBROPT(*ADD) +
                           CRTFILE(*YES)
@@ -361,6 +370,10 @@
                           TOFILE(&DMLIB/NTRANZZ) MBROPT(*REPLACE) +
                           CRTFILE(*NO)
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(&DLIB/NTRANDQDX) +
+                          TOFILE(&DMLIB/NTRANDQD) MBROPT(*REPLACE) +
+                          CRTFILE(*NO)                                                  /*MD050391*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*MD050391*/
              CPYF       FROMFILE(&DLIB/CQREGDDX) +
                           TOFILE(&DMLIB/CQREGDD) MBROPT(*REPLACE) +
                           CRTFILE(*NO)
@@ -410,6 +423,9 @@
                           TOMSGQ(MOPERQ MRUNQ)
                GOTO     ABNORMAL
              ENDDO
+                                                                                        /*MD050391*/
+             SCRUNSQL   SQL('Delete from NTRANDQD where not exists +
+                    (Select * from NTRANDD where TFRF= NVTFRF)')                        /*MD050391*/
 /**/
 /** .. CHECK FOR FILE CONTROL ERRORS TRAPPED BY THE PROGRAM    **/
 /**/
@@ -476,6 +492,10 @@
              CALL       PGM(SCC000060) PARM('NTRANDD' '*FIRST')                           /*228542*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNORMAL))                                               /*228542*/
+                                                                                        /*MD050391*/
+             CALL       PGM(SCC000060) PARM('NTRANDQD' '*FIRST')                        /*MD050391*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))                                             /*MD050391*/
                                                                                           /*228542*/
 /**********  RGZPFM     FILE(&DMLIB/CQREGDD)                                              /*228542*/
 /**********  MONMSG     MSGID(CPF2981)                                                    /*228542*/
@@ -558,6 +578,8 @@
              MONMSG     MSGID(CPF2105)                               /*065746*/
              DLTF       FILE(&DLIB/NTRANZZX)                         /*065746*/
              MONMSG     MSGID(CPF2105)                               /*065746*/
+             DLTF       FILE(&DLIB/NTRANDQDX)                                           /*MD050391*/
+             MONMSG     MSGID(CPF2105)                                                  /*MD050391*/
              DLTF       FILE(&DLIB/CQREGDDX)                         /*065746*/
              MONMSG     MSGID(CPF2105)                               /*065746*/
              DLTF       FILE(&DLIB/CQREGZZX)                         /*065746*/

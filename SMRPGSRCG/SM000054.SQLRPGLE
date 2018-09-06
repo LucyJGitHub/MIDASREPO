@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend NO. MD032152           Date 22Jan15               *
-      *  Prev Amend NO. MD022609           Date 27Sep13               *
+      *  Last Amend No. MD050393           Date 13Apr18               *      
+      *  Prev Amend No. MD032152           Date 22Jan15               *
+      *                 MD022609           Date 27Sep13               *
       *                 MD022372           Date 12Sep13               *
       *                 MD018386C          Date 23Apr13               *
       *                 AR1085933          Date 06Feb13               *
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050393 - UXP: Amend user ends in error                     *
+      *           - apply trim function to BFUSERID field to avoid    *
+      *             UXP data type mismatch                            *
       *  MD032152 - Records not written to BFTUSRZONE if same user is *
       *             defined in a second zone.                         *
       *  MD022609 - System prefix not updated in BFTUSRZONE           *
@@ -265,7 +269,8 @@
      C+ 1, :UserTyp, :InvPass, :LockOut,                                                   MD018386C
      C*+*:PassExp,*:PassInd,*:LogCnt,*0,****************************************  AR958654 AR1085933
      C+ :PassExp, :PassInd, 0,                                                             AR1085933
-     C+ :UserId, :DefBranch, :LangLocale, :CtryLocale                                       AR958654
+     C*+*:UserId,*:DefBranch,*:LangLocale,*:CtryLocale**************************   AR958654 MD050393
+     C+ trim(:UserId), :DefBranch, :LangLocale, :CtryLocale                                 MD050393
      C+ )                                                                                   AR958654
      C*+********:PassExp, :PassInd, :LogCnt, 0)                                             AR958654
      C/END-EXEC

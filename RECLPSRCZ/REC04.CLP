@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD024663           Date 25Jul16              */
+/*       Last Amend No. MD050374           Date 06Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD024663           Date 25Jul16              */
 /*                      253617             Date 25Jul16              */
 /*                      MD031950           Date 17Jun15              */
 /*                      CRE041             Date 28Sep12              */
@@ -25,6 +26,7 @@
 /*                      S01194              Date 09Mar90             */
 /*                                                                  */
 /********************************************************************/
+/*       MD050374 - Condition clear of RECUSXQD                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024663 - Input Document already exist error displays on   */
 /*                  IC. Clear extension file when driving file is    */
@@ -82,7 +84,9 @@
 /* Reset Last used customer exchange number data area                                     /*253617*/
              CHGDTAARA  DTAARA(CEXNO) VALUE('0000')                                       /*253617*/
 /* Clear Extension file to prevent input error on next IC                               /*MD024663*/
+             IF         COND(&CRE041 *EQ 'N') THEN(DO)                                  /*MD050374*/
              CLRPFM     FILE(RECUSXQD)                                                  /*MD024663*/
+             ENDDO                                                                      /*MD050374*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,REC04MPS                                             /*S01408*/
              IF         COND(&ULX043 *EQ 'Y') THEN(DO)                                    /*CER001*/

@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC056  *CREATE    Date 06Aug12              */
+/*       Last Amend No. MD050374           Date 06Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC056  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050374 - Introduce purging for RECUSXQD                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
 /*                                                                   */
@@ -84,6 +86,11 @@
                 CALL    PGM(RE0405)
                 IF      COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +
                         CMDLBL(DBETAG))
+                                                                                        /*MD050374*/
+/* Delete records from RECUSXQD where CE is not on CUSEXCE. */                          /*MD050374*/
+             SCRUNSQL   SQL('Delete from RECUSXQD where not exists +
+                    (Select * from CUSEXCE where IPDN= CUIPDN)')                        /*MD050374*/
+                                                                                        /*MD050374*/
              ENDDO
  
 /*  Check if Retail Teller System is switched on */
@@ -173,9 +180,12 @@ ABNOR:
  
              IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
                            THEN(DO)
-                RMVJRNCHG  JRN(ICJRN) FILE((CUSEXCE)) +
-                       RCVRNG(&SJRNRCVR &FJRNRCVR) FROMENT(&START) +
-                       TOENT(&FINISH)
+/**********     RMVJRNCHG  JRN(ICJRN) FILE((CUSEXCE)) +              */                 /*MD050374*/
+/**********            RCVRNG(&SJRNRCVR &FJRNRCVR) FROMENT(&START) + */                 /*MD050374*/
+/**********            TOENT(&FINISH)                                */                 /*MD050374*/
+                RMVJRNCHG  JRN(ICJRN) FILE((CUSEXCE) (RECUSXQD)) +
+                             RCVRNG(&SJRNRCVR &FJRNRCVR) +
+                             FROMENT(&START) TOENT(&FINISH)                             /*MD050374*/
                 MONMSG MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
              ENDDO
  

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048346           Date 20Dec17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047513A          Date 23Feb18               *      
+      *  Prev Amend No. MD048346           Date 20Dec17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD040629           Date 05Sep16               *
       *                 AR743357           Date 06Jul17               *
@@ -131,6 +132,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047513A - No reversal projections for swap deals.  Output  *
+      *              FX net reference for swaps.                      *
       *  MD048346 - FX netting ICD against FXDEALS will not prioritize*
       *             customer branch of the FX nets, instead, it will  *
       *             prioritize (1) system value branch code; if blank,*
@@ -1443,7 +1446,8 @@
      C                     MOVE ETYP      PART                                              MD036589
      C           ETYP      IFEQ '11V1'                                                      MD036589
      C           ETYP      OREQ '11V2'                                                      MD036589
-     C           ETYP      OREQ '12V2'                                                      MD036589
+     C********** ETYP      OREQ '12V2'                                            MD036589 MD047513A
+     C           ETYP      OREQ '13V1'                                                     MD047513A
      C           ETYP      OREQ '13V2'                                                      MD036589
      C           ETYP      OREQ '14V1'                                                      MD036589
      C           ETYP      OREQ '14V2'                                                      MD036589
@@ -1455,7 +1459,7 @@
      C                     MOVELDLNO      DBKEY                                             MD036589
      C                     GOTO END                                                         MD036589
      C                     ELSE                                                             MD036589
-     C           RCDC      IFEQ 11                                                          MD036589
+     C********** RCDC      IFEQ 11                                                MD036589 MD047513A
      C           NETBR     IFNE *BLANKS                                                     MD036589
      C           PART      ANDEQ'V1'                                                        MD036589
      C           NETSR     ORNE *BLANKS                                                     MD036589
@@ -1471,6 +1475,7 @@
      C                     MOVE NETSR     WNETR                                            MD036589A
      C                     ENDIF                                                           MD036589A
      C                     ENDIF                                                            MD036589
+     C**********           ENDIF                                                  MD036589 MD047513A
      C                     ENDIF                                                            MD036589
      C                     ENDIF                                                            MD036589
      C                     ENDIF                                                            MD036589
@@ -2176,10 +2181,10 @@
       ** Check netting record to get the branch.                                           MD036589A
       *                                                                                    MD036589A
      C           *LIKE     DEFN AMBRCA    BRCD                                              MD048346
-     C*Case 1: System Value for Branch Code is used                                         MD048346
-     C           SVBRCA    IFNE *BLANKS                                                     MD048346
-     C                     MOVELSVBRCA    BRCD                                              MD048346
-     C                     ELSE                                                             MD048346
+     C*Case*1:*System*Value*for*Branch*Code*is*used********************           MD048346 MD047513A
+     C********** SVBRCA    IFNE *BLANKS                                           MD048346 MD047513A
+     C**********           MOVELSVBRCA    BRCD                                    MD048346 MD047513A
+     C**********           ELSE                                                   MD048346 MD047513A
      C           WNETR     CHAINFXNETML3             54                                    MD036589A
      C           *IN54     IFEQ '1'                                                        MD036589A
      C                     SETON                     U7U8LR                                MD036589A
@@ -2188,6 +2193,10 @@
      C                     MOVELWNETR     DBKEY                                            MD036589A
      C                     EXSR *PSSR                                                      MD036589A
      C                     ELSE                                                             MD048346
+     C*Case 1: System Value for Branch Code is used                                        MD047513A
+     C           SVBRCA    IFNE *BLANKS                                                    MD047513A
+     C                     MOVELSVBRCA    BRCD                                             MD047513A
+     C                     ELSE                                                            MD047513A
      C           AMONOB    IFNE *BLANKS                                                     MD048346
      C*Case 2: FX net settlement branch is used.                                            MD048346
      C                     MOVELAMONOB    BRCD                                              MD048346

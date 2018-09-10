@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD051141           Date 09Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL154             Date 13Oct14               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051141 - Profit Centre is not Mandatory even if CLE051 is  *
+      *             switched on.                                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -602,6 +605,31 @@
      C                     MOVE 'N'       CGL014                                              CGL014
      C                     ENDIF                                                              CGL014
       *                                                                                       CGL014
+      ** Check if enhancement CLE051 (Mandatory Profit Centre User Input) is on             MD051141
+      *                                                                                     MD051141
+     C                     CALL 'AOSARDR0'                                                  MD051141
+     C                     PARM *BLANKS   @RTCD                                             MD051141
+     C                     PARM '*VERIFY' @OPTN   7                                         MD051141
+     C                     PARM 'CLE051'  @SARD   6                                         MD051141
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD051141
+      *                                                                                     MD051141
+     C           PRTCD     IFNE *BLANKS                                                     MD051141
+     C           PRTCD     ANDNE'*NRF   '                                                   MD051141
+     C           *LOCK     IN   LDA                                                         MD051141
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD051141
+     C                     MOVEL'CLE051  'DBKEY                                             MD051141
+     C                     Z-ADD5         DBASE                                             MD051141
+     C                     OUT  LDA                                                         MD051141
+     C                     SETON                     U7U8LR                                 MD051141
+     C                     EXSR *PSSR                                                       MD051141
+     C                     ENDIF                                                            MD051141
+      *                                                                                     MD051141
+     C           PRTCD     IFEQ *BLANKS                                                     MD051141
+     C                     MOVE 'Y'       CLE051  1                                         MD051141
+     C                     ELSE                                                             MD051141
+     C                     MOVE 'N'       CLE051                                            MD051141
+     C                     ENDIF                                                            MD051141
+      *                                                                                     MD051141
       ** Read in Installation Control Data and Menu User Data
       *
      C                     IN   RUNDAT
@@ -1987,6 +2015,15 @@
      C           RTCDPR    OREQ '1'
      C                     MOVE PRFCPR    SPRFC
      C                     ENDIF
+     C           RTCDPR    IFEQ '1'                                                         MD051141
+     C           RTCDPR    OREQ '2'                                                         MD051141
+     C           CLE051    IFEQ 'Y'                                                         MD051141
+     C                     MOVE '1'       *IN47                                             MD051141
+     C                     MOVE 'N'       NOERR                                             MD051141
+     C                     MOVEL'REL0030' ZAMSID                                            MD051141
+     C                     EXSR ZASNMS                                                      MD051141
+     C                     ENDIF                                                            MD051141
+     C                     ENDIF                                                            MD051141
      C                     ENDIF
       *
      C                     ENDIF

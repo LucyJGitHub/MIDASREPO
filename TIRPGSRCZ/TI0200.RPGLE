@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 247160             Date 05Jul07               *
+      *  Last Amend no. MD051359           Date 19Jun18               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *      
+      *                 MD046248           Date 27Oct17               *
+      *                 247160             Date 05Jul07               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -58,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051359 - TI outgoing message processing of block 3 tag 119 *
+      *             defaults to 'STP'                                 *
+      *  CSW218 - SWIFT Changes 2018                                  *      
       *  MD046248 - Finastra Rebranding                               *
       *  247160 - Increase sequence number field to 999. TI swift     *
       *           messages cannot be transmitted to Midas because     *
@@ -227,6 +232,12 @@
      D  WSID                 244    253
      D  USER                 254    263
       *
+     D PRTCD           S              7A                                                      CSW218
+     D CSW218          S              1A                                                      CSW218
+     D POSSTR          S              5  0                                                    CSW218
+     D POSEND          S              5  0                                                    CSW218
+     D POSLEN          S              5  0                                                    CSW218
+      *                                                                                       CSW218
       /EJECT
       *****************************************************************
       *                                                               *
@@ -473,13 +484,44 @@
       **  If Block 3 present                                                                 BUG8871
       *                                                                                      BUG8871
      C     *IN31         IFEQ      '1'                                                       BUG8871
+     C     '{119:'       SCAN      ARR           POSSTR                                     MD051359
+     C                   IF        POSSTR <> 0                                              MD051359
+     C     POSSTR        ADD       5             POSSTR                                     MD051359
+     C     '}'           SCAN      ARR:POSSTR    POSEND                                     MD051359
+     C     POSEND        SUB       POSSTR        POSLEN                                     MD051359
      C                   MOVEL     @@CRLF        CTRC                                        BUG8871
      C                   MOVEL     ':119:'       MTAG                                        BUG8871
      C                   MOVE      *BLANKS       MFLD                                        BUG8871
-     C                   MOVEL     'STP'         MFLD                                        BUG8871
+     C**********         MOVEL     'STP'         MFLD                               BUG8871 MD051359
+     C                   EVAL      MFLD = %SUBST(ARR:POSSTR:POSLEN)                         MD051359
       *                                                                                      BUG8871
      C                   ADD       1             X                                           BUG8871
      C     X             OCCUR     MULT                                                      BUG8871
+     C                   EVAL      POSSTR = *ZERO                                           MD051359
+     C                   EVAL      POSEND = *ZERO                                           MD051359
+     C                   EVAL      POSLEN = *ZERO                                           MD051359
+     C                   ENDIF                                                              MD051359
+      *                                                                                       CSW218
+     C                   IF        CSW218 = 'Y'                                               CSW218
+      *                                                                                       CSW218
+     C     '{121:'       SCAN      ARR           POSSTR                                       CSW218
+     C                   IF        POSSTR <> 0                                                CSW218
+     C     POSSTR        ADD       5             POSSTR                                       CSW218
+     C                   MOVEL     @@CRLF        CTRC                                         CSW218
+     C     '}'           SCAN      ARR:POSSTR    POSEND                                       CSW218
+     C     POSEND        SUB       POSSTR        POSLEN                                       CSW218
+     C                   MOVEL     ':121:'       MTAG                                         CSW218
+     C                   MOVE      *BLANKS       MFLD                                         CSW218
+     C                   EVAL      MFLD = %SUBST(ARR:POSSTR:POSLEN)                           CSW218
+     C                   ADD       1             X                                            CSW218
+     C     X             OCCUR     MULT                                                       CSW218
+     C                   EVAL      POSSTR = *ZERO                                             CSW218
+     C                   EVAL      POSEND = *ZERO                                             CSW218
+     C                   EVAL      POSLEN = *ZERO                                             CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
+     C                   ENDIF                                                                CSW218
+      *                                                                                       CSW218
      C                   ENDIF                                                               BUG8871
       *
       **  For all fields/subfields
@@ -1090,6 +1132,19 @@
       *
      C                   Z-ADD     1             H                 5 0
      C                   Z-ADD     1             I                 5 0
+      *                                                                                       CSW218
+      ** Check if SWIFT 2018 is installed                                                     CSW218
+      *                                                                                       CSW218
+     C                   EVAL      POSSTR = *ZERO                                             CSW218
+     C                   EVAL      POSEND = *ZERO                                             CSW218
+     C                   EVAL      POSLEN = *ZERO                                             CSW218
+     C                   EVAL      CSW218 = 'N'                                               CSW218
+     C                   CALL      'SWIF2018'                                                 CSW218
+     C                   PARM      *BLANKS       PRTCD                                        CSW218
+                                                                                              CSW218
+     C                   IF        PRTCD = 'CSW2018'                                          CSW218
+     C                   EVAL      CSW218 = 'Y'                                               CSW218
+     C                   ENDIF                                                                CSW218
       *
      C/COPY WNCPYSRC,TI0200C010
      C                   ENDSR

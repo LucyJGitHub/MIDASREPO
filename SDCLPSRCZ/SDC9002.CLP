@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1062470          Date 29Nov12              */
+/*       Last Amend No. MD049513           Date 12Mar18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1062470          Date 29Nov12              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -51,6 +52,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049513 - CGL010: ICD set up inconsistency                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1062470 - System does not display ICD screens             */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
@@ -101,7 +103,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODULE)
- 
+
              DCL        VAR(&MODULE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&WRTNCODE) TYPE(*CHAR) LEN(5)
@@ -135,27 +137,27 @@
              DCL        VAR(&CDL013) TYPE(*CHAR) LEN(7)                                   /*CDL013*/
              DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(5)                                    /*CDL013*/
              DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
- 
+
 /*/COPY WNCPYSRC,SDC9002INT                                          */
                                                                       /*S01408*/
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO (ERROR))
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
              CHGJOB     SWS(00000000)
- 
+
 /* Main processing */
- 
+
 /* Retrieve string of Midas modules present in the system */
- 
+
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)
- 
+
 /* A check is made to see if Switchable feature S01423 is present. */ /*S01421*/
                                                                       /*S01421*/
              CALL       PGM(AOSARDR0) PARM(&S01423 '*VERIFY' +
                           'S01423' &SFMT)                             /*S01421*/
                                                                       /*S01421*/
- 
+
 /* A check is made to see if Switchable feature CRT001 is present. */ /*CRT001*/
                                                                       /*CRT001*/
              CALL       PGM(AOSARDR0) PARM(&CRT001 '*VERIFY' +
@@ -207,13 +209,13 @@
 /*/COPY WNCPYSRC,SDC9002002                                          */
                                                                       /*S01408*/
 /**Job*can*run*only*if*system*is*in*input*cycle*or*next*day*set-up**/                     /*CCB020*/
- 
+
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)               */                     /*CCB020*/
              CALL       PGM(CBC001001) PARM(&COBST)                                       /*CCB020*/
- 
+
 /* If this program is being called in next day set-up then */
 /* the only valid parameter is '**'                        */
- 
+
 /**********  IF         COND(&MPHAS *EQ 'D') THEN(DO)              */                     /*CCB020*/
              IF         COND(&COBST *EQ '*YES') THEN(DO)                               /*AR1062470*/
                IF         COND(&MODULE *EQ '**') +
@@ -221,9 +223,9 @@
                GOTO       CMDLBL(ERROR)
              ENDDO                                                                     /*AR1062470*/
 /**********  ENDDO                                                 */                     /*CCB020*/
- 
+
 /* Otherwise this program can only be called in input cycle */
- 
+
 /**********  IF         COND(&MPHAS *NE 'A') THEN(DO)              */                     /*CCB020*/
              IF         COND(&COBST *EQ '*YES') THEN(DO)                                  /*CCB020*/
                SNDPGMMSG  MSG('SDC9002 - Job cannot be run at this +
@@ -232,10 +234,10 @@
                CALL       PGM(SDC0700) PARM('SDC9002' 'CANTRUNA' ' ')
                GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(DO)              */                     /*CCB020*/
              IF         COND(&COBST *EQ '*NO') THEN(DO)                                   /*CCB020*/
- 
+
 /**If*Module*code*is*OD*or*MF*then*call*the*maintenance*programs.**/ /*                */ /*CPK017*/
 /**No*further*checking*is*required*********************************/ /*                */ /*CPK017*/
 /************                                                                          */ /*CPK017*/
@@ -263,7 +265,7 @@
 /************  ENDDO                                                                   */ /*CPK017*/
 /************                                                                          */ /*CPK017*/
 /************  ELSE       CMD(DO)                                                      */ /*CPK017*/
- 
+
 /** If Module code is OD or MF then call the maintenance programs. */                    /*BUG2955*/
 /** No further checking is required                                */                    /*BUG2955*/
                                                                                          /*BUG2955*/
@@ -283,9 +285,9 @@
              ENDDO                                                                       /*BUG2955*/
                                                                                          /*BUG2955*/
 MAINT:
- 
+
 /* If system set-up is complete, send message to user */
- 
+
                  RTVDTAARA  DTAARA(RUNDAT (11 1)) RTNVAR(&SSF)
                  IF         COND(&SSF *EQ 'Y') THEN(DO)
                    SNDPGMMSG  MSG('SDC9002 - Job cannot be +
@@ -295,13 +297,13 @@ MAINT:
                                 'CANTRUNSSF' ' ')
                    GOTO       CMDLBL(ERROR)
                  ENDDO
- 
+
 /************  ENDDO                                                                   */ /*CPK017*/
- 
+
 /* Otherwise call maintenance programs */
- 
+
 /* If module code is SD (Standing Data) */
- 
+
                IF         COND((&MODULE *EQ 'SD') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  CALL       PGM(SD9100R) PARM(&RTNCODE 'BANK' +
@@ -309,21 +311,23 @@ MAINT:
                  IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                               CMDLBL(END))
                ENDDO
- 
+
 /* If module code is GL (General Ledger) */
- 
+
                IF         COND((&MODULE *EQ 'GL') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
 /*/COPY WNCPYSRC,SDC9002005                                          */
+                 OVRDBF     FILE(SDGELRL0) SHARE(*NO)                                   /*MD049513*/
                  CALL       PGM(SD9171R) PARM(&RTNCODE 'GELR' +
                               &WRTNCODE ' ')
+                 DLTOVR     FILE(SDGELRL0)                                              /*MD049513*/
 /*/COPY WNCPYSRC,SDC9002006                                          */
                  IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                               CMDLBL(END))
                ENDDO
- 
+
 /* If module code is TR (Trading Data) */
- 
+
                IF         COND((&MODULE *EQ 'TR') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                 IF         COND((%SST(&FMT 23 1) *EQ 'Y') *OR +
@@ -335,9 +339,9 @@ MAINT:
                                CMDLBL(END))
                 ENDDO
                ENDDO
- 
+
 /* If module code is FC (Report Control Facility) */
- 
+
                IF         COND((&MODULE *EQ 'FC') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  CALL       PGM(SD9241R) PARM(&RTNCODE 'RCF' +
@@ -345,9 +349,9 @@ MAINT:
                  IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                               CMDLBL(END))
                ENDDO
- 
+
 /* If module code is CB (Close of Business) */
- 
+
                IF         COND((&MODULE *EQ 'CB') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  CALL       PGM(SD9261R) PARM(&RTNCODE 'COBP' +
@@ -355,9 +359,9 @@ MAINT:
                  IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                               CMDLBL(END))
                ENDDO
- 
+
 /* If module code is DL (Dealing) */
- 
+
                IF         COND((&MODULE *EQ 'DL') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND((%SST(&FMT 23 1) *EQ 'Y') *OR +
@@ -368,9 +372,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is TM (Treasury Management) */
- 
+
                IF         COND((&MODULE *EQ 'TM') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 50 1) *EQ 'Y') THEN(DO)
@@ -380,7 +384,7 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is RK (Risk Management) */                          /*S01393*/
                                                                       /*S01393*/
                IF         COND((&MODULE *EQ 'RK') *OR (&MODULE *EQ +
@@ -394,7 +398,7 @@ MAINT:
                ENDDO                                                  /*S01393*/
                                                                       /*S01393*/
 /* If module code is IR (FRA/IRS) */
- 
+
                IF         COND((&MODULE *EQ 'IR') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 47 1) *EQ 'Y') THEN(DO)
@@ -404,9 +408,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is SE (Securities Trading) */
- 
+
                IF         COND((&MODULE *EQ 'SE') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 31 1) *EQ 'Y') THEN(DO)
@@ -416,9 +420,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is FF (Futures and Options) */
- 
+
                IF         COND((&MODULE *EQ 'FF') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 41 1) *EQ 'Y') THEN(DO)
@@ -428,9 +432,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is LE (Customer Lending) */
- 
+
                IF         COND((&MODULE *EQ 'LE') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 28 1) *EQ 'Y') THEN(DO)
@@ -440,9 +444,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is RE (Retail) */
- 
+
                IF         COND((&MODULE *EQ 'RE') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 29 1) *EQ 'Y') THEN(DO)
@@ -452,9 +456,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is WT (Withholding Tax) */                          /*S01413*/
- 
+
                IF         COND((&MODULE *EQ 'WT') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
 /**********      IF         COND(%SST(&FMT 93 1) *EQ 'Y') THEN(DO)   */                   /*CGL032*/
@@ -486,7 +490,7 @@ MAINT:
                ENDDO
                                                                       /*S01413*/
 /* If module code is ME (Message Management) */
- 
+
                IF         COND((&MODULE *EQ 'ME') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 46 1) *EQ 'Y') THEN(DO)
@@ -496,9 +500,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is CF (Confirmation Matching) */
- 
+
                IF         COND((&MODULE *EQ 'CF') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 70 1) *EQ 'Y') THEN(DO)
@@ -508,9 +512,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is FT (Funds Transfer) */
- 
+
                IF         COND((&MODULE *EQ 'FT') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 39 1) *EQ 'Y') THEN(DO)
@@ -520,9 +524,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is EM (Exposure Management) */
- 
+
                IF         COND((&MODULE *EQ 'EM') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 25 1) *EQ 'Y') THEN(DO)
@@ -532,9 +536,9 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
 /* If module code is MF (Microfiche Archiving) */
- 
+
                IF         COND((&MODULE *EQ 'MF') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 54 1) *EQ 'Y') THEN(DO)
@@ -547,9 +551,9 @@ MAINT:
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SDC9002001                                          */
                                                                       /*S01408*/
- 
+
 /* If module code is OD (Optical Disk) */
- 
+
                IF         COND((&MODULE *EQ 'OD') *OR (&MODULE *EQ +
                             '**')) THEN(DO)
                  IF         COND(%SST(&FMT 85 1) *EQ 'Y') THEN(DO)
@@ -559,7 +563,7 @@ MAINT:
                                 CMDLBL(END))
                  ENDDO
                ENDDO
- 
+
                                                                       /*S01379*/
 /* If module code is HF (History and Audit Facility) */               /*S01379*/
                                                                       /*S01379*/
@@ -572,7 +576,7 @@ MAINT:
                                 CMDLBL(END))                          /*S01379*/
                  ENDDO                                                /*S01379*/
                ENDDO                                                  /*S01379*/
- 
+
 /* If the module code is CS (Customer service fees) */                /*S01421*/
                                                                       /*S01421*/
                IF         COND(((&MODULE *EQ 'CS') *OR (&MODULE *EQ +
@@ -583,7 +587,7 @@ MAINT:
                             CMDLBL(END))                              /*S01421*/
                ENDDO                                                  /*S01421*/
              ENDDO
- 
+
 /* If the module code is ED (Midas-Eureka Interface)  */              /*S01493*/
                                                                       /*S01493*/
                IF         COND((&MODULE *EQ 'ED') *OR (&MODULE *EQ +
@@ -646,7 +650,7 @@ MAINT:
 /*********                      CMDLBL(END))                  /*S01505  CAC001*/
 /*********       ENDDO                                        /*S01505  CAC001*/
 /*********     ENDDO                                          /*S01505  CAC001*/
- 
+
 /* If the module code is R1 (RTS Default Charges Transaction Type */  /*CRT001*/
                                                                       /*CRT001*/
 /*             IF         COND(((&MODULE *EQ 'R1') *OR (&MODULE *EQ +
@@ -664,7 +668,7 @@ MAINT:
                   ENDDO                                               /*CRT001*/
                  ENDDO                                                /*CRT001*/
                ENDDO
- 
+
 /* If the module code is CI (Cashier Interface)                   */  /*CRT003*/
                                                                       /*CRT003*/
                IF         COND(((&MODULE *EQ 'CI') *OR (&MODULE *EQ +
@@ -683,7 +687,7 @@ MAINT:
                  IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                               CMDLBL(END))                            /*CGL004*/
                ENDDO
- 
+
 /* If the module code is TI (Midas / Trade Innovation Interface)  */  /*CTI001*/
                                                                       /*CTI001*/
                IF         COND((&MODULE *EQ 'TI') *OR (&MODULE *EQ +
@@ -693,7 +697,7 @@ MAINT:
                     IF         COND(&WRTNCODE *EQ '**CMD') THEN(GOTO +
                                CMDLBL(END))                           /*CTI001*/
                ENDDO                                                  /*CTI001*/
- 
+
 /* APIs 'AP'                                  */                      /*CAP006*/
                                                                       /*CAP006*/
                IF         COND((&MODULE *EQ 'AP') *OR (&MODULE *EQ +
@@ -715,9 +719,9 @@ MAINT:
                                CMDLBL(END))                           /*CPB001*/
                  ENDDO                                                /*CPB001*/
                ENDDO                                                  /*CPB001*/
- 
+
 /** Hedging ICD Maintenance  */                                                           /*CAS002*/
- 
+
                IF         COND(((&MODULE *EQ 'AS') *OR (&MODULE *EQ +
                             '**')) *AND (&CAS002 *EQ ' ')) THEN(DO)                       /*CAS002*/
                   CALL       PGM(SD000744) PARM(&RTNCODE 'HEDG' 'M')                      /*CAS002*/
@@ -726,7 +730,7 @@ MAINT:
                ENDDO                                                                      /*CAS002*/
                                                                                           /*CAS002*/
 /** Cash Management ICD Maintenance  */                                                   /*CRE008*/
- 
+
                IF         COND(((&MODULE *EQ 'CM') *OR (&MODULE *EQ +
                             '**')) *AND (&CRE008 *EQ ' ')) THEN(DO)                       /*CRE008*/
                   CALL       PGM(SD9452) PARM(&RTNCODE 'SDCMANPD' 'M')                    /*CRE008*/
@@ -764,12 +768,12 @@ MAINT:
                ENDDO                                                                      /*CLE025*/
                                                                                           /*CLE025*/
 ERROR:
- 
+
              RTVJOBA    JOB(&JOB)
              DLTOVR     FILE(*ALL)
- 
+
 /* If database error occurs information message is sent to user */
- 
+
              IF         COND(%SWITCH(XXXXXX1X)) THEN(DO)
                ROLLBACK
                IF         COND((&MODULE *NE '**')) THEN(DO)
@@ -779,7 +783,7 @@ ERROR:
                               TOMSGQ(&JOB)
                ENDDO
              ENDDO
- 
+
 /**Send*'MIDAS'*message*to*MSGQ/MSTATUS*that*was*removed*at*top*of**/ /*               */ /*CPK017*/
 /**this*program.*Remove*message*'ICDR'*from*MSGQ/MSPECIAL*and*reset*/ /*               */ /*CPK017*/
 /**MSGQ/MSTATUS.****************************************************/ /*               */ /*CPK017*/
@@ -803,11 +807,11 @@ ERROR:
 /************                                                                          */ /*CPK017*/
 /************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
 /************MONMSG     MSGID(CPF0000)                                                 */ /*CPK017*/
- 
+
 END:                                                                                      /*CPK017*/
              DLCOBJ     OBJ((SDICDR *DTAARA *EXCL))                                      /*BUG2955*/
              MONMSG     MSGID(CPF0000)                                                   /*BUG2955*/
                                                                                          /*BUG2955*/
              RETURN
- 
+
              ENDPGM

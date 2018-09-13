@@ -20,8 +20,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CPK030             Date 14Apr14               *
+      *  Last Amend No. MD051817           Date 20Aug18               *
+      *  Prev Amend No. CSC053             Date 20Aug18               *
+      *                 AR1033033          Date 20Aug18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CPK030             Date 14Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 247997             Date 31May07               *
@@ -43,6 +46,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051817 - Unexpected return code is sent to MOPERQ by       *
+      *             interface job MS_A2M_AFT                          *
+      *  CSC053 - FTP Secure Connections for SWIFT and CM             *
+      *         - Added the use of system value UseFTPSecureSWIFT     *
+      *  AR1033033 - Job MS_M2A_AFT requires amendment for FTPS.      *
+      *              Fix for CSC053 (Secure FTP connection for        *
+      *              SWIFT and Correspondence Manager)                *
+      *              (Child: AR1033034)                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK030 - Clean up of deliverable data library.               *
       *  247997 - Remove fix 191165. Fix 165212 is correct and there  *
@@ -99,6 +110,33 @@
      D  w@in4                  1      4
      D  w@in5                  1      5
       ** Analyse FTP output
+      *
+     D RtnCde          S              7A                                                      CSC053
+     D SValK1          S             20A                                                      CSC053
+     D SVal1           S            200A                                                      CSC053
+     D SValK2          S             20A                                                      CSC053
+     D SVal2           S            200A                                                      CSC053
+     D SValK3          S             20A                                                      CSC053
+     D SVal3           S            200A                                                      CSC053
+     D SValK4          S             20A                                                      CSC053
+     D SVal4           S            200A                                                      CSC053
+     D SValK5          S             20A                                                      CSC053
+     D SVal5           S            200A                                                      CSC053
+     D SValK6          S             20A                                                      CSC053
+     D SVal6           S            200A                                                      CSC053
+     D SValK7          S             20A                                                      CSC053
+     D SVal7           S            200A                                                      CSC053
+     D SValK8          S             20A                                                      CSC053
+     D SVal8           S            200A                                                      CSC053
+     D SValK9          S             20A                                                      CSC053
+     D SVal9           S            200A                                                      CSC053
+     D SValK0          S             20A                                                      CSC053
+     D SVal10          S            200A                                                      CSC053
+      ** Parameters for AOSVALR0                                                              CSC053
+      *                                                                                       CSC053
+     D FTPSec          S              1A                                                      CSC053
+     D CSC053          S              1A                                                   AR1033033
+      ** Other work Variables                                                                 CSC053
       *
       /COPY MSCPYSRC,SRERRD
       /EJECT
@@ -254,6 +292,21 @@
      C**************     read      msftpod0                               55                  147256
      C                   read      msftpod0                               55                  165212
      C                   movel(p)  rtc(2)        wk4                                          165212
+      *                                                                                    AR1033033
+      ** Using Secure FTP, the log embeds information message "Connection is secure"       AR1033033
+      ** between return codes 125 (Connection already open) and 226 (Transfer Complete)    AR1033033
+      ** Bypass this info to avoid pgm issuing 'unexpected return code'.                   AR1033033
+     C                   movel     w@in4         wrk03             3                       AR1033033
+     C                   testn                   wrk03                56                   AR1033033
+     C     *IN55         doweq     *OFF                                                    AR1033033
+     C     *IN56         andne     *ON                                                     AR1033033
+     C     CSC053        andeq     'Y'                                                     AR1033033
+     C     FTPSec        andeq     'Y'                                                        CSC053
+     C                   read      msftpod0                               55               AR1033033
+     C                   movel     w@in4         wrk03                                     AR1033033
+     C                   testn                   wrk03                56                   AR1033033
+     C                   enddo                                                             AR1033033
+      *                                                                                    AR1033033
      C     *in55         doweq     '0'
      C*****w@in4         andne     '226 '                                                     147256
      C*****w@in4         andne     rtc(2)                                               147256165212
@@ -376,6 +429,82 @@
      C     @RTCD         IFEQ      *BLANK                                                     CSW027
      C                   MOVE      'Y'           CSW027            1                          CSW027
      C                   ENDIF                                                                CSW027
+      *                                                                                    AR1033033
+      ** Is CSC053 installed?                                                              AR1033033
+      *                                                                                    AR1033033
+     C                   CALL      'AOSARDR0'                                              AR1033033
+     C                   PARM      '       '     @RTCD                                     AR1033033
+     C                   PARM      '*VERIFY'     @OPTN                                     AR1033033
+     C                   PARM      'CSC053'      @SARD                                     AR1033033
+     C     @RTCD         IFNE      *BLANK                                                  AR1033033
+     C     @RTCD         ANDNE     '*NRF   '                                               AR1033033
+     C                   MOVEL     'SCSARDPD'    DBFILE                                    AR1033033
+     C                   MOVEL     '023'         DBASE                                     AR1033033
+     C                   MOVEL     @RTCD         DBKEY                                     AR1033033
+     C                   SETON                                        U7U8                 AR1033033
+     C                   EXSR      *PSSR                                                   AR1033033
+     C                   ENDIF                                                             AR1033033
+     C     @RTCD         IFEQ      *BLANK                                                  AR1033033
+     C                   MOVE      'Y'           CSC053                                    AR1033033
+     C                   ENDIF                                                             AR1033033
+      *                                                                                       CSC053
+     C     CSC053        IFEQ      'Y'                                                        CSC053
+     C                   CLEAR                   SValK1                                       CSC053
+     C                   CLEAR                   SValK2                                       CSC053
+     C                   CLEAR                   SValK3                                       CSC053
+     C                   CLEAR                   SValK4                                       CSC053
+     C                   CLEAR                   SValK5                                       CSC053
+     C                   CLEAR                   SValK6                                       CSC053
+     C                   CLEAR                   SValK7                                       CSC053
+     C                   CLEAR                   SValK8                                       CSC053
+     C                   CLEAR                   SValK9                                       CSC053
+     C                   CLEAR                   SValK0                                       CSC053
+                                                                                              CSC053
+      * Initialise the first system value key                                                 CSC053
+                                                                                              CSC053
+     C                   EVAL      SValK1 = 'UseFTPSecureSWIFT'                               CSC053
+                                                                                              CSC053
+      * Retrieve the system value                                                             CSC053
+                                                                                              CSC053
+     C                   CALL      'AOSVALR0'                                                 CSC053
+     C                   PARM      *BLANKS       RtnCde                                       CSC053
+     C                   PARM                    SValK1                                       CSC053
+     C                   PARM                    SVal1                                        CSC053
+     C                   PARM                    SValK2                                       CSC053
+     C                   PARM                    SVal2                                        CSC053
+     C                   PARM                    SValK3                                       CSC053
+     C                   PARM                    SVal3                                        CSC053
+     C                   PARM                    SValK4                                       CSC053
+     C                   PARM                    SVal4                                        CSC053
+     C                   PARM                    SValK5                                       CSC053
+     C                   PARM                    SVal5                                        CSC053
+     C                   PARM                    SValK6                                       CSC053
+     C                   PARM                    SVal6                                        CSC053
+     C                   PARM                    SValK7                                       CSC053
+     C                   PARM                    SVal7                                        CSC053
+     C                   PARM                    SValK8                                       CSC053
+     C                   PARM                    SVal8                                        CSC053
+     C                   PARM                    SValK9                                       CSC053
+     C                   PARM                    SVal9                                        CSC053
+     C                   PARM                    SValK0                                       CSC053
+     C                   PARM                    SVal10                                       CSC053
+                                                                                              CSC053
+      ** If the system value is not found then issue a database error                         CSC053
+                                                                                              CSC053
+     C     RtnCde        IFNE      '       '                                                  CSC053
+     C     SVal1         IFEQ      '*NRF'                                                     CSC053
+     C                   EVAL      DBKEY  =  SValK1                                           CSC053
+     C                   ENDIF                                                                CSC053
+     C     *LOCK         IN        LDA                                                        CSC053
+     C                   EVAL      DBASE  =  024                                              CSC053
+     C                   EVAL      DBFILE =  'SDSVALPD'                                       CSC053
+     C                   EVAL      DBPGM  =  'MS3250'                                         CSC053
+     C                   OUT       LDA                                                        CSC053
+     C                   EXSR      *PSSR                                                      CSC053
+     C                   ELSE                                                                 CSC053
+     C                   MOVEL     SVal1         FTPSec                                       CSC053
+     C                   ENDIF                                                                CSC053
+     C                   ENDIF                                                                CSC053
       *
       ** Pop subroutine
      C                   clear                   @STK(Q)
@@ -413,6 +542,9 @@
       *
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
+      *                                                                                     MD051817
+      ** Array RTC changed from 250 to 226                                                  MD051817
+      *                                                                                     MD051817
 ** rtc
 150
-250
+226

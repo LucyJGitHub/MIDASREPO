@@ -14,17 +14,24 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSC053             Date 20Aug18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CCG015  *CREATE    Date 07Mar02               *
+      *                 CCG015  *CREATE    Date 07Mar02               *
       *                                    Date DDMmmYY               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSC053 - FTP Secure Connections to SWIFT and CM              *
+      *         - Incorrect FTP log message "Streamfile not           *
+      *           Transmitted" even after successful file             *
+      *           transfer. Fix is to increase the size of            *
+      *           log patterns array LogPttn to accommodate           *
+      *           all FTP log codes.                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG015 - Correspondence Manager (Phase 1)                    *
       *                                                               *
@@ -90,7 +97,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       * Log file patterns array
-     D LogPttn         S              3    DIM(10)
+     D*LogPttn*********S              3    DIM(10)                                            CSC053
+     D LogPttn         S              3    DIM(50)                                            CSC053
  
       * Patterns array
      D Pttn            S              3    DIM(10)

@@ -20,8 +20,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CPK030             Date 14Apr14               *
+      *  Last Amend No. MD051817           Date 20Aug18               *
+      *  Prev Amend No. CSC053             Date 20Aug18               *
+      *                 AR1033033          Date 20Aug18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CPK030             Date 14Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 257515             Date 11Nov08               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -38,6 +41,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051817 - Unexpected return code is sent to MOPERQ by       *
+      *             interface job MS_A2M_AFT                          *
+      *  CSC053 - FTP Secure Connections for SWIFT and CM             *
+      *         - Added the use of system value UseFTPSecureSWIFT     *
+      *  AR1033033 - Job MS_M2A_AFT requires amendment for FTPS.      *
+      *              Fix for CSC053 (Secure FTP connection for        *
+      *              SWIFT and Correspondence Manager)                *
+      *              (Child: AR1033034)                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CPK030 - Clean up of deliverable data library.               *
       *  257515 - Swift message can't be found in swift alliance.     *
@@ -86,6 +97,39 @@
      Dn@003            S             80    inz('operation not performed')
      Dn@004            S             80    inz('unexpected return code(s)')
      Dn@005            S             11    inz('No response')                                 257515
+      *                                                                                    AR1033033
+     D CSC053          S              1A                                                   AR1033033
+     D PRtcd           S              7A                                                   AR1033033
+     D POptn           S              7A                                                   AR1033033
+     D PSard           S              6A                                                   AR1033033
+     D WBypass         S              1A                                                   AR1033033
+      *                                                                                       CSC053
+     D RtnCde          S              7A                                                      CSC053
+     D SValK1          S             20A                                                      CSC053
+     D SVal1           S            200A                                                      CSC053
+     D SValK2          S             20A                                                      CSC053
+     D SVal2           S            200A                                                      CSC053
+     D SValK3          S             20A                                                      CSC053
+     D SVal3           S            200A                                                      CSC053
+     D SValK4          S             20A                                                      CSC053
+     D SVal4           S            200A                                                      CSC053
+     D SValK5          S             20A                                                      CSC053
+     D SVal5           S            200A                                                      CSC053
+     D SValK6          S             20A                                                      CSC053
+     D SVal6           S            200A                                                      CSC053
+     D SValK7          S             20A                                                      CSC053
+     D SVal7           S            200A                                                      CSC053
+     D SValK8          S             20A                                                      CSC053
+     D SVal8           S            200A                                                      CSC053
+     D SValK9          S             20A                                                      CSC053
+     D SVal9           S            200A                                                      CSC053
+     D SValK0          S             20A                                                      CSC053
+     D SVal10          S            200A                                                      CSC053
+      ** Parameters for AOSVALR0                                                              CSC053
+      *                                                                                       CSC053
+     D FTPSec          S              1A                                                      CSC053
+      ** Other work Variables                                                                 CSC053
+      *                                                                                       CSC053
       /SPACE 2
       /COPY MSCPYSRC,SRERRD
       /EJECT
@@ -273,12 +317,36 @@
      C                   read      output                                 50
      C     *in50         ifeq      '0'
      C     3             subst     SIFTPO        w@outcd           3
+      *                                                                                    AR1033033
+      ** Using Secure FTP, the log embeds information message "Connection is secure"       AR1033033
+      ** between return codes 125 (Connection already open) and 226 (Transfer Complete)    AR1033033
+      ** Bypass this info to avoid pgm issuing 'unexpected return code'.                   AR1033033
+      *                                                                                    AR1033033
+     C                   movel     'N'           WBypass                                   AR1033033
+     C                   testn                   w@outcd              56                   AR1033033
+     C     CSC053        ifeq      'Y'                                                     AR1033033
+     C     FTPSec        andeq     'Y'                                                        CSC053
+     C     *IN56         andne     *ON                                                     AR1033033
+     C                   movel     'Y'           WBypass                                   AR1033033
+     C                   endif                                                             AR1033033
+      *                                                                                    AR1033033
      C     w@outcd       ifne      w@codes(p)
+      *                                                                                    AR1033033
+     C     WBypass       andne     'Y'                                                     AR1033033
+      *                                                                                    AR1033033
      C                   movel(p)  w@subcmd      o@opr
      C                   movel(p)  n@004         o@err
      C                   endif
      C                   endif
+      *                                                                                    AR1033033
+      ** Do not increment array index if log record bypassed due to                        AR1033033
+      ** information message read from log.                                                AR1033033
+     C     WBypass       ifne      'Y'                                                     AR1033033
+      *                                                                                    AR1033033
      C                   add       1             p
+      *                                                                                    AR1033033
+     C                   endif                                                             AR1033033
+      *                                                                                    AR1033033
      C                   enddo
      C                   endif
       *
@@ -317,6 +385,77 @@
       ** Pop subroutine
      C                   clear                   @STK(Q)
      C                   sub       1             Q
+      *                                                                                    AR1033033
+      ***  Determine if CSC053 (FTP Secure Connection to SWIFT and CM)                     AR1033033
+      ***  feature is installed                                                            AR1033033
+      *                                                                                    AR1033033
+     C                   Move      'N'           CSC053                                    AR1033033
+     C                   Call      'AOSARDR0'                                              AR1033033
+     C                   Parm      *BLANKS       PRtcd                                     AR1033033
+     C                   Parm      '*VERIFY'     POptn                                     AR1033033
+     C                   Parm      'CSC053'      PSard                                     AR1033033
+      *                                                                                    AR1033033
+     C     PRtcd         Ifeq      *BLANKS                                                 AR1033033
+     C                   Move      'Y'           CSC053                                    AR1033033
+     C                   Endif                                                             AR1033033
+      *                                                                                    AR1033033
+     C     CSC053        IFEQ      'Y'                                                        CSC053
+     C                   CLEAR                   SValK1                                       CSC053
+     C                   CLEAR                   SValK2                                       CSC053
+     C                   CLEAR                   SValK3                                       CSC053
+     C                   CLEAR                   SValK4                                       CSC053
+     C                   CLEAR                   SValK5                                       CSC053
+     C                   CLEAR                   SValK6                                       CSC053
+     C                   CLEAR                   SValK7                                       CSC053
+     C                   CLEAR                   SValK8                                       CSC053
+     C                   CLEAR                   SValK9                                       CSC053
+     C                   CLEAR                   SValK0                                       CSC053
+                                                                                              CSC053
+      ** Initialise the first system value key                                                CSC053
+                                                                                              CSC053
+     C                   EVAL      SValK1 = 'UseFTPSecureSWIFT'                               CSC053
+                                                                                              CSC053
+      ** Retrieve the system value                                                            CSC053
+                                                                                              CSC053
+     C                   CALL      'AOSVALR0'                                                 CSC053
+     C                   PARM      *BLANKS       RtnCde                                       CSC053
+     C                   PARM                    SValK1                                       CSC053
+     C                   PARM                    SVal1                                        CSC053
+     C                   PARM                    SValK2                                       CSC053
+     C                   PARM                    SVal2                                        CSC053
+     C                   PARM                    SValK3                                       CSC053
+     C                   PARM                    SVal3                                        CSC053
+     C                   PARM                    SValK4                                       CSC053
+     C                   PARM                    SVal4                                        CSC053
+     C                   PARM                    SValK5                                       CSC053
+     C                   PARM                    SVal5                                        CSC053
+     C                   PARM                    SValK6                                       CSC053
+     C                   PARM                    SVal6                                        CSC053
+     C                   PARM                    SValK7                                       CSC053
+     C                   PARM                    SVal7                                        CSC053
+     C                   PARM                    SValK8                                       CSC053
+     C                   PARM                    SVal8                                        CSC053
+     C                   PARM                    SValK9                                       CSC053
+     C                   PARM                    SVal9                                        CSC053
+     C                   PARM                    SValK0                                       CSC053
+     C                   PARM                    SVal10                                       CSC053
+                                                                                              CSC053
+      ** If the system value is not found then issue a database error                         CSC053
+                                                                                              CSC053
+     C     RtnCde        IFNE      '       '                                                  CSC053
+     C     SVal1         IFEQ      '*NRF'                                                     CSC053
+     C                   EVAL      DBKEY  =  SValK1                                           CSC053
+     C                   ENDIF                                                                CSC053
+     C     *LOCK         IN        LDA                                                        CSC053
+     C                   EVAL      DBASE  =  024                                              CSC053
+     C                   EVAL      DBFILE =  'SDSVALPD'                                       CSC053
+     C                   EVAL      DBPGM  =  'MS3250'                                         CSC053
+     C                   OUT       LDA                                                        CSC053
+     C                   EXSR      *PSSR                                                      CSC053
+     C                   ELSE                                                                 CSC053
+     C                   MOVEL     SVal1         FTPSec                                       CSC053
+     C                   ENDIF                                                                CSC053
+     C                   ENDIF                                                                CSC053
      C                   endsr
       /EJECT
       *****************************************************************
@@ -350,6 +489,9 @@
       *
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
+      *                                                                                     MD051817
+      ** Array TABRTC for LS change from 227 to 229.                                        MD051817
+      *                                                                                     MD051817
 ** tabcmd / tabrtc
 CD        250
 GET       229150226
@@ -357,5 +499,5 @@ PUT       229150226
 REN       350250
 DEL       250
 TYPE      200
-LS        227
+LS        229
 QUIT      221

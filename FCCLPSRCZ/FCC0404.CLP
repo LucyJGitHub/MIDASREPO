@@ -15,7 +15,7 @@
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG5019            Date 01Apr05              */
+/*                      BUG5019            Date 01Apr05              */
 /*                      CFC002             Date 29Apr02              */
 /*                      CFC001             Date 15Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -28,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CFC007 - Release spool file via system value                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG5019 - Routing of reports involving big volume of pages  */
 /*                 is not working                                    */
@@ -105,6 +106,27 @@
              DCL        VAR(&CFC002) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFC002*/
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CFC002*/
              DCL        VAR(&RCOUNT) TYPE(*DEC) LEN(2)                                   /*BUG5019*/
+             DCL        VAR(&SVALK1)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK2)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK3)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK4)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK5)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK6)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK7)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK8)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK9)   TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVALK10)  TYPE(*CHAR) LEN(20)                                /*CFC007*/
+             DCL        VAR(&SVAL1)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL2)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL3)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL4)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL5)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL6)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL7)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL8)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL9)    TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&SVAL10)   TYPE(*CHAR) LEN(200)                               /*CFC007*/
+             DCL        VAR(&HBP)      TYPE(*CHAR) LEN(1)                                 /*CFC007*/
 /*/COPY WNCPYSRC,FCC0404002                                          */
 /************MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +   * *LN0736*/
 /************             CMDLBL(END))                               * *LN0736*/
@@ -120,6 +142,18 @@
 /************IF         COND(&HLDBF = 'N') THEN(DO)                    *LN0852*/
 /************RLSSPLF    FILE(&FLNAM) JOB(&JBNUM/&JBUSR/&JBNAM) +
 /************             SPLNBR(&SFNUM)                               *LN0852*/
+                                                                                          /*CFC007*/
+/* Get 'HoldBeforePrinting' system value from file SDSVALPD */                            /*CFC007*/
+                                                                                          /*CFC007*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CFC007*/
+             CHGVAR     VAR(&SVALK1) VALUE('HoldBeforePrinting')                          /*CFC007*/
+             CALL       PGM(AOSVALR0) PARM(&RTCD &SVALK1 &SVAL1 +
+                          &SVALK2 &SVAL2 &SVALK3 &SVAL3 &SVALK4 +
+                          &SVAL4 &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 &SVALK9 +
+                          &SVAL9 &SVALK10 &SVAL10)                                        /*CFC007*/
+             IF         COND(&RTCD *NE '       ') THEN(GOTO ABNOR)                        /*CFC007*/
+             CHGVAR     VAR(&HBP)  VALUE(&SVAL1)                                          /*CFC007*/
 /**/                                                                                      /*CFC001*/
 /** Check if CFC001 is on */                                                              /*CFC001*/
 /**/                                                                                      /*CFC001*/
@@ -264,7 +298,28 @@ RETRY:                                                                          
                              See previous messages for further +
                              information.') TOPGMQ(*EXT) +
                              TOMSGQ(MOPERQ)                           /*LN0736*/
+                GOTO       CMDLBL(END)                                                    /*CFC007*/
                 ENDDO                                                 /*LN0736*/
+             IF         COND(&HBP = 'Y') THEN(GOTO END)                                   /*CFC007*/
+
+             RLSSPLF    FILE(&FLNAM) JOB(&JBNUM/&JBUSR/&JBNAM) +
+                          SPLNBR(&SFNUM)                                                  /*CFC007*/
+             MONMSG     MSGID(CPF3337 CPF3344)                                            /*CFC007*/
+             MONMSG     MSGID(CPF3303 CPF3309 CPF3342 CPF34A4) +
+                          EXEC(DO)                                                        /*CFC007*/
+                CHGVAR     VAR(&FLNFF) VALUE('P')                                         /*CFC007*/
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSG) MSGID(&MSGID) +
+                             MSGF(&MSGF) MSGFLIB(&MSGFLIB)                                /*CFC007*/
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ)                     /*CFC007*/
+                SNDPGMMSG  MSG('FCC0404 Change Attributes of a +
+                             Spool File was unable to +
+                             process a spool file.  +
+                             See previous messages for further +
+                             information.') TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ)                                               /*CFC007*/
+                GOTO       CMDLBL(END)                                                    /*CFC007*/
+                ENDDO                                                                     /*CFC007*/
              ENDDO                                                                        /*CFC002*/
              ENDDO                                                                        /*CFC001*/
              ELSE (DO)                                                                    /*CFC001*/
@@ -321,23 +376,23 @@ RETRY:                                                                          
                           CTLCHAR(*FCFC)                                                  /*CFC001*/
              CALL       PGM(FCC000011) PARM(&FLNAM &JBNAM &JBUSR +
                           &JBNUM &SFNUM &CPI &PAGEWIDE &LPI &PAGELEN)                     /*CFC001*/
- 
+
              IF         COND(&CPI = ' ') THEN(DO)                                         /*CFC001*/
                 CHGVAR     VAR(&CPI) VALUE('10')                                          /*CFC001*/
              ENDDO                                                                        /*CFC001*/
- 
+
              IF         COND(&LPI = ' ') THEN(DO)                                         /*CFC001*/
                 CHGVAR     VAR(&LPI) VALUE('6')                                           /*CFC001*/
              ENDDO                                                                        /*CFC001*/
- 
+
              IF         COND(&PAGELEN = ' ') THEN(DO)                                     /*CFC001*/
                 CHGVAR     VAR(&PAGELEN) VALUE('66')                                      /*CFC001*/
              ENDDO                                                                        /*CFC001*/
- 
+
              IF         COND(&PAGEWIDE = ' ') THEN(DO)                                    /*CFC001*/
                 CHGVAR     VAR(&PAGEWIDE) VALUE('132')                                    /*CFC001*/
              ENDDO                                                                        /*CFC001*/
- 
+
              OVRPRTF    FILE(QSYSPRT) PAGESIZE(&PAGELEN &PAGEWIDE) +
                           LPI(&LPI) CPI(&CPI) CTLCHAR(*FCFC) +
                           OUTQ(&OUTQ) COPIES(&NOCPY) HOLD(&HOLD) +
@@ -425,10 +480,32 @@ RETRY:                                                                          
                              See previous messages for further +
                              information.') TOPGMQ(*EXT) +
                              TOMSGQ(MOPERQ)                                               /*CFC002*/
+                GOTO       CMDLBL(END)                                                    /*CFC007*/
                 ENDDO                                                                     /*CFC002*/
 /**/                                                                                      /*CFC002*/
              ENDDO                                                                        /*CFC002*/
              ENDDO                                                                        /*CFC002*/
+             IF         COND(&HBP = 'N') THEN(DO)                                         /*CFC007*/
+
+                RLSSPLF    FILE(&FLNAM) JOB(&JBNUM/&JBUSR/&JBNAM) +
+                          SPLNBR(&SFNUM)                                                  /*CFC007*/
+                MONMSG     MSGID(CPF3337 CPF3344)                                         /*CFC007*/
+                MONMSG     MSGID(CPF3303 CPF3309 CPF3342 CPF34A4) +
+                          EXEC(DO)                                                        /*CFC007*/
+                   CHGVAR     VAR(&FLNFF) VALUE('P')                                      /*CFC007*/
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSG) MSGID(&MSGID) +
+                              MSGF(&MSGF) MSGFLIB(&MSGFLIB)                               /*CFC007*/
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                              MSGDTA(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ)                    /*CFC007*/
+                   SNDPGMMSG  MSG('FCC0404 Change Attributes of a +
+                              Spool File was unable to +
+                              process a spool file.  +
+                              See previous messages for further +
+                              information.') TOPGMQ(*EXT) +
+                              TOMSGQ(MOPERQ)                                              /*CFC007*/
+                   GOTO       CMDLBL(END)                                                 /*CFC007*/
+                   ENDDO                                                                  /*CFC007*/
+                ENDDO                                                                     /*CFC007*/
              GOTO       CMDLBL(END)                                   /*LN0736*/
 /**/                                                                  /*LN0736*/
  ABNOR:      CHGVAR     VAR(&FLNFF) VALUE('Y')                        /*LN0736*/

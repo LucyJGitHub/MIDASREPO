@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD099             Date 11Feb15               *
+      *  Last Amend No. CSD094             Date 29Aug18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD099             Date 11Feb15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD094 - Make Industry and Institution Code Mandatory        *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD099 - Overrideable error if Institution Code blank.       *
       *  CAP034 - Conversion of SD inputs into modular structure      *
@@ -52,60 +54,62 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc                                       CSD099
      D WIx             S              3P 0                                                    CSD099
- 
+                                                                                              CSD094
+     D CSD094          S              1A                                                      CSD094
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -120,11 +124,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -134,9 +138,9 @@
      C                   MOVE      *BLANK        WMsgIDXAr                                    CSD099
      C                   MOVE      *BLANK        WMsgDtXAr                                    CSD099
      C                   Z-ADD     0             WIx                                          CSD099
- 
+
       ** comments
- 
+
       *
       ** VALIDATION
       *
@@ -157,6 +161,16 @@
       ** VALIDATION - Local Institution
       *****************************************************************
      C     LINCV         BEGSR
+                                                                                              CSD094
+      ** If CSD094 is installed, Local Institution Code is mandatory                          CSD094
+                                                                                              CSD094
+     C     CSD094        IFEQ      'Y'                                                        CSD094
+     C     DDLINC        ANDEQ     *BLANK                                                     CSD094
+     C                   MOVE      'N'           DDLINCOK                                     CSD094
+     C                   ADD       1             Idx                                          CSD094
+     C                   MOVEL     'DDLINC'      FldNamXAr(Idx)                               CSD094
+     C                   MOVEL     'USS0918'     MsgIdXAr(Idx)                                CSD094
+     C                   ENDIF                                                                CSD094
                                                                                               CSD099
       * If local institution code is blank, overrideable error                                CSD099
      C     DDLINC        IFEQ      *BLANK                                                     CSD099
@@ -167,7 +181,7 @@
      C                   MOVEL     'DDLINC'      WFldNmXAr(WIx)                               CSD099
      C                   MOVEL     '5047409'     WMsgIdXAr(WIx)                               CSD099
      C                   ENDIF                                                                CSD099
- 
+
       * If local institution code is entered, must be on file
      C     DDLINC        IFNE      *BLANK
      C     DDLINC        CHAIN     LOCINSTTS                          90
@@ -186,7 +200,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -199,6 +213,7 @@
       *                                                                                       CSD099
       ** Action Code (1A)                                                                     CSD099
      C                   PARM                    DDACTN            1                          CSD099
+     C                   PARM                    CSD094                                       CSD094
       *
       * OUTPUTS
       *
@@ -220,9 +235,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

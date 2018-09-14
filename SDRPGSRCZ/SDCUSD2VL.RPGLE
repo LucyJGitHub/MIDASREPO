@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051247           Date 17Jul18               *      
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. CSD094             Date 29Aug18               *
+      *  Prev Amend No. MD051247           Date 17Jul18               *      
+      *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042407           Date 07Nov16               *
       *                 CSW216             Date 14Mar16               *
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD094 - Make Industry and Institution Code Mandatory        *
       *  MD051247 - SP15 CUSD API Issue                               *      
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -273,6 +275,7 @@
      D CFX001          S              1                                                       CFX001
      D CLE025          S              1                                                       CLE025
      D CSD025          S              1                                                       CSD025
+     D CSD094          S              1                                                       CSD094
      D***CGL132*          S              1                                         MD034317 MD042407
                                                                                               CLE025
      D CSW207          S              1A                                                      CSW207
@@ -1095,6 +1098,7 @@
       *                                                                                       CSD099
       ** Action Code (1A)                                                                     CSD099
      C                   PARM                    DDACTN                                       CSD099
+     C                   PARM                    CSD094                                       CSD094
       *
       * OUTPUTS
       *
@@ -1150,6 +1154,7 @@
       *
       ** Local Industry Code (3A)
      C     CULICD        PARM                    DDLICD
+     C                   PARM                    CSD094                                       CSD094
       *
       * OUTPUTS
       *
@@ -2243,6 +2248,28 @@
      C                   ELSE                                                               MD030956
      C                   EVAL      CTI006 = 'N'                                             MD030956
      C                   ENDIF                                                              MD030956
+                                                                                              CSD094
+      ** Check if feature CSD094 is switched on.                                              CSD094
+                                                                                              CSD094
+     C                   CALLB     'AOSARDR0'                                                 CSD094
+     C                   PARM      *BLANKS       PRtCd                                        CSD094
+     C                   PARM      '*VERIFY'     POptn                                        CSD094
+     C                   PARM      'CSD094'      PSard                                        CSD094
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CSD094
+                                                                                              CSD094
+     C                   IF        PRtCd  <> *BLANKS AND                                      CSD094
+     C                             PRtCd  <> '*NRF   '                                        CSD094
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CSD094
+     C                   EVAL      DBKEY  = 'CSD094'                                          CSD094
+     C                   EVAL      DBASE  = 912                                               CSD094
+     C                   EXSR      SRERR                                                      CSD094
+     C                   ENDIF                                                                CSD094
+      *                                                                                       CSD094
+     C                   IF        PRtCd  = *BLANKS                                           CSD094
+     C                   EVAL      CSD094 = 'Y'                                               CSD094
+     C                   ELSE                                                                 CSD094
+     C                   EVAL      CSD094 = 'N'                                               CSD094
+     C                   ENDIF                                                                CSD094
  
       ** Check if SWIFT 2007 is installed                                                     CSW207
                                                                                               CSW207

@@ -1,4 +1,4 @@
- 
+
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
@@ -33,12 +33,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051187           Date 14Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051187 - Blank Profit Centre is being accepted even if     *
+      *             CLE051 is switched on.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -70,15 +73,15 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEPCCD    IF   E           K DISK
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -90,98 +93,101 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** First DS for ACCESS Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Second DS for access programs, long data structure                                   167953
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     167953
- 
+
       ** External DS for PROFIT CENTRES details
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       * Client Details data structure                                                         167953
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  167953
- 
+     D*                                                                                     MD051187
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD051187
+     D**  EXTERNAL DS FOR SWITCHABLE FEATURES                                               MD051187
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Input fields
       ** ------------
- 
+
       ** Screen Inputs
      D DDDPPC          S              4A
- 
+
       ** Depot movement details
      D DPBA            S              3A
      D DPBK            S              2A
      D*DPBN*****       S              6S 0                                                    CSD027
      D DPBN            S              6A                                                      CSD027
      D DPSS            S             10A
- 
+
       ** System Details
      D PROFCTRU        S              1A
      D BGN0ST          S              1A
      D BKPCDU          S              1A
      D BVSEPC          S              4A
- 
+
       *** Output ***
      D DPPC            S              4A
      D DDDPPCOk        S              1A
- 
- 
- 
+
+
+
      ** Working Variables
      ** -----------------
- 
+
      D @ACOF           S              2A
      D @BOOK           S              2A
      D @BRAN           S              3A
@@ -195,11 +201,11 @@
      D @USER           S             10A
      D @KEY1           S             10A                                                      167953
      D @KYST           S              7A                                                      167953
- 
+
       ** Index for arrays of error message ids etc
- 
+
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -207,8 +213,8 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
- 
+
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -219,12 +225,12 @@
       ** Initialization
       *
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
      C                   MOVEL     *BLANKS       DPPC
       *
       ** Validation
@@ -251,7 +257,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DPPCV         BEGSR
       *
       ** Profit Center If Used (*IN87)
@@ -269,19 +275,19 @@
       *
      C     DPMVType      IFEQ      'WI'
      C     DPMVType      OREQ      'WO'
- 
+
      C     SEPCCK        KLIST
      C                   KFLD                    DPBN
      C                   KFLD                    DPBA
      C                   KFLD                    DPSS
- 
+
      C     SEPCCK        CHAIN     SEPCCDF                            33
- 
+
      C     *IN33         IFEQ      '0'
      C                   MOVEL     PCCU          DPPC
      C                   MOVEL     PCCU          DDDPPC
      C                   END
- 
+
      C                   END
       *
       ** If not one of these amendment types or record not found
@@ -289,7 +295,7 @@
       ** default used is yes on PF/SDGELRPD.
       *
      C     BKPCDU        IFEQ      'Y'
- 
+
      C     DPMVType      IFNE      'WI'
      C     DPMVType      ANDNE     'WO'
      C     *IN33         OREQ      '1'
@@ -310,7 +316,7 @@
      C                   ENDIF                                                                167953
                                                                                               167953
      C                   MOVEL     DPBN          @CNUM
- 
+
      C                   CALLB     'AOPRFMR0'
      C                   PARM      *BLANKS       @RTC1
      C                   PARM      DPBK          @BOOK
@@ -323,12 +329,20 @@
      C                   PARM                    @ACOF                                        167953
      C                   PARM                    @CNUM
      C                   PARM      *BLANKS       @PRFC
- 
+
      C     @RTC1         IFEQ      '0'
      C                   MOVEL     @PRFC         DPPC
      C                   MOVEL     @PRFC         DDDPPC
      C                   END
- 
+                                                                                            MD051187
+     C     DDDPPC        IfEq      *Blanks                                                  MD051187
+     C     CLE051        AndEq     'Y'                                                      MD051187
+     C                   Add       1             Idx                                        MD051187
+     C                   MoveL     'DDDPPC'      FldNamXAr(Idx)                             MD051187
+     C                   MoveL     'FXM3016'     MsgIdXAr(Idx)                              MD051187
+     C                   Move      'N'           DDDPPCOk                                   MD051187
+     C                   EndIf                                                              MD051187
+
      C                   END
      C                   END
       *
@@ -337,7 +351,7 @@
       *
      C     BGN0ST        IFEQ      'Y'
      C     DDDPPC        ANDEQ     *BLANKS
- 
+
      C     DPMVType      IFEQ      'WI'
      C     DPMVType      OREQ      'WO'
       *
@@ -351,9 +365,9 @@
      C                   MOVEL     BVSEPC        DPPC
      C                   MOVEL     BVSEPC        DDDPPC
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** Else, verify Profit Centre that was input
@@ -363,11 +377,11 @@
       **  be same as the customer profit centre for Walk-In/Walk-out.
       *
      C     BGN0ST        IFEQ      'Y'
- 
+
      C     DPMVType      IFEQ      'WI'
      C     DPMVType      OREQ      'WO'
      C     SEPCCK        CHAIN     SEPCCDF                            37
- 
+
      C     *IN37         IFEQ      '0'
      C     DDDPPC        ANDNE     PCCU
       *
@@ -378,12 +392,12 @@
      C                   MOVEL     'MMA0230'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPPCOk
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
      C                   CALLB     'AOPRFCR0'
- 
+
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      DDDPPC        @PKEY
@@ -404,9 +418,9 @@
       *
      C                   END
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -418,34 +432,34 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Return Code Error Indicator
      C                   PARM                    RetCodeIn
- 
+
       ** Received parameters
       ** -------------------
- 
+
       ** Screen fields
       ** Profit Center from caller (4A)
      C                   PARM                    DDDPPC
- 
+
       ** Transaction Details
       ** Branch from caller (3A)
       ** Book from caller (2A)
       ** Beneficiary customer from caller (6S 0)
       ** Security Shortname from caller (10A)
       ** Depot Movement Type
- 
+
      C                   PARM                    DPBA
      C                   PARM                    DPBK
      C                   PARM                    DPBN
      C                   PARM                    DPSS
      C*******************PARM                    DPMVType          1                          167953
      C                   PARM                    DPMVType          2                          167953
- 
+
       ** System Details
       ** Profit Center Used indicator (1A)
       ** Analytical Accounting Indicator (1A)
@@ -455,7 +469,7 @@
      C                   PARM                    BGN0ST
      C                   PARM                    BKPCDU
      C                   PARM                    BVSEPC
- 
+
       ** Returned parameters
       ** -------------------
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -466,15 +480,29 @@
       ** Profit Center (4A)
      C                   PARM                    DDDPPCOk
      C                   PARM                    DPPC
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+      *                                                                                     MD051187
+      ** Check if CLE051 - Mandatory Profit Centre User Input is installed                  MD051187
+      *                                                                                     MD051187
+     C                   Call      'AOSARDR0'                                               MD051187
+     C                   Parm      *BLANKS       @RTCD                                      MD051187
+     C                   Parm      '*VERIFY'     @OPTN                                      MD051187
+     C                   Parm      'CLE051'      @SARD             6                        MD051187
+     C     SCSARD        Parm      SCSARD        DSFDY                                      MD051187
+      *                                                                                     MD051187
+     C                   If        @RTCD = *BLANKS                                          MD051187
+     C                   Move      'Y'           CLE051            1                        MD051187
+     C                   Else                                                               MD051187
+     C                   Move      'N'           CLE051                                     MD051187
+     C                   EndIf                                                              MD051187
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

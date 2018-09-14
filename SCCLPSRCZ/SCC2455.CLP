@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 259085             Date 27Jul12              */
+/*       Last Amend No. CSC060             Date 29Aug18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      259085             Date 27Jul12              */
 /*                      246515             Date 19Mar07              */
 /*                      CSC033             Date 21May07              */
 /*                      B13662             Date 21May07              */
@@ -47,6 +48,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CSC060 - Unload DBDAY tape upon Save                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       259085 - COB Performance Improvement in M+.                 */
 /*       246515 - Not possible to answer message on MIDAS_SAVE job.  */
@@ -202,6 +204,7 @@
              DCL        VAR(&TI) TYPE(*CHAR) LEN(1)                                       /*B13662*/
              DCL        VAR(&USESID) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSC033*/
 /*/COPY SDCPYSRC,SDSVALDCL                                                                /*CSC033*/
+             DCL        VAR(&UNLOAD) TYPE(*CHAR) LEN(1)                                   /*CSC060*/
 /**/
 /*/COPY WNCPYSRC,SCC2455009                                          */
 /* Global error trap                         */
@@ -248,6 +251,17 @@
              IF         COND(&RTN *EQ '       ') THEN(DO)             /*CSC002*/
 /* Set flag */                                                        /*CSC002*/
              CHGVAR     VAR(&ONETP) VALUE('CSC002')                   /*CSC002*/
+                                                                                          /*CSC060*/
+/** Determine if TAPE will be unloaded after save                    */                   /*CSC060*/
+                                                                                          /*CSC060*/
+             CALL       PGM(AOSVALR0) PARM(&RTN 'UnloadDBDAYUponSave' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)                                /*CSC060*/
+             IF         COND(&RTN *NE '       ') THEN(GOTO +
+                             CMDLBL(ABNORMAL))                                            /*CSC060*/
+             CHGVAR     VAR(&UNLOAD) VALUE(&SVAL1)                                        /*CSC060*/
              ENDDO                                                    /*CSC002*/
 /**/
 /* Determine if job is interactive or batch  */
@@ -363,7 +377,7 @@
 /*/COPY WNCPYSRC,SCC2455018                                          */
 /**/
              CHGVAR     VAR(&SENT) VALUE('*NO ')
- 
+
 /* */                                                                /*CSC002*/
 /*/COPY WNCPYSRC,SCC2455TP1                                         */
 /* */                                                                /*CSC002*/
@@ -667,7 +681,7 @@ END_LOOP:
              ENDDO                                                                        /*CSC012*/
              ELSE       CMD(SNDPGMMSG MSG('DTALIB save completed +
                           successfully') TOMSGQ(MOPERQ MRUNQ))                            /*CSC012*/
- 
+
 /*                                                                      CCB009*/
 /**/                                                                                      /*CSC033*/
 /** Check whether global library save is required.                                        /*CSC033*/
@@ -896,7 +910,7 @@ NO_DB_SAVE:
                           &FLASH *BCAT '- Do not load yesterdays +
                           JRNIC tape')                               /*084050 */
 /*/COPY WNCPYSRC,SCC2455019                                          */
- 
+
              IF         COND(&MODE *EQ '1') THEN(DO)
 /**********  SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) MSGTYPE(*INQ)                              /*246515*/
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT) MSGTYPE(*INQ) +
@@ -922,7 +936,7 @@ NO_DB_SAVE:
              ENDDO
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
                           CMDLBL(ABNORMAL))
- 
+
  CLEARS:                                                              /*CSC002*/
 /* */                                                                /*CSC002*/
 /*/COPY WNCPYSRC,SCC2455TP5                                         */
@@ -960,6 +974,17 @@ NO_DB_SAVE:
              CALL       PGM(TIC1710) PARM('TIBACKUPS' '*TAPSAV')                          /*235616*/
 /*/COPY WNCPYSRC,SCH00041                                            */
              ENDDO                                                                        /*B13662*/
+                                                                                          /*CSC060*/
+/* If UnloadDBDAYUponSave = 'Y', issue a dummy */                                         /*CSC060*/
+/* CHKTAP to unload the current tape volume */                                            /*CSC060*/
+                                                                                          /*CSC060*/
+       IF         COND(&UNLOAD *EQ 'Y') THEN(DO)                                          /*CSC060*/
+            IF         COND(%SST(&DEVICE 1 3) *EQ 'TAP') THEN(DO)                         /*CSC060*/
+                       CHKTAP     DEV(&DEVICE) ENDOPT(*UNLOAD)                            /*CSC060*/
+                       MONMSG     MSGID(CPF6708)                                          /*CSC060*/
+            ENDDO                                                                         /*CSC060*/
+       ENDDO                                                                              /*CSC060*/
+                                                                                          /*CSC060*/
              GOTO       CMDLBL(ENDCLPGM)
 /**/
 /**/

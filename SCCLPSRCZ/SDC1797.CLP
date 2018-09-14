@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030818           Date 24Nov14              */
+/*       Last Amend No. CSC060             Date 29Aug18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030818           Date 24Nov14              */
 /*                      MD030956           Date 09Oct14              */
 /*                      MD029775           Date 19Aug14              */
 /*                      CBF002             Date 04Jul11              */
@@ -45,6 +46,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CSC060 - Unload DBDAY tape upon Save                       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD030818 - TRMSAV ended abnormally due to missing DBIC     */
 /*                  save file. Renamed DBIC to DBICDM.              */
@@ -154,6 +156,7 @@
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                      /*CSC033*/
              DCL        VAR(&PRFK) TYPE(*CHAR) LEN(3) VALUE(' ')                          /*CBF002*/
 /*/COPY WNCPYSRC,SDC1797006                                          */
+             DCL        VAR(&UNLOAD) TYPE(*CHAR) LEN(1)                                   /*CSC060*/
 /*/COPY SDCPYSRC,SDSVALDCL                                           */                   /*244885*/
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
@@ -163,8 +166,18 @@
              CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CSW025')                              /*CSW025*/
              IF (&PRTCD *EQ ' ') (CHGVAR (&CSW025) VALUE('Y'))                            /*CSW025*/
                                                                                           /*CSW025*/
+/** Determine if TAPE will be unloaded after save                    */                   /*CSC060*/
+             CALL       PGM(AOSVALR0) PARM(&RTN 'UnloadDBDAYUponSave' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)                                /*CSC060*/
+             IF         COND(&RTN *NE '       ') THEN(GOTO +
+                             CMDLBL(ABNOR))                                               /*CSC060*/
+             CHGVAR     VAR(&UNLOAD) VALUE(&SVAL1)                                        /*CSC060*/
+                                                                                          /*CSC060*/
              RTVDTAARA  DTAARA(MESTAT (50 1)) RTNVAR(&MNGSYS)                             /*CER001*/
- 
+
              CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &FMT)                           /*247714*/
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,SDC1797001                                        */ /*S01408*/
@@ -278,7 +291,7 @@
 /**/
              IF         COND(&SAVD *EQ 'DKTE') THEN(DO)
  CHECK1:     CHKDKT     DEV(DKT01) VOL(&VOL1)
- 
+
              MONMSG     MSGID(CPF6162 CPF6165 CPF4128 CPF6708) EXEC(DO)
                              CHGVAR     VAR(&MONIND) VALUE('1')
                              SNDPGMMSG  MSG('Diskette with volume ID ' *CAT  +
@@ -578,7 +591,7 @@ CHECK2:      RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                     
                                                                                          /*BUG4848*/
              IF         COND(%SST(&FMT 103 1) *NE 'Y') THEN(GOTO +
                           CMDLBL(SKIP_TI))                                                /*247714*/
- 
+
 /**Call*TIC000002*to*perform*TI*database*backup,**********************/          /*CSC033 MD029775*/
 /**if*Trade*Innovation*module*is*present.*****************************/          /*CSC033 MD029775*/
 /**/                                                                                      /*CSC033*/
@@ -765,6 +778,17 @@ UNL1:                                                                           
              ENDDO                                                    /*CCB009*/
 /* */                                                                 /*CSC002*/
 /*/COPY WNCPYSRC,SDC1797012                                          */
+                                                                                          /*CSC060*/
+/* If UnloadDBDAYUponSave = 'Y', issue a dummy */                                         /*CSC060*/
+/* CHKTAP to unload the current tape volume */                                            /*CSC060*/
+                                                                                          /*CSC060*/
+             IF         COND(&UNLOAD *EQ 'Y') THEN(DO)                                    /*CSC060*/
+                IF         COND(&SAVD *EQ 'TAPE') THEN(DO)                                /*CSC060*/
+                   CHKTAP     DEV(&DEVI) ENDOPT(*UNLOAD)                                  /*CSC060*/
+                   MONMSG     MSGID(CPF6708)                                              /*CSC060*/
+                ENDDO                                                                     /*CSC060*/
+             ENDDO                                                                        /*CSC060*/
+                                                                                          /*CSC060*/
                          GOTO ENDPGM
 /**/
 /*  ERROR PROCESSING                                                          */

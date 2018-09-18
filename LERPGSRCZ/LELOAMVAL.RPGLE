@@ -14,8 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039304           Date 19Jul16               *
+      *  Last Amend No. MD027418           Date 18Jul18               *
+      *  Prev Amend No. MD026971           Date 18Jul18               *
+      *                 MD025837A          Date 18Jul18               *
+      *                 CLE158             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD039304           Date 19Jul16               *
       *                 MD035672           Date 07Sep15               *
       *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 10May13               *
@@ -90,6 +94,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027418 - Apply CLE158 validation on Auth mode              *
+      *  MD026971 - Issue either overridable error or warning         *
+      *  MD025837A - Do not issue warning when MDAT of loan is LT     *
+      *              date on which facility will be exceeded          *
+      *  CLE158 - Tranche and Facility Control                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039304 - Prevent a combination of zero spread rate and a   *
       *             spread indicator equal to percentage.             *
@@ -214,32 +223,32 @@
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+
-      **   F-specs                               
-      **   =======                               
+      ** | F-specs                              |
+      ** | =======                              |
       ** +--------------------------------------+
- 
+
       ** Midas LE loan amendment details
      FLOAMS     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(LOAMSDKF)
      F                                     PREFIX(AM_)
- 
+
       ** Midas LE loans detail files
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(CLOANCLF)
- 
+
       ** Facility amendments file - live
      FLEFCAML6  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FAM_)
- 
+
       ** Midas LE participations sold by loan
      FPSOLD     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:PSOLDF)
      F                                     PREFIX(SLD_)
- 
+
       ** Midas LE loan amendments file, select on PI
      FLELOAML4  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LOAMSDKF:LELOAMD4)
- 
+
       ** Midas historic base rates by code + date
      FSDBSHSL1  IF   E           K DISK    INFSR(*PSSR)
       *
@@ -259,21 +268,21 @@
       ** PDCL Fees link file                                                                  CLE134
                                                                                               CLE134
      FLEPDUFL2  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
- 
+
       /COPY WNCPYSRC,LELOAMV001
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE025
      D SCA_LCD       E                     EXTFLD(LCD)                                        CLE025
                                                                                               CLE025
      D PUPDT           S              1A                                                      CLE148
      D PCNEXT          S              8A                                                      CLE148
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
-      **   Automatically included D-specs        
-      **   ==============================        
+      ** | Automatically included D-specs       |
+      ** | ==============================       |
       ** +--------------------------------------+
       **
       ** Standard D-specs
@@ -290,60 +299,62 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
       *
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
       *
      D/COPY ZACPYSRC,ERR_ARRAYS
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
-      **   End of automatically included D-specs 
-      **   ===================================== 
+      ** | End of automatically included D-specs|
+      ** | =====================================|
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
-      **   Manually included D-specs             
-      **   =========================             
+      ** | Manually included D-specs            |
+      ** | =========================            |
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
-      **   Named constants                       
-      **   ===============                       
+      ** | Named constants                      |
+      ** | ===============                      |
       ** +--------------------------------------+
- 
+
      D CLAuthORED      C                   Const('CLAuthORED')                                240968
      D CLAuthSMDT      C                   Const('CLAuthSameORED')                            244314
+     D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
+                                                                                              CLE158
       ** +--------------------------------------+
-      **   Arrays and Data Structures            
-      **   ==========================            
+      ** | Arrays and Data Structures           |
+      ** | ==========================           |
       ** +--------------------------------------+
- 
+
       ** Projected drawn facility amounts array
      D WOAM            S             13  0 DIM(10)
                                                                                             AR656363
      D WUpdExpo        S              1A                                                    AR656363
- 
+
       ** Dates for Facility Exposure Array
      D                 DS
      D  FB_RUN0                1      3P 0
@@ -357,7 +368,7 @@
      D  FB_RUN8               25     27P 0
      D  FB_RUN9               28     30P 0
      D  FB_RUN                 1     30P 0 DIM(10) ASCEND
- 
+
       ** Facility Exposure Array
      D                 DS
      D  FB_OAM1                1      7P 0
@@ -371,42 +382,42 @@
      D  FB_OAM9               57     63P 0
      D  FB_OA10               64     70P 0
      D  FB_OAM                 1     70P 0 DIM(10)
- 
+
       ** Powers of 10 for currency conversions
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
- 
+
       ** Customer Details Record Layout
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Loan Type/Subtype
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** Base Rate Details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** DS For Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS For Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for calculating PC reference
      D*LEALLO***     E DS                  EXTNAME(LEALLO) DTAARA                             CLE148
      D LEALLO        E DS                  EXTNAME(LEALLO)                                    CLE148
- 
+
       ** DS to catch the record read from CLOANCL
      D LoanCRead     E DS                  EXTNAME(CLOANCL)
- 
+
       ** DS to save the loan record -C- linked to the current amendment
      D LoanCSave     E DS                  EXTNAME(CLOANCL) PREFIX(SV)
- 
+
       ** DS to save the loan record -K- linked to the current amendment
      D LoanKSave     E DS                  EXTNAME(CLOANCK) PREFIX(SV)
      D  LKSRECI      E                     EXTFLD(RECI)
@@ -421,22 +432,22 @@
      D  LKSAFRT      E                     EXTFLD(AFRT)
      D  LKSREPA      E                     EXTFLD(REPA)
      D  LKSTMST      E                     EXTFLD(TMST)
- 
+
       ** Loan amendment in screen format - input fields
      D LoamScnFmt    E DS                  EXTNAME(LELOAMPD)
- 
+
       ** Current loan amendment in file format
      D CurFilLoam    E DS                  EXTNAME(LOAMSDK) PREFIX(CAM_)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
- 
+
       ** New loan amendment in file format
      D ValidLoam     E DS                  EXTNAME(LEVLOAMPD)
- 
+
       * Screen receive instructions
      D S_REC         E DS                  EXTNAME(SDESSRPD)
- 
+
       * Screen payment instructions
      D S_PAY         E DS                  EXTNAME(SDESSPPD)
                                                                                               CAS011
@@ -464,7 +475,7 @@
      D FB_AFRT       E                     EXTFLD(AFRT)
      D FB_REPA       E                     EXTFLD(REPA)
      D FB_STMP       E                     EXTFLD(STMP)
- 
+
      D                 DS
      D  FCLKEY                 1     12
      D**WFCNM***               1      6  0                                                    CSD027
@@ -472,7 +483,7 @@
      D  WFACT                  7      9  0
      D  WFNUM                 10     11  0
      D  WFRTP                 12     12
- 
+
       ** 24X7 status data area                                                               BUG3760
       *                                                                                      BUG3760
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                    BUG3760
@@ -491,13 +502,13 @@
       ***  External DS for bank details                                                       240968
       *                                                                                       240968
       ** +--------------------------------------+
-      **   Declared variables                    
-      **   ==================                    
+      ** | Declared variables                   |
+      ** | ==================                   |
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
       *                                                                                      BUG3760
@@ -529,9 +540,12 @@
      D PCurset         S              2  0                                                    CRE073
      D PBaseRate       S             12    INZ(*BLANKS)                                       CRE073
      D PBaseCode       S              2    INZ(*BLANKS)                                       CRE073
- 
+     D CLE158          S              1A                                                      CLE158
+     D NDayFwd         S              2S 0 INZ(0)                                             CLE158
+     D @VDAYNO         S              5S 0                                                    CLE158
+
       /COPY WNCPYSRC,LELOAMV002
- 
+
      D PSysVal01       S             20A                                                      240968
      D PCurSet01       S            200A                                                      240968
      D PSysVal02       S             20A                                                      240968
@@ -559,37 +573,37 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       ** +--------------------------------------+
-      **   End of D-specs                        
-      **   ==============                        
+      ** | End of D-specs                       |
+      ** | ==============                       |
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** +--------------------------------------+
-      **   Start of I-specs                      
-      **   ================                      
+      ** | Start of I-specs                     |
+      ** | ================                     |
       ** +--------------------------------------+
- 
+
       /COPY WNCPYSRC,LELOAMV003
- 
+
       ** +--------------------------------------+
-      **   End of I-specs                        
-      **   ==============                        
+      ** | End of I-specs                       |
+      ** | ==============                       |
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** +--- Start of Main processing -----------------------------------+
-      **                                                                   
-      **   Initial processing is performed automatically: the *INZSR is    
-      **   executed at program activation.                                 
-      **                                                                   
+      ** |                                                                |
+      ** | Initial processing is performed automatically: the *INZSR is   |
+      ** | executed at program activation.                                |
+      ** |                                                                |
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,LELOAMV004
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C                   CALL      'SFC000026'                                                CAP084
      C                   PARM      *BLANKS       USER             10                          CAP084
@@ -834,7 +848,7 @@
      C                   RETURN
       *
       /COPY WNCPYSRC,LELOAMV020
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -844,7 +858,7 @@
       *
       ** Copy the saved loan details to the work format
      C                   MOVEL     LoanCSave     LoanCRead
- 
+
      C                   MOVE      SVCNUM        CNUM_Alph         6
      C                   MOVE      SVPTYP        PTYP_Loan         2 0                        244945
       *
@@ -920,9 +934,9 @@
      C     DDMDAT        ANDNE     *BLANKS                                                  BUG23159
      C*****VDAYNO        ANDGE     MDAT                                                     BUG23025
      C     VDAYNO        ANDGE     MDAYNO                                                   BUG23025
- 
+
      C/COPY WNCPYSRC,LELOAMV022
- 
+
      C                   MOVE      'N'           DDVDATOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDVDAT'
@@ -934,7 +948,7 @@
       ** Check if value date falls between the multi-currency rollover
       ** date and the next working day
      C     CLE014        IFEQ      'Y'
- 
+
      C     RLDT          IFNE      *ZEROS
      C     SVCCY         ANDNE     SVNCCY
       *
@@ -1365,7 +1379,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C     CAM_RECI      IFEQ      'R'
@@ -1538,7 +1552,7 @@
       ** Authorising user must be different from the insert and
       ** amend users
       ***  Unless CLE056 is enabled and not day of input and not last amender                 CLE056
- 
+
      C/COPY WNCPYSRC,LELOAMV023
       *
       * If system value CLAuthORED = 'Y' and last amend date is later than                    240968
@@ -1580,7 +1594,7 @@
      C                   EndIf                                                                CLE056
      C                   ENDIF
      C                   ENDIF                                                                240968
- 
+
      C/COPY WNCPYSRC,LELOAMV024
       *
       ** Status of loan must be complete or requiring re-authorisation
@@ -1907,7 +1921,7 @@
      C                   PARM      '*KEY   '     @Optn
      C                   PARM      DDCURR        @Curr
      C     SDCURR        PARM                    DSSDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVE      'N'           DDCURROK
      C                   ADD       1             Idx
@@ -1922,13 +1936,13 @@
      C                             DDATYP = 'PF' OR
      C                             DDATYP = 'PI'
      C     13            SUB       A6NBDP        ZADIG
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM      *BLANK        ZALIGNok          1
      C                   PARM      DDAMNT        ZFIELD           16
      C                   PARM      A6NBDP        ZADEC             1 0
      C                   PARM                    ZADIG             2 0
- 
+
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        WLAMT
      C                   ELSE
@@ -1937,9 +1951,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDAMNT'
      C                   MOVEL     'LEA0192'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Save loan currency details.
@@ -2272,7 +2286,7 @@
      C                   MOVE      ZFIELD        WRTSP
      C                   ENDIF
      C                   Endif                                                                CLE035
- 
+
      C                   IF        WRTSP <> DDRTSP
      C                   MOVE      'N'           DDRTSPOK
      C                   ADD       1             Idx
@@ -2538,6 +2552,12 @@
      C     DDACTN        IFNE      'X'
      C     DDACTN        ANDNE     'Q'                                                        CLE030
      C     CLE030        OREQ      'Y'                                                        CLE030
+     C     DDACTN        OREQ      'X'                                                      MD027418
+     C     CLE158        ANDEQ     'Y'                                                      MD027418
+     C     CLE025        ANDEQ     'N'                                                      MD027418
+     C     DDATYP        ANDEQ     'PI'                                                     MD027418
+     C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
       *
       ** Use Facility CCY to pick facility decimal positions
      C                   CALLB     'AOCURRR0'
@@ -2594,7 +2614,127 @@
      C                   EXSR      SrPDCLPI                                                 AR656363
      C                   ENDIF                                                              AR656363
                                                                                             AR656363
+     C     DDACTN        IFEQ      'X'                                                      MD027418
+     C     CLE158        ANDEQ     'Y'                                                      MD027418
+     C     CLE025        ANDEQ     'N'                                                      MD027418
+     C     DDATYP        ANDEQ     'PI'                                                     MD027418
+     C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+      *                                                                                     MD027418
+      ** Convert amounts in facility currency equivalent                                    MD027418
+     C     CDPF          SUB       CDPL          CX                1 0                      MD027418
+     C     CX            ADD       4             CX                                         MD027418
+     C     SVFMDI        COMP      'D'                                    99                MD027418
+     C   99SVFCXR        DIV(H)    POWR(CX)      OFCXRT                                     MD027418
+     C   991             DIV       OFCXRT        OFCXRT                                     MD027418
+     C  N99SVFCXR        MULT(H)   POWR(CX)      OFCXRT           15 9                      MD027418
+      *                                                                                     MD027418
+      ** If CLE023 is on, get cross rate of currencies spot.                                MD027418
+     C     CLE023        IFEQ      'Y'                                                      MD027418
+                                                                                            MD027418
+     C                   CALLB     'ZXRATE'                                                 MD027418
+     C                   PARM                    ZRATE1           13 8                      MD027418
+     C                   PARM                    ZMDI1             1                        MD027418
+     C                   PARM                    ZRATE2           13 8                      MD027418
+     C                   PARM                    ZMDI2             1                        MD027418
+     C                   PARM                    ZRATEX           13 8                      MD027418
+     C                   PARM                    ZMDIX             1                        MD027418
+                                                                                            MD027418
+     C                   Z-ADD     ZRATEX        ZEXCH                                      MD027418
+     C                   MOVE      ZMDIX         ZMD                                        MD027418
+     C                   ENDIF                                                              MD027418
+      *                                                                                     MD027418
+     C     WLAMT         MULT(H)   OFCXRT        ILAAMF           13 0                      MD027418
+      *                                                                                     MD027418
+      ** If CLE023 is on convert amounts using spot rate.                                   MD027418
+     C     CLE023        IFEQ      'Y'                                                      MD027418
+     C                   Z-ADD     WLAMT         ZAMTCI                                     MD027418
+      *                                                                                     MD027418
+     C                   CALLB     'ZCONVZ1'                                                MD027418
+     C                   PARM                    ZAMTCI           15 0                      MD027418
+     C                   PARM                    ZEXCH            13 8                      MD027418
+     C                   PARM                    ZMD               1                        MD027418
+     C                   PARM                    ZCCYI             3                        MD027418
+     C                   PARM                    ZCCYO             3                        MD027418
+     C                   PARM                    ZCDPI             1 0                      MD027418
+     C                   PARM                    ZCDPO             1 0                      MD027418
+     C                   PARM                    ZAMTCO           15 0                      MD027418
+      *                                                                                     MD027418
+     C                   Z-ADD     ZAMTCO        WXAAMF           13 0                      MD027418
+      *                                                                                     MD027418
+      ** If rollover date is less than or equal to the value date of                        MD027418
+      ** the amendment and there is a rollover of facility exchange                         MD027418
+      ** rate, use the new facility exchange rate defined.                                  MD027418
+      *                                                                                     MD027418
+     C     SVRLDT        IFLT      WRNDAY                                                   MD027418
+     C     SVRLDT        ANDNE     0                                                        MD027418
+     C     SVNFCE        ANDNE     0                                                        MD027418
+     C     SVNCCY        ANDEQ     *BLANKS                                                  MD027418
+     C     SVNFMD        IFEQ      'D'                                                      MD027418
+     C     SVNFCE        DIV(H)    POWR(CX)      WNFCE            15 9                      MD027418
+     C     1             DIV       WNFCE         WNFCE                                      MD027418
+     C                   ELSE                                                               MD027418
+     C     SVNFCE        MULT(H)   POWR(CX)      WNFCE                                      MD027418
+     C                   ENDIF                                                              MD027418
+     C     WLAMT         MULT(H)   WNFCE         ILAAMF                                     MD027418
+     C                   ENDIF                                                              MD027418
+     C                   ENDIF                                                              MD027418
+      *                                                                                     MD027418
+     C                   Z-ADD     ILAAMF        FCBAL                                      MD027418
+     C                   ELSE                                                               MD027418
      C                   EXSR      FCLTSR
+     C                   ENDIF                                                              MD027418
+      *                                                                                       CLE158
+      ** Call program to check for facility exceeded amount from                              CLE158
+      ** value date (Only applicable if CLE025 is OFF)                                        CLE158
+      *                                                                                       CLE158
+     C                   IF        CLE158 = 'Y'                                               CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDATYP = 'PI'                                          CLE158
+     C                             and VDAYNO >= BJRDNB                                     MD027418
+      *                                                                                       CLE158
+     C                   Z-ADD     VDAYNO        @VDAYNO                                      CLE158
+     C                   Z-ADD     0             @MDAYNO           5 0                     MD025837A
+     C                   MOVE      SVFTYP        @FACT             3                          CLE158
+     C                   MOVE      SVFSEQ        @FCNO             2                          CLE158
+      *                                                                                       CLE158
+     C                   CALL      'LE000630'                                                 CLE158
+     C                   PARM                    SVFCUS                                       CLE158
+     C                   PARM                    @FACT                                        CLE158
+     C                   PARM                    @FCNO                                        CLE158
+     C                   PARM                    @VDAYNO                                      CLE158
+     C                   PARM                    @MDAYNO                                   MD025837A
+     C                   PARM                    FCBAL                                        CLE158
+     C                   PARM                    NDayFwd                                      CLE158
+     C                   PARM                    DDACTN                                     MD027418
+     C                   PARM                    DDLOAN                                     MD027418
+     C                   PARM                    DDATYP                                     MD027418
+     C                   PARM      *BLANKS       @PRTCD                                       CLE158
+      *                                                                                       CLE158
+      ** If the transaction amount causes the available amount of the                         CLE158
+      ** Fcty/Tranche to be exceeded for any of the next NFwdDays                             CLE158
+      ** business days from the value date of the transaction                                 CLE158
+      ** --> Issue overridable error message                                                  CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'E'                                                        CLE158
+     C                   MOVE      'W'           DDAMNTOK                                   MD026971
+     C                   ADD       1             WIdx                                       MD026971
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD026971
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049122'                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+      ** If the transaction causes the available amount of the                                CLE158
+      ** Fcty/Tranche to be exceeded beyond the NDayFwd business day                          CLE158
+      ** --> Issue warning message only                                                       CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'W'                                                        CLE158
+     C                   MOVE      'W'           DDAMNTOK                                     CLE158
+     C                   ADD       1             WIdx                                         CLE158
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                                CLE158
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049123'                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+     C                   ENDIF                                                                CLE158
       *
      C                   EVAL(H)   FA_FAMT = FA_FAMT * (FA_OVPC + 100) / 100
       *
@@ -2603,7 +2743,17 @@
       *
       ** Send warning message if loan amount causes facility amount
       ** to be exceeded
-     C                   DO        10            L                 2 0
+      ** Perform old validation if CLE158 is off, or                                          CLE158
+      ** is ON but value date is less than the run date.                                      CLE158
+      *                                                                                       CLE158
+     C**********         DO        10            L                 2 0                        CLE158
+     C                   Z-ADD     1             L                 2 0                        CLE158
+     C     L             DOWLE     10                                                         CLE158
+     C     CLE158        ANDEQ     'N'                                                        CLE158
+      *                                                                                       CLE158
+     C     L             ORLE      NdayFwd                                                    CLE158
+     C     CLE158        ANDEQ     'Y'                                                        CLE158
+     C     VDAYNO        ANDLT     BJRDNB                                                     CLE158
       *
      C     CLE030        IFNE      'Y'                                                        CLE030
      C     FA_FAMT       IFLT      WOAM(L)
@@ -2632,19 +2782,20 @@
      C                   ENDIF                                                                CLE030
      C                   ENDIF                                                                CLE030
       *
+     C                   EVAL      L = L + 1                                                  CLE158
      C                   ENDDO
       *
       ** If facility is a tranche, check if loan amount exceeds credit
       ** agreement facility amount
      C                   IF        FA_TRCA = 'TR'
- 
+
       * Retrieve credit agreement details
      C                   EVAL      WFCNM = FA_CANM
      C                   EVAL      WFACT = FA_CAFT
      C                   EVAL      WFNUM = FA_CAFN
      C                   EVAL      WFRTP = 'A'
      C     KFCLT         CHAIN     FCLTY
- 
+
      C                   IF        %FOUND
      C                   EVAL      WFRTP = 'B'
      C     KFCLT         CHAIN     FCLTY
@@ -2676,7 +2827,94 @@
      C                   EXSR      SrPDCLPI                                                 AR656363
      C                   ENDIF                                                              AR656363
                                                                                             AR656363
+     C     DDACTN        IFEQ      'X'                                                      MD027418
+     C     CLE158        ANDEQ     'Y'                                                      MD027418
+     C     CLE025        ANDEQ     'N'                                                      MD027418
+     C     DDATYP        ANDEQ     'PI'                                                     MD027418
+     C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+      *                                                                                     MD027418
+      ** Use CA Facility CCY to pick facility decimal positions                             MD027418
+     C                   CALLB     'AOCURRR0'                                               MD027418
+     C                   PARM      *BLANK        @RTCD                                      MD027418
+     C                   PARM      '*KEY'        @OPTN                                      MD027418
+     C                   PARM      CAF_FCCY      @CURR             3                        MD027418
+     C     SDCURR        PARM                    DSSDY                                      MD027418
+      *                                                                                     MD027418
+     C     @RTCD         IFNE      *BLANKS                                                  MD027418
+     C                   MOVE      'N'           DDLOANOK                                   MD027418
+     C                   ADD       1             Idx                                        MD027418
+     C                   EVAL      FldNameArr(Idx) = 'DDLOAN'                               MD027418
+     C                   MOVEL     'LEA1519'     MsgIdArr(Idx)                              MD027418
+     C                   MOVEL(P)  CAF_FCCY      MsgDtaArr(Idx)                             MD027418
+     C                   ENDIF                                                              MD027418
+      *                                                                                     MD027418
+     C                   Z-ADD     A6NBDP        CAPF              1 0                      MD027418
+      *                                                                                     MD027418
+      ** Convert amounts in CA facility currency equivalent                                 MD027418
+     C     CAPF          SUB       CDPL          CX                1 0                      MD027418
+     C     CX            ADD       4             CX                                         MD027418
+     C     FA_CMDI       COMP      'D'                                    99                MD027418
+     C   99FA_CAXR       DIV(H)    POWR(CX)      OFCXRT                                     MD027418
+     C   991             DIV       OFCXRT        OFCXRT                                     MD027418
+     C  N99FA_CAXR       MULT(H)   POWR(CX)      OFCXRT           15 9                      MD027418
+                                                                                            MD027418
+     C     FCBAL         MULT(H)   OFCXRT        CABAL            13 0                      MD027418
+     C                   ELSE                                                               MD027418
      C                   EXSR      CAFCYSR
+     C                   ENDIF                                                              MD027418
+      *                                                                                       CLE158
+      ** Call program to check for facility exceeded amount from                              CLE158
+      ** value date (Only applicable if CLE025 is OFF)                                        CLE158
+      *                                                                                       CLE158
+     C                   IF        CLE158 = 'Y'                                               CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDATYP = 'PI'                                          CLE158
+     C                             and VDAYNO >= BJRDNB                                     MD027418
+      *                                                                                       CLE158
+     C                   Z-ADD     VDAYNO        @VDAYNO                                      CLE158
+     C                   Z-ADD     0             @MDAYNO                                   MD025837A
+     C                   MOVE      FA_CAFT       @FACT                                        CLE158
+     C                   MOVE      FA_CAFN       @FCNO                                        CLE158
+      *                                                                                       CLE158
+     C                   CALL      'LE000630'                                                 CLE158
+     C                   PARM                    FA_CANM                                      CLE158
+     C                   PARM                    @FACT                                        CLE158
+     C                   PARM                    @FCNO                                        CLE158
+     C                   PARM                    @VDAYNO                                      CLE158
+     C                   PARM                    @MDAYNO                                   MD025837A
+     C                   PARM                    CABAL                                        CLE158
+     C                   PARM                    NDayFwd                                      CLE158
+     C                   PARM                    DDACTN                                     MD027418
+     C                   PARM                    DDLOAN                                     MD027418
+     C                   PARM                    DDATYP                                     MD027418
+     C                   PARM      *BLANKS       @PRTCD            1                          CLE158
+      *                                                                                       CLE158
+      ** If the transaction amount causes the available amount of the                         CLE158
+      ** Fcty/Tranche to be exceeded for any of the next NFwdDays                             CLE158
+      ** business days from the value date of the transaction                                 CLE158
+      ** --> Issue overridable error message                                                  CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'E'                                                        CLE158
+     C                   MOVE      'W'           DDAMNTOK                                   MD026971
+     C                   ADD       1             WIdx                                       MD026971
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                              MD026971
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049124'                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+      ** If the transaction causes the available amount of the                                CLE158
+      ** Fcty/Tranche to be exceeded beyond the NDayFwd business day                          CLE158
+      ** --> Issue warning message only                                                       CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'W'                                                        CLE158
+     C                   MOVE      'W'           DDAMNTOK                                     CLE158
+     C                   ADD       1             WIdx                                         CLE158
+     C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'                                CLE158
+     C                   EVAL      WMsgIDArr(WIdx)  = '5049125'                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
      C                   EVAL(H)   CAF_FAMT = CAF_FAMT * (CAF_OVPC + 100)/ 100
       *
       ** Check if there are facility amendments
@@ -2684,7 +2922,19 @@
       *
       ** Send warning message if loan amount causes credit agreement
       ** facility amount to be exceeded
-     C                   DO        10            L                 2 0
+      ** Perform old validation if CLE158 is off, or                                          CLE158
+      ** is ON but value date is less than the run date.                                      CLE158
+      *                                                                                       CLE158
+     C**********         DO        10            L                 2 0                        CLE158
+     C                   EVAL      L = 1                                                      CLE158
+     C     L             DOWLE     10                                                         CLE158
+     C     CLE025        ANDEQ     'N'                                                        CLE158
+     C     CLE158        ANDEQ     'N'                                                        CLE158
+      *                                                                                       CLE158
+     C     L             ORLE      NdayFwd                                                    CLE158
+     C     CLE025        ANDEQ     'N'                                                        CLE158
+     C     CLE158        ANDEQ     'Y'                                                        CLE158
+     C     VDAYNO        ANDLT     BJRDNB                                                     CLE158
       *
      C     CLE030        IFNE      'Y'                                                        CLE030
      C     CAF_FAMT      IFLT      WOAM(L)
@@ -2711,8 +2961,9 @@
      C                   ENDIF                                                                CLE030
      C                   ENDIF                                                                CLE030
       *
+     C                   EVAL      L = L + 1                                                  CLE158
      C                   ENDDO
- 
+
       * If credit agreement not found, error
      C                   ELSE
      C                   MOVE      'N'           DDLOANOK
@@ -2720,7 +2971,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDLOAN'
      C                   MOVEL     'LEL0134'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -2817,7 +3068,7 @@
      C   99FA_CAXR       DIV(H)    POWR(CX)      OFCXRT
      C   991             DIV       OFCXRT        OFCXRT
      C  N99FA_CAXR       MULT(H)   POWR(CX)      OFCXRT           15 9
- 
+
      C     FCBAL         MULT(H)   OFCXRT        CABAL            13 0
      C                   Z-ADD     VDAYNO        WDAYNO            5 0
       *
@@ -2854,7 +3105,7 @@
      C     WDAYNO        ANDNE     0
      C                   EXSR      CAFCLTY
      C                   ENDIF
- 
+
      C     CAF_RVCR      IFEQ      'T'
      C                   MOVE      FA_RVCR       WRVCR             1
      C                   ELSE
@@ -2909,7 +3160,7 @@
       * CAFCLTY - Update Exposure Array                               *
       *****************************************************************
      C     CAFCLTY       BEGSR
- 
+
      C                   Z-ADD     1             Z                 2 0
      C     WDAYNO        LOOKUP    FB_RUN(Z)                          99  99
      C  N99              GOTO      ENDCAFCT
@@ -3027,7 +3278,7 @@
       *
       ** If CLE023 is on, get cross rate of currencies spot.
      C     CLE023        IFEQ      'Y'
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1           13 8
      C                   PARM                    ZMDI1             1
@@ -3035,7 +3286,7 @@
      C                   PARM                    ZMDI2             1
      C                   PARM                    ZRATEX           13 8
      C                   PARM                    ZMDIX             1
- 
+
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
      C                   ENDIF
@@ -3210,7 +3461,7 @@
       *****************************************************************
      C     QFCLTY        BEGSR
       *
- 
+
      C                   Z-ADD     1             Z                 2 0
      C     DAYNO         LOOKUP    FB_RUN(Z)                          99  99
      C  N99              GOTO      ENDFCT
@@ -3881,7 +4132,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSTYP'
      C                   MOVEL     'LEA0520'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
       ** If no errors, update LSMD
      C                   If        Idx = W#Idx
      C                   Z-ADD     ZDAYNO        WLSMD             5 0
@@ -5566,71 +5817,71 @@
      C     *INZSR        BEGSR
       *
      C     *ENTRY        PLIST
- 
+
       ** Transaction information (DS) from source system  (screen format)
      C                   PARM                    LoamScnFmt
- 
+
       ** Current loan amendment in file format from caller
      C                   PARM                    CurFilLoam
- 
+
       * File receive instructions
       * File payment instructions
      C                   PARM                    S_REC
      C                   PARM                    S_PAY
- 
+
       ** Loan 'A' & 'B' formats
      C                   PARM                    LoanCSave
      C                   PARM                    LoanKSave
- 
+
       ** Facility 'A' & 'B' formats
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
- 
+
       ** Front Office Transaction Id., Associated Front Office Transaction Id.
       ** Repair Location
      C                   PARM                    FOTranId         20
      C                   PARM                    FOAssocId        20
      C                   PARM                    RepairLoc         1
- 
+
       ** Date format indicator / local currency / run day
      C                   PARM                    BJDFIN            1
      C                   PARM                    BJLCCY            3
      C                   PARM                    WRNDAY            5 0
- 
+
       ** Analytical Accounting
      C                   PARM                    BGN0ST            1
- 
+
       * Authorise amends / authorise principal tfr / base rate change
      C                   PARM                    BPLMAU            1
      C                   PARM                    BPTPAU            1
      C                   PARM                    BPBRCF            1
- 
+
       * Tolerance for funding rate
      C***************    PARM                    FTTFRT            3 0          213496
      C                   PARM                    WFTTFRT           3            213496
- 
+
       ** Field OK flags (DS) from/to caller
      C                   PARM                    LOAM_OK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Calling module code
      C                   PARM                    CallModCod        3
- 
+
       ** Features
      C                   PARM                    CDE002            1
      C                   PARM                    CLE002            1
@@ -5641,7 +5892,7 @@
      C                   PARM                    CLE030            1                          CLE030
      C                   PARM                    CEU004            1
      C                   PARM                    CEU020            1
- 
+
       ** Valid Loan Amendment layout (DS) from/to caller
      C                   PARM                    ValidLoam
       *
@@ -5963,6 +6214,19 @@
      C                   IF        PRTCD = *BLANKS                                            CRE073
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
+                                                                                              CLE158
+      ** Determine if CLE158 is installed                                                     CLE158
+                                                                                              CLE158
+     C                   EVAL      CLE158 = 'N'                                               CLE158
+     C                   CALL      'AOSARDR0'                                                 CLE158
+     C                   PARM      *BLANKS       PRTCD                                        CLE158
+     C                   PARM      '*VERIFY '    POPTN                                        CLE158
+     C                   PARM      'CLE158'      PSARD                                        CLE158
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE158
+                                                                                              CLE158
+     C                   IF        PRTCD = *BLANKS                                            CLE158
+     C                   EVAL      CLE158 = 'Y'                                               CLE158
+     C                   ENDIF                                                                CLE158
       *                                                                                       240968
       ***  Access bank details                                                                240968
       *                                                                                       240968
@@ -5985,7 +6249,8 @@
      C**********         PARM      *BLANKS       PSysVal02                             240968 244314
      C                   PARM      CLAuthSMDT    PSysVal02                                    244314
      C                   PARM      *BLANKS       PCurSet02                                    240968
-     C                   PARM      *BLANKS       PSysVal03                                    240968
+     C**********         PARM      *BLANKS       PSysVal03                             240968 CLE158
+     C                   PARM      FctyNoDaysFwd PSysVal03                                    CLE158
      C                   PARM      *BLANKS       PCurSet03                                    240968
      C                   PARM      *BLANKS       PSysVal04                                    240968
      C                   PARM      *BLANKS       PCurSet04                                    240968
@@ -6010,6 +6275,7 @@
      C                   EndIf                                                                240968
      C                   MOVEL     PCurSet01     ATHORED           1                          240968
      C                   MOVEL     PCurSet02     ATHSMDT           1                          244314
+     C                   MOVEL     PCurSet03     NDayFwd                                      CLE158
       *                                                                                       240968
       *                                                                                       240408
       ** Check System Value: Use Original Borrower or Purchased From?                         240408

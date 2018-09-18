@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046370           Date 07Nov17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD027418           Date 18Jul18               *
+      *  Prev Amend No. MD026971           Date 18Jul18               *
+      *                 MD025837A          Date 18Jul18               *
+      *                 CLE158             Date 18Jul18               *
+      *                 MD046370           Date 07Nov17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041443           Date 19Sep16               *
       *                 CLE154             Date 06Aug12               *
       *                 CLE141             Date 08Feb16               *
@@ -156,6 +160,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027418 - Display Warning/Error on auth of insert (CLE158)  *
+      *  MD026971 - Issue either overridable error or warning         *
+      *  MD025837A - Apply MD025837 extra check to CLE158 processing  *
+      *  CLE158 - Tranche and Facility Control                        *
       *  MD046370 - Component LERC135 is looping in COB. If system    *
       *             value 'AutoEndCalcLoanFee' is 'N', allow change   *
       *             of loan maturity date to be earlier than fee start*
@@ -608,6 +616,7 @@
      D*OMEInd***       C                   CONST('OMEIndicator')                      BUG8436 CSC054
      D PEAInd          C                   CONST('PEAIndicator')                              CSC054
      D RateFixDays     C                   Const('RateFixingDaysDfault')                      256579
+     D FctyNoDaysFwd   C                   Const('FctyExceedNoDaysFwd')                       CLE158
       *
       ** +--------------------------------------+
       ** | Arrays and Data Structures           |
@@ -1126,6 +1135,9 @@
      D PCurSet09       S            200A                                                     BUG6108
      D PSysVal10       S             20A                                                     BUG6108
      D PCurSet10       S            200A                                                     BUG6108
+                                                                                              CLE158
+     D NDayFwd         S              2S 0 INZ(0)                                             CLE158
+     D CLE158          S              1A                                                      CLE158
                                                                                               CLE143
      D CLE143          S              1A                                                      CLE143
      D @KEY1           S              3                                                       CLE134
@@ -4723,14 +4735,104 @@ E004 C                   ENDIF
      C     WKFAM         READE     LEFCAML7                               99
      C                   ENDDO
      C                   ENDIF
+      *                                                                                       CLE158
+     C                   MOVE      DDMDAT        ZDATE                                        CLE158
+     C                   MOVE      BJDFIN        ZDATFM                                       CLE158
+     C                   CALL      'ZDATE1'                                                   CLE158
+     C                   PARM      *BLANKS       ZERR                                         CLE158
+     C                   PARM                    ZDATE                                        CLE158
+     C                   PARM                    ZDATFM                                       CLE158
+     C                   PARM                    ZDAYNO                                       CLE158
+      *                                                                                       CLE158
+     C                   Z-ADD     ZDAYNO        WMDAT2            5 0                        CLE158
+      *                                                                                       CLE158
+      ** Call program to check for facility exceeded amount from                              CLE158
+      ** value date (Only applicable if CLE025 is OFF)                                        CLE158
+      *                                                                                       CLE158
+     C                   IF        CLE158 = 'Y'                                               CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'LOAN'                                      CLE158
+      *                                                                                       CLE158
+     C                             OR CLE158 = 'Y'                                            CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'PTPU'                                      CLE158
+      *                                                                                     MD027418
+     C                             OR CLE158 = 'Y'                                          MD027418
+     C                             and CLE025 = 'N'                                         MD027418
+     C                             and DDACTN = 'X'                                         MD027418
+     C                             and @@CHTP = 'I'                                         MD027418
+     C                             and WSVVD >= BJRDNB                                      MD027418
+     C                             and LoanType = 'LOAN'                                    MD027418
+      *                                                                                     MD027418
+     C                             OR CLE158 = 'Y'                                          MD027418
+     C                             and CLE025 = 'N'                                         MD027418
+     C                             and DDACTN = 'X'                                         MD027418
+     C                             and @@CHTP = 'I'                                         MD027418
+     C                             and WSVVD >= BJRDNB                                      MD027418
+     C                             and LoanType = 'PTPU'                                    MD027418
+      *                                                                                       CLE158
+     C                   MOVE      FACT          @FACT             3                          CLE158
+     C                   MOVE      FCNO          @FCNO             2                          CLE158
+     C                   MOVE      *BLANKS       DSAMTP            2                        MD027418
+      *                                                                                       CLE158
+     C                   CALL      'LE000630'                                                 CLE158
+     C                   PARM                    CNUMF                                        CLE158
+     C                   PARM                    @FACT                                        CLE158
+     C                   PARM                    @FCNO                                        CLE158
+     C                   PARM                    WSVVD                                        CLE158
+     C                   PARM                    WMDAT2                                    MD025837A
+     C                   PARM                    FCBAL                                        CLE158
+     C                   PARM                    NDayFwd                                      CLE158
+     C                   PARM                    DDACTN                                     MD027418
+     C                   PARM                    DDLNRF                                     MD027418
+     C                   PARM                    DSAMTP                                     MD027418
+     C                   PARM      *BLANKS       @PRTCD            1                          CLE158
+      *                                                                                       CLE158
+      ** If the transaction amount causes the available amount of the                         CLE158
+      ** Fcty/Tranche to be exceeded for any of the next NFwdDays                             CLE158
+      ** business days from the value date of the transaction                                 CLE158
+      ** --> Issue overridable error message                                                  CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'E'                                                        CLE158
+     C                   MOVE      'W'           DDCPAMOK                                   MD026971
+     C                   ADD       1             WId                                        MD026971
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                             MD026971
+     C                   MOVEL     '5049116'     WMsgIDXAr(WId)                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+      ** If the transaction causes the available amount of the                                CLE158
+      ** Fcty/Tranche to be exceeded beyond the NDayFwd business day                          CLE158
+      ** --> Issue warning message only                                                       CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'W'                                                        CLE158
+     C                   MOVE      'W'           DDCPAMOK                                     CLE158
+     C                   ADD       1             WId                                          CLE158
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                               CLE158
+     C                   MOVEL     '5049117'     WMsgIDXAr(WId)                             MD026971
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+     C                   ENDIF                                                                CLE158
       *
      C     OVPC          ADD       100           WRK85             8 5
      C                   DIV       100           WRK85
      C                   MULT(H)   WRK85         FAMT
      C                   Z-ADD     1             S
       *
+      ** Perform old validation if CLE158 is off, or                                          CLE158
+      ** is ON but value date is less than the run date.                                      CLE158
+      *                                                                                       CLE158
      C     S             DOWLE     10
      C     RUNS(S)       ANDLE     DTEXF
+     C     CLE158        ANDEQ     'N'                                                        CLE158
+      *                                                                                       CLE158
+     C     S             ORLE      NdayFwd                                                    CLE158
+     C     RUNS(S)       ANDLE     DTEXF                                                      CLE158
+     C     CLE158        ANDEQ     'Y'                                                        CLE158
+     C     WSVVD         ANDLT     BJRDNB                                                     CLE158
 
      C     RUNS(S)       IFGE      WSVVD
      C     FAMT          ANDLT     OAM(S)
@@ -4892,14 +4994,96 @@ E004 C                   ENDIF
      C                   ENDDO
      C                   ENDIF
       *
+      ** Call program to check for facility exceeded amount from                              CLE158
+      ** value date (Only applicable if CLE025 is OFF)                                        CLE158
+      *                                                                                       CLE158
+     C                   IF        CLE158 = 'Y'                                               CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'LOAN'                                      CLE158
+      *                                                                                       CLE158
+     C                             OR CLE158 = 'Y'                                            CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'PTPU'                                      CLE158
+      *                                                                                       CLE158
+     C                             OR CLE158 = 'Y'                                            CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'X'                                           CLE158
+     C                             and @@CHTP = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'LOAN'                                      CLE158
+      *                                                                                       CLE158
+     C                             OR CLE158 = 'Y'                                            CLE158
+     C                             and CLE025 = 'N'                                           CLE158
+     C                             and DDACTN = 'X'                                           CLE158
+     C                             and @@CHTP = 'I'                                           CLE158
+     C                             and WSVVD >= BJRDNB                                        CLE158
+     C                             and LoanType = 'PTPU'                                      CLE158
+      *                                                                                       CLE158
+     C                   MOVE      CAFT          @FACT                                        CLE158
+     C                   MOVE      CAFN          @FCNO                                        CLE158
+     C                   MOVE      *BLANKS       DSAMTP            2                          CLE158
+      *                                                                                       CLE158
+     C                   CALL      'LE000630'                                                 CLE158
+     C                   PARM                    CNUMF                                        CLE158
+     C                   PARM                    @FACT                                        CLE158
+     C                   PARM                    @FCNO                                        CLE158
+     C                   PARM                    WSVVD                                        CLE158
+     C                   PARM                    WMDAT2                                       CLE158
+     C                   PARM                    FCBAL                                        CLE158
+     C                   PARM                    NDayFwd                                      CLE158
+     C                   PARM                    DDACTN                                       CLE158
+     C                   PARM                    DDLNRF                                       CLE158
+     C                   PARM                    DSAMTP                                       CLE158
+     C                   PARM      *BLANKS       @PRTCD            1                          CLE158
+      *                                                                                       CLE158
+      ** If the transaction amount causes the available amount of the                         CLE158
+      ** Fcty/Tranche to be exceeded for any of the next NFwdDays                             CLE158
+      ** business days from the value date of the transaction                                 CLE158
+      ** --> Issue overridable error message                                                  CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'E'                                                        CLE158
+     C                   MOVE      'W'           DDCPAMOK                                     CLE158
+     C                   ADD       1             WId                                          CLE158
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                               CLE158
+     C                   MOVEL     '5049118'     WMsgIDXAr(WId)                               CLE158
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+      ** If the transaction causes the available amount of the                                CLE158
+      ** Fcty/Tranche to be exceeded beyond the NDayFwd business day                          CLE158
+      ** --> Issue warning message only                                                       CLE158
+      *                                                                                       CLE158
+     C     @PRTCD        IFEQ      'W'                                                        CLE158
+     C                   MOVE      'W'           DDCPAMOK                                     CLE158
+     C                   ADD       1             WId                                          CLE158
+     C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)                               CLE158
+     C                   MOVEL     '5049119'     WMsgIDXAr(WId)                               CLE158
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
+     C                   ENDIF                                                                CLE158
+      *                                                                                       CLE158
      C     OVPC          ADD       100           WRK85             8 5
      C                   DIV       100           WRK85
      C                   MULT(H)   WRK85         FAMTB
       *
      C                   Z-ADD     1             S
      C                   Z-ADD     0             WTSUM            13 0
+      *                                                                                       CLE158
+      ** Perform old validation if CLE158 is off, or                                          CLE158
+      ** is ON but value date is less than the run date.                                      CLE158
+      *                                                                                       CLE158
      C     S             DOWLE     10
      C     CLE025        ANDEQ     'N'                                                        CLE025
+     C     CLE158        ANDEQ     'N'                                                        CLE158
+      *                                                                                       CLE158
+     C     S             ORLE      NdayFwd                                                    CLE158
+     C     CLE025        ANDEQ     'N'                                                        CLE158
+     C     CLE158        ANDEQ     'Y'                                                        CLE158
+     C     WSVVD         ANDLT     BJRDNB                                                     CLE158
+      *                                                                                       CLE158
      C     CRAKEY        CHAIN     LEFCLTLC                           99
       *
      C*****OAMD(S)*******ADD       WSVAM         WTSUM
@@ -9541,6 +9725,19 @@ E004 C                   ENDIF
      C                   EXSR      *PSSR                                                      CLE141
      C                   ENDIF                                                                CLE141
                                                                                               CLE141
+      ** Determine if CLE158 is switched on                                                   CLE158
+                                                                                              CLE158
+     C                   EVAL      CLE158 = 'N'                                               CLE158
+     C                   CALLB     'AOSARDR0'                                                 CLE158
+     C                   PARM      *BLANKS       PRTCD                                        CLE158
+     C                   PARM      '*VERIFY'     POPTN                                        CLE158
+     C                   PARM      'CLE158'      PSARD                                        CLE158
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE158
+                                                                                              CLE158
+     C                   IF        PRTCD = *BLANKS                                            CLE158
+     C                   EVAL      CLE158 = 'Y'                                               CLE158
+     C                   ENDIF                                                                CLE158
+                                                                                              CLE158
       ** Check for auto allocation of loan numbers system value.                             BUG6108
      C                   CALLB     'AOSVALR0'                                                BUG6108
      C                   PARM      *BLANKS       PRtCd                                       BUG6108
@@ -9553,7 +9750,8 @@ E004 C                   ENDIF
      C**********         PARM                    PSysVal03                            BUG6108 256579
      C                   PARM      RateFixDays   PSysVal03                                    256579
      C                   PARM                    PCurSet03                                   BUG6108
-     C                   PARM                    PSysVal04                                   BUG6108
+     C**********         PARM                    PSysVal04                            BUG6108 CLE158
+     C                   PARM      FctyNoDaysFwd PSysVal04                                    CLE158
      C                   PARM                    PCurSet04                                   BUG6108
      C                   PARM                    PSysVal05                                   BUG6108
      C                   PARM                    PCurSet05                                   BUG6108
@@ -9595,6 +9793,8 @@ E004 C                   ENDIF
      C**********         MOVE      'Y'           WOMEINd                              BUG8436 CSC054
      C                   MOVE      'Y'           WPEAINd                                      CSC054
      C                   ENDIF                                                               BUG8436
+                                                                                              CLE158
+     C                   MOVEL     PCurSet04     NdayFwd                                      CLE158
       *                                                                                       CLE148
       ** Check System Value: LoanAlphaAllow                                                   CLE148
       ** Check System Value: AutoEndCalcLoanFee                                             MD046370

@@ -9,103 +9,111 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. MD051723           Date 17Sep18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD045731           Date 27Sep17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL013  *CREATE    Date 31Apr02              */
+/*                      CGL013  *CREATE    Date 31Apr02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051723 - After submitting a batch header and requesting   */
+/*                  the MT940 in Message Management menu, the MT940  */
+/*                  of the batch was not generated in MGOMSGPD.      */      
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Recompile over changed procedure GL001435        */
 /*       CGL013 - MT94x Message Generation                           */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,GLC001435A                                          */
- 
+
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7) VALUE('       ')
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&DATFMT) TYPE(*CHAR) LEN(3)                                 /*MD045731*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**/                                                                                    /*MD045731*/
 /* Retrieve system date format */                                                       /*MD045731*/
 /**/                                                                                    /*MD045731*/
              RTVSYSVAL  SYSVAL(QDATFMT) RTNVAR(&DATFMT)                                 /*MD045731*/
 
 /* Check feature CGL013 MT94x Message Generation */
- 
+
              CHGVAR     VAR(&RTNCDE) VALUE('       ')
              CALL       PGM(AOSARDR0) PARM(&RTNCDE '*VERIFY' 'CGL013')
              IF         COND(&RTNCDE *NE '       ') THEN(GOTO +
                           CMDLBL(END))
- 
+
              CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*/COPY WNCPYSRC,GLC001435B                                          */
- 
+
+              OVRDBF     FILE(GLNWKAL0) SHARE(*NO)                                      /*MD051723*/
+
 /* Reset Network Activity Control File */
- 
+
 /**********   CALLPRC    PRC(GL001435) */                                               /*MD045731*/
               CALLPRC    PRC(GL001435)  PARM(&DATFMT)                                   /*MD045731*/
- 
+              
+              DLTOVR FILE(GLNWKAL0)                                                     /*MD051723*/
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /*/COPY WNCPYSRC,GLC001435C                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
 ABNOR:
 /*/COPY WNCPYSRC,GLC001435D                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             GLC001435 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 /* Abnormal termination - interactive job */
- 
+
              IF         COND(&JOBTYPE = '1') THEN(DO)
                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC001435 ended abnormally - see job +
                           log') TOPGMQ(*EXT)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 END:
- 
+
 /*/COPY WNCPYSRC,GLC001435E                                          */
- 
+
              ENDPGM

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027418           Date 18Jul18               *
-      *  Prev Amend No. MD026971           Date 18Jul18               *
+      *  Last Amend No. MD051873           Date 14Sep18               *
+      *  Prev Amend No. MD027418           Date 18Jul18               *
+      *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
       *                 CLE158             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -94,6 +95,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051873 - Issue warning or overridable error on Principal   *
+      *             Increase amendment when facility will be exceeded *
       *  MD027418 - Apply CLE158 validation on Auth mode              *
       *  MD026971 - Issue either overridable error or warning         *
       *  MD025837A - Do not issue warning when MDAT of loan is LT     *
@@ -2558,6 +2561,12 @@
      C     DDATYP        ANDEQ     'PI'                                                     MD027418
      C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
      C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+     C     DDACTN        OREQ      'X'                                                      MD051873
+     C     CLE158        ANDEQ     'Y'                                                      MD051873
+     C     CLE025        ANDEQ     'N'                                                      MD051873
+     C     DDATYP        ANDEQ     'PI'                                                     MD051873
+     C     CAM_CHTP      ANDEQ     'A'                                                      MD051873
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD051873
       *
       ** Use Facility CCY to pick facility decimal positions
      C                   CALLB     'AOCURRR0'
@@ -2620,6 +2629,12 @@
      C     DDATYP        ANDEQ     'PI'                                                     MD027418
      C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
      C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+     C     DDACTN        OREQ      'X'                                                      MD051873
+     C     CLE158        ANDEQ     'Y'                                                      MD051873
+     C     CLE025        ANDEQ     'N'                                                      MD051873
+     C     DDATYP        ANDEQ     'PI'                                                     MD051873
+     C     CAM_CHTP      ANDEQ     'A'                                                      MD051873
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD051873
       *                                                                                     MD027418
       ** Convert amounts in facility currency equivalent                                    MD027418
      C     CDPF          SUB       CDPL          CX                1 0                      MD027418
@@ -2833,6 +2848,12 @@
      C     DDATYP        ANDEQ     'PI'                                                     MD027418
      C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
      C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+     C     DDACTN        OREQ      'X'                                                      MD051873
+     C     CLE158        ANDEQ     'Y'                                                      MD051873
+     C     CLE025        ANDEQ     'N'                                                      MD051873
+     C     DDATYP        ANDEQ     'PI'                                                     MD051873
+     C     CAM_CHTP      ANDEQ     'A'                                                      MD051873
+     C     VDAYNO        ANDGE     BJRDNB                                                   MD051873
       *                                                                                     MD027418
       ** Use CA Facility CCY to pick facility decimal positions                             MD027418
      C                   CALLB     'AOCURRR0'                                               MD027418
@@ -3292,6 +3313,7 @@
      C                   ENDIF
       *
      C     DDACTN        IFEQ      'I'
+     C     DDACTN        OREQ      'A'                                                      MD051873
      C     WLAMT         MULT(H)   OFCXRT        ILAAMF           13 0
       *
       ** If CLE023 is on convert amounts using spot rate.

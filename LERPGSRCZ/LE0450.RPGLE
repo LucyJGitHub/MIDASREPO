@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049745B          Date 29Jun18               *
-      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *  Last Amend No. MD051788           Date 30Aug18               *
+      *  Prev Amend No. MD049745B          Date 29Jun18               *
+      *                 MD049745A          Date 16Mar18               *
       *                 MD049745           Date 02Mar18               *
       *                 MD049444           Date 07Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -385,6 +386,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *
+      *              missing exchange rate on PDCL                    *
       *  MD049745B - FX account keys are not generated for loan start *
       *              date events                                      *
       *  MD049745A - Corruption of Original currency of Loans and     *
@@ -7098,6 +7101,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on set work type to start & call SR/SETCCY                      CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
+     C     NEWCOB        ANDNE     'Y'                                                      MD051788
      C                   MOVE      'S'           WTYPE
      C**********           EXSR SETCCY                                                 CLE031 218782
       *                                                                                       CLE031
@@ -7141,6 +7145,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on  call SR/SETTLE                                              CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
+     C     NEWCOB        ANDNE     'Y'                                                      MD051788
      C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   MOVE      OSACSV        OSAC
      C                   MOVE      SETPSV        SETP
@@ -7511,6 +7516,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on set work type to start & call SR/SETCCY                      CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
+     C     NEWCOB        ANDNE     'Y'                                                      MD051788
      C                   MOVE      'S'           WTYPE
      C                   EXSR      SETCCY
      C                   ENDIF
@@ -7527,6 +7533,7 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on call SR/SETTLE                                               CLE031
       *                                                                                       CLE031
      C     CLE031        IFEQ      'Y'
+     C     NEWCOB        ANDNE     'Y'                                                      MD051788
      C*****WCLE134       ANDEQ     ' '                                             MD049078 MD049745
      C                   EXSR      SETTLE
      C                   ENDIF

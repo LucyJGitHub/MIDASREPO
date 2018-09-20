@@ -48,8 +48,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048606           Date 20Nov17               *
+      *  Last Amend No. MD048400           Date 02Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048606           Date 20Nov17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD037658           Date 19Feb16               *
@@ -185,6 +186,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048400 - LE: Incorrect COB generated projection            *
+      *             for the fee on payment date                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048606 - Looping COB Component - LEC0609B seq 00001        *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
@@ -511,6 +514,10 @@
      FLEHISTLBIF  E           K        DISK                                                   CLE073
      FLEPDUFL1IF  E           K        DISK                                                   CLE134
       *                                                                                       CLE073
+     FLEPDUEL6IF  E           K        DISK                                                 MD048400
+     F            LEPDUED0                          KRENAMELEPDUED1                         MD048400
+     FLEPDUFLAIF  E           K        DISK                                                 MD048400
+     F            LEPDUFD0                          KRENAMELEPDUFD1                         MD048400 
      FLE0492AUO   E                    PRINTER                              0030
      ***  Audit report
      FLKYFEDL0IF  E           K        DISK                                                 MD030700
@@ -1029,6 +1036,30 @@
      I              PRAM                            PRAMM                                     CLE073
      I              LCD                             LCDM                                      CLE073
      I              CPAM                            CPAMM                                     CLE073
+     ILEPDUED1                                                                              MD048400
+      *                                                                                     MD048400
+      ** Rename LEPDUEL6 fields that are too long.                                          MD048400
+      *                                                                                     MD048400
+     I              YTKPACL                         YTPACL                                  MD048400
+     I              YTKPABR                         YTPABR                                  MD048400
+     I              YTKPAAC                         YTPAAC                                  MD048400
+     I              YTKPASE                         YTPASE                                  MD048400
+     I              YTKPACY                         YTPACY                                  MD048400
+     I              YTKIACL                         YTIACL                                  MD048400
+     I              YTKIABR                         YTIABR                                  MD048400
+     I              YTKIAAC                         YTIAAC                                  MD048400
+     I              YTKIASE                         YTIASE                                  MD048400
+     I              YTKIACY                         YTIACY                                  MD048400
+      *                                                                                     MD048400
+     ILEPDUFD1                                                                              MD048400
+      *                                                                                     MD048400
+      ** Rename LEPDUFLA fields that are too long.                                          MD048400
+      *                                                                                     MD048400
+     I              YTKPACL                         YTPACL                                  MD048400
+     I              YTKPABR                         YTPABR                                  MD048400
+     I              YTKPAAC                         YTPAAC                                  MD048400
+     I              YTKPASE                         YTPASE                                  MD048400
+     I              YTKPACY                         YTPACY                                  MD048400
       *
      IPSDS       SDS
       ** Program Status Data Structure - gives Job/Workstation name and
@@ -1885,6 +1916,15 @@
      C                     KFLD           FEBRCA                                              CLE073
      C                     KFLD           FECNUM                                              CLE073
      C                     KFLD           FELOAN                                              CLE073
+      *                                                                                     MD048400
+     C           KEYPDI    KLIST                                                            MD048400
+     C                     KFLD           WRECI   1                                         MD048400
+     C                     KFLD           WPLON   6                                         MD048400
+     C                     KFLD           WPDCT   1                                         MD048400
+      *                                                                                     MD048400
+     C           KEYPDF    KLIST                                                            MD048400
+     C                     KFLD           WRECI                                             MD048400
+     C                     KFLD           WPLON                                             MD048400
       *
      C           *NAMVAR   DEFN           LESTAT
      C                     IN   LESTAT
@@ -6284,8 +6324,19 @@
       ***  Update of future total amount drawn array
       *
      C           ETP       IFEQ 'A1'                       ***B001
-      *
+      *                                                                                     MD048400
+      ** Call subroutine to check if amounts should update                                  MD048400
+      ** facility exposure                                                                  MD048400
+      *                                                                                     MD048400
+     C                     MOVEL'Y'       PROCFL  1                                         MD048400
+     C           CLE134    IFEQ 'Y'                                                         MD048400
+     C                     EXSR SRFAMU                                                      MD048400
+     C                     ENDIF                                                            MD048400
+     C           PROCFL    IFEQ 'Y'                                                         MD048400
      C                     Z-ADDWEAMT     WRK13
+     C                     ELSE                                                             MD048400
+     C                     Z-ADD0         WRK13                                             MD048400
+     C                     ENDIF                                                            MD048400
       *
      C***********PTP       IFNE '66'                       ***B002        CLE005
      C***********PTP       ORNE '67'                                      CLE005
@@ -8958,6 +9009,40 @@
      C                     ENDSR                                                            CLE075AP
      C/EJECT                                                                                CLE075AP
       *                                                                                     CLE075AP
+      *****************************************************************                     MD048400
+      *                                                               *                     MD048400
+      *  SRFAMU - Check facility amount utilisation flag for Y and Z  *                     MD048400
+      *                                                               *                     MD048400
+      *****************************************************************                     MD048400
+     C           SRFAMU    BEGSR                                                            MD048400
+     C                     MOVELLTYP      LONTYP  1                                         MD048400
+      *                                                                                     MD048400
+      ** Interest PDCL                                                                      MD048400
+      *                                                                                     MD048400
+     C           LONTYP    IFEQ 'Y'                                                         MD048400
+     C                     MOVEL'D'       WRECI                                             MD048400
+     C                     MOVELLNRF      WPLON                                             MD048400
+     C                     MOVEL'I'       WPDCT                                             MD048400
+     C           KEYPDI    CHAINLEPDUEL6             88                                     MD048400
+     C           *IN88     IFEQ *OFF                                                        MD048400
+     C                     MOVELYPFAMU    PROCFL                                            MD048400
+     C                     ENDIF                                                            MD048400
+     C                     ENDIF                                                            MD048400
+      *                                                                                     MD048400
+      ** Fee PDCL                                                                           MD048400
+      *                                                                                     MD048400
+     C           LONTYP    IFEQ 'Z'                                                         MD048400
+     C                     MOVEL'D'       WRECI                                             MD048400
+     C                     MOVELLNRF      WPLON                                             MD048400
+     C           KEYPDF    CHAINLEPDUFLA             88                                     MD048400
+     C           *IN88     IFEQ *OFF                                                        MD048400
+     C                     MOVELYPFAMU    PROCFL                                            MD048400
+     C                     ENDIF                                                            MD048400
+     C                     ENDIF                                                            MD048400
+      *                                                                                     MD048400
+     C                     ENDSR                                                            MD048400
+     C/EJECT                                                                                MD048400
+      *                                                                                     MD048400
       /TITLE SR/ZFWDT
      C/COPY ZSRSRC,ZFWDT
       /TITLE SR/ZACCH

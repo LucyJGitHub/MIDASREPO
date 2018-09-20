@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051305           Date 19Jun18               *
-      *  Prev Amend No. MD050345           Date 04Apr18               *
+      *  Last Amend No. MD023188           Date 20Sep18               *
+      *  Prev Amend No. MD051305           Date 19Jun18               *
+      *                 MD050345           Date 04Apr18               *
       *                 MD050052           Date 16Mar18               *
       *                 CGL157             Date 17Aug15               *
       *                 MD044880           Date 15Jan18               *
@@ -143,6 +144,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023188 - European tax status disappears after re-inserting *
+      *             customer details by country of tax. Remove part   *
+      *             of AR784700 as it is causing blank tax status.    *
+      *             Ensure that tax status is properly saved when     *
+      *             it is left blanks then defaulted.                 *
+      *           - Applied for MD048773.                             *
       *  MD051305 - CRS warning encountered while CRS is switched off *
       *  MD050345 - Data under CRS Country Details are not aligned to *
       *             their corresponding columns                       *
@@ -1926,11 +1933,14 @@
      C                   EXSR      ValdCCTX                                                 AR740196
      C                   EVAL      V_CTCUST =  TXDDCUST                                     AR740196
      C                   EVAL      V_CTCTTX =  TXDDCTTX                                     AR740196
-     C                   EVAL      D01ETXS  =  TXDDETXS                                     AR784700
+     C**********         EVAL      D01ETXS  =  TXDDETXS                            AR784700 MD023188
+     C                   EVAL      V_CTETXS =  TXDDETXS                                     MD023188
      C                   EVAL      V_CCTXArr(Idy)  = ValidCCTX                              AR740196
+     C                   EVAL      CCTXArr(Idy) = TranInCCTX1                               MD023188
      C                   EVAL      Idy = Idy + 1                                            AR740196
      C                   EVAL      hasDetails = *ON                                         AR743761
      C                   ENDDO                                                              AR740196
+     C                   EVAL      TranInCCTX = CCTXArrDS                                   MD023188
      C**********         ENDIF                                                     AR740196 AR913994
                                                                                             AR740196
                                                                                             AR743761

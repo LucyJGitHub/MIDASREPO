@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034709           Date 16Jun15               *
+      *  Last Amend No. MD047369           Date 30Aug17               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034709           Date 16Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 MD033530           Date 09Jun15               *
       *                 AR920574           Date 10Nov14               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369 - Funds transfter does not check block Dr flag on   *
+      *             beneficary customer account.                      *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD034709 - A serious Midas error has occurred is encountered *
       *             upon hitting the Complete button in IPAY          *
@@ -628,6 +631,10 @@
      C**********         MOVEL     'FTM7120'     MsgIdXAr(Idx)                    AR750736 AR1077987
      C**********         MOVEL     '5045879'     MsgIdXAr(Idx)                    AR1077987 MD025111
      C                   ENDIF                                                              AR750736
+     C                   TESTB     '0'           RETB                     53                MD047369
+     C     *IN53         IFEQ      '1'                                                      MD047369
+     C                   MOVE      'R'           BENEDrBlck                                 MD047369
+     C                   ENDIF                                                              MD047369
      C                   ENDIF                                                              AR750736
       * Check for block credits on account                                                   BUG4581
      C                   TESTB     '3'           RETB                     51                 BUG4581

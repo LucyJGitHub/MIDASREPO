@@ -19,7 +19,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Prev Amend No. MD047884           Date 25Sep17               *      
+      *  Last Amend No. MD047884           Date 25Sep17               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
@@ -53,7 +53,7 @@
       *                                                               *
       *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
       *             Indicator is Add and Charges to the Debit of A/c  *
-      *             is blocked debit.                                 *      
+      *             is blocked debit.                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *

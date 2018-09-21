@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Prev Amend No. MD047884           Date 25Sep17               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
       *                 257125             Date 28Sep12               *
       *                 CFT120             Date 28Sep12               *
@@ -50,6 +51,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
+      *             Indicator is Add and Charges to the Debit of A/c  *
+      *             is blocked debit.                                 *      
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -254,6 +258,8 @@
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
                                                                                               247273
+     D CHACDrBlck      S              1A                                                    MD047884
+                                                                                            MD047884
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -522,6 +528,7 @@
       *
       ** Incoming Payments for file update - file format
      C                   PARM                    NwIPFilFmt
+     C                   PARM                    CHACDrBlck                                 MD047884
       *
       ** Update error information.
       *
@@ -1973,6 +1980,7 @@
       ** Fees & Charges                                                         CFT009
      C                   PARM                    CFT009                         CFT009
      C                   PARM                    CFT010                         CFT010
+     C                   PARM                    CHACDrBlck                                 MD047884
       *
       ** OUTPUT
       ** ======

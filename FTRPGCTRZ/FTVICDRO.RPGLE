@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD047884           Date 25Sep17               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 07May13               *
       *                 AR1095997          Date 20Mar13               *
       *                 CFT120             Date 28Sep12               *
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
+      *             Indicator is Add and Charges to the Debit of A/c  *
+      *             is blocked debit.                                 *      
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -233,6 +237,7 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
+     D CHACDrBlck      S              1A                                                    MD047884
       *
       ** +--------------------------------------+
       ** ¦ /COPYs                               ¦
@@ -803,16 +808,18 @@
       *                                                                                       240689
       ** Blocked Debit                                                                        240689
       *                                                                                       240689
+     C                   EVAL      CHACDrBlck = ' '                                         MD047884
      C                   TESTB     '2'           WRETB                    48                  240689
      C     *IN48         IFEQ      '1'                                                        240689
+     C                   EVAL      CHACDrBlck = 'Y'                                         MD047884
      C/COPY WNCPYSRC,FTH00524
-     C                   MOVE      'N'           OKCDRO                                       240689
-     C                   IF        DDCDRC <> *BLANKS AND CFT120 = 'Y'                         CFT120
-     C                   MOVE      'N'           OKCdrc                                       CFT120
-     C                   ENDIF                                                                CFT120
-     C                   ADD       1             Idx                                          240689
-     C                   MOVEL     'DDCDRO'      FldNamXAr(Idx)                               240689
-     C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                                240689
+     C**********         MOVE      'N'           OKCDRO                              240689 MD047884
+     C**********         IF        DDCDRC <> *BLANKS AND CFT120 = 'Y'                CFT120 MD047884
+     C**********         MOVE      'N'           OKCdrc                              CFT120 MD047884
+     C**********         ENDIF                                                       CFT120 MD047884
+     C**********         ADD       1             Idx                                 240689 MD047884
+     C**********         MOVEL     'DDCDRO'      FldNamXAr(Idx)                      240689 MD047884
+     C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                       240689 MD047884
      C/COPY WNCPYSRC,FTH00525
      C                   ENDIF                                                                240689
       *                                                                                       240689
@@ -1026,6 +1033,7 @@
       *
       ** Incoming Payments for file update - file format
      C                   PARM                    NwIPFilFmt
+     C                   PARM                    CHACDrBlck                                 MD047884
      C/COPY WNCPYSRC,FTH00526
       *                                                                                       CFT120
       ** Access SAR details file to determine if CFT120 enhancement is                        CFT120

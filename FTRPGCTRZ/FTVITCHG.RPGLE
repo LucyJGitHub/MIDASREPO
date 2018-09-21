@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD047369           Date 30Aug17               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047884           Date 25Sep17               *
+      *  Prev Amend No. MD047369           Date 30Aug17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
       *                 CFT120             Date 28Sep12               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
+      *             Indicator is Add and Charges to the Debit of A/c  *
+      *             is blocked debit.                                 *
       *  MD047369 - Funds transfter does not check block Dr flag on   *
       *             beneficary customer account.                      *      
       *  MD046248 - Finastra Rebranding                               *
@@ -229,6 +233,7 @@
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
      D PSard           S              6                                                       CFT120
+     D CHACDrBlck      S              1A                                                    MD047884
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -1565,6 +1570,103 @@
      C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
      C                   ENDIF                                                              MD047369
      C                   ENDIF                                                              MD047369
+      *                                                                                     MD047884
+      ** Check Charges to the debit of A/C if Blocked Debit                                 MD047884
+      *                                                                                     MD047884
+     C                   IF        CHACDrBlck  = 'Y' AND                                    MD047884
+     C                             IPADDC = 'D'                                             MD047884
+     C                                                                                      MD047884
+      *                                                                                     MD047884
+     C                   IF        IPTRCM <> 0                                              MD047884
+     C                   MOVE      'N'           OKTRCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDTRCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPTXCH <> 0                                              MD047884
+     C                   MOVE      'N'           OKTXCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDTXCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPCQCH <> 0                                              MD047884
+     C                   MOVE      'N'           OKCQCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDCQCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPADCH <> 0                                              MD047884
+     C                   MOVE      'N'           OKADCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDADCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPTLCH <> 0                                              MD047884
+     C                   MOVE      'N'           OKTLCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDTLCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPMSCH <> 0                                              MD047884
+     C                   MOVE      'N'           OKMSCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDMSCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        IPINCHCM <> 0 and                                        MD047884
+     C                             S01494 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKCHCD                                     MD047884
+     C                   ADD       1             Idx                                        MD047884
+     C                   MOVEL     'DDCHCD'      FldNamXAr(Idx)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        I2AMM1 <> 0 AND                                          MD047884
+     C                             CFT009 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKM1CD                                     MD047884
+     C                   ADD       1             IDX                                        MD047884
+     C                   MOVEL     'M1CD'        FLDNAMXAR(IDX)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        I2AMM2 <> 0 AND                                          MD047884
+     C                             CFT009 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKM2CD                                     MD047884
+     C                   ADD       1             IDX                                        MD047884
+     C                   MOVEL     'M2CD'        FLDNAMXAR(IDX)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        I2AMM3 <> 0 AND                                          MD047884
+     C                             CFT009 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKM3CD                                     MD047884
+     C                   ADD       1             IDX                                        MD047884
+     C                   MOVEL     'M3CD'        FLDNAMXAR(IDX)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        I2AMM4 <> 0 AND                                          MD047884
+     C                             CFT009 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKM4CD                                     MD047884
+     C                   ADD       1             IDX                                        MD047884
+     C                   MOVEL     'M4CD'        FLDNAMXAR(IDX)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+      *                                                                                     MD047884
+     C                   IF        I2AMM5 <> 0 AND                                          MD047884
+     C                             CFT009 = 'Y'                                             MD047884
+     C                   MOVE      'N'           OKM5CD                                     MD047884
+     C                   ADD       1             IDX                                        MD047884
+     C                   MOVEL     'M5CD'        FLDNAMXAR(IDX)                             MD047884
+     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C                   ENDIF                                                              MD047884
+     C                   ENDIF                                                              MD047884
       *
       ** Check that total charges do not exceed payment amount if the
       ** add/deduct indicator is 'D' and 'Charges To The Debit Of' has
@@ -1779,6 +1881,7 @@
       ** Fees & Charges                                                         CFT009
      C                   PARM                    CFT009            1            CFT009
      C                   PARM                    CFT010            1            CFT009
+     C                   PARM                    CHACDrBlck                                 MD047884
       *
       ** OUTPUT
       ** ======

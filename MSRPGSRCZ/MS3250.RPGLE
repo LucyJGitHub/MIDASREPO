@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051817           Date 20Aug18               *
-      *  Prev Amend No. CSC053             Date 20Aug18               *
+      *  Last Amend No. MD051956           Date 19Sep18               *
+      *  Prev Amend No. MD051817           Date 20Aug18               *
+      *                 CSC053             Date 20Aug18               *
       *                 AR1033033          Date 20Aug18               *
       *                 MD046248           Date 27Oct17               *
       *                 CPK030             Date 14Apr14               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051956 - Alphanumeric Filename cannot process by job       *
+      *             MS-A2M_AFT.                                       *
       *  MD051817 - Unexpected return code is sent to MOPERQ by       *
       *             interface job MS_A2M_AFT                          *
       *  CSC053 - FTP Secure Connections for SWIFT and CM             *
@@ -136,6 +139,12 @@
       *                                                                                       CSC053
      D FTPSec          S              1A                                                      CSC053
      D CSC053          S              1A                                                   AR1033033
+     D xPos            S              2S 0                                                  MD051956
+     D yPos            S              2S 0                                                  MD051956
+     D xPattern        S             10A                                                    MD051956
+     D wTranslate      S                   LIKE(SIFTPO)                                     MD051956
+     D Up              C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                     MD051956
+     D Lo              C                   'abcdefghijklmnopqrstuvwxyz'                     MD051956
       ** Other work Variables                                                                 CSC053
       *
       /COPY MSCPYSRC,SRERRD
@@ -305,6 +314,19 @@
      C                   read      msftpod0                               55               AR1033033
      C                   movel     w@in4         wrk03                                     AR1033033
      C                   testn                   wrk03                56                   AR1033033
+      *                                                                                     MD051956
+      ** If filename not numeric (ie. MT103.out), do not skip                               MD051956
+      ** when the extension file ends with .out so that FTP can                             MD051956
+      ** process it.                                                                        MD051956
+      *                                                                                     MD051956
+     C                   if        *in56 <> *on                                             MD051956
+     C                   eval      wTranslate = %xlate(Up:Lo:SIFTPO)                        MD051956
+     C                   eval      yPos = %scan(xPattern:wTranslate)                        MD051956
+     C                   if        yPos > 0                                                 MD051956
+     C                   leave                                                              MD051956
+     C                   endif                                                              MD051956
+     C                   endif                                                              MD051956
+      *                                                                                     MD051956
      C                   enddo                                                             AR1033033
       *                                                                                    AR1033033
      C     *in55         doweq     '0'
@@ -504,6 +526,15 @@
      C                   ELSE                                                                 CSC053
      C                   MOVEL     SVal1         FTPSec                                       CSC053
      C                   ENDIF                                                                CSC053
+      *                                                                                     MD051956
+      ** Get the filename pattern from ICD, convert it to be in lower case                  MD051956
+      ** to be used as comparison in FTP ouptut                                             MD051956
+      *                                                                                     MD051956
+     C                   IF        ENSRFI <> *BLANKS                                        MD051956
+     C                   EVAL      xPos = %LEN(%TRIM(ENSRFI))                               MD051956
+     C                   EVAL      xPattern = %SUBST(ENSRFI:2:xPos-1)                       MD051956
+     C                   EVAL      xPattern = %XLATE(Up:Lo:xPattern)                        MD051956
+     C                   ENDIF                                                              MD051956
      C                   ENDIF                                                                CSC053
       *
       ** Pop subroutine

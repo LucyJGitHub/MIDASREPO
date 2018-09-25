@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 24Feb14               *
       *                 CFT151             Date 21Mar14               *
       *                 CFT120             Date 28Sep12               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
@@ -1994,6 +1997,7 @@
      C                   PARM                    DEFVALID                       CFT009
      C                   PARM                    DEFVALIDX                      CFT009
      C                   PARM                    BENEDrBlck        1                        MD025111
+     C                   PARM                    BENEDrRefd        1                       MD047369A
      C/COPY WNCPYSRC,FTIPAYCC15
       *
      C                   SELECT                                                               250600
@@ -2662,6 +2666,7 @@
                                                                                               199992
      C                   PARM                    PChgWarn                                     199992
      C                   PARM                    BENEDrBlck                                 MD025111
+     C                   PARM                    BENEDrRefd                                MD047369A
       *                                                                         CFT014
      C                   ENDSR                                                  CFT014
       *                                                                         CFT014

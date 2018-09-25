@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047884           Date 25Sep17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD047884           Date 25Sep17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
       *                 257125             Date 28Sep12               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *
       *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
       *             Indicator is Add and Charges to the Debit of A/c  *
       *             is blocked debit.                                 *
@@ -1981,6 +1984,7 @@
      C                   PARM                    CFT009                         CFT009
      C                   PARM                    CFT010                         CFT010
      C                   PARM                    CHACDrBlck                                 MD047884
+     C                   PARM                    BENEDrRefd                                MD047369A
       *
       ** OUTPUT
       ** ======
@@ -1989,6 +1993,10 @@
      C                   Parm                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning fields/message IDs/message data (arrays) from/to caller                   MD047369A
+     C                   Parm                    WFldNmXAr                                 MD047369A
+     C                   Parm                    WMsgIDXAr                                 MD047369A
+     C                   Parm                    WMsgDtXAr                                 MD047369A
       *
       ** Incoming Payments Lvl 2 Scrn 3 error indicators
      C                   PARM                    FTEIPY4
@@ -2732,6 +2740,7 @@
       ** Warning message work inds for charges screen                           CFT009
      C                   PARM                    PChgWarn                       CFT009
      C                   PARM                    BENEDrBlck        1                        MD025111
+     C                   PARM                    BENEDrRefd        1                       MD047369A
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

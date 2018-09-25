@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036089           Date 23Oct15               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036089           Date 23Oct15               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 10May14               *
       *                 CFT151             Date 21Mar14               *
@@ -102,6 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD036089 - Incorrect values appeared in FT IPN1              *
       *  AR1090283 - Customer details not visible for enquire.        *
@@ -3586,6 +3589,7 @@
      C                   PARM                    DefValid                       CFT009
      C                   PARM                    DefValidX                      CFT009
      C                   PARM                    BENEDrBlck        1                        MD025111
+     C                   PARM                    BENEDrRefd        1                       MD047369A
      C/COPY WNCPYSRC,FTIPAYSC11
       *
      C                   SELECT                                                               250600
@@ -5796,6 +5800,7 @@
       ** Warning message work inds for charges screen                           CFT009
      C                   PARM                    PChgWarn                       CFT009
      C                   PARM                    BENEDrBlck                                 MD025111
+     C                   PARM                    BENEDrRefd                                MD047369A
       *                                                                         CFT014
      C                   MOVE      PFrcReDisplay WRedisplay                     CFT014
       *                                                                         CFT014

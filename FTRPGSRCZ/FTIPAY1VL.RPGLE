@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW215             Date 06Apr15               *
       *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR798055           Date 19Aug14               *
@@ -80,6 +81,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR900506 - Add/Deduct defaulting not occurring through API   *
@@ -1786,6 +1789,7 @@
      C**********         PARM                    PPYFLDS          18                          CGL029
      C                   PARM                    PPYFLDS                                      CGL029
      C                   PARM                    BENEDrBlck                                 MD025111
+     C                   PARM                    BENEDrRefd                                MD047369A
       *                                                                                       CSW215
       ** Debit Account                                                                        CSW215
      C                   PARM                    PDBACT                                       CSW215
@@ -3600,6 +3604,7 @@
      C                   PARM                    DEFVALID                       CFT009
      C                   PARM                    DEFVALIDX                      CFT009
      C                   PARM                    BENEDrBlck        1                        MD025111
+     C                   PARM                    BENEDrRefd        1                       MD047369A
      C/COPY WNCPYSRC,FTIPA1VC24
                                                                                               CAP084
       ** Access SAR file to determine if CFT003 (Batch Authorisation)                         CAP084

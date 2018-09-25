@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD047369           Date 30Aug17               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD047369           Date 30Aug17               *      
+      *                 MD046248           Date 27Oct17               *
       *                 MD034709           Date 16Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 MD033530           Date 09Jun15               *
@@ -74,6 +75,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *
       *  MD047369 - Funds transfter does not check block Dr flag on   *
       *             beneficary customer account.                      *      
       *  MD046248 - Finastra Rebranding                               *
@@ -380,6 +383,7 @@
      D   LenStr                1      2                                                     MD000091
       *                                                                                     MD025111
      D BENEDrBlck      S              1A                                                    MD025111
+     D BENEDrRefd      S              1A                                                   MD047369A
                                                                                               CSW215
       ** Work variable for CSW215                                                             CSW215
      D CSW215          S              1A                                                      CSW215
@@ -621,6 +625,7 @@
       ** Check for block debits on account                                                  AR750736
       *                                                                                     AR750736
      C                   MOVE      ' '           BENEDrBlck                                 MD025111
+     C                   MOVE      ' '           BENEDrRefd                                MD047369A
      C     DDADDC        IFEQ      'D'                                                      AR851079
      C                   TESTB     '2'           RETB                     52                AR750736
      C     *IN52         IFEQ      '1'                                                      AR750736
@@ -633,7 +638,8 @@
      C                   ENDIF                                                              AR750736
      C                   TESTB     '0'           RETB                     53                MD047369
      C     *IN53         IFEQ      '1'                                                      MD047369
-     C                   MOVE      'R'           BENEDrBlck                                 MD047369
+     C**********         MOVE      'R'           BENEDrBlck                       MD047369 MD047369A
+     C                   MOVE      'Y'           BENEDrRefd                                MD047369A
      C                   ENDIF                                                              MD047369
      C                   ENDIF                                                              AR750736
       * Check for block credits on account                                                   BUG4581
@@ -1620,6 +1626,7 @@
       ** Account needed to set payment value date
      C                   PARM                    PPYFLDS
      C                   PARM                    BENEDrBlck                                 MD025111
+     C                   PARM                    BENEDrRefd                                MD047369A
       *                                                                                       CSW215
       ** Debit Account                                                                        CSW215
      C                   PARM                    PDBACT                                       CSW215

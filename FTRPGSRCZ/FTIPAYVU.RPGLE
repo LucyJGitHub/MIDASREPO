@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 MD044395           Date 08Mar17               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD036159           Date 15Jul16               *
@@ -97,6 +98,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -5623,6 +5626,7 @@
      C                   PARM                    DefValid
      C                   PARM                    DefValidX
      C                   PARM                    BENEDrBlck        1                        MD025111
+     C                   PARM                    BENEDrRefd        1                       MD047369A
       *                                                                                       230309
       *  If DDBRCA was not *BLANKS prior to CALLB 'FTIPAY1VL then                             230309
       *  ignore the value held in IPBRCA, set in *MODULE FTVISNDR, and                        230309
@@ -6271,6 +6275,7 @@
       ** Warning message work inds for charges screen
      C                   PARM                    PChgWarn
      C                   PARM                    BENEDrBlck                                 MD025111
+     C                   PARM                    BENEDrRefd                                MD047369A
  
      C                   ENDSR
       *****************************************************************

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD047884           Date 25Sep17               *
-      *  Prev Amend No. MD047369           Date 30Aug17               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD047884           Date 25Sep17               *
+      *                 MD047369           Date 30Aug17               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD025111           Date 10May14               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047369A - Funds transfter does not check block Dr flag on  *
+      *              beneficary customer account.                     *
       *  MD047884 - Error in IPAY insert when Add/Deduct Charges      *
       *             Indicator is Add and Charges to the Debit of A/c  *
       *             is blocked debit.                                 *
@@ -222,6 +225,7 @@
       *
       ** Index for arrays of error message ids, etc.
      D IDx             S              3P 0
+     D Wix             S              3P 0                                                 MD047369A
       *
       ** Error message array
      D WMsgArr         S             20    DIM(1) CTDATA PERRCD(1)
@@ -234,6 +238,7 @@
      D CFT120          S              1A                                                      CFT120
      D PSard           S              6                                                       CFT120
      D CHACDrBlck      S              1A                                                    MD047884
+     D BENEDrRefd      S              1A                                                   MD047369A
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -252,6 +257,10 @@
       *
       ** Initialise work variables.
      C                   EVAL      IDx = 0
+     C                   Eval      WFldNmXAr = *Blanks                                     MD047369A
+     C                   Eval      WMsgIDXAr  = *Blanks                                    MD047369A
+     C                   Eval      WMsgDtXAr = *Blanks                                     MD047369A
+     C                   Eval      WIx = 0                                                 MD047369A
       *
       ** Initialise display fields.
      C**********         EVAL      DDTRCM = *BLANKS                                           249756
@@ -1476,98 +1485,135 @@
       *                                                                                     MD047369
       ** Check if Referred Debit                                                            MD047369
       *                                                                                     MD047369
-     C                   IF        BENEDrBlck  = 'R' AND                                    MD047369
+     C**********         IF        BENEDrBlck  = 'R' AND                          MD047369 MD047369A
+     C                   IF        BENEDrRefd  = 'Y' AND                                   MD047369A
      C                             DDCDRO = *BLANKS                                         MD047369
      C                                                                                      MD047369
       *                                                                                     MD047369
      C                   If        IPTRCM <> 0                                              MD047369
      C                   MOVE      'N'           OKTRCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369 
-     C                   MOVEL     'DDTRCD'      FldNamXAr(Idx)                             MD047369 
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369 
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDTRCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDTRCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPTXCH <> 0                                              MD047369
      C                   MOVE      'N'           OKTXCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDTXCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDTXCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDTXCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPCQCH <> 0                                              MD047369
      C                   MOVE      'N'           OKCQCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDCQCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDCQCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDCQCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPADCH <> 0                                              MD047369
      C                   MOVE      'N'           OKADCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDADCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDADCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDADCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPTLCH <> 0                                              MD047369
      C                   MOVE      'N'           OKTLCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDTLCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDTLCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDTLCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPMSCH <> 0                                              MD047369
      C                   MOVE      'N'           OKMSCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDMSCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDMSCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDMSCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                             MD04736A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   If        IPINCHCM <> 0 and                                        MD047369
      C                             S01494 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKCHCD                                     MD047369
-     C                   ADD       1             Idx                                        MD047369
-     C                   MOVEL     'DDCHCD'      FldNamXAr(Idx)                             MD047369
-     C                   MOVEL     '5049015'     MsgIdXAr(Idx)                              MD047369
+     C**********         ADD       1             Idx                              MD047369 MD047369A
+     C**********         MOVEL     'DDCHCD'      FldNamXAr(Idx)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MsgIdXAr(Idx)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'DDCHCD'      WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   EndIf                                                              MD047369
       *                                                                                     MD047369
      C                   IF        I2AMM1 <> 0 AND                                          MD047369
      C                             CFT009 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKM1CD                                     MD047369
-     C                   ADD       1             IDX                                        MD047369
-     C                   MOVEL     'M1CD'        FLDNAMXAR(IDX)                             MD047369
-     C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
+     C**********         ADD       1             IDX                              MD047369 MD047369A
+     C**********         MOVEL     'M1CD'        FLDNAMXAR(IDX)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MSGIDXAR(IDX)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'M1CD'        WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   ENDIF                                                              MD047369
       *                                                                                     MD047369
      C                   IF        I2AMM2 <> 0 AND                                          MD047369
      C                             CFT009 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKM2CD                                     MD047369
-     C                   ADD       1             IDX                                        MD047369
-     C                   MOVEL     'M2CD'        FLDNAMXAR(IDX)                             MD047369
-     C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
+     C**********         ADD       1             IDX                              MD047369 MD047369A
+     C**********         MOVEL     'M2CD'        FLDNAMXAR(IDX)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MSGIDXAR(IDX)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'M2CD'        WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   ENDIF                                                              MD047369
       *                                                                                     MD047369
      C                   IF        I2AMM3 <> 0 AND                                          MD047369
      C                             CFT009 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKM3CD                                     MD047369
-     C                   ADD       1             IDX                                        MD047369
-     C                   MOVEL     'M3CD'        FLDNAMXAR(IDX)                             MD047369
-     C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
+     C**********         ADD       1             IDX                              MD047369 MD047369A
+     C**********         MOVEL     'M3CD'        FLDNAMXAR(IDX)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MSGIDXAR(IDX)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'M3CD'        WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   ENDIF                                                              MD047369
       *                                                                                     MD047369
      C                   IF        I2AMM4 <> 0 AND                                          MD047369
      C                             CFT009 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKM4CD                                     MD047369
-     C                   ADD       1             IDX                                        MD047369
-     C                   MOVEL     'M4CD'        FLDNAMXAR(IDX)                             MD047369
-     C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
+     C**********         ADD       1             IDX                              MD047369 MD047369A
+     C**********         MOVEL     'M4CD'        FLDNAMXAR(IDX)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MSGIDXAR(IDX)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'M4CD'        WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   ENDIF                                                              MD047369
       *                                                                                     MD047369
      C                   IF        I2AMM5 <> 0 AND                                          MD047369
      C                             CFT009 = 'Y'                                             MD047369
      C                   MOVE      'N'           OKM5CD                                     MD047369
-     C                   ADD       1             IDX                                        MD047369
-     C                   MOVEL     'M5CD'        FLDNAMXAR(IDX)                             MD047369
-     C                   MOVEL     '5049015'     MSGIDXAR(IDX)                              MD047369
+     C**********         ADD       1             IDX                              MD047369 MD047369A
+     C**********         MOVEL     'M5CD'        FLDNAMXAR(IDX)                   MD047369 MD047369A
+     C**********         MOVEL     '5049015'     MSGIDXAR(IDX)                    MD047369 MD047369A
+     C                   ADD       1             Wix                                       MD047369A
+     C                   MOVEL     'M5CD'        WFldNmXAr(Wix)                            MD047369A
+     C                   MOVEL     'FTM7134'     WMsgIdXAr(Wix)                            MD047369A
      C                   ENDIF                                                              MD047369
      C                   ENDIF                                                              MD047369
       *                                                                                     MD047884
@@ -1581,42 +1627,48 @@
      C                   MOVE      'N'           OKTRCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDTRCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPTXCH <> 0                                              MD047884
      C                   MOVE      'N'           OKTXCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDTXCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPCQCH <> 0                                              MD047884
      C                   MOVE      'N'           OKCQCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDCQCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPADCH <> 0                                              MD047884
      C                   MOVE      'N'           OKADCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDADCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPTLCH <> 0                                              MD047884
      C                   MOVE      'N'           OKTLCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDTLCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPMSCH <> 0                                              MD047884
      C                   MOVE      'N'           OKMSCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDMSCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        IPINCHCM <> 0 and                                        MD047884
@@ -1624,7 +1676,8 @@
      C                   MOVE      'N'           OKCHCD                                     MD047884
      C                   ADD       1             Idx                                        MD047884
      C                   MOVEL     'DDCHCD'      FldNamXAr(Idx)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MsgIdXAr(Idx)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        I2AMM1 <> 0 AND                                          MD047884
@@ -1632,7 +1685,8 @@
      C                   MOVE      'N'           OKM1CD                                     MD047884
      C                   ADD       1             IDX                                        MD047884
      C                   MOVEL     'M1CD'        FLDNAMXAR(IDX)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MSGIDXAR(IDX)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        I2AMM2 <> 0 AND                                          MD047884
@@ -1640,7 +1694,8 @@
      C                   MOVE      'N'           OKM2CD                                     MD047884
      C                   ADD       1             IDX                                        MD047884
      C                   MOVEL     'M2CD'        FLDNAMXAR(IDX)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MSGIDXAR(IDX)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        I2AMM3 <> 0 AND                                          MD047884
@@ -1648,7 +1703,8 @@
      C                   MOVE      'N'           OKM3CD                                     MD047884
      C                   ADD       1             IDX                                        MD047884
      C                   MOVEL     'M3CD'        FLDNAMXAR(IDX)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MSGIDXAR(IDX)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        I2AMM4 <> 0 AND                                          MD047884
@@ -1656,7 +1712,8 @@
      C                   MOVE      'N'           OKM4CD                                     MD047884
      C                   ADD       1             IDX                                        MD047884
      C                   MOVEL     'M4CD'        FLDNAMXAR(IDX)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MSGIDXAR(IDX)                             MD047369A
      C                   ENDIF                                                              MD047884
       *                                                                                     MD047884
      C                   IF        I2AMM5 <> 0 AND                                          MD047884
@@ -1664,7 +1721,8 @@
      C                   MOVE      'N'           OKM5CD                                     MD047884
      C                   ADD       1             IDX                                        MD047884
      C                   MOVEL     'M5CD'        FLDNAMXAR(IDX)                             MD047884
-     C                   MOVEL     '5049017'     MsgIdXAr(Idx)                              MD047884
+     C**********         MOVEL     '5049017'     MsgIdXAr(Idx)                    MD047884 MD047369A
+     C                   MOVEL     'FTM7136'     MSGIDXAR(IDX)                             MD047369A
      C                   ENDIF                                                              MD047884
      C                   ENDIF                                                              MD047884
       *
@@ -1882,6 +1940,7 @@
      C                   PARM                    CFT009            1            CFT009
      C                   PARM                    CFT010            1            CFT009
      C                   PARM                    CHACDrBlck                                 MD047884
+     C                   PARM                    BENEDrRefd                                MD047369A
       *
       ** OUTPUT
       ** ======
@@ -1890,6 +1949,10 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning fields/message IDs/message data (arrays) from/to caller                   MD047369A
+     C                   Parm                    WFldNmXAr                                 MD047369A
+     C                   Parm                    WMsgIDXAr                                 MD047369A
+     C                   Parm                    WMsgDtXAr                                 MD047369A
       *
       ***Incoming*Payments*Lvl*2*Scrn*2*error*indicators***************         CFT014
      C*****              PARM                    FTEIPY3                        CFT014

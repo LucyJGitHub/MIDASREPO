@@ -5835,6 +5835,7 @@
      C                   EXSR      SRFmtWMsg                                                MD046080
       *                                                                                     MD046080
      C                   EVAL      PFldTag  = 'DDREXR'                                      MD046080
+     C                   MOVEL     *BLANKS       ZFIELD           16                        MD051788
      C                   SELECT                                                             MD046080
      C                   WHEN      RecordType = Loan                                        MD046080
      C**********         MOVEL     C_REXR        PFldData                          MD046080 MD051788

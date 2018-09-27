@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD051788           Date 30Aug18               *
-      *  Prev Amend No. MD049572           Date 18Feb18               *
+      *  Last Amend No. MD047999           Date 27Sep18               *
+      *  Prev Amend No. MD051788           Date 30Aug18               *
+      *                 MD049572           Date 18Feb18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD049078           Date 12Jan18               *
@@ -100,6 +101,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047999 - PDCL loans goes in repair due to incorrect        *
+      *             Settlement (Recompile)                            *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *
       *              missing exchange rate on PDCL                    *
       *  MD049572 - Error in spread rate during creation of PDCL      *
@@ -5298,30 +5301,30 @@
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
      C                   ENDSL
-      *
-      ** Receiver number
-     C                   SELECT
-     C                   WHEN      RecordType = Loan
-     C                   MOVEL     C_RVNO        PFldData
-     C                   OTHER
-     C                   MOVEL     M_RVNO        PFldData
-     C                   ENDSL
-     C                   EVAL      PFldTag  = 'DDRVNO'
-     C                   EVAL      PFldType = *BLANK
-     C                   EVAL      PFldAttr = *BLANK
-     C                   EXSR      SRFmtWMsg
-      *
-      ** Cover Message Required
-     C                   SELECT
-     C                   WHEN      RecordType = Loan
-     C                   MOVEL     C_CVMR        PFldData
-     C                   OTHER
-     C                   MOVEL     M_CVMR        PFldData
-     C                   ENDSL
-     C                   EVAL      PFldTag  = 'DDCVMR'
-     C                   EVAL      PFldType = *BLANK
-     C                   EVAL      PFldAttr = *BLANK
-     C                   EXSR      SRFmtWMsg
+      ****************************************************************                      MD047999
+      ***Receiver*number**********************************************                      MD047999
+     C**********         SELECT                                                             MD047999
+     C**********         WHEN      RecordType = Loan                                        MD047999
+     C**********         MOVEL     C_RVNO        PFldData                                   MD047999
+     C**********         OTHER                                                              MD047999
+     C**********         MOVEL     M_RVNO        PFldData                                   MD047999
+     C**********         ENDSL                                                              MD047999
+     C**********         EVAL      PFldTag  = 'DDRVNO'                                      MD047999
+     C**********         EVAL      PFldType = *BLANK                                        MD047999
+     C**********         EVAL      PFldAttr = *BLANK                                        MD047999
+     C**********         EXSR      SRFmtWMsg                                                MD047999
+      ****************************************************************                      MD047999
+      ***Cover*Message*Required***************************************                      MD047999
+     C**********         SELECT                                                             MD047999
+     C**********         WHEN      RecordType = Loan                                        MD047999
+     C**********         MOVEL     C_CVMR        PFldData                                   MD047999
+     C**********         OTHER                                                              MD047999
+     C**********         MOVEL     M_CVMR        PFldData                                   MD047999
+     C**********         ENDSL                                                              MD047999
+     C**********         EVAL      PFldTag  = 'DDCVMR'                                      MD047999
+     C**********         EVAL      PFldType = *BLANK                                        MD047999
+     C**********         EVAL      PFldAttr = *BLANK                                        MD047999
+     C**********         EXSR      SRFmtWMsg                                                MD047999
       *                                                                                    MD021423E
      C                   SELECT                                                            MD021423E
      C                   WHEN      BlockCredit = 'N'                                       MD021423E
@@ -5457,26 +5460,62 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+      *                                                                                     MD047999
+      ** Receiver number                                                                    MD047999
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
+     C                   SELECT                                                             MD047999
+     C                   WHEN      RecordType = Loan                                        MD047999
+     C                   MOVEL     C_RVNO        PFldData                                   MD047999
+     C                   OTHER                                                              MD047999
+     C                   MOVEL     M_RVNO        PFldData                                   MD047999
+     C                   ENDSL                                                              MD047999
+     C                   ENDIF                                                              MD047999
+     C                   EVAL      PFldTag  = 'DDRVNO'                                      MD047999
+     C                   EVAL      PFldType = *BLANK                                        MD047999
+     C                   EVAL      PFldAttr = *BLANK                                        MD047999
+     C                   EXSR      SRFmtWMsg                                                MD047999
+      *                                                                                     MD047999
+      ** Cover Message Required                                                             MD047999
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
+     C                   SELECT                                                             MD047999
+     C                   WHEN      RecordType = Loan                                        MD047999
+     C                   MOVEL     C_CVMR        PFldData                                   MD047999
+     C                   OTHER                                                              MD047999
+     C                   MOVEL     M_CVMR        PFldData                                   MD047999
+     C                   ENDSL                                                              MD047999
+     C                   ENDIF                                                              MD047999
+     C                   EVAL      PFldTag  = 'DDCVMR'                                      MD047999
+     C                   EVAL      PFldType = *BLANK                                        MD047999
+     C                   EVAL      PFldAttr = *BLANK                                        MD047999
+     C                   EXSR      SRFmtWMsg                                                MD047999
       *
       ** Receiver correspondent number
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_RCRN        PFldData
      C                   OTHER
      C                   MOVEL     M_RCRN        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDRCRN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Receiver correspondent a/c line
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_RCRA        PFldData
      C                   OTHER
      C                   MOVEL     M_RCRA        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDRCRA'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -5517,180 +5556,225 @@
      C                   EXSR      SRFmtWMsg
       *
       ** A/C with bank no
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_AWBN        PFldData
      C                   OTHER
      C                   MOVEL     M_AWBN        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDAWBN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** A/C with bank a/c line
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_AWBA        PFldData
      C                   OTHER
      C                   MOVEL     M_AWBA        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDAWBA'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Beneficiary number
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BENN        PFldData
      C                   OTHER
      C                   MOVEL     M_BENN        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBENN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Beneficiary a/c line
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BENA        PFldData
      C                   OTHER
      C                   MOVEL     M_BENA        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBENA'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Details of Pay 1
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_DTP1        PFldData
      C                   OTHER
      C                   MOVEL     M_DTP1        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDDTP1'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Details of Pay 2
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_DTP2        PFldData
      C                   OTHER
      C                   MOVEL     M_DTP2        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDDTP2'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Details of Pay 3
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_DTP3        PFldData
      C                   OTHER
      C                   MOVEL     M_DTP3        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDDTP3'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Details of Pay 4
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_DTP4        PFldData
      C                   OTHER
      C                   MOVEL     M_DTP4        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDDTP4'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** IN Currency in Fld 72
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_ICCY        PFldData
      C                   OTHER
      C                   MOVEL     E_FEICCY      PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDIC72'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 1
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB1        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB1        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB1'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 2
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB2        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB2        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB2'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 3
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB3        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB3        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB3'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 4
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB4        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB4        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB4'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 5
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB5        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB5        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB5'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       *
       ** Bank to bank info 6
+     C                   EVAL      PFldData = *BLANK                                        MD047999
+     C                   IF        PSTMX = '01' or PSTMX = '07' or PSTMX = '08'             MD047999
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   MOVEL     C_BTB6        PFldData
      C                   OTHER
      C                   MOVEL     M_BTB6        PFldData
      C                   ENDSL
+     C                   ENDIF                                                              MD047999
      C                   EVAL      PFldTag  = 'DDBTB6'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK

@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 30May14               *
+      *  Last Amend No. MD048898           Date 11Dec17               *
+      *  Prev Amend No. MD038440           Date 27Oct17               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL094             Date 30May14               *
       *                 AR1095725          Date 15Mar13               *
       *       Amend No. AR920354           Date 09Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -22,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048898 - Files not updating. Correct Parameters            *
+      *  MD038440 - Nostro deletion issue. Revised validation process *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *  AR1095725- Program fails due to missing SD0152 object.       *
@@ -34,15 +38,15 @@
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
      FSDNOSTL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       * Midas SD Nostro Code Details Master File
- 
+
      FSDFCTLL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
       * Midas SD Standing Data Controls index
- 
+
      FRSACMTL8  IF   E           K DISK                                                     AR920354
       *                                                                                     AR920354
       ** GL Acc Movts by cust/ccy/acct code/acct seq/branch                                 AR920354
@@ -59,12 +63,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -75,23 +79,23 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D ChkNosrFmt    E DS                  EXTNAME(SDNOSTPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
      D SDVNosr       E DS                  EXTNAME(SDVNOSRPD)
      D                                     PREFIX(A_)
       ** Intermediary bank fields                                                             CDL094
@@ -99,28 +103,28 @@
      D   IntBanks                    46    Dim(3)                                             CDL094
      D                                     Overlay(DBIntermeds)                               CDL094
       ** Externally desc'd DS for valid transactions Detail
- 
+
      D OKNosDets     E DS                  EXTNAME(SDENOSRPD)
       * Error indicators
- 
+
      D B_NOSRF       E DS                  EXTNAME(SDNOSTPD)
      D                                     PREFIX(B_)
       **  Externally described DS for 'BEFORE UPDATE' xxxxxxxxxx
- 
+
       **  Transaction Details File
      D NOSRF         E DS                  EXTNAME(SDNOSTPD)
- 
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       * Data Structure for SAR Details
@@ -133,7 +137,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Outward parameters
       * RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -169,7 +173,7 @@
      D    PBLCD             3061   3063P 0
       * I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -183,11 +187,11 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
      D @Timestamp      S             26Z
       ** Fields defined for Enhancement CDL008
- 
+
      D CDL008          S              1A
      D CSD012          S              1A
      D TRANSDTL        S           5800A
@@ -198,7 +202,7 @@
      D POptn           S              7A
      D PSard           S              6A
      D WCust           S              6A
- 
+
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
                                                                                               CDL094
@@ -209,31 +213,31 @@
      D IdIn            S             18    Inz                                                CDL094
      D Key10           S             10    Inz                                                CDL094
      D x               S              3U 0                                                    CDL094
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main processing                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the transaction
      C     A_NVTYLC      CASEQ     'I'           INSERT
      C     A_NVTYLC      CASEQ     'A'           AMEND
      C     A_NVTYLC      CASEQ     'D'           DELETE
      C                   ENDCS
- 
+
       * Exit From Program
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -243,13 +247,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    @@RTCD            7
- 
+
       ** Externally described DS for valid Nostro Codes Detail
      C                   PARM                    SDVNOSR
       *                                                                                     AR920354
@@ -270,7 +274,7 @@
      C                   EVAL      DBASE  =  909                                * DBERR 909 *
      C                   EXSR      *PSSR                                        *************
      C                   ENDIF
- 
+
       ** Check if CDL008 is Switched On
      C                   EVAL      CDL008 = 'N'
      C                   CALLB     'AOSARDR0'
@@ -315,8 +319,8 @@
      C     KLCRSL        KLIST
      C                   KFLD                    A_NVCYCD
      C                   KFLD                    A_NVNONB
- 
- 
+
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -324,7 +328,7 @@
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
       *
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -334,11 +338,11 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current Nostro Code details
      C                   MOVE      A_NVCYCD      MidasCYCD         3
      C                   MOVE      A_NVNONB      MidasNONB         2
- 
+
      C                   CALLB     'SDNOSRRTV'
       * Inputs
       *
@@ -376,7 +380,7 @@
      C                   PARM                    DDCYCDOK          1
       * OK - Nostro Number
      C                   PARM                    DDNONBOK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -387,21 +391,21 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        CHA7TMST <> A_NVTMST
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
      C                   ELSE
      C                   IF        DDACTNOK = 'N' OR
@@ -409,7 +413,7 @@
      C                             DDNONBOK = 'N'
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   Z-ADD     1             C                 2 0
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *BLANKS
      C                   CLEAR                   DBError         132
@@ -421,11 +425,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -435,7 +439,7 @@
       *                                                              *
       ****************************************************************
      C     INSERT        BEGSR
- 
+
       ** Access Nostro Details
      C     KLCRSL        CHAIN     SDNOSTL0                           99
       ** Database error
@@ -445,15 +449,15 @@
      C                   EVAL      DBASE  = 901
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise Nostro Code Detail
      C                   CLEAR                   NOSRF
- 
+
       ** Store Old fields for comparisons
      C                   MOVEL(P)  NOSRF         B_NOSRF
- 
+
       ** SET Nostro Code Detail FIELDS ON INSERT
- 
+
      C                   EVAL      A7CYCD = A_NVCYCD
      C                   EVAL      A7NONB = A_NVNONB
      C                   EVAL      A7ACCD = A_NVACCD
@@ -478,11 +482,11 @@
      C                   EVAL      A7CLSC = A_NVCLSC
      C                   EVAL      A7ASID = A_NVASID
      C                   ENDIF
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      A7TMST  = TimeStamp
       *                                                                                       CDL094
       ** Move Intermediary banks fields if CDL094 is ON                                       CDL094
@@ -494,7 +498,7 @@
       *
       ** Write new Transaction Detail
      C                   WRITE     @A7REBE
- 
+
       * INSERT A RECORD IN THE TABLE TABLETH
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
@@ -508,7 +512,7 @@
       *                                                              *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Nostro Details                                     HILO
      C     KLCRSL        CHAIN     SDNOSTL0                           9998
       ** Database error (Record Not Found)
@@ -525,12 +529,12 @@
      C                   EVAL      DBASE  = 902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
      C                   MOVEL(P)  NOSRF         B_NOSRF
- 
+
       ** SET Nostro Detail FIELDS ON AMEND
- 
+
      C                   EVAL      A7CYCD = A_NVCYCD
      C                   EVAL      A7NONB = A_NVNONB
      C                   EVAL      A7ACCD = A_NVACCD
@@ -555,12 +559,12 @@
      C                   EVAL      A7CLSC = A_NVCLSC
      C                   EVAL      A7ASID = A_NVASID
      C                   ENDIF
- 
- 
+
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      A7TMST  = TimeStamp
       *                                                                                       CDL094
       ** Move Intermediary banks fields if CDL094 is ON                                       CDL094
@@ -569,8 +573,8 @@
      C                   Eval      %Subst(NOSRF:210:138) =                                    CDL094
      C                                %Subst(SDVNosr:210:138)                                 CDL094
      C                   EndIf                                                                CDL094
- 
- 
+
+
       *
       ** Update Nostro Code Record
      C                   UPDATE    @A7REBE
@@ -578,7 +582,7 @@
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -588,7 +592,7 @@
       *                                                              *
       ****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Access Nostro Code Details
      C     KLCRSL        CHAIN     SDNOSTL0                           99
       ** Database error
@@ -598,37 +602,98 @@
      C                   EVAL      DBASE  = 902
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *                                                                                     AR920354
       ** Check if Nostro is used by LIVE transactions                                       AR920354
       *                                                                                     AR920354
      C                   MOVEL     A7ACSN        ##ACSN            2                        AR920354
      C**********         CALL      'SD0152'                                       AR920354 AR1095725
-     C                   CALL      'SD000152'                                              AR1095725
-     C                   PARM                    A7BRCD                                     AR920354
-     C                   PARM                    A7CUST                                     AR920354
-     C                   PARM                    A7CYCD                                     AR920354
-     C                   PARM                    A7ACCD                                     AR920354
-     C                   PARM                    ##ACSN                                     AR920354
-     C                   PARM                    A7NONB                                     AR920354
-     C                   PARM      *BLANKS       RETURN            1                        AR920354
-     C                   PARM      *BLANKS       WMSGD            45                        AR920354
+     C**********         CALL      'SD000152'                                     AR1095725 MD038440
+     C**********         PARM                    A7BRCD                            AR920354 MD038440
+     C**********         PARM                    A7CUST                            AR920354 MD038440
+     C**********         PARM                    A7CYCD                            AR920354 MD038440
+     C**********         PARM                    A7ACCD                            AR920354 MD038440
+     C**********         PARM                    ##ACSN                            AR920354 MD038440
+     C**********         PARM                    A7NONB                            AR920354 MD038440
+     C**********         PARM      *BLANKS       RETURN            1               AR920354 MD038440
+     C**********         PARM      *BLANKS       WMSGD            45               AR920354 MD038440
+     C                   MOVEL     *BLANKS       WMSGD            45                        MD038440
+      *                                                                                     MD038440
+     C     PNosVal       PLIST                                                              MD038440
+     C                   PARM      'V'           PMODE             1                        MD038440
+     C                   PARM                    A7BRCD                                     MD038440
+     C                   PARM                    A7CUST                                     MD038440
+     C                   PARM                    A7CYCD                                     MD038440
+     C                   PARM                    A7ACCD                                     MD038440
+     C                   PARM                    ##ACSN                                     MD038440
+     C                   PARM                    A7NONB                                     MD038440
+     C                   PARM      *BLANKS       RETURN            1                        MD038440
+     C                   PARM      *BLANKS       RSEQ              5                        MD048898
+      *                                                                                     MD038440
+      ** If Nostro is used for Deals                                                        MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152DL'  PNosVal                                    MD038440
       *                                                                                     AR920354
       ** If Nostro is used for Receipt                                                      AR920354
       *                                                                                     AR920354
      C                   IF        RETURN = 'R'                                             AR920354
      C                   EVAL      @@RTCD = 'R'                                             AR920354
-     C                   EVAL      @@MSGD = WMSGD                                           AR920354
+     C**********         EVAL      @@MSGD = WMSGD                                  AR920354 MD038440
      C                   GOTO      DELEXIT                                                  AR920354
      C                   ENDIF                                                              AR920354
-      *                                                                                     AR920354
-      ** If Nostro is used for Payment                                                      AR920354
-      *                                                                                     AR920354
-     C                   IF        RETURN = 'P'                                             AR920354
-     C                   EVAL      @@RTCD = 'P'                                             AR920354
-     C                   EVAL      @@MSGD = WMSGD                                           AR920354
-     C                   GOTO      DELEXIT                                                  AR920354
-     C                   ENDIF                                                              AR920354
+      *                                                                                     MD038440
+      ** If Nostro is used for Fund Transfer                                                MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152FT'  PNosVal                                    MD038440
+      *                                                                                     MD038440
+     C                   IF        RETURN = 'R'                                             MD038440
+     C                   EVAL      @@RTCD = 'R'                                             MD038440
+     C                   GOTO      DELEXIT                                                  MD038440
+     C                   ENDIF                                                              MD038440
+      *                                                                                     MD038440
+      ** If Nostro is used for GL/Retail                                                    MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152GL'  PNosVal                                    MD038440
+      *                                                                                     MD038440
+     C                   IF        RETURN = 'R'                                             MD038440
+     C                   EVAL      @@RTCD = 'R'                                             MD038440
+     C                   GOTO      DELEXIT                                                  MD038440
+     C                   ENDIF                                                              MD038440
+      *                                                                                     MD038440
+      ** If Nostro is used for Lending                                                      MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152LE'  PNosVal                                    MD038440
+      *                                                                                     MD038440
+     C                   IF        RETURN = 'R'                                             MD038440
+     C                   EVAL      @@RTCD = 'R'                                             MD038440
+     C                   GOTO      DELEXIT                                                  MD038440
+     C                   ENDIF                                                              MD038440
+      *                                                                                     MD038440
+      ** If Nostro is used for Securities                                                   MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152SE'  PNosVal                                    MD038440
+      *                                                                                     MD038440
+     C                   IF        RETURN = 'R'                                             MD038440
+     C                   EVAL      @@RTCD = 'R'                                             MD038440
+     C                   GOTO      DELEXIT                                                  MD038440
+     C                   ENDIF                                                              MD038440
+      *                                                                                     MD038440
+      ** If Nostro is used for Other Transactions                                           MD038440
+      *                                                                                     MD038440
+     C                   CALL      'SD000152OM'  PNosVal                                    MD038440
+      *                                                                                     MD038440
+     C                   IF        RETURN = 'R'                                             MD038440
+     C                   EVAL      @@RTCD = 'R'                                             MD038440
+     C                   GOTO      DELEXIT                                                  MD038440
+     C                   ENDIF                                                              MD038440
+      **********                                                                   AR920354 MD038440
+      ***If*Nostro is used for Payment                                             AR920354 MD038440
+      **********                                                                   AR920354 MD038440
+     C**********         IF        RETURN = 'P'                                    AR920354 MD038440
+     C**********         EVAL      @@RTCD = 'P'                                    AR920354 MD038440
+     C**********         EVAL      @@MSGD = WMSGD                                  AR920354 MD038440
+     C**********         GOTO      DELEXIT                                         AR920354 MD038440
+     C**********         ENDIF                                                     AR920354 MD038440
       *                                                                                     AR920354
       ** Check if there are existing records in LF/RSACMTL8.                                AR920354
       ** If yes, do not allow deletion of Nostro Account.                                   AR920354
@@ -660,9 +725,21 @@
       *                                                                                     AR920354
       ** Update 'BEFORE' status
      C                   MOVEL(P)  NOSRF         B_NOSRF
- 
+
       ** Delete record
      C                   DELETE    @A7REBE
+      *                                                                                     MD048898
+      ** Update 'Dead' transactions                                                         MD038440
+     C                   CALL      'SD000152UP'                                             MD048898
+     C                   PARM      'U'           PMODE             1                        MD048898
+     C                   PARM                    A7BRCD                                     MD048898
+     C                   PARM                    A7CUST                                     MD048898
+     C                   PARM                    A7CYCD                                     MD048898
+     C                   PARM                    A7ACCD                                     MD048898
+     C                   PARM                    ##ACSN                                     MD048898
+     C                   PARM                    A7NONB                                     MD048898
+     C                   PARM      *BLANKS       RETURN            1                        MD048898
+      *                                                                                     MD048898
       * WRITE DELETED RECORD IN STANDING DATA DELETED FILE
      C                   EXSR      WRTDLRC
      C                   EVAL      A7TYLC = 'D'
@@ -670,7 +747,7 @@
      C                   EXSR      UPDTABL
       * UPDATE SD STANDING DATA CONTROL FILE
      C                   EXSR      UPDCTRL
- 
+
      C**********         ENDSR                                                              AR920354
      C     DELEXIT       ENDSR                                                              AR920354
       ****************************************************************
@@ -697,7 +774,7 @@
      C                   PARM      A7BRCD        WQ0011            3
      C                   PARM      A7TYLC        WQ0012            1
      C                   PARM      BJRDNB        WQ0013            5 0
- 
+
      C     *IN90         IFEQ      *ON
      C                   MOVEL     A7NONB        DBKEY
      C                   MOVEL     'TABLETL'     DBFILE
@@ -814,7 +891,7 @@
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *  Note: if non-standard processing required, use the PSSR_ILENE
       *  subroutine
       ****************************************************************

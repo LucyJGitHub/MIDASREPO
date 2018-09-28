@@ -10,82 +10,110 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD047609           Date 10Nov17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK020  *CREATE    Date 19Aug04              */
+/*                      CPK020  *CREATE    Date 19Aug04              */
 /*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD047609 - Component SCRMVALTRG have LCKW status            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK020 - New utility to remove triggers from a library.     */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&LIB)
- 
+
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&LASTFILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+             DCL        VAR(&IDX)       TYPE(*DEC)  LEN(1) VALUE(0)                     /*MD047609*/
+
              DCLF       FILE(RMVALLTRGF)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /* Create temporary message queue for error handling. */
              DLTMSGQ    MSGQ(QTEMP/RMVALLTRG)
              MONMSG     MSGID(CPF0000)
              CRTMSGQ    MSGQ(QTEMP/RMVALLTRG) TEXT('Temporary +
                           message queue for RMVALLTRG utility')
- 
+
 /* Display triggers of all files in library to outfile. */
              DSPFD      FILE(&LIB/*ALL) TYPE(*TRG) OUTPUT(*OUTFILE) +
                           FILEATR(*PF) OUTFILE(QTEMP/RMVALLTRGF)
              MONMSG     MSGID(CPF3012) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              IF         COND(&TRFILE *NE &LASTFILE) THEN(DO)
+             IF         COND(&TRFILE *EQ 'SDMMIDPD') THEN(DO)                           /*MD047609*/
+                CHGVAR     VAR(&IDX) VALUE(1)                                           /*MD047609*/
+/* Wait for 5 seconds and repeated up to 3 times */                                     /*MD047609*/
+ ALCOBJECT:     ALCOBJ     OBJ((&TRFILE *FILE *EXCL *FIRST)) WAIT(5)                    /*MD047609*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                      /*MD047609*/
+                    IF         COND(&IDX *LE 3) THEN(DO)                                /*MD047609*/
+                       CHGVAR     VAR(&IDX) VALUE(&IDX + 1)                             /*MD047609*/
+                       GOTO       CMDLBL(ALCOBJECT)                                     /*MD047609*/
+                    ENDDO                                                               /*MD047609*/
+                    ELSE       CMD(DO)                                                  /*MD047609*/
+                       GOTO       CMDLBL(ERROR)                                         /*MD047609*/
+                    ENDDO                                                               /*MD047609*/
+                ENDDO                                                                   /*MD047609*/
+                RMVPFTRG   FILE(&LIB/&TRFILE)                                           /*MD047609*/
+                MONMSG     MSGID(CPF0000) EXEC(DO)                                      /*MD047609*/
+                   SNDMSG     MSG('Unable to remove trigger for file' +
+                                *BCAT &TRFILE) TOMSGQ(QTEMP/RMVALLTRG)                  /*MD047609*/
+                   CHGVAR     VAR(&ERRORFLAG) VALUE('Y')                                /*MD047609*/
+                ENDDO                                                                   /*MD047609*/
+                DLCOBJ     OBJ((&TRFILE *FILE *EXCL *FIRST))                            /*MD047609*/
+                MONMSG     MSGID(CPF0000)                                               /*MD047609*/
+                ENDDO                                                                   /*MD047609*/
+             ELSE       CMD(DO)                                                         /*MD047609*/
+
                 RMVPFTRG   FILE(&LIB/&TRFILE)
                 MONMSG     MSGID(CPF0000) EXEC(DO)
                    SNDMSG     MSG('Unable to remove trigger for file' +
                                 *BCAT &TRFILE) TOMSGQ(QTEMP/RMVALLTRG)
                    CHGVAR     VAR(&ERRORFLAG) VALUE('Y')
                 ENDDO
+             ENDDO                                                                      /*MD047609*/
              ENDDO
- 
+
              CHGVAR     VAR(&LASTFILE) VALUE(&TRFILE)
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           UTC000015 ended abnormally.  See joblog +
                           for more details') TOPGMQ(*PRV) +
                           MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              IF         COND(&ERRORFLAG *EQ 'Y') THEN(DO)
                 DSPMSG     MSGQ(QTEMP/RMVALLTRG) OUTPUT(*PRINT)
              ENDDO
- 
+
              ENDPGM

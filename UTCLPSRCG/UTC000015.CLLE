@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD047609           Date 10Nov17              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD051000           Date 01Jun18              */
+/*       Prev Amend No. MD047609           Date 10Nov17              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051000 - SCRMVALTRG is insensitive to RMVPFTRG errors     */
 /*       MD047609 - Component SCRMVALTRG have LCKW status            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK020 - New utility to remove triggers from a library.     */
@@ -33,6 +35,7 @@
              DCL        VAR(&LASTFILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&IDX)       TYPE(*DEC)  LEN(1) VALUE(0)                     /*MD047609*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                  /*MD051000*/
 
              DCLF       FILE(RMVALLTRGF)
 
@@ -45,6 +48,9 @@
 
              CHGJOB     SWS(00000000)
 
+/* Retrieve the phase of day */                                                         /*MD051000*/
+/**********  RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS)           */        /*MD051000 MD051743*/
+                                                                                        /*MD051000*/
 /* Create temporary message queue for error handling. */
              DLTMSGQ    MSGQ(QTEMP/RMVALLTRG)
              MONMSG     MSGID(CPF0000)
@@ -114,6 +120,14 @@ ERROR:
 ENDPGM:
              IF         COND(&ERRORFLAG *EQ 'Y') THEN(DO)
                 DSPMSG     MSGQ(QTEMP/RMVALLTRG) OUTPUT(*PRINT)
+                                                                                        /*MD051743*/
+                 CALL       PGM(SCGETMPHAS) PARM(&MPHAS)                                /*MD051743*/
+                                                                                        /*MD051000*/
+/**********      IF  COND((&MPHAS *NE 'A') *OR (&MPHAS *NE 'G')) THEN(DO)      /*MD051000 MD051564*/
+                 IF  COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G')) THEN(DO)              /*MD051564*/
+                     CHGJOB SWS(XXXXXX11)                                               /*MD051000*/
+                 ENDDO                                                                  /*MD051000*/
+                                                                                        /*MD051000*/
              ENDDO
 
              ENDPGM

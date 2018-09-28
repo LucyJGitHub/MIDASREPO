@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020029           Date 12Apr13               *
+      *  Last Amend No. MD048882           Date 19Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020029           Date 12Apr13               *
       *                 AR1078092          Date 20Jan13               *
       *                 264044             Date 01Aug12               *
       *                 263415             Date 01Aug12               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048882 - Always use period decimal as separator.           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020029 - Fees transactions went into repair queue          *
       *  AR1078092 - Event Code of 45021706 (settlement account is    *
@@ -390,7 +392,8 @@
      C                   PARM      *BLANK        @@RETC
      C                   PARM      E_FEFAMT      @@AMTW
      C                   PARM      A6NBDP        W@DECP
-     C                   PARM      BNDCSP        @@DCSP
+     C**********         PARM      BNDCSP        @@DCSP                                     MD048882
+     C                   PARM      '.'           @@DCSP                                     MD048882
      C                   PARM      *BLANK        @@AMTP
      C                   PARM      *BLANK        @@AMTD
  
@@ -503,7 +506,8 @@
      C                   PARM      *BLANK        @@RETC
      C                   PARM      C_CPAM        @@AMTW
      C                   PARM      A6NBDP        W@DECP
-     C                   PARM      BNDCSP        @@DCSP
+     C**********         PARM      BNDCSP        @@DCSP                                     MD048882
+     C                   PARM      '.'           @@DCSP                                     MD048882
      C                   PARM      *BLANK        @@AMTP
      C                   PARM      *BLANK        @@AMTD
  
@@ -525,7 +529,8 @@
      C                   PARM      *BLANK        @@RETC
      C                   PARM      C_AIPD        @@AMTW
      C                   PARM      A6NBDP        W@DECP
-     C                   PARM      BNDCSP        @@DCSP
+     C**********         PARM      BNDCSP        @@DCSP                                     MD048882
+     C                   PARM      '.'           @@DCSP                                     MD048882
      C                   PARM      *BLANK        @@AMTP
      C                   PARM      *BLANK        @@AMTD
  
@@ -831,7 +836,8 @@
      C                   PARM                    C_AUTO
      C                   PARM                    E_FEAUTO
      C                   PARM                    E_FEAMTP
-     C                   PARM                    BNDCSP
+     C**********         PARM                    BNDCSP                                     MD048882
+     C                   PARM      '.'           BNDCSP                                     MD048882
      C                   PARM                    RecordType
  
       ** Output

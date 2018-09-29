@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD034643           Date 11Sep17               *
+      *  Last Amend No. MD041649           Date 06Oct16               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD034643           Date 11Sep17               *
       *                 MD032110           Date 11Sep17               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041649 - Validation during authorisation should be executed*
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD034643 - Settlement branch not restored after reject. On   *
       *             reject, retrieve settlement details and convert   *
@@ -2124,12 +2126,13 @@
      C                   MOVEL     'N'           ##PPAY
      C                   MOVEL     'N'           ##PREC
 
-     C     DDACTN        IFEQ      'X'                                                       BUG4473
-     C                   MOVEL     'Y'           ##PPAY                                      BUG4473
-     C                   MOVEL     'Y'           ##PREC                                      BUG4473
-     C                   ENDIF                                                               BUG4473
+     C*****DDACTN        IFEQ      'X'                                              BUG4473 MD041649
+     C**********         MOVEL     'Y'           ##PPAY                             BUG4473 MD041649
+     C**********         MOVEL     'Y'           ##PREC                             BUG4473 MD041649
+     C**********         ENDIF                                                      BUG4473 MD041649
                                                                                              BUG4473
      C     DDACTN        IFEQ      'A'
+     C     DDACTN        OREQ      'X'                                                      MD041649
      C     CL_VDAT       IFLT      BJRDNB
      C     CL_ORED       ANDLT     BJRDNB
      C     LoanType      IFEQ      'PTSO'

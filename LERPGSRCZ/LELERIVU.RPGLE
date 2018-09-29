@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041649           Date 06Oct16               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
       *                 MD028338           Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041649 - Validation during authorisation should be executed*
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
@@ -979,6 +981,10 @@
      C                   EVAL      FLPEXR = *Zeros                                            CLE031
      C                   EVAL      FLREXI = *Blanks                                           CLE031
      C                   EVAL      FLPEXI = *Blanks                                           CLE031
+     C                   MOVE      DDACTN        WDDACTN           1                        MD041649
+     C     DDACTN        IFEQ      'X'                                                      MD041649
+     C                   MOVE      'A'           DDACTN                                     MD041649
+     C                   ENDIF                                                              MD041649
 
       ***Validate*settlement*details*if*Discount*Loan******************                     BUG10456
       ***or*a*multi-currency*rollover**********************************                     BUG10456
@@ -989,6 +995,7 @@
      C*****DDNCCYB       ORNE      *BLANKS                                                  BUG10456
      C                   EXSR      DftSettmts
      C                   EXSR      ValidateSt
+     C                   MOVE      WDDACTN       DDACTN                                     MD041649
      C**********         ENDIF                                                              BUG10456
 
       ** Settlement details should not be filled up when the

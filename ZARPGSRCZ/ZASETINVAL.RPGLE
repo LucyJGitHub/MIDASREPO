@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend no. MD051239           Date 14Jun18               *
-      *  Prev Amend No. CDL051             Date 02May18               *
+      *  Last Amend No. MD041649           Date 06Oct16               *
+      *  Prev Amend no. MD051239           Date 14Jun18               *
+      *                 CDL051             Date 02May18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046115           Date 24Jul17               *
@@ -134,6 +135,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041649 - Validation during authorisation should be executed*
       *  MD051239 - [CDL051]- Validation errors for Settlement        *
       *             Payment during Authorization in WIP are not       *
       *             appearing for FXDL, DEAM and NASP APis.           *
@@ -965,6 +967,9 @@
      C                             AND ##PPAY = ' ' AND (##CALP = 'FXDL'                    MD051239
      C                             OR ##CALP = 'LDNI' OR ##CALP = 'NASP'                    MD051239
      C                             OR ##CALP = 'NASS' OR ##CALP = 'DEAM'))                  MD051239
+     C                             OR ##ACTN = 'X' AND ##PPAY <> 'Y'                        MD041649
+     C                             AND (##CALP = 'LEND' OR ##CALP = 'DEAM'                  MD041649
+     C                               OR ##CALP = 'FXDL' OR ##CALP = 'NASP')                 MD041649
      C                   EXSR      PAYMNT
      C/COPY WNCPYSRC,ZASETNVC36
      C                   ENDIF                                                               BUG6010

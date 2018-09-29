@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR878735           Date 13Dec11               *
+      *  Last Amend No. MD041649           Date 29Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR878735           Date 13Dec11               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 MD021423E          Date 12Sep13               *
@@ -92,6 +93,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041649 - Validation during authorisation should be executed*
       *  MD046248 - Finastra Rebranding                               *
       *  AR878735 - Field CVMR not properly inserted/updated in       *
       *             LOAMSDK. Ensure that CVMR will be written in file *
@@ -655,6 +657,21 @@
      C                   IF        DDACTN = 'X'                                             BUG22169
      C                   MOVEL     'Y'           ##PPAY                                     BUG22169
      C                   MOVEL     'Y'           ##PREC                                     BUG22169
+      *                                                                                     MD041649
+      ** Principal increases for loans and parts purchased need                             MD041649
+      ** pay settlements, parts sold need receive settlements                               MD041649
+      *                                                                                     MD041649
+     C     DDATYP        IFEQ      'PI'                                                     MD041649
+     C     LO_PTYP       IFEQ      66                                                       MD041649
+     C     LO_PTYP       OREQ      67                                                       MD041649
+     C     LO_PTYP       OREQ      69                                                       MD041649
+     C     LO_PTYP       OREQ      72                                                       MD041649
+     C                   MOVE      'N'           ##PREC                                     MD041649
+     C                   ELSE                                                               MD041649
+     C                   MOVE      'N'           ##PPAY                                     MD041649
+     C                   ENDIF                                                              MD041649
+     C                   ENDIF                                                              MD041649
+      *                                                                                     MD041649
      C                   ENDIF                                                              BUG22169
       *  Processing for Inserts
      C                   IF        DDACTN = 'I' AND DDATYP = 'PI'

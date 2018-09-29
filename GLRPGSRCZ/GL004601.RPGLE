@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034016           Date 16Jun15               *
+      *  Last Amend No. MD043945A          Date 20Feb17               *
+      *  Prev Amend No. MD043945           Date 07Feb17               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034016           Date 16Jun15               *
       *                 MD029951           Date 25Feb15               *
       *                 AR1075388          Date 21Nov13               *
       *                 AR1095876          Date 30Sep13               *
@@ -48,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043945A - Inactive account should not be posted in suspense*
+      *  MD043945 - Account transfer for blocked account should be    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034016 - Same Customer Name in the DR/CR transaction       *
       *  MD029951 - Account Transfer - Narratives wrong on file       *
@@ -953,6 +957,11 @@
  
      C                   EVAL      WSuspAct = 'D'
      C**********         EXSR      SRChkSusp                                               BUG27831A
+      *                                                                                     MD043945
+     C     R1EXDT        IFEQ      AGRDNB                                                   MD043945
+     C                   EXSR      SRChkSusp                                                MD043945
+     C                   ENDIF                                                              MD043945
+      *                                                                                     MD043945
      C                   EXSR      SRGetAcod
      C                   IF        CRE072 = 'Y'                                               CRE072
      C                   EXSR      SRSetPsIn                                                  CRE072
@@ -986,6 +995,11 @@
  
      C                   EVAL      WSuspAct = 'C'
      C**********         EXSR      SRChkSusp                                               BUG27831A
+      *                                                                                     MD043945
+     C     R1EXDT        IFEQ      AGRDNB                                                   MD043945
+     C                   EXSR      SRChkSusp                                                MD043945
+     C                   ENDIF                                                              MD043945
+      *                                                                                     MD043945
      C                   EXSR      SRGetAcod
      C                   IF        CRE072 = 'Y'                                               CRE072
      C                   EXSR      SRSetPsIn                                                  CRE072
@@ -3227,6 +3241,56 @@
      C                   ENDSR                                                                CRE072
       *****************************************************************                       CRE072
       /EJECT                                                                                  CRE072
+      *****************************************************************                     MD043945
+      *                                                               *                     MD043945
+      *  SRChkSusp - Check if account is a suspense account           *                     MD043945
+      *                                                               *                     MD043945
+      *****************************************************************                     MD043945
+     C     SRChkSusp     BEGSR                                                              MD043945
+      *                                                                                     MD043945
+     C                   EVAL      WSuspnse = 'N'                                           MD043945
+     C                   EVAL      *IN20 = *OFF                                             MD043945
+     C                   EVAL      PCnum = CNUM                                             MD043945
+     C                   EVAL      PAccy = CCY                                              MD043945
+     C                   EVAL      PBrca = BRCA                                             MD043945
+     C                   MOVE      ACSQ          PAcsq                                      MD043945
+     C                   MOVE      ACOD          PAcod                                      MD043945
+     C                   EXSR      SRGetAcct                                                MD043945
+      *                                                                                     MD043945
+      ** Test if account is blocked - Send to suspense                                      MD043945
+      *                                                                                     MD043945
+     C     WSuspAct      IFEQ      'D'                                                      MD043945
+     C                   TESTB     '2'           ACRETB                   42                MD043945
+     C                   ELSE                                                               MD043945
+     C                   TESTB     '3'           ACRETB                   42                MD043945
+     C                   ENDIF                                                              MD043945
+      ****************************************************************            MD043945 MD043945A
+      ***Test*if*account*is*inactive*-*Send*to*suspense***************            MD043945 MD043945A
+      ****************************************************************            MD043945 MD043945A
+     C**N42*****         TESTB     '4'           ACRETB                   42      MD043945 MD043945A
+      *                                                                                     MD043945
+     C     *IN42         IFEQ      '1'                                                      MD043945
+     C                   EVAL      WSuspnse = 'Y'                                           MD043945
+     C                   ENDIF                                                              MD043945
+      *                                                                                     MD043945
+     C                   EXSR      SRGetAcod                                                MD043945
+      *                                                                                     MD043945
+      ** If post to suspense account, change some                                           MD043945
+      ** entries of the posting                                                             MD043945
+      *                                                                                     MD043945
+     C                   IF        WSuspnse = 'Y'                                           MD043945
+     C                   EVAL      CNUM = B8BICN                                            MD043945
+     C                   EVAL      ACSQ = 01                                                MD043945
+     C                   EVAL      BRCA = R1BRCA                                            MD043945
+     C                   MOVE      BKACCD        ACOD                                       MD043945
+     C                   EVAL      ASOC = '000000'                                          MD043945
+     C                   EVAL      ACNO = *ZEROS                                            MD043945
+     C                   EVAL      TRAT = *ZEROS                                            MD043945
+     C                   ENDIF                                                              MD043945
+      *                                                                                     MD043945
+     C                   ENDSR                                                              MD043945
+      *****************************************************************                     MD043945
+      /EJECT                                                                                MD043945
       *****************************************************************
       *****************************************************************                    BUG27831A
       ***SRChkSusp*-*Check*if*account*is*a*suspense*account************                    BUG27831A
@@ -3364,6 +3428,11 @@
      C                   KFLD                    KPHACOD                                      CRE072
      C                   KFLD                    KPHOTRF                                      CRE072
       *                                                                                       CRE072
+      ** Access rundate                                                                     MD043945
+      *                                                                                     MD043945
+     C     *DTAARA       DEFINE    RUNDAT        RUNDAT                                     MD043945
+     C                   IN        RUNDAT                                                   MD043945
+      *                                                                                     MD043945
       ** Access Bank details
  
      C                   CALL      'AOBANKR0'

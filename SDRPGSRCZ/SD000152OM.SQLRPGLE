@@ -23,7 +23,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD038440A - MGOREFPD records should not block transmitted    *
-      *              mCessages. Change to Info only                   *
+      *              messages. Change to Info only.                   *
       *  MD048898 - No validation for default Nostro in SDCURRPD      *
       *  MD038440 - Nostro deletion issue. Revise validation process. *
       *                                                               *

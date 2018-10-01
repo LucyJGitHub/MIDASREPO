@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD049571           Date 06Feb18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD049571           Date 06Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1002234          Date 12Jan17               *
       *                 MD040186           Date 13Sep16               *
       *                 MD045010           Date 05Apr17               *
@@ -106,13 +107,14 @@
       *                 CRE020             Date 20Jan04               *
       *                 CGL029             Date 01Sep03               *
       *                 CAP084             Date 11Oct02               *
-      *                 CDE005             Date 23Sep02
+      *                 CDE005             Date 23Sep02               *
       *                 CAP077  *CREATE    Date 17Jul02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049571 - Value date of Manual Repayment in Projected       *
-      *             Account movement is incorrect                     *      
+      *             Account movement is incorrect                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1002234 - FCOOB in LE0320 when an MR with a 13-digit       *
       *              amount is inserted (Child: AR1002235).           *
@@ -942,7 +944,7 @@
      I              L8PI                        L8PIL                                         CLE141
      I              L9PI                        L9PIL                                         CLE141
      I              L0PI                        L0PIL                                         CLE141
- 
+
      ICLOANCKF
       ***  Rename fields for Loans file - B
       *
@@ -1175,7 +1177,7 @@
       *****************************************************************
       * MAIN - Mainlines                                              *
       *****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -1183,18 +1185,18 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUSER = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
      C                   EVAL      MR_PTRF = MRPCRF                                          CSF011A
                                                                                              CSF011A
       ***  Ensure that details used for update are right
       ***  - if so, bypass updating and return to calling program.
- 
+
      C                   EXSR      CHKOTHUPD
- 
+
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ***  Process Insert, Amend, authorise or reverse
      C                   EXSR      SROUTPUT
                                                                                               CRE020
@@ -1204,11 +1206,11 @@
      C                             WSysVal01 = 'Y'                                            CRE020
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
- 
+
       ***  Exit From Program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
       ****************************************************************
       /EJECT
@@ -1216,9 +1218,9 @@
       * CHKOTHUPD - Check for update by another workstation           *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ***  Retrieve current Manual Repayment
- 
+
      C                   Eval      @@RTCD = *BLANKS
      C                   MOVE      MRFRNT        FOTRID
      C                   MOVE      MRLNRF        MidasLNRF         6
@@ -1271,20 +1273,20 @@
      C                   eval      MidasEVAL = *blanks
      C                   eval      MidasEseq = *blanks
      C                   Endif
- 
+
       ***  Determine whether program is running interactively or in batch
       ***   ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return           6
      C                   PARM                    @Type             1
- 
+
       ***  Allow access to loan record by Front-Office ID when in Repair
       ***  mode for inserts . Set  *RTV module  parameter @@MODE  to   *FRONT
       ***  if the pgm is:  a) running in Interactive mode - @Type= 1   ~~~~~~
       ***                  b) action code is Insert - 'I'
       ***                  c) Front-Office Id is NOT Blank
- 
+
      C                   IF        @Type = '1' AND
      C                             WWACTN = 'I' AND
      C                             MRFRNT <> *BLANKS
@@ -1292,11 +1294,11 @@
      C                   EVAL      @@MODE = '*FRONT'
       *
      C                   ELSE
- 
+
       ***  Otherwise, if running in batch use Front-Office ID
       ***             (if insert)
       ***             else, use Midas Manual Repayment  key
- 
+
      C                   IF        @Type = '0' AND
      C                             WWACTN = 'I'
      C                   EVAL      @@MODE = '*FRONT'
@@ -1318,12 +1320,12 @@
      C                   CALLB     'LEMAPYRTV'
       *
       ***  Inputs
- 
+
      C                   PARM      *BLANK        RetCodeOut
- 
+
       ***  Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ***  Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    @@MODE            6
      C                   PARM      'S'           @@RSMD            1            Response mode Sec
      C                   PARM                    WWACTN                         Action Code
@@ -1340,10 +1342,10 @@
      C                   PARM                    CLE007
      C                   PARM                    CLE009
      C                   PARM                    CLE014
- 
+
       ***  Outputs
       ***  (Current) Manual Repayment in file format
- 
+
      C                   PARM                    CMapyFilFmt
      C                   PARM      *BLANK        DDACTNOK                       OK Actn code
      C                   PARM      *BLANK        DDLNRFOK                       OK Loan ref
@@ -1376,7 +1378,7 @@
      C**********         PARM                    UpSRFlg                             CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDauto            1                          CLE164
- 
+
       ***  Reset MidasEseq regardless.                                                       BUG4325
      C                   EVAL      MidasEseq = SavEseq                                       BUG4325
                                                                                              BUG4325
@@ -1387,24 +1389,24 @@
       *                                                                                      BUG7348
       ***  Error if Timestamp is not the same (record has been changed
       ***  by another workstation)
- 
+
       ***  Processing varies according to mode program is running in.
       ***  In interacive mode
       ***  Check that details for input aren't changed since it was last used
       ***  if it was changed, it returns to caller in error
       ***  In batch (API input) check return parameters from Retrieve
       ***  module for errors, and send message to system operator.
- 
+
       ***  Interactive mode:
- 
+
      C                   IF        @TYPE = '1'
- 
+
      C                   IF        TMST <> MRTMES
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ENDIF
- 
+
       ***  Batch mode:
- 
+
      C                   ELSE
       *
       ***  Reset OKFlagsDS If ix = 0 and warning <> 0
@@ -1419,18 +1421,18 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  check That Loan Amendment details were not update since details were used
- 
+
      C                   IF        @@RTCD = *blanks
      C     DDESEQ        IFNE      'LN '
      C     MRXAVD        ANDNE     0                                            PD/RE Exist
      C     WWACTN        AndNE     'A'
      C     WWACTN        AndNE     'E'
      C     WWACTN        AndNE     'X'
- 
+
       ***  Check details used to work = Current Details   (Past Due/Repayment Scheduled)
- 
+
      C     CurrPDLastChg IFNE      ReadPDLastChg
       *
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -1442,13 +1444,13 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ***  check That Loan details were not update since details were used
- 
+
      C                   IF        @@RTCD = *blanks
- 
+
       ***  Check details used to work = Current Details   (Past Due/Repayment Scheduled)
- 
+
      C     CurrLnLastChg IFNE      ReadLnLastChg
       *
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -1459,9 +1461,9 @@
       *
      C                   Endif
      C                   Endif
- 
+
       ***  Batch - Return Details to Caller
- 
+
      C                   IF        @TYPE <> '1' and @@RTCD <> *blank
      C                   Z-ADD     1             C                 2 0
       *
@@ -1485,9 +1487,9 @@
       * SROUTPUT - Process Insert, Amend, authorise or reverse       *
       ****************************************************************
      C     SROUTPUT      BEGSR
- 
+
       ***  Access loan details
- 
+
      C                   MOVE      MRLNRF        WCLOAN
      C                   MOVE      MRLNRF        WLNRF
      C                   MOVE      'A'           WCRCDT
@@ -1545,9 +1547,9 @@
      C                   Z-ADD     A6SPRT        WSPRTL           13 8
      C                   MOVE      A6MDIN        WMDINL            1
      C                   ENDIF
- 
+
       ***  Obtain last transaction number
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANK        P@RTCD           10
      C                   PARM                    P@NATN            5 0
@@ -1558,9 +1560,9 @@
      C                   Else
      C                   Exsr      SRUpdateLoAm
      C                   endif
- 
+
       ***  Data export for CCRM - Limits
- 
+
      C     CDE001        IFEQ      'Y'
      C     @@RTCD        ANDEQ     *BLANKS
      C                   MOVEL     MRLNRF        T#TREF
@@ -1577,9 +1579,9 @@
      C**********         IN        SC24X7                                                   MD024398
      C**********         IN        SDSTAT                                                   MD024398
      C                   if        S1SUPP = LIBR
- 
+
       ***  Setup Facility support log
- 
+
      C                   CALLB     'LEMAPYLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    WWACTN
@@ -1587,9 +1589,9 @@
      C                   PARM                    ReadLoam
      C                   PARM                    PassDtaDS
      C                   PARM                    TRANSDTL
- 
+
       ***  Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
       *
      C                   EVAL      APTGTTYPE = 'LEMAPY'
@@ -1599,9 +1601,9 @@
      C                   Z-ADD     VDAT          WrkVdate          5 0
      C                   MOVE      WrkVdate      W@MRVDAT          5
      C                   MOVE      LASN          W@MRLASN          2
- 
+
       ***  Key Fields
- 
+
      C                   EVAL      PDealNo = W@MRCNUM + W@MRVDAT +
      C                                       W@MRLASN
      C                   EVAL      PADealNo = *BLANKS
@@ -1624,29 +1626,29 @@
       * SRWriteLoAm - Write Loan Amendment and Update Files           *
       *****************************************************************
      C     SRWriteLoAm   BEGSR
- 
+
       ***  Fill Input amounts in Saved Amounts DS
- 
+
      C                   Z-Add     MRPRAM        OPRAM
      C                   Z-Add     MRINTA        OINTA
      C                   Z-Add     MRPNAM        OPNAM
      C                   Z-Add     MRTAMT        OTAMT
      C                   Z-Add     MRWTXA        OWTXA
      C                   MOVE      *BLANK        WAMTP
- 
+
      C                   MOVE      OAMT          SAMT
       *
      C                   if        PD_AMTP = 'PD'
      C                             or MRXAVD = 0
- 
+
       ***  Do Facility Update
- 
+
      C                   EXSR      SRFCLT
      C     @@RTCD        CABEQ     '*RECUPD'     EndWriteLoAm
      C                   endif
- 
+
       ***  Loans file update
- 
+
      C                   IF        DDESEQ = 'LN ' or
      C                             PD_AMTP = 'PD'
      C                   EXSR      SRLOAN
@@ -1655,17 +1657,17 @@
       *
      C                   EXSR      SRLOAM
      C     @@RTCD        CABEQ     '*RECUPD'     EndWriteLoAm
- 
+
       ***  If CLE009 is installed, update fees file
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ENDIF
- 
+
       ***  Update Trailer
- 
+
      C                   EXSR      SRTRAL
- 
+
      C*****PCRF*         CHAIN     LESTALLA                           99             BUG9225 CSF011A
      C     MR_PTRF       CHAIN     LESTALLA                           99                     CSF011A
      C     *IN99         DOWEQ     *OFF                                                      BUG9225
@@ -1679,7 +1681,7 @@
       ***  Shadow posting
       ***  Update on shadow posting shd only be done if not a Risk loan
       ***  If it is a Risk loan then it should have an interest payment.
- 
+
      C     PTYP          IFEQ      61
      C     PTYP          OREQ      62
      C     PTYP          OREQ      63
@@ -1732,9 +1734,9 @@
       * SRUpdateLoAm - Update Loan Amendment and Update Files         *
       *****************************************************************
      C     SRUpdateLoAm  BEGSR
- 
+
       ***  Fill details with know details
- 
+
      C                   Z-Add     MRPRAM        PRAMR
      C                   Z-Add     MRINTA        INTAR
      C                   Z-Add     MRPNAM        PNAMR
@@ -1743,9 +1745,9 @@
      C                   Z-ADD     MRVDAT        WVALD
      C                   MOVE      MRLASN        SLASN
      C                   MOVE      *BLANK        WAMTP                                        260446
- 
+
       ***  Update facility files
- 
+
      C     WWACTN        IFEQ      'R'
      C     MRXAVD        IFEQ      0
      C     MRXAVD        ORNE      0
@@ -1754,17 +1756,17 @@
      C     @@RTCD        CABEQ     '*RECUPD'     EndUpdateLoAm
      C                   ENDIF
      C                   ENDIF
- 
+
       ***  Loans file update
- 
+
      C     DDESEQ        IFEQ      'LN '
      C     PD_AMTP       OREQ      'PD'
      C                   EXSR      SRLOAN
      C     @@RTCD        CABEQ     '*RECUPD'     EndUpdateLoAm
      C                   ENDIF
- 
+
       ***  Update loan amendment
- 
+
      C     WWACTN        IFEQ      'R'
      C**********         Z-ADD     MRLNRF        W#LNRF                                       CLE148
      C                   MOVEL     MRLNRF        W#LNRF                                       CLE148
@@ -1774,26 +1776,26 @@
      C**********         Z-ADD     W#LNRF        MRLNRF                                       CLE148
      C                   MOVEL     W#LNRF        MRLNRF                                       CLE148
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, update fees file
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ENDIF
       *
      C     @@RTCD        CABEQ     '*RECUPD'     EndUpdateLoAm
- 
+
       ***  Update trailer
- 
+
      C     WWACTN        IFEQ      'R'
      C                   EXSR      SRTRAL
      C     @@RTCD        CABEQ     '*RECUPD'     EndUpdateLoAm
      C                   ENDIF
- 
+
       ***  Shadow posting - Before Status
       ***  Update on shadow posting shd only be done if not a Risk loan
       ***  If it is a Risk loan then it should have an interest payment.
- 
+
      C     PTYP          IFEQ      61
      C     PTYP          OREQ      62
      C     PTYP          OREQ      63
@@ -1827,9 +1829,9 @@
      C                   IF        CLE134      = 'Y'                                          CLE134
      C                   EVAL      Z#BDT8      = Z#ADTH                                       CLE134
      C                   ENDIF                                                                CLE134
- 
+
       ***  Shadow posting - After Status
- 
+
      C                   MOVE      WSETT         SHSETT
      C                   EXSR      SRSHAD
      C                   MOVE      Z#ADTA        Z#ADT1
@@ -1864,9 +1866,9 @@
       *
      C     WWACTN        IFEQ      'I'
      C     WWACTN        OREQ      'R'
- 
+
       ***  Access FACILITY 'A' record
- 
+
      C                   MOVE      'A'           WRCDT1
      C                   MOVE      FCUS          WFCUS
      C                   MOVE      FTYP          WFTYP
@@ -1884,9 +1886,9 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ***  Access FACILITY 'B' record
- 
+
      C                   MOVE      'B'           WRCDT1
      C*****KFCLT         CHAIN     FCLTY                              50                   AR1080805
      C     KFCLT         CHAIN(n)  FCLTY                              50                   AR1080805
@@ -1901,9 +1903,9 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       *** Access LEFCAMPD file for change in revolving credit.
- 
+
      C                   MOVE      ' '           WRVCRC            1                         245177A
      C                   Z-ADD     0             WVLDT             5 0                       245177A
      C     KFCAM         SETLL     LEFCAML3                                                  245177A
@@ -1918,9 +1920,9 @@
      C                   ENDIF                                                               245177A
      C     KFCAM         READE     LEFCAML3                               85                 245177A
      C                   ENDDO                                                               245177A
- 
+
       ***  Access FCCY record for decimal places
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*BLANK  '    PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -1938,9 +1940,9 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ***  Save currency details to work field
- 
+
      C                   MOVE      A6NBDP        CDPF              1 0
      C     CLE023        IFEQ      'Y'
      C                   Z-ADD     A6SPRT        WSPRTF           13 8
@@ -1960,18 +1962,18 @@
      C                   PARM                    TimeStamp
      C                   EVAL      STMP=TimeStamp
      C                   UPDATE    FCLTYFNF                             50
- 
+
       ***  Update superfacility of the tranche, if any, for CLE005
- 
+
      C     CLE005        IFEQ      'Y'
      C     TRCA          ANDEQ     'TR'
      C                   Movel     WPRME         SPRME            12
      C                   Exsr      SRUPCA
      C                   MOVEL     SPRME         WPRME
      C                   endif
- 
+
       ***  Update also the Participant facility if existing
- 
+
      C     LPFI          IFNE      ' '
      C*****LPFI*         ANDNE     'R'                                                        CLE106
       *
@@ -1994,9 +1996,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Access FACILITY 'B' record
- 
+
      C                   MOVE      'B'           WRCDT1
      C     KFCLT         CHAIN     FCLTY                              50
      C     *IN50         IFEQ      '1'
@@ -2010,9 +2012,9 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFCL
      C                   ENDIF
- 
+
       ***  Access FCCY record for decimal places
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*BLANK  '    PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -2079,9 +2081,9 @@
       * Calls    : SRSLOC                                             *
       *****************************************************************
      C     SRLOAN        BEGSR
- 
+
       ***  Access the CLOAN record to be updated
- 
+
      C                   MOVE      MRLNRF        WCLOAN
      C                   MOVE      'A'           WCRCDT
      C     WKLON         CHAIN     CLOAN                              50
@@ -2098,13 +2100,13 @@
      C                   EXSR      *PSSR
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   ELSE
- 
+
       ***  Save repayment amount for generating 'RE' if match to cloan
- 
+
      C                   Z-ADD     RAMT          RAMTS            13 0
- 
+
       ***  Update fields for next repayment date
- 
+
      C*****MRAMTP*       IFNE      'PD'                                         output rec   BUG4774
      C     PD_AMTP       IFNE      'PD'                                         output rec   BUG4774
       *
@@ -2115,19 +2117,19 @@
      C                   Z-ADD     RDYN          ZMDAY
      C**********         MOVE      CCY           ZCCY                                        BUG3829
      C                   MOVE      CCYL          ZCCY                                        BUG3829
- 
+
       ***  Find the location of the settlement
- 
+
      C                   MOVE      MDST          W@SETP            2
      C                   MOVEL     OMDA          W@SNOS            2
      C**********         MOVE      CCY           W@CCY             3                         BUG3829
      C                   MOVE      CCYL          W@CCY             3                         BUG3829
      C                   EXSR      SRSLOC
- 
+
       ***  Determine next repayment date
- 
+
      C                   MOVE      W@STLL        ZLOC
- 
+
       ** Get Currency and Location Value (Arrays)                                             CLE141
                                                                                               CLE141
      C                   IF        CLE141 = 'Y'                                               CLE141
@@ -2152,10 +2154,10 @@
      C                   EVAL      LocArr(9) = L9PIL                                          CLE141
      C                   EVAL      LocArr(10)= L0PIL                                          CLE141
      C                   ENDIF                                                                CLE141
- 
+
       ***  If CLE005 exist, calculate the next repayment date based on
       ***  the Payment Due Day Indicator
- 
+
      C     CLE005        IFEQ      'Y'
      C                   CallB     'ZFRQB3'
      C                   PARM                    ZFREQ             1
@@ -2288,13 +2290,13 @@
      C                   ENDIF                                                                CLE141
      C                   ENDIF
      C                   ENDIF
- 
+
       ***  Update next repayment date on insert only                                        BUG23031
                                                                                             BUG23031
      C     WWACTN        IFEQ      'I'                                                      BUG23031
                                                                                             BUG23031
       ***  If next repay date greater than maturity date zeroise fields
- 
+
      C     MDAT          IFNE      0
      C     ZDYNBR        ANDGT     MDAT
      C     RFRQ          OREQ      ' '
@@ -2314,9 +2316,9 @@
      C                   ENDIF                                                              BUG23031
       *
      C                   ELSE
- 
+
       ***  Update Past Due Interest
- 
+
      C                   Z-ADD     INTAR         WRK13            13 0
       *
      C     WTINL         IFEQ      'G'                                          Gross Withhold. tax
@@ -2336,19 +2338,19 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  Update CLOAN file to unlink Loan to syndication and
       ***  Consolidated confirmation
- 
+
      C     BPCONR        IFEQ      'Y'
      C                   MOVE      'N'           CNCF
      C                   ELSE
      C                   MOVE      *BLANK        CNCF
      C                   ENDIF
- 
+
       ***  Update CLOAN
       ***  Write after status of CLOAN record
- 
+
      C                   Z-ADD     BJRDNB        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     P@NATN        TNLU
@@ -2372,24 +2374,24 @@
       * Calls    : SRNSEQ, SRINRE, SRUPRE, SRINMR, SRUPMR             *
       *****************************************************************
      C     SRLOAM        BEGSR
- 
+
       ***  1) Update/create Past due/ Repayment Scheduled Record
- 
+
      C                   Z-ADD     0             SLASN             3 0
      C                   Z-ADD     0             XLASN             3 0
       *
      C     WWACTN        IFEQ      'I'
- 
+
       ***  input details
- 
+
      C                   Z-ADD     MRXAVD        WVALD
      C                   MOVE      MRXASQ        SLASN
      C                   ENDIF
       *
      C     WWACTN        IFEQ      'R'
- 
+
       ***  Current Loan Amendment has Expected date/seq
- 
+
      C     MRXAVD        IFNE      0
      C     MRXASQ        ANDNE     0
      C                   Z-ADD     MRXAVD        WVALD
@@ -2400,26 +2402,26 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  Setup XLASN
- 
+
      C                   MOVE      SLASN         XLASN
- 
+
       ***  Expected payment date filled , or Reverse or Insert
- 
+
      C     DDESEQ        IFNE      *BLANKS                                      Expect. paym.(RE/PD)
      C     WWACTN        ANDNE     'A'                                          Not Amend
      C     WWACTN        ANDNE     'X'                                          Not authorise
- 
+
       ***  Get next available sequence for Insert of related RE
- 
+
      C                   IF        DDESEQ = 'LN '
      C                   EXSR      SRNSEQ
      C                   MOVE      SLASN         XLASN
      C                   ENDIF
- 
+
       ***  Chain to related LOAM record (Past due or Repayment schedule)
- 
+
      C     KLMKEY        CHAIN     LOAMS                              50        Lock current Details
       *
      C     WWACTN        IFEQ      'R'                                          Reverse
@@ -2444,24 +2446,24 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Save Before status of Related record
- 
+
      C                   Z-ADD     PRAM          OPRAM
      C                   Z-ADD     INTA          OINTA
      C                   Z-ADD     PNAM          OPNAM
      C                   Z-ADD     TAMT          OTAMT
      C                   Z-ADD     WTXA          OWTXA
- 
+
       ***  Repayment schedule only
- 
+
      C     AMTP          IFEQ      'RE'
       *
      C     REPTL         IFNE      3
      C     WWACTN        IFEQ      'I'
- 
+
       ***  Principal = Principal - Manual Repayment Principal amount
- 
+
      C     PRAM          SUB       PRAMR         PRAM
       *                                                                                    MD020445A
      C                   IF        PRAM < 0                                                MD020445A
@@ -2471,9 +2473,9 @@
      C                   ENDIF
       *
      C     WWACTN        IFEQ      'R'
- 
+
       ***  Principal = Principal + Manual Repayment Principal Amount
- 
+
      C     PRAM          ADD       PRAMR         PRAM
      C                   ENDIF
      C                   ENDIF                                                  REPTL = 3
@@ -2509,9 +2511,9 @@
      C                   ENDIF                                                  REPLT
       *
      C                   ENDIF                                                  Repayment Schedule
- 
+
       ***  For Past Due Details
- 
+
      C     AMTP          IFEQ      'PD'
       *
      C     WWACTN        IFEQ      'I'
@@ -2524,7 +2526,7 @@
      C     WTXA          SUB       WTXAR         WTXA
      C     TAMT          SUB       TAMTR         TAMT
      C                   ENDIF
- 
+
      C     WWACTN        IFEQ      'R'
       ***  Principal  = Principal  + Manual Repayment Principal Amount
       ***  Interests  = Interest   + Manual Repayment Interest  Amount
@@ -2563,9 +2565,9 @@
      C                   ENDSL
       *
      C                   ENDIF
- 
+
       ***  Save after status of TAMT of RE/PD
- 
+
      C                   Z-ADD     TAMT          TAMTS            13 0
       *
      C     DDESEQ        IFEQ      'LN '
@@ -2576,9 +2578,9 @@
      C                   TESTB     '2'           CBLI                     86
      C   86              BITON     '45'          LAIN
      C                   BITON     '27'          LAIN
- 
+
       ***  Write new RE record
- 
+
      C                   Z-ADD     1             XASQ
      C                   EXSR      SRINRE
       *
@@ -2685,13 +2687,13 @@
                                                                                               CAP086
      C                   WRITE     LOAMSDKF
      C                   MOVE      *BLANK        WAMTP
- 
+
       ***  Update related amendment
- 
+
      C                   ELSE                                                   Insert/Reverse PD/RE
- 
+
       ***  Amend / authorise
- 
+
      C     AMTP          IFEQ      'RE'
      C     AMTP          OREQ      'PD'
      C                   MOVE      AMTP          WAMTP             2
@@ -2885,9 +2887,9 @@
      C                   ENDIF                                                  LN
       *
      C                   ENDIF                                                  I/R with PD/RE
- 
+
       ***  2)Create/update Manual Repayment with Validated details
- 
+
      C                   MOVE      MRLASN        SLASN
       *
      C     WWACTN        IFEQ      'I'                                          Insert
@@ -2910,9 +2912,9 @@
      C                   ENDIF                                                                CSC024
                                                                                               CSC024
      C                   EXSR      SRINMR
- 
+
       ***  Output MR record
- 
+
      C                   MOVE      LeVMapy       CMapyFilFmt
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
@@ -3056,9 +3058,9 @@
      C                   ENDIF
       *
      C                   ELSE
- 
+
       ***  Setup MR details for update
- 
+
      C                   Z-ADD     MRVDAT        WVALD
      C                   MOVE      MRLASN        SLASN
      C     KLMKEY        CHAIN     LOAMS                              50
@@ -3299,22 +3301,22 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SRFEES        BEGSR
- 
+
       ***  If authorisation switchable feature is on and action code
       ***  is insert or amend and Manual Repayments Authorisations is
       ***  required
- 
+
      C     CLE002        IFEQ      'Y'
      C     WWACTN        ANDNE     'X'
      C     WWACTN        ANDNE     'R'
      C     BPMRAU        ANDEQ     'Y'
- 
+
       ***  If action code is insert
- 
+
      C     WWACTN        IFEQ      'I'
- 
+
       ***  Write a record to Loan Amendment Fee Index File
- 
+
      C                   MOVE      MRLNRF        FFLNRF
      C                   Z-ADD     MRVDAT        FFVDAT
      C                   MOVE      MRLASN        FFLASN
@@ -3323,24 +3325,24 @@
      C                   WRITE     LEFELAD0
       *
      C                   ENDIF
- 
+
       ***  If action code is amend
- 
+
      C     WWACTN        IFEQ      'A'
- 
+
       ***  Chain to Loan Amendment Fee Index File
- 
+
      C                   MOVE      MRLNRF        WKLOAN
      C                   Z-ADD     MRVDAT        WKDATE
      C                   MOVE      MRLASN        WKSEQN
      C     KIDXF         CHAIN     LEFELAL0                           13
- 
+
       ***  If record not found
- 
+
      C     *IN13         IFEQ      *ON
- 
+
       ***  Write a record to Loan Fee Index File
- 
+
      C                   MOVE      MRLNRF        FFLNRF
      C                   Z-ADD     MRVDAT        FFVDAT
      C                   MOVE      MRLASN        FFLASN
@@ -3349,15 +3351,15 @@
      C                   WRITE     LEFELAD0
       *
      C                   ELSE
- 
+
       ***  If work regeneration indicator is changed and regeneration
       ***  indicator is blank
- 
+
      C     WKSWRI        IFEQ      'C'
      C     FFSWRI        ANDEQ     *BLANKS
- 
+
       ***  Update the record to Loan Amendment Fee Index File
- 
+
      C                   MOVE      WKSWRI        FFSWRI
      C                   UPDATE    LEFELAD0
      C                   ENDIF
@@ -3366,31 +3368,31 @@
      C                   ENDIF
       *
      C                   ELSE
- 
+
       ***  If action code is authorise
- 
+
      C     WWACTN        IFEQ      'X'
- 
+
       ***  Chain to Loan Amendment Fee Index File
- 
+
      C                   MOVE      MRLNRF        WKLOAN
      C                   Z-ADD     MRVDAT        WKDATE
      C                   MOVE      MRLASN        WKSEQN
      C     KIDXF         CHAIN     LEFELAL0                           13
- 
+
      C     *IN13         IFEQ      *OFF                                         Found
- 
+
       ***  Update the record to Loan Amendment Fee Index File
- 
+
      C                   MOVE      FFSWRI        WKSWRI
      C                   MOVE      'Y'           FFAUTH
      C                   UPDATE    LEFELAD0
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  If action code is reverse
- 
+
      C     WWACTN        IFEQ      'R'
       *
       ***  Chain to Loan Amendment Fee Index File
@@ -3399,17 +3401,17 @@
      C                   Z-ADD     MRVDAT        WKDATE
      C                   MOVE      MRLASN        WKSEQN
      C     KIDXF         CHAIN     LEFELAL0                           13
- 
+
      C     *IN13         IFEQ      *OFF                                         Found
- 
+
       ***  If authorised is blank
- 
+
      C     FFAUTH        IFEQ      *BLANKS
      C                   MOVE      *BLANKS       WKSWRI
      C                   ELSE
- 
+
       ***  If work regeneration indicator is blank
- 
+
      C     WKSWRI        IFEQ      *BLANKS
      C                   MOVE      FFSWRI        WKSWRI
      C                   ENDIF
@@ -3417,13 +3419,13 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ***  If work regeneration indicator is changed
- 
+
      C     WKSWRI        IFEQ      'C'
- 
+
       ***  Check if the facility has an associated fee
- 
+
      C                   MOVE      CL_FTYP       CHFACT            3
      C                   MOVE      CL_FSEQ       CHFCNO            2
      C     CHFACT        CAT       CHFCNO        CHFACL            5
@@ -3432,11 +3434,11 @@
      C                   MOVEL     *BLANKS       WFLOAN                                       CLE148
      C     WKFEE         SETLL     LEFEEDL1
      C     WKFEE         READE     LEFEEDL1                               14
- 
+
       ***  Do while an associated fee exists
- 
+
      C     *IN14         DOWEQ     *OFF
- 
+
      C                   MOVE      FEAUTO        WFEAUT            1                          CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     WFEAUT        IFEQ      'C'                                                        CLE134
@@ -3447,27 +3449,27 @@
                                                                                               CLE134
       ***  If the fee is a confirmed calculated fee and swift
       ***  regeneration indicator is not 'I', 'B', 'H'
- 
+
      C*****FEAUTO        IFEQ      'Y'                                                        CLE134
      C     WFEAUT        IFEQ      'Y'                                                        CLE134
      C     FECALT        ANDNE     *BLANKS
      C     FESWRI        ANDNE     'I'
      C     FESWRI        ANDNE     'B'
      C     FESWRI        ANDNE     'H'
- 
+
       ***  Set currency to fee currency
       ***  Set day to run date
       ***  Set number of working days to telex notice days
- 
+
      C                   MOVE      FEFCCY        ZCCY
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   Z-ADD     1             Y
      C     FEFCCY        LOOKUP    CYA(Y)                                 12
      C                   MOVE      *OFF          *IN12
      C                   MOVE      TND(Y)        ZNRDYS
- 
+
       ***  If Fee Settlement type is '01', '02', '07', '08' or '12'
- 
+
      C     FESTTL        IFEQ      01
      C     FESTTL        OREQ      02
      C     FESTTL        OREQ      07
@@ -3499,9 +3501,9 @@
      C                   EXSR      *PSSR
       *
      C                   ELSE
- 
+
       ***  Set Location to Nostro Location
- 
+
      C                   MOVE      A7NOSN        ZLOC
      C                   ENDIF
       *
@@ -3510,41 +3512,41 @@
      C                   MOVE      *BLANKS       ZLOC
       *
      C                   ENDIF
- 
+
       ***  Calculate number of working days forward
- 
+
      C                   CallB     'ZFWDT'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZNRDYS            2 0
      C                   PARM                    ZDYNBR            5 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZLOC              3
- 
+
       ***  Set Telex Notice date to day number
- 
+
      C                   Z-ADD     ZDYNBR        TXDT              5 0
- 
+
       ***  If next payment date is before or equals to Telex Notice date
       ***  and Next Payment Telex indicator is set to 'Y'
- 
+
      C     FENPYD        IFLE      TXDT
      C     FEPPTI        ANDEQ     'Y'
- 
+
       ***  Update Fees file
- 
+
      C                   MOVE      'A'           FESWRI
      C                   Eval      FELCHD = BJRDNB                                            243154
      C                   UPDATE    LEFEEDF
      C                   ELSE
- 
+
       ***  If end date is before or equals to Telex Notice date and End
       ***  Telex indicator is set to 'Y'
- 
+
      C     FEPEND        IFLE      TXDT
      C     FEEPTI        ANDEQ     'Y'
- 
+
       ***  Update Fees file
- 
+
      C                   MOVE      'A'           FESWRI
      C                   Eval      FELCHD = BJRDNB                                            243154
      C                   UPDATE    LEFEEDF
@@ -3575,10 +3577,10 @@
       * Calls    : FCLTSR                                             *
       *****************************************************************
      C     SRUPCA        BEGSR
- 
+
       ***  Whenever the facility utilisation is updated for a tranche,
       ***  update the credit agreement/superfacility as well
- 
+
      C                   MOVE      FCCY          WTCCY             3
      C                   MOVE      CMDI          WCMDI             1
      C                   Z-ADD     CAXR          WCAXR            13 8
@@ -3586,9 +3588,9 @@
      C                   MOVEL     CAFT          WFTYP
      C                   MOVEL     CAFN          WFSEQ
      C                   MOVE      'A'           WRCDT1
- 
+
       ***  Save the revolving credit indicator specified for the tranche
- 
+
      C     CLE014        IFEQ      'Y'
      C                   MOVE      RVCRF         WRVCRF            1
      C                   ENDIF
@@ -3605,11 +3607,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  If the revolving credit indicator for the credit agreement is
       ***  'T', use the saved tranche revolving credit indicator as the
       ***  credit agreement revolving indicator.
- 
+
      C     CLE014        IFEQ      'Y'
       *
      C     RVCRF         IFEQ      'T'
@@ -3630,10 +3632,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  If tranche and superfacility currencies are different, get
       ***  superfacility currency details
- 
+
      C     WTCCY         IFNE      FCCYF
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD             7
@@ -3650,9 +3652,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Convert facility amount to credit facility currency
- 
+
      C                   Z-ADD     A6NBDP        CDPC              1 0
      C                   Eval      CX = CDPC - CDPF + 4
      C     WCMDI         IFEQ      'D'
@@ -3663,10 +3665,10 @@
      C                   ENDIF
       *
      C                   MULT(H)   OFCXRT        PRAM_Fac
- 
+
       ***  Convert facility amount to Credit agreement facility using spot
       ***  rate for later update of Current exposure
- 
+
      C     CLE023        IFEQ      'Y'
      C                   Z-ADD     WSPRTF        ZRATE1
      C                   MOVE      WMDINF        ZMDI1
@@ -3702,9 +3704,9 @@
      C                   Z-ADD     ZAMTCO        WrkPRAMS         13 0
      C                   ENDIF
      C                   ENDIF
- 
+
       ***  Update facility exposure and availability
- 
+
      C                   MOVE      'Y'           WTRCA             1
      C                   IF        CLE134 = 'Y'                                             AR806351
      C                   EVAL      WUpdExpo = 'Y'                                           AR806351
@@ -3728,9 +3730,9 @@
       * Calls    :  QFCLTY                                            *
       *****************************************************************
      C     FCLTSR        BEGSR
- 
+
       ***  Convert amounts into facility currency equivalent
- 
+
      C     WTRCA         IFEQ      *BLANK
       *
      C     CLE023        IFEQ      'Y'
@@ -3758,9 +3760,9 @@
      C                   ENDIF
       *
      C     PRAMR         MULT(H)   OFCXRT        PRAM_Fac         13 0
- 
+
       ***  Convert amount to facility currency using spot rates
- 
+
      C     CLE023        IFEQ      'Y'
      C                   MOVE      WMDINL        ZMDI1             1
      C                   Z-ADD     WSPRTL        ZRATE1           13 8
@@ -3797,9 +3799,9 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  Set up fields for availability updating
- 
+
      C                   Z-ADD     MDAT          ENDAY             5 0    40
      C     *IN40         IFEQ      '1'
      C                   Z-ADD     99999         ENDAY
@@ -3807,10 +3809,10 @@
      C                   Z-ADD     MRVDAT        DAYNO             5 0
       *
      C                   MOVEA     '00'          *IN(41)
- 
+
       ***  Similar update for a non-syndicated loan and part purchased,
       ***  internal parts purchased and funding participant
- 
+
      C     RVCRF         IFEQ      'Y'
      C     WRVCRC        ANDEQ     ' '                                                       245177A
      C     RVCRF         OREQ      'N'                                                       245177A
@@ -3829,9 +3831,9 @@
      C                   ELSE
      C                   MOVE      '1'           *IN42
      C                   ENDIF
- 
+
       ***  Similar update for a non-syndicated parts sold, and prime facilities
- 
+
      C                   ELSE
      C     WWACTN        IFEQ      'I'
      C                   MOVE      '1'           *IN42
@@ -3850,13 +3852,13 @@
      C                   Z-ADD     0             FCBAL                                      AR806351
      C                   Z-ADD     0             WrkPRAMS                                   AR806351
      C                   ENDIF                                                              AR806351
- 
+
       ***  Do not update for parts sold with recourse and
       ***  if CLE023 is not installed.  If CLE023 is installed, do not
       ***  update for parts sold for non-participant facility with or
       ***  without recourse.  Also do not update
       ***  Prime facility of a syndicated loan
- 
+
      C     *IN52         IFEQ      '1'
      C     RCSI          ANDEQ     'Y'
      C     LPFI          ANDEQ     ' '
@@ -3870,10 +3872,10 @@
      C     LPFI          ANDNE     ' '
      C                   MOVEA     '00'          *IN(41)
      C                   endif
- 
+
       ***  If customer is branch internal customer, then no update to
       ***  facility availability
- 
+
      C                   EXSR      SRCIBC
       *
       ***  If ind. 43 is on, then customer is an internal customer.
@@ -3892,7 +3894,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  UPDATE EXPOSURE
       *
       ***  Internal parts purchased and funding participants are updated
@@ -3903,7 +3905,7 @@
       ***  Update CAMD of Prime or normal facility only if loan is not
       ***  a parts sold.  If CLE023 is installed, update the exposure
       ***  only if normal loan or a funded loan is sold without recourse
- 
+
      C     MRVDAT        IFLE      BJRDNB
      C     LPFI          IFNE      *BLANK
      C     WWACTN        IFEQ      'I'
@@ -3925,9 +3927,9 @@
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C     CEXP          SUB       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, set Work Regeneration Indicator to 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI            1
      C                   ENDIF
@@ -3953,17 +3955,17 @@
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C     CEXP          ADD       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, set Work Regeneration Indicator to 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI            1
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  normal, non-syndicated loans
- 
+
      C                   ELSE
       *
      C     *IN52         IFEQ      '0'
@@ -3984,9 +3986,9 @@
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C     CEXP          SUB       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, set Work Regeneration Indicator to 'C'hanged
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI            1
      C                   ENDIF
@@ -4011,10 +4013,10 @@
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C     CEXP          ADD       WrkPRAMS      CEXP
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, set Work Regeneration Indicator to
       ***  changed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI            1
      C                   ENDIF
@@ -4060,13 +4062,13 @@
      C     ENDAY         LOOKUP    RUNS(X)                            40  40
      C     *IN40         IFEQ      '0'
      C                   Z-ADD     99            X
- 
+
       ***  with Manual Repayment on loans during I/C
       ***  the availability (i.e. undrawn amount) should be updated
       ***  to reflect the repayment.
       ***  RUNS,1 = The previous working day
       ***  ENDAY  = Maturity date of loan
- 
+
      C                   ELSE
       *                                                                                       204708
       * If Loan is not autosettled, then the O/S principal of that loan                       204708
@@ -4100,10 +4102,10 @@
      C     CLE025        ANDEQ     'N'                                                        CLE025
      C     OAM(W)        ADD       FCBAL         OAM(W)
      C                   ENDIF
- 
+
       ***  If CLE009 is installed, set Work Regeneration Indicator to
       ***  changed
- 
+
      C     CLE009        IFEQ      'Y'
      C                   MOVE      'C'           WKSWRI            1
      C                   ENDIF
@@ -4223,9 +4225,9 @@
      C                   MOVE      *BLANKS       XUSR
       *
      C                   MOVE      MRPAST        PAST
- 
+
       ***  Set status depending on ICD
- 
+
      C**********         EXSR      SRSTAT                                                   MD029048
      C                   MOVE      'A'           ASTS                                       MD029048
       *
@@ -4240,7 +4242,7 @@
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PBRCA             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -4274,14 +4276,14 @@
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        CLE106 = 'Y' AND MR_PTRF <> *BLANKS                       CSF011A
      C                             OR @@MODE = '*FRONT'                                      CSF011A
      C                   EVAL      PCRFK  = MR_PTRF                                          CSF011A
      C                   ENDIF                                                               CSF011A
                                                                                              CSF011A
       ***  System generated
- 
+
      C     CEU004        IFEQ      'Y'
      C                   MOVE      CL_SCCY       SCCYK
      C                   MOVE      CL_ICCY       ICCY
@@ -4331,9 +4333,9 @@
      C     AMTP          IFEQ      'RE'
      C                   EXSR      SRSTAT
      C                   ENDIF
- 
+
       ***   Setting of 'manual/system generated' flag.
- 
+
      C     WWACTN        IFNE      'X'
      C                   MOVE      'M'           MNSG
      C                   ENDIF
@@ -4364,10 +4366,10 @@
      C                   Eval      AMTP = 'MR'                                   used by SRSTAT
      C                   Eval      MRASTS = 'A'
      C                   EXSR      SRSTAT
- 
+
       ***  New Settlement details are already filled (In SIN or RPR, CALLB ZASETINSIN)
       ***                                            (IN CTL, CALLB ZASETINDFT)
- 
+
      C     WWACTN        IFEQ      'I'
      C     CLE106        ANDNE     'Y'                                                        CLE106
      C     CLE134        ANDNE     'Y'                                                      MD020605
@@ -4409,9 +4411,9 @@
      C**********         Z-ADD     PCNEXT        PCLAST                                       CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C                   ENDIF
- 
+
       *** if Expected Payment was a Past due
- 
+
      C     PD_AMTP       IFEQ      'PD'
      C                   MOVE      'Y'           MRMTPD
      C                   ELSE
@@ -4442,13 +4444,13 @@
      C     WWACTN        IFEQ      'R'
      C                   MOVE      'R'           MRRECI
      C                   ENDIF
- 
+
       ***  Set status depending on ICD
- 
+
      C                   EXSR      SRSTAT
- 
+
       ***   Setting of 'manual/system generated' flag.
- 
+
      C     WWACTN        IFNE      'X'
      C                   MOVE      'M'           MRMNSG
      C                   ENDIF
@@ -4513,14 +4515,14 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SRSLOC        BEGSR
- 
+
       ***  Initialise working variable - settlement branch location
- 
+
      C                   MOVE      *BLANKS       W@STLL            3
- 
+
       ***  For type 01,02,07,08 or 12, settlement location is determined
       ***  by the nostro branch
- 
+
      C     W@SETP        IFEQ      '01'
      C     W@SETP        OREQ      '02'
      C     W@SETP        OREQ      '07'
@@ -4567,9 +4569,9 @@
      C     SRNSEQ        BEGSR
       *
      C                   Z-ADD     0             SLASN
- 
+
       ***  Get next available sequence, for loan at Date
- 
+
      C     KLMKEY        SETLL     LOAMD
      C                   READ      LOAMD                                  50
      C     *IN50         DOWEQ     *OFF
@@ -4639,9 +4641,9 @@
      C******IN79         OREQ      '1'                                                      AR322732
       *
      C**********         Z-ADD     1             LXRRN             5 0                      AR322732
- 
+
       ***  Access LTRIX header
- 
+
      C*****LXRRN         CHAIN(N)  LTRIX                              79                    AR322732
       *
      C******IN79         IFEQ      '0'                                                      AR322732
@@ -4693,17 +4695,17 @@
      C**********         ENDIF                                                              AR322732
       *
      C                   Z-ADD     0             PRI1
- 
+
       ***  Check settlement type
- 
+
      C     SETP          IFEQ      01
      C     SETP          OREQ      02
      C     SETP          OREQ      07
      C     SETP          OREQ      08
      C     SETP          OREQ      12
- 
+
       ***  Obtain lowest telex notice days between loan & local CCY
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*BLANK  '    PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -4720,15 +4722,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Default to local CCY for telex notice calculation
- 
+
      C                   Z-ADD     A6TXND        ZNRDYS
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   MOVE      BJLCCY        ZCCY
- 
+
       ***  For settlement types 01, 07, & 08 use loan currency instead
- 
+
      C     SETP          IFEQ      01
      C     SETP          OREQ      07
      C     SETP          OREQ      08
@@ -4750,14 +4752,14 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ***  Update LTRIX detail record
- 
+
      C                   Z-ADD     0             RRNA              5 0                      AR322732
      C                   EXCEPT    LTRIXD
- 
+
       ***  Get header record
- 
+
      C**********         Z-ADD     1             LXRRN                                      AR322732
      C*****LXRRN         CHAIN     LTRIX                              79                    AR322732
       *
@@ -4771,9 +4773,9 @@
      C**********         OUT       LDA                                                      AR322732
      C**********         EXSR      *PSSR                                                    AR322732
      C**********         ENDIF                                                              AR322732
- 
+
       ***  Update relevant control fields
- 
+
      C*****NORE*         ADD       1             NORE                                       AR322732
      C*****RRNA*         ADD       1             RRNA                                       AR322732
      C*****NLAR*         ADD       1             NLAR                                       AR322732
@@ -4800,9 +4802,9 @@
      C                   MOVE      '999999'      WLNRF
      C                   MOVE      '99999'       WVALD
      C                   MOVE      '999'         SLASN
- 
+
       ***  Store values before updating loan amendments trailer
- 
+
      C     *LIKE         DEFINE    VDAT          W#VDAT
      C     *LIKE         DEFINE    LNRF          W#LNRF
      C                   Z-ADD     VDAT          W#VDAT
@@ -4826,9 +4828,9 @@
      C                   ELSE                                                               MD024342
      C                   EXSR      Initialise                                               MD024342
      C                   ENDIF                                                              MD024342
- 
+
       ***  Action is insert
- 
+
      C     WWACTN        IFEQ      'I'
      C     NORE          ADD       1             NORE
      C     NINS          ADD       1             NINS
@@ -4836,48 +4838,48 @@
      C                   Z-ADD     VRIF          ZZTOTI
      C                   Z-ADD     VRIL          ZZTOTD
      C                   ENDIF
- 
+
       ***  Action is reverse
- 
+
      C     WWACTN        IFEQ      'R'
      C     NDEL          ADD       1             NDEL
      C     NLRA          SUB       1             NLRA
      C                   Z-ADD     VRDF          ZZTOTI
      C                   Z-ADD     VRDL          ZZTOTD
      C                   ENDIF
- 
+
       ***  If matched against CLOAN add for extra 'RE' record
- 
+
      C     DDESEQ        IFEQ      'LN '
      C     NORE          ADD       1             NORE
      C     NINS          ADD       1             NINS
      C     NLRA          ADD       1             NLRA
      C                   ENDIF
- 
+
       ***  Update amount fields
- 
+
      C     TAMTR         DIV       1000          ZZAMT                  40
      C     *IN40         IFEQ      '1'                                          Negative Amount
      C                   Z-SUB     ZZAMT         ZZAMT                          Reverse Sign
      C                   ENDIF
      C                   EXSR      GLZADD
- 
+
       ***  Action is insert
- 
+
      C     WWACTN        IFEQ      'I'
      C                   Z-ADD     ZZTOTI        VRIF
      C                   Z-ADD     ZZTOTD        VRIL
      C                   ENDIF
- 
+
       ***  Action is reverse
- 
+
      C     WWACTN        IFEQ      'R'
      C                   Z-ADD     ZZTOTI        VRDF
      C                   Z-ADD     ZZTOTD        VRDL
      C                   ENDIF
- 
+
       ***  If matched against CLOAN add for extra 'RE' record
- 
+
      C     DDESEQ        IFEQ      'LN '
      C     TAMTS         DIV       1000          ZZAMT                  40
      C     *IN40         IFEQ      '1'                                          Negative amount
@@ -4900,18 +4902,18 @@
      C**********         Z-SUB     TAMTR         WAMNT                                        264014
      C**********         ENDIF                                                                264014
      C                   ENDIF
- 
+
       ***  Also get absolute value of amount when linked to a past due.
- 
+
      C     WAMTP         IFEQ      'PD'
      C     WWACTN        ANDEQ     'R'
      C     WAMNT         ANDLT     0
      C                   Z-SUB     WAMNT         WAMNT
      C                   ENDIF
- 
+
       ***  Get absolute value of amount first before negating it.  This is
       ***  to accomodate negative manual repayments linked to a past due.
- 
+
      C     WAMTP         IFEQ      'PD'
      C     WWACTN        ANDEQ     'I'
      C                   Z-ADD     TAMTR         WAMNT
@@ -4919,11 +4921,11 @@
      C                   Z-SUB     WAMNT         WAMNT
      C                   ENDIF
      C                   ENDIF
- 
+
       ***  For match against 'RE' value of amend is absolute
       ***  value of TAMT of 'RE' after amend minus absolute value
       ***  of TAMT of 'RE' before amend
- 
+
      C     WAMTP         IFEQ      'RE'
      C     REPTL         ANDNE     1
      C                   Z-ADD     OTAMT         WRK13                  40
@@ -5009,7 +5011,7 @@
      C**********         WRITE     LOAMSZ1FX                                      MD024342B MD025467
      C                   WRITE     LOAMSZ1F                                                 MD025467
      C                   ENDIF                                                              MD024342
- 
+
       ** Update Loan Amendments Trailer File                                                MD020733
                                                                                             MD020733
      C                   IF        CLE134 = 'Y' and UpSRFlg = 'Y'                           MD020733
@@ -5073,7 +5075,7 @@
      C                   ENDIF                                                              MD020733
                                                                                             MD020733
       ***  Restore values after updating loan amendments trailer
- 
+
      C                   MOVE      W#VDAT        VDAT
      C                   MOVE      W#LNRF        LNRF
       *
@@ -5185,9 +5187,9 @@
      C                   ENDIF                                                              MD023787
       *                                                                                     MD023787
      C     POSTPD        TAG                                                                MD023787
- 
+
       ***  Do On-line updates
- 
+
      C     WPDCLNoPost   IFEQ      ' '                                                      MD040186
      C                   MOVE      *BLANKS       ##RTCD            7
      C                   CALL      'AOOULAU0'
@@ -5376,14 +5378,14 @@
       *
      C                   Z-ADD     ZZAMT         ZZAMT            15 3    91    -DEFINE ZZAMT
      C   91              GOTO      ZZAEND                                       AMT = 0.BYPASS
- 
+
       ***  SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
- 
+
      C                   Z-ADD     ZZAMT         ZZAMTI           15 0          INTEGER FIELD
      C                   MOVE      ZZAMT         ZZAMTD            3 0          DECIMAL FIELD
- 
+
       ***  BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
- 
+
      C                   EXSR      GLZSUM
      C     ZZAEND        ENDSR
       *****************************************************************
@@ -5399,26 +5401,26 @@
      C                   Z-ADD     ZZTOTD        ZZTOTD            3 0          DEFINE ZZTOTD
      C                   SETOFF                                       919293
      C                   SETOFF                                       949599
- 
+
       ***  DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
- 
+
      C     ZZAMTI        COMP      0                                    9293
      C   93ZZAMTD        COMP      0                                    9293
      C   93              GOTO      ZZSEND                                       ZERO BYPASS
- 
+
       ***  DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
- 
+
      C     ZZTOTI        COMP      0                                    9193
      C   93ZZTOTD        COMP      0                                    9193
- 
+
       ***  IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
- 
+
      C   93              Z-ADD     ZZAMTI        ZZTOTI
      C   93              Z-ADD     ZZAMTD        ZZTOTD
      C   93              GOTO      ZZSEND                                       ZERO BYPASS
- 
+
       ***  IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
- 
+
      C   91
      CANN92
      CORN91
@@ -5434,46 +5436,46 @@
      CAN 92ZZAMTI        SUB       1             ZZWK3                          SUB 'CARRY' -VE
      C   93ZZTOTI        ADD       ZZWK3         ZZWK3
      C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3
- 
+
       ***  IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
- 
+
      C  N92ZZWK3         COMP      ZZTOTI                               99      -92 MEANS NOS.
      C   92ZZWK3         COMP      ZZTOTI                             99         NEGATIVE
      C  N99              Z-ADD     ZZWK2         ZZTOTD
      C  N99              Z-ADD     ZZWK3         ZZTOTI
- 
+
       ***  IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
- 
+
      C   99              Z-ADD     0             ZZAMT            15 3
      C                   GOTO      ZZSEND
- 
+
       ***  THE 'SIGNS' ARE DIFFERENT
- 
+
      C     ZZOFPS        TAG
- 
+
       ***  IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0
      C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0
- 
+
       ***  IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
- 
+
      C   91              Z-SUB     ZZTOTI        ZZTOTI
      C   91              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ***  BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
- 
+
      C     ZZTOTI        COMP      ZZAMTI                             93  95
      C   95ZZTOTD        COMP      ZZAMTD                             93  95
- 
+
       ***  IF ZZTOT EQ. ZZAMT RETURN ZERO.
- 
+
      C   95              Z-ADD     0             ZZTOTI
      C   95              Z-ADD     0             ZZTOTD
      C   95              GOTO      ZZSEND
- 
+
       ***  IF ZZTOT GT. ZZAMT.
- 
+
      C   93ZZAMTD        COMP      ZZTOTD                             94
      C   93
      CAN 94ZZTOTI        SUB       1             ZZTOTI
@@ -5484,9 +5486,9 @@
      CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      C   93
      CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
- 
+
       ***  IF ZZAMT GT. ZZTOT.
- 
+
      C  N93ZZTOTD        COMP      ZZAMTD                             94
      C  N93
      CAN 94ZZAMTI        SUB       1             ZZWK3            15 0
@@ -5500,9 +5502,9 @@
      CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      C  N93
      CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD
- 
+
       ***  REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
- 
+
      C                   SETOFF                                       94
      C   93
      CAN 91
@@ -5510,15 +5512,15 @@
      CAN 92              SETON                                        94
      C   94              Z-SUB     ZZTOTI        ZZTOTI
      C   94              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ***  RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI
      C   92              Z-SUB     ZZAMTD        ZZAMTD
      C     ZZSEND        TAG
- 
+
       ***  IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
- 
+
      C                   SETOFF                                       96
      C     ZZTOTD        COMP      0                                      91
      C   91ZZTOTI        COMP      0                                    96
@@ -5533,9 +5535,9 @@
       * Calls    : GLZADD                                             *
       *****************************************************************
      C     GLZSUB        BEGSR
- 
+
       ***  PROCESSING. JUST REVERSE THE 'SIGN' AND ADD
- 
+
      C                   Z-SUB     ZZAMT         ZZAMT            15 3          REVERSE 'SIGN'
      C                   EXSR      GLZADD                                         AND 'ADD'
      C                   Z-SUB     ZZAMT         ZZAMT                          RESTORE 'SIGN'
@@ -6087,9 +6089,9 @@
      C     *INZSR        BEGSR
       *
      C                   MOVEA     CPY@          CPY2@            80
- 
+
       ***  Program Parameters
- 
+
      C     *ENTRY        PLIST
       *
       ***  Inputs
@@ -6120,14 +6122,14 @@
      C**********         PARM                    UpSRFlg           1                 CLE134 MD020445
      C                   PARM                    UpSRFlg           1                        MD020733
      C                   PARM                    DDAuto            1                          CLE164
- 
+
       ***  Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -6138,9 +6140,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Retrieve lending ICD
- 
+
      C                   CALL      'AOCLNDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -6156,14 +6158,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Access Trading Data
- 
+
      C                   CALLB     'AOTRADR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -6174,14 +6176,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ***  Retrieve module details
- 
+
      C                   CALLB     'AOMMODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      @@RTCD = '*RECUPD'
@@ -6194,16 +6196,16 @@
      C                   ENDIF
       *
      C                   MOVEL     BGMBIN        MBIN              1
- 
+
       ***  Access General Ledger
- 
+
      C**********         CALLB     'AOGELRR0'                                                 CGL029
      C                   CALLB     'AOGELRR1'                                                 CGL029
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      @@RTCD = '*RECUPD'
      C                   MOVEL     'LEMAPYUPD'   DBPGM
@@ -6214,12 +6216,12 @@
      C                   END
       *
      C                   If        BGRTBN = 'Y'
- 
+
      C                   CALLB     'AORETLR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST'      @OPTN
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C                   endif
                                                                                               CLE106
       **  Access CLE106 feature                                                               CLE106
@@ -6247,17 +6249,17 @@
      C                   IF        @RTCD = *Blanks                                            CLE031
      C                   EVAL      CLE031 = 'Y'                                               CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ***  Access CSC011 feature, 24X7 Interface
       ** CSC011 is a redundant feature. No need to check                                    MD024398
- 
+
      C                   MOVE      'N'           CSC011            1
      C**********         CALLB     'AOSARDR0'                                               MD024398
      C**********         PARM      *BLANKS       @RTCD                                      MD024398
      C**********         PARM      '*VERIFY'     @OPTN                                      MD024398
      C**********         PARM      'CSC011'      @SARD             6                        MD024398
      C*****SCSARD        PARM      SCSARD        DSFDY                                      MD024398
- 
+
      C*****@RTCD         IFEQ      *BLANKS                                                  MD024398
      C**********         MOVE      'Y'           CSC011                                     MD024398
      C     *DTAARA       DEFINE                  SDSTAT
@@ -6283,37 +6285,37 @@
      C                   IF        PRTCD = *BLANKS                                            CLE025
      C                   MOVE      'Y'           CLE025                                       CLE025
      C                   ENDIF                                                                CLE025
- 
+
       ***  when feature CLE009 is Activated, fill in working Arrays
- 
+
      C                   if        CLE009 = 'Y'
      C                   Z-ADD     1             Y                 3 0
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C                   PARM                    PCURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      A6CYCD        CYA(Y)
      C                   MOVE      A6TXND        TND(Y)
- 
+
      C     PRTCD         DOWNE     '*EOF    '
      C                   ADD       1             Y
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*NEXT  '     POPTN
      C                   PARM                    PCURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     PRTCD         IFNE      '*EOF    '
      C                   MOVE      A6CYCD        CYA(Y)
      C                   MOVE      A6TXND        TND(Y)
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   Endif
                                                                                               CRE020
       ** Check if CRE020 is enabled.                                                          CRE020
@@ -6401,19 +6403,19 @@
      C                   EVAL      CobMode = 'Y'                                            MD023787
      C                   ENDIF                                                              MD023787
       *                                                                                     MD023787
- 
+
       ***  Define Key Lists
- 
+
       ***  Loan Amendments
- 
+
      C     KLMKEY        KLIST
      C**********         KFLD                    WLNRF             6 0                        CLE148
      C                   KFLD                    WLNRF                                        CLE148
      C                   KFLD                    WVALD             5 0
      C                   KFLD                    SLASN
- 
+
       ***  Loans
- 
+
      C     WKLON         KLIST
      C**********         KFLD                    WCLOAN            6 0                        CLE148
      C                   KFLD                    WCLOAN            6                          CLE148
@@ -6423,9 +6425,9 @@
      C**********         KFLD                    WLOAN             6 0                        CLE148
      C                   KFLD                    WLOAN             6                          CLE148
      C                   KFLD                    WRCDT             1
- 
+
       ***  Facility
- 
+
      C     KFCLT         KLIST
      C                   KFLD                    WFCUS
      C                   KFLD                    WFTYP
@@ -6436,17 +6438,17 @@
      C                   KFLD                    WFCUS                                       245177A
      C                   KFLD                    WFTYP                                       245177A
      C                   KFLD                    WFSEQ                                       245177A
- 
+
       ***  Loan Amendment Fee Index
- 
+
      C     KIDXF         KLIST
      C**********         KFLD                    WKLOAN            6 0                        CLE148
      C                   KFLD                    WKLOAN            6                          CLE148
      C                   KFLD                    WKDATE            5 0
      C                   KFLD                    WKSEQN            3 0
- 
+
       ***  Fees
- 
+
      C     WKFEE         KLIST
      C**********         KFLD                    WFCNUM            6 0                        CSD027
      C                   KFLD                    WFCNUM            6                          CSD027
@@ -6696,12 +6698,12 @@
       *
      C                   Z-ADD     0             I                 3 0
      C                   MOVE      *OFF          *IN99
- 
+
       ***  First read, store BICN
- 
+
      C     *LOVAL        SETLL     SDBRCHL5
      C                   READ      SDBRCHL5                               99
- 
+
      C     *IN99         IFEQ      *ON
      C                   EVAL      @@RTCD = '*RECUPD'
      c     *LOCK         IN        LDA

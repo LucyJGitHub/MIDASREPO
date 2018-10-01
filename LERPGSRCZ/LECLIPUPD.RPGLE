@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD040789           Date 24Jan18               *
-      *  Prev Amend No. MD046370           Date 07Nov17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD040789           Date 24Jan18               *
+      *                 MD046370           Date 07Nov17               *
       *                 260408             Date 06Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD041714           Date 29Sep16               *
@@ -151,6 +152,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD040789 - LE1150P1 is not generated during authorization of *
       *             maturity amendment.                               *
       *  MD046370 - Component LERC135 is looping in COB. If loan      *

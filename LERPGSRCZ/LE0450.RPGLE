@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051788           Date 30Aug18               *
-      *  Prev Amend No. MD049745B          Date 29Jun18               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD051788           Date 30Aug18               *
+      *                 MD049745B          Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD049745           Date 02Mar18               *
       *                 MD049444           Date 07Mar18               *
@@ -386,6 +387,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *
       *              missing exchange rate on PDCL                    *
       *  MD049745B - FX account keys are not generated for loan start *

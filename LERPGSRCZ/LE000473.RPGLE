@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD047999           Date 27Sep18               *
-      *  Prev Amend No. MD051788           Date 30Aug18               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD047999           Date 27Sep18               *
+      *                 MD051788           Date 30Aug18               *
       *                 MD049572           Date 18Feb18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD047999 - PDCL loans goes in repair due to incorrect        *
       *             Settlement (Recompile)                            *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *

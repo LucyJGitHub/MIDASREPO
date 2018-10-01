@@ -1,0 +1,1475 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG LE Fee Rate Change Advices')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG6078 - LE Fee Rate Change Advices                          *
+      *                                                               *
+      *  Function:  This program extracts data for Fee Rate Change    *
+      *             Advices                                           *
+      *                                                               *
+      *  Called By: CG6077 - LE Fee Rate Change Advices - Driver      *
+      *                                                               *
+      *  (c) Finastra International Limited 2018                      *
+      *                                                               *
+      *  Last Amend No. CLE071  *CREATE    Date 18Jul18               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
+      *                                                               *
+      *****************************************************************
+     FFCLTY   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N  C T I O N    O F    I N D I C A T O R S               *
+      *                                                               *
+      *  88   -    No record found in FCLTY file.                     *
+      *  90   -    General error indicator.                           *
+      *  98   -    MMDDYY date format.                                *
+      *  99   -    LOKUP indicator.                                   *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  Main routine                                                 *
+      *  SRMAIN  -  Main Processing                                   *
+      *  SRINIT  -  Initial Processing                                *
+      *  SRINZF  -  Initialise Fields on Each Invocation              *
+      *  SRDETL  -  Obtain Detail Information                         *
+      *  L14FRC  -  Process Lending Fee Rate Change Advices           *
+      *  FEERC   -  Process Loan Fee Rate Change Details              *
+      *  LOANA   -  Process Loan Associated Details                   *
+      *  SRADTA  -  Accumulate RDEs and Associated Data               *
+      *  SRODTA  -  Output Accumulated Data to PF/CGUDTAPD            *
+      *  SRBIND  -  Generate Binding Numbers                          *
+      *  SRPATH  -  Generate Path String                              *
+      *  SRRFMN  -  Reformat RDE Data                                 *
+      *  SRDCDT  -  Determine Currency Details                        *
+      *  SRGENR  -  Generate Reference Number                         *
+      *  *PSSR   -  Error Subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /COPY CGCPYSRC,CGPACKE
+      /COPY CGCPYSRC,SRERRE
+      *
+      ** Number Arrays
+      *
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+      *
+      ** Array of Currencies accessed by program
+      *
+     E                    ##CY      100  3
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Look-up string for RDE definition Array
+      *
+     I##SDS       DS
+     I                                        15632 ##S
+      *
+     I#@SDS       DS
+     I                                     56325632 #@S
+      ** Packed data string.
+      *
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+      ** Number Field
+      *
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+      ** Used to convert item reference from character to numeric
+      *
+     I            DS
+     I                                        1   6 ##NCIT
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1   5 ##CCCC
+     I                                        1   3 ##CCY
+     I                                        4   5 ##CCD
+      *
+      ** UDC Details for call to CG6001
+      *
+     IP1PARM      DS                            256
+      ** Output Sequence
+     I                                        1   90P1OSEQ
+      ** UDC item number
+     I                                       10  170P1ITEM
+      ** This bind level
+     I                                       18  250P1TBIN
+      ** Previous bind level
+     I                                       26  330P1PBIN
+      *
+      ** Loan details Parameters for call to CG6001
+      *
+     IP3PARM      DS                            256
+      ** Loan Reference
+     I                                        1   6 P3LNRF
+      ** Cancel/Amend Field
+     I                                        7   7 P3CNAM
+      *
+      ** For error reporting
+      *
+      ** Named constants
+      *
+     IP4PARM      DS                            256
+      ** Facility Customer Number
+     I                                        1   6 P4CNUM
+      ** Facility Type
+     I                                        7   90P4FACT
+      ** Facility Number
+     I                                       10  110P4FCNO
+      *
+     I              'LOAN FEERC'          C         W#PTYP
+     I              'FACILITY  '          C         W#PSTY
+      *
+     IDSPARM    E DSLEFRCAPD
+      ** External DS for parameter passed from CG6077
+      *
+     I##UDCR    E DSCGUDCRPD
+      ** External DS for incomplete reference
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank details
+      *
+     ISDCURR    E DSSDCURRPD                101
+      ** External DS for currency details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     IW0FMT     E DSCGUDTAPD
+      ** Record format of PF/CGUDTAPD for use as a parameter
+      *
+      /COPY CGCPYSRC,CGPACKI
+      *
+      /COPY CGCPYSRC,SRERRI
+      ** DS to store subroutine specific data.
+      ** - Saved Path
+     I##PATH      DS                         20
+     I                                        1   6 ##GRPS
+      *
+     I##BIND      DS                         20
+     I I            1                         1   60##PBIN
+     I I            1                         7  120##TBIN
+      *
+     I            DS
+     I I            1                         1   60#@BIND
+      *
+     I#PDS        DS
+     I I            0                         1   30P1
+     I                                        4   60P2
+     I                                        7   90P3
+     I                                       10  120P4
+     I                                       13  150P5
+      ** DS to store FCLTY key fields.
+     IDSFCKY      DS
+     I                                        1   6 DSFC01
+     I                                        7   9 DSFC02
+     I                                       10  11 DSFC03
+     I                                       12  12 DSFC04
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Process     :  MAINLINE                                      *
+      *  Function    :  Mainline processing                           *
+      *                                                               *
+      *  Called by   :  None                                          *
+      *  Calls       :  SRINIT - Initial Processing - On First Call   *
+      *                 SRINZF - Initialise Fields on Each Invocation *
+      *                 SRMAIN - Main Processing                      *
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C                     PARM           DSPARM
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Initial processing - Once Only
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+      *
+     C                     EXSR SRINZF
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Terminate program
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRMAIN                                        *
+      *  Function    :  Main processing                               *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  SRDETL - Obtain Detail Information            *
+      *                 SRGENR - Generate reference number by writing *
+      *                          to PF/CGUDCRPD                       *
+      *                 L14FRC - Process LE Fee Rate Change Advices   *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+     C                     EXSR SRDETL
+      *
+      ** Generate reference number by writing to PF/CGUDCRPD
+      ** If no confirmation to be produced, then bypass
+      *
+     C                     MOVE 'N'       ##COPD
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+      *
+      ** Extract
+      *
+     C                     EXSR L14FRC
+      *
+     C           EXMAIN    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRDETL                                        *
+      *  Function    :  Process: Obtain detail information            *
+      *                                                               *
+      *  Called by   :  SRMAIN - Main Processing                      *
+      *  Calls       :  SRERR  - Database Error                       *
+      *****************************************************************
+     C           SRDETL    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+     C           FCLTYK    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+     C                     KFLD           RCTP
+      *
+     C                     MOVELFVCNUM    CNUM
+     C                     MOVELFVFACL    FACT
+     C                     MOVE FVFACL    FCNO
+     C                     MOVEL'A'       RCTP
+     C           FCLTYK    CHAINFCLTY                88
+     C*
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'FCLTY   'W0FILE
+     C                     MOVELCNUM      DSFC01
+     C                     MOVELFACT      DSFC02
+     C                     MOVELFCNO      DSFC03
+     C                     MOVELRCTP      DSFC04
+     C                     MOVELDSFCKY    W0KEY
+     C                     Z-ADD14        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C           EXDETL    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRGENR                                        *
+      *  Function    :  Generate reference number by writing to       *
+      *                 PF/CGUDCRPD                                   *
+      *                                                               *
+      *  Called by   :  SRMAIN - Main Processing                      *
+      *  Calls       :  CG9010 - Create reference record              *
+      *****************************************************************
+     C           SRGENR    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+      *
+      ** Generate reference number and check if further processing
+      ** required. Set up all available information in the record
+      ** format before calling.
+      *
+     C                     CLEAR##UDCR
+      *
+      ** Booking/Main Branch (Mandatory)
+      *
+     C                     MOVELBRCA      DRBRCA
+      *
+      ** Originating Branch (Optional)
+      *
+     C                     MOVELORBR      DRORBR
+      *
+      ** Module identifier (Mandatory)
+      *
+     C                     MOVEL'LE'      DRMODI
+      *
+      ** Midas Transaction Number (Mandatory)
+      *
+     C                     MOVEL*BLANKS   DRMTRN
+      *
+     C                     MOVELW#PTYP    DRPTYP           * print type
+     C                     MOVELW#PSTY    DRPSTP           * print s/type
+      *
+      ** Auto Transmission indicator
+      *
+     C                     MOVEL'N'       DRATRM
+      *
+      ** Customer Number (Mandatory)
+      *
+     C                     MOVELCNUM      ##CUST
+      *
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      ** Blank return code implies generate correspondence.
+      ** CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       ##COPD
+      *
+      ** Pass reference as printtype:subtype
+      *
+     C           DRPTYP    CAT  ':':0     COLON  11 P
+     C           COLON     CAT  DRPSTP:0  ##REFR    P
+     C                     EXSR WRAPRF
+      *
+     C                     ELSE
+      *
+     C           ##RTCD    IFNE 'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD13        W0ERNB           * DB ERROR 13 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EXGENR    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  L14FRC                                        *
+      *  Function    :  Process: Lending Fee Rate Change Advices      *
+      *                                                               *
+      *  Called by   :  SRMAIN - Main Processing                      *
+      *  Calls       :  SRPATH - Generate Path String                 *
+      *                 FEERC  - Process Loan Fee Rate Change Details *
+      *                 LOANA  - Process Loan Associated Details      *
+      *****************************************************************
+     C           L14FRC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'L14FRC'  @STK,Q
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'l14FRC'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+      *
+     C                     EXSR PSHGRS
+      *
+     C                     EXSR FEERC
+      *
+     C                     EXSR LOANA
+      *
+      ** Decrement Path DS index
+      *
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *
+     C                     EXSR POPGRS
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  FEERC                                         *
+      *  Function    :  Process: Loan Fee Rate Change details         *
+      *                                                               *
+      *  Called by   :  L14FRC - Process LE Fee Rate Change Advices   *
+      *  Calls       :  SRPATH - Generate Path String                 *
+      *                 SRDCDT - Determine Currency Details           *
+      *                 SRADTA - Accumulate RDEs and Associated Data  *
+      *                 SRODTA - Output Accumulated Data to           *
+      *                           PF/CGUDTAPD                         *
+      *****************************************************************
+     C           FEERC     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'FEERC '  @STK,Q
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'FEERC '  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+      *
+     C                     EXSR PSHGRS
+      *
+     C                     Z-ADD0         R1      30
+      *
+      ** Fee Sequence
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE SEQ' #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVFSEQ    ##DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Value Date
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'VALUE'   #@RDE
+     C                     MOVE 'DATE'    #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRCVD    ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CURRENCY'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVFCCY    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Currency Description
+     C                     MOVELFVFCCY    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##WRK  14
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CCY_DESC'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVEL##WRK     R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Calculation Type
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE'     #@RDE
+     C                     MOVE 'CALTYP'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVCALT    ##DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 1 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE RATE'#@RDE
+     C                     MOVE '1'       #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT1B    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 2 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE RATE'#@RDE
+     C                     MOVE '2'       #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT2B    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 3 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE RATE'#@RDE
+     C                     MOVE '3'       #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT3B    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 4 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE RATE'#@RDE
+     C                     MOVE '4'       #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT4B    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 5 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE RATE'#@RDE
+     C                     MOVE '5'       #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT5B    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 1 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE AMT1'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM1B    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 2 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE AMT2'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM2B    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 3 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE AMT3'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM3B    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 4 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE AMT4'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM4B    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 5 Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE AMT5'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM5B    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Percentage Indicator Before Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'FEE'     #@RDE
+     C                     MOVE 'PCTIN '  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVPINB    ##DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 1 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE R1'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT1A    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 2 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE R2'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT2A    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 3 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE R3'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT3A    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 4 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE R4'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT4A    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Rate 5 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE R5'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVRT5A    ##DATA
+     C                     MOVEL'Rate  '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'5'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 1 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE A1'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM1A    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 2 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE A2'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM2A    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 3 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE A3'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM3A    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 4 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE A4'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM4A    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Amount 5 After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE A5'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVAM5A    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'0'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Fee Percentage Indicator After Update
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NEW'     #@RDE
+     C                     MOVE 'FEE PC'  #@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELFVPINA    ##DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Run date; production time
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'RUNDAT  '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELBJRDNB    ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+      ** Save new fields
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      ** Decrement Path DS index
+      *
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *
+     C                     EXSR POPGRS
+      *
+      ** Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  LOANA                                         *
+      *  Function    :  Process: Loan Associated Details              *
+      *                                                               *
+      *  Called by   :  L14FRC - Process LE Fee Rate Changes Advice   *
+      *  Calls       :  SRPATH - Generate Path String                 *
+      *                 CG6001 - General Loan Details                 *
+      *****************************************************************
+     C           LOANA     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'LOANA '  @STK,Q
+      *
+     C                     EXSR SRPATH
+      *
+     C                     MOVELS#PATH    P2PARM
+     C                     Z-ADD##OSEQ    P1OSEQ
+     C                     Z-ADD##ITEM    P1ITEM
+     C                     Z-ADD##TBIN    P1TBIN
+     C                     Z-ADD##PBIN    P1PBIN
+      *
+      ** Set up data.
+      *
+     C                     CLEARP3PARM
+     C                     CLEARP4PARM
+     C                     MOVELCNUM      P4CNUM
+     C                     Z-ADDFACT      P4FACT
+     C                     Z-ADDFCNO      P4FCNO
+     C                     CALL 'CG6001'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM           W0CMT   3
+     C                     PARM           P1PARM
+     C                     PARM           P2PARM140
+     C                     PARM           P3PARM
+     C                     PARM           P4PARM
+     C                     PARM           ##AUTO  1
+     C                     PARM           ##REFR
+     C                     PARM           P@ICR
+     C                     PARM 'N'       ##MAST
+      *
+      ** Reset Sequence number.
+      *
+     C                     Z-ADDP1OSEQ    ##OSEQ
+      *
+     C           EXXPAY    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRINZF                                        *
+      *  Function    :  Initialise Fields on Program Invocation       *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  none                                          *
+      *****************************************************************
+     C           SRINZF    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+      *
+      ** Initialise work fields
+      *
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    ##W157 157
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+      *
+      ** Initialise output sequence (to CGUDTAPD)
+      *
+     C                     Z-ADD*ZEROS    ##OSEQ
+      *
+      ** DJU Additions for CG4999 1st version **
+      *
+     C                     MOVE *BLANKS   #@RDE  10
+     C           *LIKE     DEFN ##TBIN    #@TBIN
+      *
+     C           1         OCUR ##BIND
+     C                     RESET##BIND
+     C                     RESET#@BIND
+     C                     RESET#PDS
+      *
+      ** Initialise XML increment
+     C                     EXSR INIXML
+      *
+     C           EXINZ     TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRINIT                                        *
+      *  Function    :  Initial processing - First Call Only          *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  SRERR  - Report Error and Close Down Program  *
+      *                 SRDCDT - Determine Currency Details           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Call access program for Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD01        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Determine Number of decimal places - Base currency
+      *
+     C                     MOVELBJCYCD    ##CCY
+     C                     EXSR SRDCDT
+     C                     Z-ADDA6NBDP    BASCDP  10
+      *
+      ** Access SAR details file to determine if CCG015 is installed
+      *
+     C                     MOVEL'N'       CCG015  1
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' ##RTCD
+     C                     PARM '*VERIFY' ##OPTN
+     C                     PARM 'CCG015'  ##SARD  6
+      *
+      ** Database Error
+      *
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*NRF   '
+     C                     MOVEL'SCSARDPD'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD16        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVEL'Y'       CCG015
+     C                     ENDIF
+      *
+      **  Copyright
+     C                     MOVEACPY@      ACT@   80
+      *
+     C           EXINIT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRADTA                                        *
+      *  Function    :  Accumulate RDEs and associated data for output*
+      *                                                               *
+      *  Called by   :  FEERC  - Process Loan Fee Rate Change Details *
+      *  Calls       :  CG3999 - Format and Pack Data                 *
+      *                 SRRFMN - Reformat RDE Data                    *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C           SRADTA    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+      *
+      ** Reformat RDE data
+      *
+     C                     EXSR SRRFMN
+      *
+      ** Pack RDEs and associated data into data string
+      *
+     C                     CLEAR##SDS
+      *
+     C           CCG015    IFEQ 'Y'
+     C                     MOVE '*NEWARR 'W0ACT
+     C                     MOVELS#PATH    W0SPAT
+     C                     ELSE
+     C                     MOVE '*PACK   'W0ACT
+     C                     MOVEL*BLANKS   W0SPAT
+     C                     ENDIF
+      *
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM           W0ACT
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70
+     C                     PARM           ##RN
+     C                     PARM           ##DN
+     C                     PARM           ##FM
+      *
+      ** Database error
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG3999  'W0FILE
+     C                     MOVEL##RTCD    W0KEY
+     C                     Z-ADD10        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Write a XML record for RDE
+      *
+     C                     EXSR WRTRDE
+      *
+      **  Append Data from pack routine.
+      *
+     C           #@SDS     CAT  ##SDS:0   #@SDS
+      *
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+     C           EXADTA    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRODTA                                        *
+      *  Function    :  Output Accumulated data to PF/CGUDTAPD        *
+      *                                                               *
+      *  Called by   :  FEERC  - Process Loan Fee Rate Change Details *
+      *  Calls       :  CG9020 - Output Data to CGUDTAPD              *
+      *                 SRERR  - Database Error                       *
+      *****************************************************************
+     C           SRODTA    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+      *
+      ** Initialise Write Format Parameter.
+      *
+     C                     CLEARW0FMT
+      *
+      ** Set up Control Information.
+      *
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+      *
+      ** Append Data from pack routine.
+      *
+     C           W0FMT     CAT  #@SDS:0   W0FMT
+      *
+      ** Output PF/CGUDTAPD Record.
+      *
+     C           CCG015    IFEQ 'N'
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      ** Database error
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG9020  'W0FILE
+     C                     MOVEL##RTCD    W0KEY
+     C                     Z-ADD11        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     CLEAR#@SDS
+      *
+     C           EXODTA    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRBIND                                        *
+      *  Function    :  Generate Binding numbers                      *
+      *                                                               *
+      *  Called by   :  All Repeating Group Set Subroutines           *
+      *  Calls       :  none                                          *
+      *****************************************************************
+     C           SRBIND    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBIND'  @STK,Q
+      *
+     C           P1        SUB  1         P2
+     C           P2        OCUR ##BIND
+      *
+     C                     Z-ADD##TBIN    #@TBIN
+     C           P1        OCUR ##BIND
+     C                     Z-ADD#@TBIN    ##PBIN
+      *
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRPATH                                        *
+      *  Function    :  Generate Path String /GS1/GS2...              *
+      *                                                               *
+      *  Called by   :  L14FRC - Process LE Fee Rate Change Advices   *
+      *                 FEERC  - Process Loan Fee Rate Change Detail  *
+      *                 LOANA  - Process Loan Associated Details      *
+      *  Calls       :  none                                          *
+      *****************************************************************
+     C           SRPATH    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+      *
+     C                     CLEARS#PATH
+      *
+     C                     DO   P1        P2
+     C           P2        OCUR ##PATH
+     C           S#PATH    CAT  '\':0     S#PATH
+     C           S#PATH    CAT  ##GRPS:0  S#PATH
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRRFMN                                        *
+      *  Function    :  Reformat RDE data                             *
+      *                                                               *
+      *  Called by   :  SRADTA - Accumulate RDEs and associated       *
+      *                          data for outout                      *
+      *  Calls       :  none                                          *
+      *****************************************************************
+     C           SRRFMN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+      *
+      ** Loop through RDE's and data
+      *
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+      *
+      ** Reformat Amount
+      *
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+      *
+      ** Sign the amount
+      *
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+      *
+      ** Default Edit Type
+      *
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+      *
+      ** Default Decimal Places
+      *
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+      *
+      ** New RDE data
+      *
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           EXRFMN    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  :  SRDCDT                                        *
+      *  Function    :  Determine Currency Details                    *
+      *                                                               *
+      *  Called by   :  FEERC  - Process Loan Fee Rate Change Detail  *
+      *                 SRINIT - Initial Processing - On First Call   *
+      *  Calls       :  SRERR  - Database Error                       *
+      *****************************************************************
+     C           SRDCDT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+      *
+      ** Access array of Currency Details already loaded
+      *
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+      *
+      ** If no match is found determine the next free space in the
+      ** loaded currency array.
+      *
+     C           *IN99     IFEQ *OFF
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUP##CY,C                   99
+      *
+      ** If no space is left, set the Currency Data data structure to
+      ** the 101st occurrence so that when the new details are
+      ** retrieved no existing details are overwritten.
+      *
+     C           *IN99     IFEQ *OFF
+     C           101       OCUR SDCURR
+      *
+      ** If a space is found, set up the new currency into the array
+      ** and position the Currency Data data structure on the
+      ** occurrence matching the array index.
+      *
+     C                     ELSE
+     C                     MOVE ##CCY     ##CY,C
+     C           C         OCUR SDCURR
+     C                     ENDIF
+      *
+      ** Retrieve the currency details.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*KEY'    ##OPTN
+     C                     PARM ##CCY     ##CCYP  3
+     C           SDCURR    PARM *BLANK    DSSDY
+      *
+      ** Database Error
+      *
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVEL##CCY     W0KEY
+     C                     Z-ADD12        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** If the currency has been retrieved earlier, position the
+      ** Currency Data data structure on the relevant occurrence.
+      *
+     C                     ELSE
+     C           C         OCUR SDCURR
+     C                     ENDIF
+      *
+     C           EXDCDT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+     C/COPY CGCPYSRC,CGNWEX
+     C/EJECT
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2018

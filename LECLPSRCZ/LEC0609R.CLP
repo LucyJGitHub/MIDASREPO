@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2005                    */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021605           Date 22Aug13              */
+/*       Last Amend No. CLE071             Date 18Jul18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021605           Date 22Aug13              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       CLE071 - Value Dating of Rate Changes to Fees (Recompile)   */
 /*       MD046248 - Finastra Rebranding                              */
 /*     MD021605 - Add a parameter for LE0480.                       */
 /*     CLE134 - Past Due Call Loan Processing (Recompile)           */
@@ -35,21 +37,21 @@
 /*                                                                  */
 /********************************************************************/
              PGM
- 
+
 /************DCLF       FILE(TABTB50)                                   ER_R10*/
              DCLF       FILE(SDCLNDPD)                                /*ER_R10*/
 /************RCVF       RCDFMT(TABTB50F)                                ER_R10*/
              RCVF       RCDFMT(SDCLNDD0)                              /*ER_R10*/
- 
+
              SNDPGMMSG  MSG('CUSTOMER LENDING EVENTS FILE CREATION +
                           FOR ER') TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(01XXXXXX)
- 
+
              CLRPFM     FILE(ERLVENHH)
              CLRPFM     FILE(ERLVENPD)
              CLRPFM     FILE(ERLVENZZ)
- 
+
 /************IF         COND(&EEOB *NE 'Y') THEN(DO)                    ER_R10*/
 /**********  IF         COND(&BPGEEB *NE 'Y') THEN(DO)  *ER_R10*        124371*/
              OVRDBF     FILE(TABLE) TOFILE(TABLEEI)
@@ -58,13 +60,13 @@
              OVRDBF     FILE(LVNTXEL) TOFILE(ERLVENPD) SEQONLY(*YES +
                           100)
              OVRDBF     FILE(LVNTXZZ) TOFILE(ERLVENZZ)
- 
+
 /**********  CALL       PGM(LE0480)                                */                   /*MD021605*/
              CALL       PGM(LE0480) PARM(' ')                                           /*MD021605*/
- 
+
              DLTOVR     FILE(*ALL)
  /*          ENDDO                                                      124371*/
- 
+
 /************IF         COND(&EEOB *EQ 'Y') THEN(DO)                    ER_R10*/
 /*           IF         COND(&BPGEEB *EQ 'Y') THEN(DO)     *ER_R10*     124371*/
 /*           CPYF       FROMFILE(LVENTEL) TOFILE(ERLVENPD) +            124371*/
@@ -74,7 +76,7 @@
 /*                        FILE(ERLVENPD))                               124371*/
 /* ERL454 END                                                           124371*/
 /*           ENDDO                                                      124371*/
- 
+
              CHGJOB     SWS(00XXXXXX)
- 
+
 ENDPGM:      ENDPGM

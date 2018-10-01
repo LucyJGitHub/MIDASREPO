@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD027418           Date 18Jul18               *
-      *  Prev Amend No. MD026971           Date 18Jul18               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD027418           Date 18Jul18               *
+      *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
       *                 CLE158             Date 18Jul18               *
       *                 MD046370           Date 07Nov17               *
@@ -160,6 +161,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD027418 - Display Warning/Error on auth of insert (CLE158)  *
       *  MD026971 - Issue either overridable error or warning         *
       *  MD025837A - Apply MD025837 extra check to CLE158 processing  *

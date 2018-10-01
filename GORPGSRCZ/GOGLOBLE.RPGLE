@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER073B            Date 25Sep17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
@@ -160,12 +162,13 @@
      C     PFLNAME       CASEQ     'CLOANCL'     GLOB_CLOANCL
      C     PFLNAME       CASEQ     'FCLTYFM'     GLOB_FCLTYFM
      C     PFLNAME       CASEQ     'FCLTYFN'     GLOB_FCLTYFN
-     C     PFLNAME       CASEQ     'LEADINPD'    GLOB_LEADINPD                               CLE106
+     C     PFLNAME       CASEQ     'LEADINPD'    GLOB_LEADINPD                                CLE106
      C     PFLNAME       CASEQ     'LEFCAMPD'    GLOB_LEFCAMPD
      C     PFLNAME       CASEQ     'LEFEEAD'     GLOB_LEFEEAD
      C     PFLNAME       CASEQ     'LEFEED'      GLOB_LEFEED
+     C     PFLNAME       CASEQ     'LEFERCPD'    GLOB_LEFERCPD                                CLE071
      C     PFLNAME       CASEQ     'LEPARTPD'    GLOB_LEPARTPD
-     C     PFLNAME       CASEQ     'LETREFPD'    GLOB_LETREFPD                               CLE106
+     C     PFLNAME       CASEQ     'LETREFPD'    GLOB_LETREFPD                                CLE106
      C     PFLNAME       CASEQ     'LOAMSDK'     GLOB_LOAMSDK
      C     PFLNAME       CASEQ     'LEFCLTQD'    GLOB_LEFCLTQD                               BUG3286
      C     PFLNAME       CASEQ     'LEAGFMPD'    GLOB_LEAGFMPD                                CLE041
@@ -355,6 +358,14 @@
      C                   ENDSR
       *****************************************************************
       /SPACE 5
+      *****************************************************************                       CLE071
+      * Global Updates - Fee Rate Change Amendment Details                                    CLE071
+      *****************************************************************                       CLE071
+     C     GLOB_LEFERCPD BEGSR                                                                CLE071
+      /COPY GPCPYSRCG,GPLEFERCPD                                                              CLE071
+     C                   ENDSR                                                                CLE071
+      *****************************************************************                       CLE071
+      /SPACE 5                                                                                CLE071
       *****************************************************************
       * Global Updates - Participant Details
       *****************************************************************

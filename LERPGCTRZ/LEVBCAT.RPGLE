@@ -15,67 +15,69 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       /EJECT
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ===============
- 
+
       ** Arrays and Data Structures
       ** ==========================
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer Lending ICD
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** Loan Details
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
- 
+
       ** Fee Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(LEFEEMPD)
- 
+
       ** (Current) Fee record in file Format
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)   PREFIX(@@)
- 
+
       ** Customer Loans record CL in file Format
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)  PREFIX(CL_)
- 
+
       ** Short data structure for access objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long data structure for access objects
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *
@@ -114,7 +116,7 @@
       *****************************************************************
       *  VBCAT - Validate Basel II Past Due Classification            *
       *****************************************************************
- 
+
      C     VBCAT         BEGSR
       *
       ** Check if Numeric and in Range
@@ -194,7 +196,7 @@
       *****************************************************************
       ** @DEFN - @DEFN: Definition Rountine                          *
       *****************************************************************
- 
+
      C     @DEFN         BEGSR
       *
       ** Entry List
@@ -215,7 +217,7 @@
      C                   PARM                    TranInPrim
      C                   PARM                    CrFeFilFmt
      C                   PARM                    ClilFilFmt
- 
+
      C                   ENDSR
      C/EJECT
       /COPY ZACPYSRC,PSSR_ILE

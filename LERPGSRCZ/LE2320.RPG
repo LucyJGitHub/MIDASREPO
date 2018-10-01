@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -155,6 +157,7 @@
      FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR          124047
      FLEFCAML2IF  E           K        DISK         KINFSR *PSSR          127657
      FLEMNFUL2IF  E           K        DISK         KINFSR *PSSR          127657
+     FLEFERCL2IF  E           K        DISK         KINFSR *PSSR                              CLE071
      F/COPY WNCPYSRC,LE2320F001
       *****************************************************************
       *                                                               *
@@ -187,6 +190,7 @@
       *  REP6   - Process Unauthroised Facilities                     *   124047
       *  REP7   - Process Unauthorised Facility Amendments            *   127657
       *  REP8   - Process Unauthorised Manual Facility Utilisation    *   127657
+      *  REP10  - Process Unauthorised Fee Rate Changes               *                       CLE071
       *                                                               *
       *  WP1REC - Format and Write a Detail Record to the Report      *
       *  WP1END - Write End of Report                                 *
@@ -209,7 +213,8 @@
      E********************LBL     1   6 45                          124047127657
      E/COPY WNCPYSRC,LE2320E001
      E**********          LBL     1   8 45                                             127657 202364
-     E                    LBL     1   9 45                                                    202364
+     E**********          LBL     1   9 45                                             202364 CLE071
+     E                    LBL     1  10 45                                                    CLE071
      E/COPY WNCPYSRC,LE2320E002
       *
       ** Array containing Label for Audit Report
@@ -425,6 +430,20 @@
      C                     ELSE                                                               CLE028
      C                     MOVE 'N'       CLE028                                              CLE028
      C                     ENDIF                                                              CLE028
+      *                                                                                       CLE071
+      ** Determine if the Switchable feature CLE071 is Enabled                                CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   PRTCD                                               CLE071
+     C                     PARM '*VERIFY' POPTN                                               CLE071
+     C                     PARM 'CLE071'  PSARD                                               CLE071
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE071
+      *                                                                                       CLE071
+     C           PRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2320C006
       *
       ***  RCF Processing for Printer File
@@ -447,7 +466,8 @@
       *
       ***  Program Work fields
       *
-     C                     Z-ADD0         I       10
+     C**********           Z-ADD0         I       10                                          CLE071
+     C                     Z-ADD0         I       20                                          CLE071
      C                     MOVE *OFF      HAUIND  1
       *
      C                     ENDSR
@@ -469,6 +489,7 @@
       *  REP7   - Process Unauthorised Facility Amendments            *   127657
       *  REP8   - Process Unauthorised Manual Facility Utilisation    *   127657
       *  REP9   - Process Unauthorised Fee Settlement                 *                       202364
+      *  REP10  - Process Unauthorised Fee Rate Change Amendments     *                       CLE071
       *  WP1END - Write End of Report                                 *
       *                                                               *
       *****************************************************************
@@ -674,6 +695,32 @@
       *                                                                   124047
      C                     EXSR AUDIT                                     124047
       *
+      ** Do While Not EOF LEFERCL2                                                            CLE071
+      *                                                                                       CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+      *                                                                                       CLE071
+     C                     Z-ADD10        I                                                   CLE071
+     C                     MOVE *OFF      *IN89                                               CLE071
+     C           *IN89     DOWEQ*OFF                                                          CLE071
+      *                                                                                       CLE071
+     C                     READ LEFERCL2                 89                                   CLE071
+      *                                                                                       CLE071
+     C           *IN89     IFEQ *OFF                                                          CLE071
+      *                                                                                       CLE071
+      ** Process Unauthorised Fee Rate Changes                                                CLE071
+      *                                                                                       CLE071
+     C                     EXSR REP10                                                         CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDDO                                                              CLE071
+      *                                                                                       CLE071
+      ** Process Audit Report                                                                 CLE071
+      *                                                                                       CLE071
+     C                     EXSR AUDIT                                                         CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
       ***  Write End of Report
       *
      C                     EXSR WP1END
@@ -2122,6 +2169,138 @@
       *                                                                                       202364
      C                     ENDSR                                                              202364
       *
+      *****************************************************************                       CLE071
+      /TITLE SR/REP10                                                                         CLE071
+      *****************************************************************                       CLE071
+      *                                                               *                       CLE071
+      *  REP10  - Process Unauthorised Fee Rate Changes               *                       CLE071
+      *                                                               *                       CLE071
+      *  Called By: PROCES                                            *                       CLE071
+      *  Calls:                                                       *                       CLE071
+      *  VALID  - Validate Fields                                     *                       CLE071
+      *  WP1REC - Format and Write a Detail Record to the Report      *                       CLE071
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *                       CLE071
+      *  ZFRPED - Edit an Amount                                      *                       CLE071
+      *                                                               *                       CLE071
+      *****************************************************************                       CLE071
+     C           REP10     BEGSR                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVELFCCNUM    PCNUM                                               CLE071
+     C                     MOVELFCBRCA    PBRCA                                               CLE071
+     C                     MOVELFCFCCY    PCCY                                                CLE071
+     C                     MOVELFCFCCY    PFCCY                                               CLE071
+      *                                                                                       CLE071
+      ** Validate Fields                                                                      CLE071
+      *                                                                                       CLE071
+     C                     EXSR VALID                                                         CLE071
+      *                                                                                       CLE071
+      ** Customer Short Name                                                                  CLE071
+      *                                                                                       CLE071
+     C                     MOVELBBCSSN    PCSSN                                               CLE071
+      *                                                                                       CLE071
+      ** Format Facility/Loan                                                                 CLE071
+      *                                                                                       CLE071
+     C                     MOVEL*OFF      *IN15                                               CLE071
+     C           FCFACL    IFNE *ZEROS                                                        CLE071
+     C                     MOVEL*OFF      *IN15                                               CLE071
+     C                     MOVE FCFACL    #FACL5  5                                           CLE071
+     C                     MOVE FCFACL    #FACL2  2                                           CLE071
+     C                     MOVEL#FACL5    PFACL                                               CLE071
+     C                     MOVE '/  '     PFACL                                               CLE071
+     C                     MOVE #FACL2    PFACL                                               CLE071
+     C                     MOVELFCFSEQ    PFSEQ                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           FCLOAN    IFNE *BLANKS                                                       CLE071
+     C                     MOVEL*ON       *IN15                                               CLE071
+     C                     MOVELFCLOAN    PLOAN                                               CLE071
+     C                     MOVELFCFSEQ    PFSEQ                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Format Fee Value Date                                                                CLE071
+      *                                                                                       CLE071
+     C                     Z-ADDFCRCVD    ZDAYNO                                              CLE071
+     C                     EXSR ZDATE2                                                        CLE071
+     C                     MOVELZADATE    PRCVD                                               CLE071
+      *                                                                                       CLE071
+      ** Format Amount                                                                        CLE071
+      *                                                                                       CLE071
+     C           FCPIND    IFEQ 'P'                                                           CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   WFIELD                                              CLE071
+     C                     MOVE *BLANKS   PFAMT1                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANK    ZFIELD                                              CLE071
+     C                     MOVE FCAMT1    ZFIELD                                              CLE071
+     C                     MOVE 3         ZADEC   10                                          CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVELZFIELD    WFIELD 16                                           CLE071
+     C           ' '       CHECKWFIELD    IDX     20                                          CLE071
+     C           IDX       IFGT 0                                                             CLE071
+     C                     MOVE *BLANKS   #STR1                                               CLE071
+     C                     SUBSTWFIELD:IDX#STR1  16                                           CLE071
+     C                     MOVE #STR1     PFAMT1                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE WFIELD    PFAMT1                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ELSE                                                               CLE071
+      *                                                                                       CLE071
+     C                     Z-ADD*ZERO     ZDECS                                               CLE071
+     C                     Z-ADDFCAMT1    ZFLD15                                              CLE071
+     C                     EXSR ZFRPED                                                        CLE071
+     C           ' '       CHECKZOUT25    IDX                                                 CLE071
+     C           IDX       IFGT 0                                                             CLE071
+     C                     MOVE *BLANKS   #STR1                                               CLE071
+     C                     SUBSTZOUT25:IDX#STR1                                               CLE071
+     C                     MOVE #STR1     PFAMT1                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE ZOUT25    PFAMT1                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Format Rate                                                                          CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   WFIELD                                              CLE071
+     C                     MOVE *BLANK    ZFIELD                                              CLE071
+     C                     MOVE FCFRT1    ZFIELD                                              CLE071
+     C                     MOVE 5         ZADEC                                               CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVELZFIELD    WFIELD 16                                           CLE071
+     C                     MOVE *BLANKS   PRTE1                                               CLE071
+     C                     MOVE WFIELD    PRTE1                                               CLE071
+      *                                                                                       CLE071
+     C                     MOVELFCPIND    PIND                                                CLE071
+     C                     MOVELFCIUSR    PIUSR                                               CLE071
+     C                     MOVELFCAUSR    PAUSR                                               CLE071
+      *                                                                                       CLE071
+      ** Write out the record.                                                                CLE071
+      *                                                                                       CLE071
+     C                     EXSR WP1REC                                                        CLE071
+      *                                                                                       CLE071
+      ** Increment Record Count                                                               CLE071
+      *                                                                                       CLE071
+     C                     ADD  1         RCOUNT  50                                          CLE071
+      *                                                                                       CLE071
+      ** Initialise Detail Record                                                             CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   PBRCA                                               CLE071
+     C                     MOVE *BLANKS   PCNUM                                               CLE071
+     C                     MOVE *BLANKS   PCCY                                                CLE071
+     C                     MOVE *BLANKS   PFCCY                                               CLE071
+     C                     MOVE *BLANKS   PFACL                                               CLE071
+     C                     MOVE *BLANKS   PFSEQ                                               CLE071
+     C                     MOVE *BLANKS   PCSSN                                               CLE071
+     C                     MOVE *BLANKS   PRCVD                                               CLE071
+     C                     MOVE *BLANKS   PFAMT1                                              CLE071
+     C                     MOVE *BLANKS   PRTE1                                               CLE071
+     C                     MOVE *BLANKS   PIND                                                CLE071
+     C                     MOVE *BLANKS   PIUSR                                               CLE071
+     C                     MOVE *BLANKS   PAUSR                                               CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
+      *                                                                                       CLE071
       *****************************************************************
      C/COPY WNCPYSRC,LE2320C002
       /TITLE SR/VALID
@@ -2274,6 +2453,10 @@
      C                     WRITESUB9                                                          202364
      C                     ENDIF                                                              202364
       *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITESUB10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2320C003
       *                                                                   127657
      C                     ENDIF
@@ -2322,6 +2505,10 @@
      C                     WRITESUB9                                                          202364
      C                     ENDIF                                                              202364
       *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITESUB10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2320C004
       *                                                                   127657
      C                     ENDIF
@@ -2364,6 +2551,10 @@
      C                     WRITEDTL9                                                          202364
      C                     ENDIF                                                              202364
       *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITEDTL10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2320C005
       *                                                                   127657
      C                     ENDSR
@@ -2558,6 +2749,7 @@ Unauthorised Facilities         - LF/LEFCLTL1 =6                          124047
 Unauthorised Fclty Amendment    - LF/LEFCAML2 =7                          127657
 Unauthorised Manual Fclty Util  - LF/LEMNFUL2 =8                          127657
 Unauthorized Fees Settlement    - LF/LEFEEAL3 =9                                              202364
+Unauthorised Fee Rate Changes   - LF/LEFERCL2 =0                                              CLE071
      X/COPY WNCPYSRC,LE2320X001
 **  DESC
 LOAN                 =1

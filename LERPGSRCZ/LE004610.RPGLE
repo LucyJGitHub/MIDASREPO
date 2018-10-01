@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 262654             Date 11May09               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -89,27 +91,27 @@
       *           for Lending                                         *
       *                                                               *
       *****************************************************************
- 
+
       * Midas LE Effective Interest Rate Details File
      FLEEIRDL3  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Effective Interest Rate Amortisation file
      FLEEIRAL4  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Lending Fees History file
      FLEFHSTL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Midas LE Cash Flow File
      FLECFSFL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
       * Midas LE Present EIR Cash Flows File
      FLEEIRPL0  UF A E           K DISK    INFSR(*PSSR)
      F*                                    RENAME(LEEIRPD0 : ZAEIRPD0)
- 
+
       * Midas LE Future Cash Flows File
      FLEEIRFL0  UF A E           K DISK    INFSR(*PSSR)
      F*                                    RENAME(LEEIRFD0 : ZAEIRFD0)
- 
+
       ** Midas LE Cashflows File for Amortisation Calc                                        231712
      FLEAMRTL0  UF A E           K DISK    INFSR(*PSSR)                                       231712
                                                                                               231712
@@ -117,15 +119,15 @@
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       * Midas LE History File
      F***HISTR**   IF   E           K DISK    INFSR(*PSSR)                                    232628
      FHISTSL0   IF   E           K DISK    INFSR(*PSSR)                                       232628
- 
+
       * Midas LE Lending Fees File
      F***LEFEEDLB  IF   E           K DISK    INFSR(*PSSR)                                    CAS011
      FLEFEEDLC  IF   E           K DISK    INFSR(*PSSR)                                       CAS011
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -144,45 +146,45 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D***##OX1           S             56    DIM(4)  CTDATA PERRCD(1)                         231712
      D ##OX1           S             56    DIM(6)  CTDATA PERRCD(1)                           231712
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Midas Modules details accessed via access program
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Hedging ICD Details
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)
- 
+
       ** Fee Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** General Ledger Details                                                               231712
      D SDGELR        E DS                  EXTNAME(SDGELRPD)                                  231712
                                                                                               231712
@@ -191,10 +193,10 @@
                                                                                               CAS011
       ** Long Access Object Data Structure                                                    CAS011
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CAS011
- 
+
       * Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** ZAEIRF Data Structure                                                                231712
      D ZAEIRF        E DS                  EXTNAME(ZAEIRFPD)                                  231712
                                                                                               231712
@@ -230,12 +232,12 @@
      D PInpTNRF        S              6A                                                      CLE148
      D PInpStartEff    S              5P 0
      D PInpEndEff      S              5P 0
- 
+
       ** Output Parameter
      D*POutEIR**       S             14P12                                                    262654
      D POutEIR         S             15P10                                                    262654
      D PReturnCode     S              7A
- 
+
      D WCAMT           S                   LIKE(PRAM)
      D WAllFeePaidTdy  S             17P 0                                                    231712
                                                                                               231712
@@ -270,26 +272,26 @@
       *****************************************************************
       * MAIN - Main Body                                              *
       *****************************************************************
- 
+
       ** Get all EIR records that are set for recalculation.
      C     *LOVAL        SETLL     LEEIRDL3
      C                   READ      LEEIRDL3
- 
+
      C                   DOW       NOT %EOF(LEEIRDL3)
- 
+
      C                   IF         EIRECI <> '*'                                             232630
       ** Get loan details
      C                   EXSR      SRLoanDetails
- 
+
       ** Generate Present Cash Flows
      C                   EXSR      SRPresCashFl
- 
+
       ** Generate Future Cash Flows
      C                   EXSR      SRFutCashFl
- 
+
       ** Calculate EIR by calling the EIR calculator
      C                   EXSR      SREIRCalc
- 
+
       ** Compute for Amortisation adjustment if last amortisation                             231712
       ** date is not *ZERO                                                                    231712
      C                   IF        EILADT <> *ZERO                                            231712
@@ -299,10 +301,10 @@
       ** Update EIR details
      C                   EXSR      SREIRUpdate
      C                   ENDIF                                                                232630
- 
+
       ** Read another EIR record for recalculation
      C                   READ      LEEIRDL3
- 
+
      C                   ENDDO
       ** Exit Program
      C                   EVAL      *INLR = *ON
@@ -313,15 +315,15 @@
       * SRLoanDetails - Get loan details                             *
       ****************************************************************
      C     SRLoanDetails BEGSR
- 
+
       ** Get loan details
      C     KLOAN         CHAIN     CLOAN                              21
- 
+
      C                   EVAL      @ICBS = ICBS
      C                   EVAL      WFACL = 0
- 
+
      C                   IF        *IN21 = *ON
- 
+
       ** Database error if record missing
      C                   MOVE      EITRAN        DBKEY
      C                   EVAL      DBFILE = 'CLOAN'
@@ -333,7 +335,7 @@
                                                                                              Bug9668
      C     *LIKE         DEFINE    EIFDPA        WFDPA                                       Bug9668
      C                   EVAL      wFDPA = 0                                                 Bug9668
- 
+
       ** Check Loans detail flag to see if accrual is halted                                  233612
      C                   EVAL      PStopAccrualF = ' '                                        233612
      C                   TESTB     '3'           LONI                     50                  233612
@@ -347,7 +349,7 @@
       * SRPresCashFl - Generate Present Cash Flow                    *
       ****************************************************************
      C     SRPresCashFl  BEGSR
- 
+
       ** If found, continue processing
      C                   EVAL      WBRCA = BRCA
      C                   EVAL      WCNUM = CNUM
@@ -356,13 +358,13 @@
                                                                                               233578
       ** Ensure that the Total Interest used is the Current TOTI                              233578
      C                   EVAL(R)   WTOTI = TOTI                                               233578
- 
+
       ** Get the current principal amount from the history file
      C*****KEY001        SETGT     HISTR                              11                      232628
      C**********         READP     HISTR                                                      232628
      C     KEY001        SETGT     HISTSL0                            11                      232628
      C                   READP     HISTSL0                                                    232628
- 
+
       ** If found latest action prior to EIR start date,
       **  populate fields and write record to LEEIRPPD
      C**********         IF        NOT %EOF(HISTR) and WBRCA = BRCA and                       232628
@@ -370,13 +372,13 @@
      C                   IF        NOT %EOF(HISTSL0) AND LNRF = EITRAN                        232628
      C                   EVAL      EPTNMR = EITRAN
      C                   EVAL      EPFLDT = EISTDT
- 
+
      C                   EVAL      EPCAMT = CPAM
      C                   IF        EPCAMT = 0
      C                   EVAL      EPCAMT = PRAM
      C                   ENDIF
      C                   EVAL      WCAMT = EPCAMT
- 
+
       ** Incoming/outgoing indicator
      C                   IF        PTYP = 66 OR
      C                             PTYP = 67 OR
@@ -385,21 +387,21 @@
      C                   ELSE
      C                   EVAL      EPIOIN = 'O'
      C                   ENDIF
- 
+
       ** Get No. of days in Interest Year
      C                   MOVE      @ICBS         ZZCALC
      C                   EXSR      SRNDYY
      C                   EVAL      EPNDYY = @NDYY
- 
+
      C                   Z-ADD     EISTDT        ZZBEG
      C                   Z-ADD     EIENDT        ZZEND
      C                   EXSR      ZINTDY
      C                   Z-ADD     ZZINDY        EPNDEI
      C                   WRITE     ZAEIRPD0
- 
+
       ** ENDIF of READP HISTR
      C                   ENDIF
- 
+
       ** Discount
      c                   IF        TOTI <> 0
      C***********        EVAL      EPCAMT = TOTI
@@ -415,17 +417,17 @@
      C                   ELSE
      C                   EVAL      EPIOIN = 'I'
      C                   ENDIF
- 
+
      C                   WRITE     ZAEIRPD0
- 
+
      C                   ENDIF
- 
+
       ** Fees with the EIR period
      C*****LNRF          SETLL     LEFEEDLB                                                   CAS011
      C*****LNRF          READE     LEFEEDLB                                                   CAS011
      C     LNRF          SETLL     LEFEEDLC                                                   CAS011
      C     LNRF          READE     LEFEEDLC                                                   CAS011
- 
+
       **  Do while EIR start date is equal to EIRA start date and
       **  not end of file, then populate fields and write record to LEEIRPPD
      C**********         DOW       NOT %EOF(LEFEEDLB)                                         CAS011
@@ -474,7 +476,7 @@
      C                   ELSE                                                                 232628
      C                   EVAL      EPFLDT = FEPSTD                                            232628
      C                   ENDIF                                                                232628
- 
+
      C                   IF        FEFCCY = CCY
      C                   IF        FEAMTS <> 0
      C                   EVAL      EPCAMT = FEAMTS
@@ -489,7 +491,7 @@
      C                   ENDIF
                                                                                              Bug9668
      C                   EVAL      wFDPA = wFDPA + EPCAMT                                    Bug9668
- 
+
       ** Incoming/outgoing indicator should be 'I'
      C                   IF        PTYP = 66 OR
      C                             PTYP = 67 OR
@@ -507,7 +509,7 @@
      C                   Z-ADD     EIENDT        ZZEND
      C                   EXSR      ZINTDY
      C                   Z-ADD     ZZINDY        EPNDEI
- 
+
       ** Compute for all paid fees on run date for net principal                              231712
      C                   IF        FERECI <> 'R' AND                                          231712
      C**********                   FEAUTO = 'Y' and                                   BUG9472 CLE134
@@ -527,7 +529,7 @@
      C*****LNRF          READE     LEFEEDLB                                                   CAS011
      C     LNRF          READE     LEFEEDLC                                                   CAS011
      C                   ENDDO
- 
+
      C                   EVAL      EPFLDT = VDAT
       ***Accrued*Interest**********************************************                       231710
      C**********         EVAL      EPCAMT = AIPD + AIAP                                       231710
@@ -549,7 +551,7 @@
      C                   MOVE      @ICBS         ZZCALC
      C                   EXSR      SRNDYY
      C                   EVAL      EPNDYY = @NDYY
- 
+
      C**********         Z-ADD     VDAT          ZZBEG                                        232628
      C**********         Z-ADD     MDAT          ZZEND                                        232628
      C                   Z-ADD     EISTDT        ZZBEG                                        232628
@@ -559,15 +561,15 @@
      C                   IF        EPCAMT <> 0                                                232628
      C                   WRITE     ZAEIRPD0
      C                   ENDIF                                                                232628
- 
+
       ** Get Amortised to date then write details to LEEIRPPD
- 
+
       ** Cashflow date
      C**********         EVAL      EPFLDT = EISTDT                                            232630
- 
+
       ** Cash flow amount
      C**********         EVAL      EPCAMT = EIAMTD                                            231712
- 
+
       ** Incoming/outgoing indicator
      C**********         IF        PTYP = 66 OR                                               232630
      C**********                   PTYP = 67 OR                                               232630
@@ -576,61 +578,61 @@
      C**********         ELSE                                                                 232630
      C**********         EVAL      EPIOIN = 'I'                                               232630
      C**********         ENDIF                                                                232630
- 
+
       ** Number of days in Interest Year
      C**********         EXSR      SRNDYY                                                     232630
- 
+
       ** Call ZINTDY passing EIR Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C**********         EVAL      ZZBEG = EISTDT                                             232630
      C**********         EVAL      ZZEND = EIENDT                                             232630
      C**********         EXSR      ZINTDY                                                     232630
      C**********         EVAL      EPNDEI = ZZINDY                                            232630
- 
+
      C**********         WRITE     ZAEIRPD0                                                   232630
- 
+
       ** Get Fee paid  details then write details to LEEIRPPD
- 
+
      C     EITRAN        SETLL     LEFHSTL0
      C     EITRAN        READE     LEFHSTL0
      C                   DOW       NOT %EOF(LEFHSTL0)
- 
+
      C                   CALL      'AOFEER0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      HIFCOD        PFECD
      C     SDFEE         PARM      SDFEE         DSFDY
- 
+
      C                   IF        AUADJY = 'Y'
- 
+
       ** Cashflow date
      C                   EVAL      EPFLDT = HIHDAT
- 
+
       ** Cash flow amount
      C                   EVAL      EPCAMT = HIAMTS
- 
+
       ** Incoming/Outgoing Indicator
      C                   EVAL      EPIOIN = 'O'
- 
+
       ** Number of days in Interest Year
      C                   EXSR      SRNDYY
- 
+
       ** Call ZINTDY passing EIR Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C                   EVAL      ZZBEG = EISTDT
      C                   EVAL      ZZEND = EIENDT
      C                   EXSR      ZINTDY
      C                   EVAL      EPNDEI = ZZINDY
- 
+
      C                   IF        EPCAMT <> 0                                                232628
      C                   WRITE     ZAEIRPD0
      C                   ENDIF                                                                232628
      C                   ENDIF
- 
+
      C     EITRAN        READE     LEFHSTL0
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -640,14 +642,14 @@
       *                                                              *
       ****************************************************************
      C     SRFutCashFl   BEGSR
- 
+
       ** Get all the future cash flows from cash flows file.
- 
+
      C     KEY002        SETLL     LECFSFL0
      C     LNRF          READE     LECFSFL0
      C                   DOW       NOT %EOF(LECFSFL0)
      C                             AND LFFLDT <= EIENDT
- 
+
      C**********         IF        (LFFLDT < EIENDT AND LFFLDT > EISTDT AND                   231710
      C**********                   EISTDT = BJRDNB) OR                                        231710
      C**********                   (LFFLDT < EIENDT AND LFFLDT >= EISTDT AND                  231710
@@ -665,7 +667,7 @@
       ** period should be considered.                                                        Bug9668
                                                                                              Bug9668
      C                   IF        LFFLDT >= EISTDT And LFFLDT <= EIENDT                     Bug9668
- 
+
       ** If cash flow is not an accruing fee, write to LEEIRFPD
      C                   IF        LFFTYP <> 'EFAN' AND LFFTYP <> 'SFAN' AND
      C                             LFFTYP <> 'SFBN'
@@ -684,19 +686,19 @@
      C                   EVAL      EFTNMR = LFLNRF
      C                   EVAL      EFFLDT = LFFLDT
      C                   EVAL      EFCAMT = LFCAMT
- 
+
       ** Incoming/outgoing indicator based on event type
      C                   EVAL      EFIOIN = LFIOIN
                                                                                               232628
      C                   IF        LFIOIN = 'S'                                               232628
      C                   EVAL      EFIOIN = 'I'                                               232628
      C                   ENDIF                                                                232628
- 
+
       ** No. of days in interest year not taken from cash flow file
      C                   MOVE      @ICBS         ZZCALC
      C                   EXSR      SRNDYY
      C                   EVAL      EFNDYY = @NDYY
- 
+
       ** No. of days from end of effectivity period calculated
       ** based on cash flow date and EIR end date.
      C                   Z-ADD     LFFLDT        ZZBEG
@@ -787,7 +789,7 @@
       ** Do not need to create a dummy cash flow to close out the EIR                         232628
       ** period.  LE0400 and LE4310 generates shadow rollover cash                            232628
       ** flows for the principal and interest.                                                232628
- 
+
       ***If*not*yet*end*of*file*and*that*the*previous*record*written*on*the                   232628
       ***future*cash*flow*file*is*not*equal*to*maturity*date,*write********                   232628
       ***a*dummy*maturity*future*cash*flow.********************************                   232628
@@ -880,15 +882,15 @@
       * SREIRUpdate - Update EIR file details                        *
       ****************************************************************
      C     SREIRUpdate   BEGSR
- 
+
      C                   EVAL      EIEIR = POutEIR
      C                   EVAL      EIFDPA = wFDPA                                            Bug9668
- 
+
       ** Reset the EIR recalculation indicator of all records for
       ** recalculation
- 
+
      C                   EVAL      EIRCAL = *BLANKS
- 
+
       ** Update EIR record
      C                   IF        EIRECI = 'D'
      C                             OR EIRECI ='T'                                             232628
@@ -902,32 +904,32 @@
       * SRNDYY - Determine No. of Days in Interest Year               *
       *****************************************************************
      C     SRNDYY        BEGSR
- 
+
       ** If No. of Days in a Year in Hedging ICD is blank, use
       ** the common processing in Midas which are the following.
      C                   IF        FSNDYR = *BLANKS
       ** Calculation Methods are:
      C                   SELECT
- 
+
       ** 1  Actual/365
       ** 4  365/365 (excluding 29/02)
      C                   WHEN      @ICBS = 1 or @ICBS = 4
      C                   Z-ADD     365           @NDYY
- 
+
       ** 2  Actual/360
       ** 3  360/360 (sometimes called 30/360)
       ** 5  365/360 (excluding 29/02)
      C                   WHEN      @ICBS = 2 or @ICBS = 3 or
      C                             @ICBS = 5
      C                   Z-ADD     360           @NDYY
- 
+
       ** 6  Actual/366
      C                   WHEN      @ICBS = 6
      C                   Z-ADD     366           @NDYY
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
      C                   MOVE      FSNDYR        @NDYY
      C                   SELECT
      C                   WHEN      @NDYY  = 360
@@ -937,53 +939,53 @@
      C                   WHEN      @NDYY  = 366
      C                   EVAL      ZZCALC = '6'
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * SREIRCalc - Calculate EIR                                     *
       *****************************************************************
      C     SREIRCalc     BEGSR
- 
+
      C                   MOVEL     ##OX1(1)      MESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    MESOVR
      C                   PARM                    MESLEN
- 
+
      C                   MOVEL     ##OX1(2)      MESOVR
- 
+
       * Override ZAEIRFPD
      C                   CALL      'QCMDEXC'
      C                   PARM                    MESOVR
      C                   PARM                    MESLEN
- 
+
      C                   EVAL      PInpTNRF = EITRAN
      C                   EVAL      PInpStartEff = EISTDT
      C                   EVAL      PInpEndEff   = EIENDT
      C                   EVAL      POutEIR      = *ZERO
      C                   EVAL      PReturnCode  = *BLANKS
- 
+
      C**********         CALL      'ZAEIRCALC'                                                262654
      C                   CALLB     'ZAEIRCALC'                                                262654
- 
+
       ** Input Parameter
      C                   PARM                    PInpTNRF
      C                   PARM                    PInpStartEff
      C                   PARM                    PInpEndEff
- 
+
       ** Output Parameter
      C                   PARM                    POutEIR
      C                   PARM                    PReturnCode
- 
+
      C                   MOVEL     ##OX1(3)      MESOVR
      C                   CALL      'QCMDEXC'
      C                   PARM                    MESOVR
      C                   PARM                    MESLEN
- 
+
      C                   MOVEL     ##OX1(4)      MESOVR
- 
+
       * Override ZAEIRFPD
      C                   CALL      'QCMDEXC'
      C                   PARM                    MESOVR
@@ -991,7 +993,7 @@
                                                                                               231712
       ** Save Effective Interest Rate for Adjustment Computation                              231712
      C                   EVAL      WEffIntRate = POutEIR                                      231712
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1004,20 +1006,20 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
- 
+
       ** Key list for accessing History File
      C     KEY001        KLIST
      C**********         KFLD                    WBRCA                                        232628
      C**********         KFLD                    WCNUM                                        232628
      C                   KFLD                    WLNRF
      C                   KFLD                    WSTDT
- 
+
      C     KEY002        KLIST
      C                   KFLD                    EITRAN
      C                   KFLD                    EISTDT
- 
+
      C     KLOAN         KLIST
      C                   KFLD                    EITRAN
      C                   KFLD                    WRCDT
@@ -1026,15 +1028,15 @@
      C                   KFLD                    WFACL
      C                   KFLD                    EATRAN
      C                   KFLD                    EAFSEQ
- 
+
      C     KFSEQ         KLIST
      C                   KFLD                    EITRAN
      C                   KFLD                    FEFSEQ
- 
+
       * Override ZAEIRPPD
      C                   Z-ADD     56            MESLEN
- 
- 
+
+
       ** Access Bank details via access program
       ** (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
@@ -1047,13 +1049,13 @@
      C                   EVAL      DBASE = 1
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Access Module Details
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       * Database error
      C     @RTCD         IFNE      *BLANKS
      C                   EVAL      DBKEY = @OPTN
@@ -1062,16 +1064,16 @@
      C                   EXSR      *PSSR
      C                   END
      C                   EVAL      WRCDT = 'A'
- 
+
       ** Access Midas SD Hedging ICD File
- 
+
      C                   CALL      'AOHEDGR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDHEDG        PARM      SDHEDG        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      DBKEY  =  @OPTN
      C                   EVAL      DBFILE =  'SDHEDGPD'
@@ -1106,7 +1108,7 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE134
      C                   MOVE      'Y'           CLE134                                       CLE134
      C                   ENDIF                                                                CLE134
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1132,14 +1134,14 @@
       *                                                              *
       ****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     '*ERROR '     ReturnCode
      C                   MOVEL     'LE004610 '   DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
- 
+
       **  Terminate the program
      C                   RETURN
       *

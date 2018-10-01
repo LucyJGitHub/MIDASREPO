@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024398           Date 11May14               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024398           Date 11May14               *
       *                 AR693564           Date 08Oct12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
       *  AR693564 - API: LEFAMD duplicate amend sequence record in    *

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024398           Date 11May14               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024398           Date 11May14               *
       *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
       *                 MD024342           Date 08May14               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
       *  MD025467 - API locking issues Redesign Approach              *

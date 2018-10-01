@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034264           Date 05May15               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034264           Date 05May15               *
       *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD024398           Date 11May14               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034264 - Unable to reject transaction due to wrong sequence*
       *           - number. Remove unnecessary CHAIN.                 *

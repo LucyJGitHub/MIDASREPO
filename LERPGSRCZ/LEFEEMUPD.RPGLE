@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034020           Date 19Jul17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034020           Date 19Jul17               *
       *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 28Nov14               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034020 - Rename settlement fields of CLOANCL to prevent    *
       *             missing projections when fee customer also has    *

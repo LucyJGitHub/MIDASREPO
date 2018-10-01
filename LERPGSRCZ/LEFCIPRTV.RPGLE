@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026120           Date 13May14               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026120           Date 13May14               *
       *                 MD024398           Date 11May14               *
       *                 MD000091           Date 09May13               *
       *                 CLE134             Date 01Aug12               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026120 - Additional deps for GLC0720/740                   *
       *  MD024398 - API Performance Optimisation                      *

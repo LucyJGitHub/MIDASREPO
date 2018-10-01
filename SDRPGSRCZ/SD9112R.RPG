@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan processing                       *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -156,7 +158,8 @@
      I*#1DBRC*****DS                             74                                    CAS001 CLE023
      I***#1DBRC*     DS                             75                                 CLE023 CAS005
      I***#1DBRC*     DS                             78                                 CAS005 225889
-     I#1DBRC      DS                             79                                           225889
+     I***#1DBRC*     DS                             79                                 225889 CLE071
+     I#1DBRC      DS                            582                                           CLE071
       * Stored master file format fields
      I                                        1   1 #1DB1
       *
@@ -165,7 +168,8 @@
      I*YARDCS*****DS                             74                                    CAS001 CLE023
      I***YARDCS*     DS                             75                                 CLE023 CAS005
      I***YARDCS*     DS                             78                                 CAS005 225889
-     IYARDCS      DS                             79                                           225889
+     I***YARDCS*     DS                             79                                 225889 CLE071
+     IYARDCS      DS                            582                                           CLE071
      IQSDFC1    E DSSDFCTLL0
       * UPD : Midas SD Standing data controls update
      IYBRDCS      DS                             22
@@ -197,7 +201,8 @@
      I*P1PARM*****DS                             74                                    CAS001 CLE023
      I***P1PARM*     DS                             75                                 CLE023 CAS005
      I***P1PARM*     DS                             78                                 CAS005 225889
-     IP1PARM      DS                             79                                           225889
+     I***P1PARM*     DS                             79                                 225889 CLE071
+     IP1PARM      DS                             80                                           CLE071
       * RCD: Midas SD Customer Lending ICD retrieval
       * I : MAP Customer Lend
      I                                        1  10 P1CLND
@@ -305,6 +310,8 @@
       * Message data for 'Fee Settlements to be Authorised Invalid                            CGP001
       * Fee Adjustments to be Authrsd                                                         CGP001
      I                                        1   1 ZA0018                                    CGP001
+      ** Message data for Fee Rate Change Amendments to be Authorised                         CLE071
+     I                                        1   1 ZA0019                                    CLE071
       /EJECT
       *****************************************************************
       * Entry parameters
@@ -728,6 +735,26 @@
       *                                                                                       CGP001
      C                     END                             End Blank BPFJAU                   CGP001
       *                                                                                       CGP001
+      ** Fee Rate Change Amendment to be Authorised                                           CLE071
+      ** CASE: If field Fee Rate Change to be Authorised is Blank                             CLE071
+      *                                                                                       CLE071
+     C           BPFCAU    IFEQ *BLANK                                                        CLE071
+      *                                                                                       CLE071
+     C                     MOVEL'0'       Y0CX01  1                                           CLE071
+     C           WULE02    IFEQ 'Y'                                                           CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+     C                     MOVEL'1'       Y0CX01                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           Y0CX01    IFEQ '1'                                                           CLE071
+     C                     MOVEL'Y'       #1FCAU                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVEL'N'       #1FCAU                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
       * Authorisation to Review is Required                               123857
       * CASE: Authorisation to Review is Blank                            123857
      C           BPAURV    IFEQ *BLANK                     *IF            123857
@@ -1106,6 +1133,18 @@
      C                     MOVEL'Y'       W0DCF   1                                           CGP001
      C                     END                                                                CGP001
       *                                                                                       CGP001
+      ** Validate Fee Rate Change to be Authorised                                            CLE071
+     C                     MOVEL*BLANK    W0RTN                                               CLE071
+     C                     MOVEL#1FCAU    W0NSRQ  1                                           CLE071
+      ** Name search required?                                                                CLE071
+     C           W0NSRQ    IFEQ '?'                                                           CLE071
+     C                     CALL 'Y2VLLSR'              90                                     CLE071
+     C                     PARM           W0RTN   7                                           CLE071
+     C                     PARM 1208394   Y2LSNO  70                                          CLE071
+     C           #1FCAU    PARM #1FCAU    W0EXVL 20                                           CLE071
+      ** Defer confirm                                                                        CLE071
+     C                     MOVEL'Y'       W0DCF   1                                           CLE071
+     C                     ENDIF                                                              CLE071
       *
       * USER: Validate detail screen fields
       * Consolidated Confirmations Required
@@ -1362,6 +1401,17 @@
       *                                                                                       CGP001
      C                     END                                                                CGP001
       *                                                                                       CGP001
+      ** Fee Rate Change to be authorised                                                     CLE071
+      ** If Fee Rate Change to be Auth field is not a Valid Value                             CLE071
+      *                                                                                       CLE071
+     C           #1FCAU    IFNE 'N'                                                           CLE071
+     C           #1FCAU    ANDNE'Y'                                                           CLE071
+     C                     MOVEL#1FCAU    ZA0019                                              CLE071
+     C                     MOVEL'USS0919' ZAMSID                                              CLE071
+     C                     EXSR ZASNMS                                                        CLE071
+     C                     SETON                     9951                                     CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
       * Authorisation to Review All Fields                                123857
       * CASE: DTL.Auth to Review All Fields is Valid Values               123857
      C           #1AURV    IFEQ 'N'                        *IF            123857
@@ -1488,6 +1538,10 @@
      C           WUDPGF    IFEQ 'N'                        *IF
      C                     MOVEL'1'       *IN76
      C                     END                             *FI
+     C                     MOVEL'0'       *IN75                                               CLE071
+     C           WUDAF3    IFEQ 'N'                                                           CLE071
+     C                     MOVEL'1'       *IN75                                               CLE071
+     C                     ENDIF                                                              CLE071
       * Enable key screen
      C                     SETON                     87    *
       *================================================================
@@ -1540,6 +1594,7 @@
      C                     Z-ADD*ZERO     #1GRIR           Grace Days for
      C                     MOVEL*BLANK    #1AURV           Auth to Review 123857
      C                     MOVEL*BLANK    #1FJAU           Fees Adjustments                   CGP001
+     C                     MOVEL*BLANK    #1FCAU                                              CLE071
       *                                                                                       CAS001
       ** When CAS001 enhancement is installed                                                 CAS001
      C           CAS001    IFEQ 'Y'                                                           CAS001
@@ -1605,6 +1660,7 @@
      C                     Z-ADDBPGRIR    #1GRIR           Grace Days for
      C                     MOVELBPAURV    #1AURV           Auth to Review 123857
      C                     MOVELBPFJAU    #1FJAU           Fees Adjustments                   CGP001
+     C                     MOVELBPFCAU    #1FCAU                                              CLE071
       *                                                                                       CAS001
       ** If CAS001 enhancement is installed                                                   CAS001
      C           CAS001    IFEQ 'Y'                                                           CAS001
@@ -1671,10 +1727,11 @@
      C                     GOTO SAEXIT
      C                     END
       *
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Check for changed record
      C********** #1DBRC    IFNE @1DBRC                     IF                                 CLE134
-     C           #1DBRC    IFNE @1DBRX                                                        CLE134
+     C********** #1DBRC    IFNE @1DBRX                                                 CLE134 CLE071
+     C           #1DBRC    IFNE @1DBRC                                                        CLE071
      C                     MOVEL'Y2U0007' W0RTN   7
       * Send message '*Update not accepted'
      C                     MOVEL'Y2U0007' ZAMSID
@@ -1732,6 +1789,7 @@
      C                     Z-ADD#1GRIR    BPGRIR           Grace Days for
      C                     MOVEL#1AURV    BPAURV           Auth to Review 123857
      C                     MOVEL#1FJAU    BPFJAU           Fee Adjustments                    CGP001
+     C                     MOVEL#1FCAU    BPFCAU                                              CLE071
       *                                                                                       CAS001
       ** If CAS001 enhancement is installed                                                   CAS001
      C           CAS001    IFEQ 'Y'                                                           CAS001
@@ -1752,10 +1810,11 @@
      C                     Z-ADDP1NODM    BPNODM                                              CAS005
      C                     ENDIF                                                              CAS005
       *
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Set PGM.*Record Data Changed flag
      C********** @1DBRC    IFNE YARDCS                                                        CLE134
-     C           @1DBRX    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
      C                     MOVE 'Y'       YARDC
      C                     END
       * USER: Processing before Data update
@@ -1816,10 +1875,11 @@
       * 00/Copy Member SD9112RBDU - Customer Lending Data  *
      C*Edit Cust Lnd ICD - Auth Processing Before Update
      C/COPY WNCPYSRC,SD9112RBDU
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Set PGM.*Record Data Changed flag
      C********** @1DBRC    IFNE YARDCS                                                        CLE134
-     C           @1DBRX    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
      C                     MOVE 'Y'       YARDC
      C                     END
       * If changed update record otherwise release record
@@ -2216,6 +2276,8 @@
      C                     MOVEL*BLANK    WULE02  1
       * Define work field Switchable Feature CLE005
      C                     MOVEL*BLANK    WULE05  1
+      ** Define work field Switchable Feature CLE071                                          CLE071
+     C                     MOVEL*BLANK    CLE071  1                                           CLE071
       * Define work field Run day number
      C                     Z-ADD*ZERO     WURDNB  50
       * Define work field Last Change Date
@@ -2232,6 +2294,8 @@
      C                     Z-ADD*ZERO     WUNOAM  50
       * Define work field Display LE ICD Auth Flds2
      C                     MOVEL*BLANK    WUDAF2  1
+      ** Define work field Display LE ICD Rate Change to be auth                              CLE071
+     C                     MOVEL*BLANK    WUDAF3  1                                           CLE071
       * Define work field Display Grace Day fields
      C                     MOVEL*BLANK    WUDPGF  1
       * Define work field Midas Run Date
@@ -2518,6 +2582,33 @@
       *                                                                                       CAS005
      C                     ENDIF                                                              CAS005
       *                                                                                       CAS005
+      ** Access SAR details to see if CLE071 is enabled                                       CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   PRTCD                                               CLE071
+     C                     PARM '*VERIFY' POPTN                                               CLE071
+     C                     PARM 'CLE071'  PSARD                                               CLE071
+     C           SCSARD    PARM SCSARD    DSSDY                                               CLE071
+      *                                                                                       CLE071
+     C           PRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Set Dsply flag for for 'Fee Rate Change Amendment to be Auth'                        CLE071
+      *                                                                                       CLE071
+     C                     MOVEL'0'       Y0CX01  1                                           CLE071
+     C           WULE02    IFEQ 'Y'                                                           CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+     C                     MOVEL'1'       Y0CX01                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C                     ENDIF                                                              CLE071
+     C           Y0CX01    IFEQ '1'                                                           CLE071
+     C                     MOVEL'Y'       WUDAF3                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVEL'N'       WUDAF3                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
       * 00/Copy Member SD9112RIPG - Customer Lending Data  *
       * 00/Copy Member SD9112RFPG - Customer Lending Data  *
       * 00/Copy Member SD9112REPG - Customer Lending Data  *

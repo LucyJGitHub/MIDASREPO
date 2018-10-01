@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034840           Date 10Feb17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034840           Date 10Feb17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD030621           Date 26Feb15               *
       *                 CLE164             Date 18Aug14               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
       *             Base Rate Change Facility ICD is set to 'N'.      *

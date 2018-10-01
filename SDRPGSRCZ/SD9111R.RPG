@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024934           Date 05Mar14               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024934           Date 05Mar14               *
       *                 AR1092740          Date 18Apr13               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024934 - System Values related to CLE134 Past due          *
       *             Processing are available despite CLE134 is        *
@@ -210,7 +212,8 @@
      I*#1DBRC*****DS                             74                                    CAS001 CLE023
      I***#1DBRC*     DS                             75                                 CLE023 CAS005
      I***#1DBRC*     DS                             78                                 CAS005 237307
-     I#1DBRC      DS                             79                                           237307
+     I***#1DBRC*     DS                             79                                 237307 CLE071
+     I#1DBRC      DS                            582                                           CLE071
       * Stored master file format fields
      I                                        1   1 #1DB1
       *
@@ -274,15 +277,18 @@
       ** I : MAP No. of Days to Maturity                                                      CAS005
       *                                                                                       CAS005
      I                                       76  780PANODM                                    CAS005
-     I#2DBRC      DS                            581                                           CLE134
+     I***#2DBRC*     DS                            581                                 CLE134 CLE071
+     I#2DBRC      DS                            582                                           CLE071
       *
      I***YARDCS******DS                             72                    123857
      I***YARDCS*     DS                             73                                 123857 CAS001
      I*YARDCS*****DS                             74                                    CAS001 CLE023
      I***YARDCS*     DS                             75                                 CLE023 CAS005
      I***YARDCS*     DS                             78                                 CAS005 237307
-     IYARDCS      DS                             79                                           237307
-     IYARDC2      DS                            581                                           CLE134
+     I***YARDCS*     DS                             79                                 237307 CLE071
+     IYARDCS      DS                            582                                           CLE071
+     I***YARDC2*     DS                            581                                 CLE134 CLE071
+     IYARDC2      DS                            582                                           CLE071
      IQSDFC1    E DSSDFCTLL0
       * UPD : Midas SD Standing data controls update
      IYBRDCS      DS                             22
@@ -3871,6 +3877,7 @@
      C                     MOVELBPDASI    #1DASI           Default Auto-se
      C                     MOVELBPGIAV    #1GIAV           Guarantees Issu
      C                     MOVELBPFJAU    #1FJAU           Fee Adjustments                    CGP001
+     C                     MOVELBPFCAU    #1FCAU                                              CLE071
       *                                                                                       CAS001
       ** If CAS001 enhancement is installed                                                   CAS001
      C           CAS001    IFEQ 'Y'                                                           CAS001
@@ -3946,10 +3953,11 @@
      C                     GOTO SAEXIT
      C                     END
       *
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Check for changed record
      C********** #1DBRC    IFNE @1DBRC                     IF                                 CLE134
-     C           #1DBRC    IFNE @1DBRX                                                        CLE134
+     C********** #1DBRC    IFNE @1DBRX                                                 CLE134 CLE071
+     C           #1DBRC    IFNE @1DBRC                                                        CLE071
      C                     MOVEL'Y2U0007' W0RTN   7
       * Send message '*Update not accepted'
      C                     MOVEL'Y2U0007' ZAMSID
@@ -4008,6 +4016,7 @@
      C                     Z-ADD#1GRPR    BPGRPR           Grace Days for
      C                     Z-ADD#1GRIR    BPGRIR           Grace Days for
      C                     MOVEL#1FJAU    BPFJAU           Fee Adjustments                    CGP001
+     C                     MOVEL#1FCAU    BPFCAU                                              CLE071
       *                                                                                       CAS001
       ** If CAS001 enhancement is installed                                                   CAS001
      C           CAS001    IFEQ 'Y'                                                           CAS001
@@ -4028,10 +4037,11 @@
      C                     Z-ADD#1NODM    BPNODM                                              CAS005
      C                     ENDIF                                                              CAS005
       *
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Set PGM.*Record Data Changed flag
      C********** @1DBRC    IFNE YARDCS                                                        CLE134
-     C           @1DBRX    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
      C                     MOVE 'Y'       YARDC
      C                     END
       * USER: Processing before Data update
@@ -4100,10 +4110,11 @@
       * 00/COPY member SD9111RBDU - Customer Lending Data  * S01212
      C/COPY WNCPYSRC,SD9111RBDU
      C                     END                             *FI
-     C                     MOVEL@1DBRC    @1DBRX 79                                           CLE134
+     C**********           MOVEL@1DBRC    @1DBRX 79                                    CLE134 CLE071
       * Set PGM.*Record Data Changed flag
      C********** @1DBRC    IFNE YARDCS                                                        CLE134
-     C           @1DBRX    IFNE YARDCS                                                        CLE134
+     C********** @1DBRX    IFNE YARDCS                                                 CLE134 CLE071
+     C           @1DBRC    IFNE YARDCS                                                        CLE071
      C                     MOVE 'Y'       YARDC
      C                     END
       * If changed update record otherwise release record

@@ -16,9 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047993           Date 23Sep17               *
-      *                 MD035545           Date 11Sep15               *      
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
       *                 MD037658           Date 19Feb16               *
       *                 MD046351           Date 23Aug17               *
       *                 MD026385           Date 25Apr14               *
@@ -97,11 +98,12 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD037658 - Define NDAYS/WDAYS w/decimal to cater calc basis 6*
       *  MD046351 - Rounding and truncation in fee accrual            *
       *             calculations due to mult/div using 15,9 fields    *
@@ -246,6 +248,10 @@
      F            CLOANCLF                          KRENAMEMLOANCLF       085677
      F***SDCURRPDIF  E           K        DISK                                                CSC042
      FSDCURRPDIF  E           K        DISK                           UC                      CSC042
+      *                                                                                       CLE071
+     FLEFHSTLBIF  E           K        DISK                                                   CLE071
+      ** Lending Fees History for Rate Changes                                                CLE071
+      *                                                                                       CLE071
      FLER180P1O   E             80     PRINTER      KINFDS SPOOL1     UC
       *
      FLER180P2O   E             81     PRINTER      KINFDS SPOOL2     UC
@@ -268,6 +274,7 @@
      F* 14    Work indicator
      F* 16    Output Estimated Average amount                             100657
      F* 18    Read of FACHSAL1
+      * 17    Read of LEFHSTLB                                                                CLE071
      F* 19    Last Payment Date = 0
      F* 20    Work indicator
      F* 24    Multi Branch system
@@ -308,6 +315,8 @@
      F* *PSSR  - Abnormal error conditions
      F* ZXRATE - Midas standard subroutine
      F* ZCONV  - Midas standard subroutine
+      * PRCFRC - Calculation of average amount based fees for                                 CLE071
+      *          Value Dating of Fee Rate Changes                                             CLE071
      F*
      F*****************************************************************
      F/EJECT
@@ -332,6 +341,10 @@
      E                    ARAC     5000150               FEE ACCRUALS DETAILS                 246309
      E                    ##BR      999  3               Branch Codes                         CSC042
      E                    ##BN      999 30               Branch Names                         CSC042
+     E                    WAM         5 11 0A            FEE AMOUNTS                          CLE071
+     E                    WRT         5  7 5A            FEE RATES                            CLE071
+     E                    HIAM        5 11 0A            FEE AMOUNTS                          CLE071
+     E                    HIRT        5  7 5A            FEE RATES                            CLE071
       *
      E/EJECT
       *                                                                   CLE005
@@ -528,6 +541,31 @@
      I                                        4   50FSEQ
      I                                        6   70FEFCOD                052703
      I                                        6   7 WFCOD                 052703
+      ** History Fee Amounts                                                                  CLE071
+     I            DS                                                                          CLE071
+     I                                    P   1   60HIAMT1                                    CLE071
+     I                                    P   7  120HIAMT2                                    CLE071
+     I                                    P  13  180HIAMT3                                    CLE071
+     I                                    P  19  240HIAMT4                                    CLE071
+     I                                    P  25  300HIAMT5                                    CLE071
+     I                                        1  30 HIAMTX                                    CLE071
+      ** History Fee Rates                                                                    CLE071
+     I            DS                                                                          CLE071
+     I                                    P   1   45HIFRT1                                    CLE071
+     I                                    P   5   85HIFRT2                                    CLE071
+     I                                    P   9  125HIFRT3                                    CLE071
+     I                                    P  13  165HIFRT4                                    CLE071
+     I                                    P  17  205HIFRT5                                    CLE071
+     I                                        1  20 HIFRTX                                    CLE071
+      *                                                                                       CLE071
+     I            DS                                                                          CLE071
+     I                                    P   1  300HIAM                                      CLE071
+     I                                        1  30 PVAMTX                                    CLE071
+      *                                                                                       CLE071
+     I            DS                                                                          CLE071
+     I                                    P   1  205HIRT                                      CLE071
+     I                                        1  20 PVFRTX                                    CLE071
+      *                                                                                       CLE071
      ISPOOL1      DS
       ** File information data structure
      I                                       83  92 SFILE1
@@ -620,6 +658,8 @@
       *
      C/EJECT
       *
+     C                     MOVE *BLANK    WKPIND  1                                           CLE071
+     C                     MOVE *BLANK    PVPIND  1                                           CLE071
      C  N01                Z-ADD0         @REP1   50
      C  N01                Z-ADD0         @REP2   50
      C  N01                EXSR INIT
@@ -930,6 +970,19 @@
      C           WRTCD     IFEQ *BLANKS                                                       CLE134
      C                     MOVE 'Y'       CLE134                                              CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                       CLE071
+      ** Check if CLE071 is Switched *ON                                                      CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   WRTCD   7                                           CLE071
+     C                     PARM '*VERIFY' WOPTN   7                                           CLE071
+     C                     PARM 'CLE071'  WSARD   6                                           CLE071
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE071
+      *                                                                                       CLE071
+     C           WRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     ENDIF                                                              CLE071
       *****************************************************************            MD035545 MD047993
       ***Access*general*ledger*details.********************************            MD035545 MD047993
       *****************************************************************            MD035545 MD047993
@@ -1073,6 +1126,26 @@
      C           HSAKY2    KLIST
      C                     KFLD           FECNUM
      C                     KFLD           FEFACL
+      *                                                                                       CLE071
+      ** Define key list for read of LEFHSTLB file - partial key.                             CLE071
+      *                                                                                       CLE071
+     C           FEHKY1    KLIST                                                              CLE071
+     C                     KFLD           FEBRCA                                              CLE071
+     C                     KFLD           FECNUM                                              CLE071
+     C                     KFLD           FEFACL                                              CLE071
+     C                     KFLD           FELOAN                                              CLE071
+     C                     KFLD           FEFSEQ                                              CLE071
+      *                                                                                       CLE071
+      ** Define key list for read of LEFHSTLB file - Full key.                                CLE071
+      *                                                                                       CLE071
+     C           FEHKY2    KLIST                                                              CLE071
+     C                     KFLD           FEBRCA                                              CLE071
+     C                     KFLD           FECNUM                                              CLE071
+     C                     KFLD           FEFACL                                              CLE071
+     C                     KFLD           FELOAN                                              CLE071
+     C                     KFLD           FEFSEQ                                              CLE071
+     C                     KFLD           STDATE                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LER180CCP2                                           S01408
       *
      C                     ENDSR
@@ -3065,6 +3138,26 @@
       ** Initialise work fee field.
       *
      C                     Z-ADD0         WFEE   130
+      *                                                                                       CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANK    WRKFRC  1                                           CLE071
+     C           FEHKY1    CHAINLEFHSTLB             75                                       CLE071
+     C           *IN75     IFEQ *OFF                                                          CLE071
+     C                     MOVE 'Y'       WRKFRC                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE 'N'       WRKFRC                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** If CLE071 switchable feature is OFF or CLE071 is ON and                              CLE071
+      ** record with FEBRCA,FECNUM,FEFACL,FEFSEQ is not present                               CLE071
+      ** in the history file then do the regular processing                                   CLE071
+      *                                                                                       CLE071
+     C           CLE071    IFEQ 'N'                                                           CLE071
+     C           CLE071    OREQ 'Y'                                                           CLE071
+     C           WRKFRC    ANDEQ'N'                                                           CLE071
       *
       ** Read file until date read is greater than date of end of
       ** this accrual period.
@@ -3146,9 +3239,60 @@
      C                     END
      C                     END
      C*
+     C                     MOVEAFEAM      WAM                                                 CLE071
+     C                     MOVEAFRT       WRT                                                 CLE071
+     C                     MOVE FEPIND    WKPIND                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LER180C007
      C                     EXSR ACCRUE
      C                     Z-ADDWTOT      WFEE
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** If the switchable feature CLE071 is ON then do the process                           CLE071
+      ** according to the Value dating of Rate changes to Fees                                CLE071
+      *                                                                                       CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+     C           WRKFRC    ANDEQ'Y'                                                           CLE071
+      *                                                                                       CLE071
+     C                     MOVE '0'       *IN18                                               CLE071
+     C           *IN18     DOWEQ'0'                                                           CLE071
+     C           HSAKY2    READEFACHSAL1                 18                                   CLE071
+      *                                                                                       CLE071
+     C           *IN18     IFEQ '1'                                                           CLE071
+     C           FADATE    ORGT ENDATE                                                        CLE071
+     C                     Z-ADDENDATE    FADATE                                              CLE071
+     C                     MOVE '1'       *IN18                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     EXSR PRCFRC                                                        CLE071
+      *                                                                                       CLE071
+     C           FECALT    IFEQ '01'                                                          CLE071
+     C           FECALT    OREQ '02'                                                          CLE071
+     C           FECALT    OREQ '03'                                                          CLE071
+      *                                                                                       CLE071
+     C           FAUNDR    IFGE 0                                                             CLE071
+     C                     Z-ADDFAUNDR    AAMT                                                CLE071
+     C                     ELSE                                                               CLE071
+     C                     Z-ADD0         AAMT                                                CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           FECALT    IFEQ '11'                                                          CLE071
+     C           FECALT    OREQ '12'                                                          CLE071
+     C           FECALT    OREQ '13'                                                          CLE071
+     C                     Z-ADDFADRAM    AAMT                                                CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           FECALT    IFEQ '21'                                                          CLE071
+     C                     Z-ADDFACFAM    AAMT                                                CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDDO                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C                     ENDSR
      C/EJECT
       *****************************************************************
@@ -3170,7 +3314,8 @@
       ** Calculate percentage if required.
       ** Use original facility amount for average.
       *
-     C           FEPIND    IFNE 'A'
+     C********** FEPIND    IFNE 'A'                                                           CLE071
+     C           WKPIND    IFNE 'A'                                                           CLE071
      C           FHOFAM    IFGT 0                                                             246018
      C           FHOFAM    IFNE 0                                                             246309
      C           WAMT      DIV  FHOFAM    WRK155    H
@@ -3303,11 +3448,13 @@
       *
       ** Amount (not percentage)
       *
-     C           FEPIND    IFEQ 'A'
+     C********** FEPIND    IFEQ 'A'                                                           CLE071
+     C           WKPIND    IFEQ 'A'                                                           CLE071
       *
       ** Convert limit amounts for fee decimal places.
       *
-     C           FEAM      MULT POWER,P   FAM
+     C********** FEAM      MULT POWER,P   FAM                                                 CLE071
+     C           WAM       MULT POWER,P   FAM                                                 CLE071
      C                     Z-ADD0         WFAM
      C                     Z-ADDWAMT      WOAMT
      C                     Z-ADD1         X
@@ -3316,10 +3463,12 @@
       *
      C           WOAMT     IFLT FAM,X
      C           FAM,X     OREQ 0
-     C           WAMT      MULT FRT,X     WRK15
+     C********** WAMT      MULT FRT,X     WRK15                                               CLE071
+     C           WAMT      MULT WRT,X     WRK15                                               CLE071
      C                     ELSE
      C           FAM,X     SUB  WFAM      WRK15
-     C                     MULT FRT,X     WRK15
+     C**********           MULT FRT,X     WRK15                                               CLE071
+     C                     MULT WRT,X     WRK15                                               CLE071
      C                     END
      C                     ADD  WRK15     WTOT
      C                     SUB  FAM,X     WAMT
@@ -3343,7 +3492,8 @@
       *
       ** - PERCENTAGE:
       *
-     C           FEAM      DIV  1000      FPC
+     C********** FEAM      DIV  1000      FPC                                                 CLE071
+     C           WAM       DIV  1000      FPC                                                 CLE071
       *
      C                     Z-ADD0         WFPC
      C                     Z-ADDWPCT      WOPCT
@@ -3358,7 +3508,8 @@
      C           FPC,X     SUB  WFPC      WRK63
      C           WAMT      MULT WRK63     WRK15
      C                     END
-     C                     MULT FRT,X     WRK15
+     C**********           MULT FRT,X     WRK15                                               CLE071
+     C                     MULT WRT,X     WRK15                                               CLE071
      C                     DIV  100       WRK15     H
      C                     ADD  WRK15     WTOT
      C                     SUB  FPC,X     WPCT
@@ -3390,11 +3541,13 @@
       *
       ** - AMOUNT:
       *
-     C           FEPIND    IFEQ 'A'
+     C********** FEPIND    IFEQ 'A'                                                           CLE071
+     C           WKPIND    IFEQ 'A'                                                           CLE071
       *
       ** Convert limit amounts for fee decimal places.
       *
-     C           FEAM      MULT POWER,P   FAM
+     C********** FEAM      MULT POWER,P   FAM                                                 CLE071
+     C           WAM       MULT POWER,P   FAM                                                 CLE071
       *
       ** Search amount array to find value larger or equal.
       *
@@ -3410,7 +3563,8 @@
      C           Y         ANDEQ0
      C                     MULT 0         WAMT
      C                     ELSE
-     C                     MULT FRT,X     WAMT
+     C**********           MULT FRT,X     WAMT                                                CLE071
+     C                     MULT WRT,X     WAMT                                                CLE071
      C                     END
       *
      C********** WAMT      MULT WDAYS     WTOT                                              MD046351
@@ -3424,7 +3578,8 @@
       *
       ** - PERCENTAGE:
       *
-     C           FEAM      DIV  1000      FPC
+     C********** FEAM      DIV  1000      FPC                                                 CLE071
+     C           WAM       DIV  1000      FPC                                                 CLE071
       *
       ** Search percentage array to find value larger or equal.
       *
@@ -3440,7 +3595,8 @@
      C           Y         ANDEQ0
      C                     MULT 0         WAMT
      C                     ELSE
-     C                     MULT FRT,X     WAMT
+     C**********           MULT FRT,X     WAMT                                                CLE071
+     C                     MULT WRT,X     WAMT                                                CLE071
      C                     END
       *
      C                     DIV  100       WAMT      H
@@ -3466,7 +3622,8 @@
      C**********           MULT WDAYS     WTOT                                              MD046351
      C**********           DIV  WCBS      WTOT      H                                       MD046351
       *                                                                                     MD046351
-     C           WAMT      MULT FRT,1     ZWK309                                            MD046351
+     C********** WAMT      MULT FRT,1     ZWK309                                     MD046351 CLE071
+     C           WAMT      MULT WRT,1     ZWK309                                              CLE071
      C                     MULT WDAYS     ZWK309                                            MD046351
      C                     DIV  WCBS      ZWK309    H                                       MD046351
      C                     Z-ADDZWK309    WTOT      H                                       MD046351
@@ -3587,8 +3744,10 @@
       *
      C                     Z-ADD5         Y       20
      C           Y         DOWGT0
-     C           FEAM,Y    IFEQ 0
-     C           FRT,Y     ANDNE0
+     C********** FEAM,Y    IFEQ 0                                                             CLE071
+     C********** FRT,Y     ANDNE0                                                             CLE071
+     C           WAM,Y     IFEQ 0                                                             CLE071
+     C           WRT,Y     ANDNE0                                                             CLE071
      C                     Z-ADDY         X
      C                     Z-ADD0         Y
      C                     END
@@ -3597,6 +3756,86 @@
       *
      C                     ENDSR
       *
+      ********************************************************************                    CLE071
+      *                                                                                       CLE071
+      *  PRCFRC - Calculation of fees based on average balances                               CLE071
+      *           for Value dating of Fee Rate changes.                                       CLE071
+      *                                                                                       CLE071
+      *  CALLED FROM:  AVCALC                                                                 CLE071
+      *                                                                                       CLE071
+      *  CALLS:  ZINTDY,ACCRUE                                                                CLE071
+      *                                                                                       CLE071
+      ********************************************************************                    CLE071
+      *                                                                                       CLE071
+     C           PRCFRC    BEGSR                                                              CLE071
+      *                                                                                       CLE071
+     C           FEHKY2    SETGTLEFHSTLB                                                      CLE071
+     C           FEHKY1    REDPELEFHSTLB                 17                                   CLE071
+     C           *IN17     IFEQ '0'                                                           CLE071
+     C                     MOVE HIPIND    PVPIND                                              CLE071
+     C                     MOVE HIAMTX    PVAMTX                                              CLE071
+     C                     MOVE HIFRTX    PVFRTX                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           FEHKY1    READELEFHSTLB                 17                                   CLE071
+     C           *IN17     DOWEQ'0'                                                           CLE071
+     C           HIRCVD    ANDLTFADATE                                                        CLE071
+      *                                                                                       CLE071
+     C                     Z-ADDSTDATE    ZZBEG                                               CLE071
+     C                     Z-ADDHIRCVD    ZZEND                                               CLE071
+     C                     MOVE FECALC    ZZCALC                                              CLE071
+      *                                                                                       CLE071
+     C                     EXSR ZINTDY                                                        CLE071
+      *                                                                                       CLE071
+     C                     Z-ADDZZINDY    NDAYS                                               CLE071
+      *                                                                                       CLE071
+     C           NDAYS     IFGT 0                                                             CLE071
+     C                     MULT NDAYS     AAMT                                                CLE071
+     C                     DIV  WDAYS     AAMT                                                CLE071
+     C                     Z-ADDAAMT      WAMT                                                CLE071
+     C                     Z-ADDHIRCVD    STDATE                                              CLE071
+     C                     MOVEAHIAM      WAM                                                 CLE071
+     C                     MOVEAHIRT      WRT                                                 CLE071
+     C                     MOVE PVPIND    WKPIND                                              CLE071
+      *                                                                                       CLE071
+     C                     EXSR ACCRUE                                                        CLE071
+      *                                                                                       CLE071
+     C                     ADD  WTOT      WFEE                                                CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE HIPIND    PVPIND                                              CLE071
+     C                     MOVELHIAMTX    PVAMTX                                              CLE071
+     C                     MOVELHIFRTX    PVFRTX                                              CLE071
+      *                                                                                       CLE071
+     C           FEHKY1    READELEFHSTLB                 17                                   CLE071
+     C                     ENDDO                                                              CLE071
+      *                                                                                       CLE071
+     C           STDATE    IFLT FADATE                                                        CLE071
+     C                     Z-ADDSTDATE    ZZBEG                                               CLE071
+     C                     Z-ADDFADATE    ZZEND                                               CLE071
+     C                     MOVE FECALC    ZZCALC                                              CLE071
+      *                                                                                       CLE071
+     C                     EXSR ZINTDY                                                        CLE071
+      *                                                                                       CLE071
+     C                     Z-ADDZZINDY    NDAYS                                               CLE071
+      *                                                                                       CLE071
+     C           NDAYS     IFGT 0                                                             CLE071
+     C                     MULT NDAYS     AAMT                                                CLE071
+     C                     DIV  WDAYS     AAMT                                                CLE071
+     C                     Z-ADDAAMT      WAMT                                                CLE071
+     C                     Z-ADDFADATE    STDATE                                              CLE071
+     C                     MOVEAHIAM      WAM                                                 CLE071
+     C                     MOVEAHIRT      WRT                                                 CLE071
+     C                     MOVE PVPIND    WKPIND                                              CLE071
+      *                                                                                       CLE071
+     C                     EXSR ACCRUE                                                        CLE071
+      *                                                                                       CLE071
+     C                     ADD  WTOT      WFEE                                                CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
      C********************************************************************
      C*
      C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046370           Date 07Nov17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD021377           Date 18Jul18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046370           Date 07Nov17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD028931           Date 13May14               *
       *                 MD039016           Date 26May16               *
       *                 CLE141A            Date 28Apr16               *
@@ -106,6 +108,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021377 - Reversed Fee Rate Changes have FCRECI = 'R'.      *
+      *             LER0238 should be checked against live fees only. *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046370 - Component LERC135 is looping in COB. If system    *
       *             value AutoEndCalcLoanFee is 'Y' & loan already has*
       *             a zero amount, prevent fee from being inserted    *
@@ -300,7 +305,9 @@
      F                                                                                     AR826996B
      FLEHISTLA  IF   E           K DISK    INFSR(*PSSR)                                     MD046370
      F                                     PREFIX(HP_)                                      MD046370
-
+      ** Fee Rate Change Amendment Details                                                    CLE071
+     FLEFERCL1  IF   E           K DISK    INFSR(*PSSR)                                       CLE071
+                                                                                              CLE071
       **  Compile time arrays
 
      D WCTP            S              2    DIM(14) CTDATA PERRCD(14)
@@ -603,6 +610,9 @@
                                                                                               CLE106
       ** Work variable for CLE054 amendments                                                  CLE054
      D CLE054          S              1A                                                      CLE054
+                                                                                              CLE071
+      ** Value Dating of Rate changes to Fees switchable feature                              CLE071
+     D CLE071          S              1                                                       CLE071
                                                                                               CLE054
      D PDAYNS          S              5P 0                                                    CLE139
      D PDAYNE          S              5P 0                                                    CLE139
@@ -1859,6 +1869,37 @@
      C                   ENDIF
      C                   ENDIF
       *
+      ** Additional validation to protect selected fields when                                CLE071
+      ** maintaining Fee details                                                              CLE071
+      *                                                                                       CLE071
+     C     DDEPEDOK      IFNE      'N'                                                        CLE071
+     C     DDEPED        ANDNE     *BLANKS                                                    CLE071
+     C     CLE071        ANDEQ     'Y'                                                        CLE071
+      *                                                                                       CLE071
+     C                   MOVEL     FA_BRCA       FCBRCA                                       CLE071
+     C                   MOVEL     DDCSSN        FCCNUM                                       CLE071
+     C                   MOVE      *BLANKS       WCFACL            5                          CLE071
+     C                   EVAL      WCFACL = %TRIM(DDFACT) + %TRIM(DDFCNO)                     CLE071
+     C                   MOVEL     WCFACL        FCFACL                                       CLE071
+     C                   MOVEL     DDLNRF        FCLOAN                                       CLE071
+     C                   MOVEL     DDFSEQ        FCFSEQ                                       CLE071
+      *                                                                                       CLE071
+     C     FCADKY        SETGT     LEFERCL1                                                   CLE071
+     C     FCADKY        READPE    LEFERCL1                               75                  CLE071
+     C     *IN75         IFEQ      '0'                                                        CLE071
+      *                                                                                       CLE071
+     C     FCRCVD        IFGE      WPEND                                                      CLE071
+     C     FCRECI        ANDEQ     'D'                                                      MD021377
+     C                   MOVE      'N'           DDEPEDOK                                     CLE071
+     C                   ADD       1             Idx                                          CLE071
+     C                   MOVEL     'DDEPED'      FldNamXAr(Idx)                               CLE071
+     C                   MOVEL     '5049178'     MsgIDXAr(Idx)                                CLE071
+     C                   ENDIF                                                                CLE071
+      *                                                                                       CLE071
+     C                   ENDIF                                                                CLE071
+      *                                                                                       CLE071
+     C                   ENDIF                                                                CLE071
+      *                                                                                       CLE071
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -4515,6 +4556,20 @@
      C                   IF        PRtcd = *Blanks                                            CAS019
      C                   EVAL      CAS016 = 'Y'                                               CAS019
      C                   END                                                                  CAS019
+                                                                                              CLE071
+      ** Access switchable feature for Value dating of                                        CLE071
+      ** Rate changes to Fees                                                                 CLE071
+                                                                                              CLE071
+     C                   EVAL      CLE071 = 'N'                                               CLE071
+     C                   CALLB     'AOSARDR0'                                                 CLE071
+     C                   PARM      *BLANKS       PRTCD                                        CLE071
+     C                   PARM      '*VERIFY'     POPTN                                        CLE071
+     C                   PARM      'CLE071'      PSARD                                        CLE071
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE071
+                                                                                              CLE071
+     C                   IF        PRTCD = *Blanks                                            CLE071
+     C                   EVAL      CLE071 = 'Y'                                               CLE071
+     C                   ENDIF                                                                CLE071
                                                                                               CLE073
       ** Check if CLE083 - Calculation of loan based fees is installed                        CLE073
                                                                                               CLE073
@@ -4566,6 +4621,13 @@
      C                   KFLD                    @@FEFACL
      C                   KFLD                    @@FELOAN
      C                   KFLD                    @@FEFSEQ
+      *                                                                                       CLE071
+     C     FCADKY        KLIST                                                                CLE071
+     C                   KFLD                    FCBRCA                                       CLE071
+     C                   KFLD                    FCCNUM                                       CLE071
+     C                   KFLD                    FCFACL                                       CLE071
+     C                   KFLD                    FCLOAN                                       CLE071
+     C                   KFLD                    FCFSEQ                                       CLE071
                                                                                               CLE134
      C     KCLOANL4      KLIST                                                                CLE134
      C                   KFLD                    Kpd_RECI                                     CLE134

@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR943686           Date 23Sep16               *
       *                 MD040830           Date 14Sep16               *
       *                 CLE154             Date 02Aug12               *
       *                 MD025467           Date 08May14               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031: System generating wrong projected move-   *
       *             ment. Populate value of SCCY to convert amount    *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE139             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -199,32 +201,32 @@
      C                   MOVEL     FE_FELOAN     W#LOAN                                       CLE148
      C                   Z-ADD     FE_FEFSEQ     W#FSEQ
      C                   MOVEL     W#FEEID       T#TREF
- 
+
       ** If the fee is facility related
      C                   IF        FE_FEFACL <> 0
- 
+
       ** Transaction Type
      C**********         MOVEL     FE_FEFACL     T#TRTP                                       208221
      C                   MOVEL     W#FTYP        T#TRTP                                       208221
       ** Transaction sub-type
      C                   EVAL      T#TRST = *Blanks
- 
+
      C                   ENDIF
- 
+
       ** If the fee is loan related
      C**********         IF        FE_FELOAN <> 0                                             CLE148
      C                   IF        FE_FELOAN <> *BLANKS                                       CLE148
- 
+
       ** Transaction Type
      C                   EVAL      T#TRTP = FE_FELTYP
       ** Transaction sub-type
      C                   EVAL      T#TRST = FE_FESUTP
- 
+
      C                   ENDIF
- 
+
       ** Transaction fee code
      C                   MOVEL     FE_FEFCOD     T#FEEC
- 
+
       ** Transaction calculated fee
      C                   EVAL      T#CAFE = 'Y'
      C                   MOVE      FE_FEFCOD     @FECD
@@ -980,7 +982,7 @@
       *
      C                   EVAL      E#EVTP = 'IP'
      C                   EVAL      E#INTA = HIAMTS
- 
+
       ** Event fee code
      C                   EVAL      E#FEEC = T#FEEC
                                                                                               208221
@@ -1030,7 +1032,7 @@
      C                   ELSE
      C                   EVAL      E#ACIN = 'Y'
      C                   ENDIF
- 
+
       ** Event fee code
      C                   EVAL      E#FEEC = T#FEEC
       *
@@ -1277,7 +1279,7 @@
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           30            * ERROR MESSAGE
- 
+
      C                   PARM                    I#ACTN            1            * ACTION CODE
      C                   PARM                    I#EXTT            4
      C                   PARM                    I#PH              1

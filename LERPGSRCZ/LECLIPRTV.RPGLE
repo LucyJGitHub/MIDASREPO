@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 260408             Date 06Oct17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. 260408             Date 06Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD032052           Date 23Jan15               *
       *                 MD031225           Date 10Dec14               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  260408 - Non-syndicated loans with attached part sold are    *
       *           allowed to be deleted. Amended program sources such *
       *           that these loans will not bypass validation. This is*

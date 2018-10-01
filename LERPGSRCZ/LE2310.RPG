@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
@@ -162,6 +164,9 @@
      FLEMNFUL2IF  E           K        DISK                               126627
       ** Unauthorised Manual Utilisations                                 126627
       *                                                                   126627
+     FLEFERCL2IF  E           K        DISK                                                   CLE071
+      ** Unauthorised Fee Rate Change Amendment Details                                       CLE071
+      *                                                                                       CLE071
      FCLOAN   IF  E           K        DISK         KINFSR *PSSR
      F            CLOANCKF                          KRENAMECLOANCK
      F            CLOANCLF                          KRENAMECLOANCL
@@ -182,6 +187,7 @@
      F                                        SRRN  KSFILE LE2310S8       126627
      F                                        SRRN  KSFILE LE2310S9       126627
      F                                        SRRN  KSFILE LE2310S0       126627
+     F                                        SRRN  KSFILE LE2310SA                           CLE071
      F/COPY WNCPYSRC,LE2310F002
       *
       /EJECT
@@ -197,6 +203,8 @@
       *    26                "                        Facilities "    *   124047
       *    27          Invalid from facility                          *   124047
       *    28          Used for TESTN                                 *   124047
+      *    30          Invalid Entry for Fee Rate Change Amendments   *                       CLE071
+      *                Menu Item                                      *                       CLE071
       *    31          Unauthorised loans enquiry                     *
       *    32                "      amendments enquiry                *
       *    33                "      rollovers enquiry                 *
@@ -206,6 +214,7 @@
       *    37                "      fee settlements enquiry           *   126627
       *    38                "      facility amendments enquiry       *   126627
       *    39                "      manual utilisations enquiry       *   126627
+      *    40                "      Fee Rate Change Amendment Enquiry *                       CLE071
       *    42          Invalid customer/loan number                   *
       *    47          Invalid entry for Unauthorised Fee Settlements *   126627
       *                menu item                                      *   126627
@@ -213,6 +222,8 @@
       *                Amendments menu item                           *   126627
       *    49          Invalid entry for Unauthorised Manual          *   126627
       *                Utilisation menu item                          *   126627
+      *    50          31 to 40 is OFF - Unauthorised Transaction     *                       CLE071
+      *                Enquiry                                        *                       CLE071
       *    70          CLE005 is on                                   *   126627
       *    74          Roll-up key pressed                            *
       *    78          Subfile clear                                  *
@@ -277,9 +288,11 @@
      I                                        7   7 SENT7                 126627
      I                                        8   8 SENT8                 126627
      I                                        9   9 SENT9                 126627
+     I                                       10  10 SENT10                                    CLE071
      I************                            1   5 SENTS                 124047
      I************                            1   6 SENTS           124047126627
-     I                                        1   9 SENTS                 126627
+     I**********                              1   9 SENTS                              126627 CLE071
+     I                                        1  10 SENTS                                     CLE071
      I            DS
       ** Format amount returned by standard subroutine
      I                                        1  22 ZOUT22
@@ -345,6 +358,7 @@
       *  SRSUB7  -          "            Fee Settlement Enquiry Screen*   126627
       *  SRSUB8  -          "            Fclty Amendments Enq Screen  *   126627
       *  SRSUB9  -          "            Manual Utilisations Enq Scrn *   126627
+      *  SRSUB0  -          "            Fee Rate Change Amendment    *                       CLE071
       *  SRSU11  -  Reinitialise Loans subfile fields                 *
       *  SRSU21  -          "    Amendments subfile fields            *
       *  SRSU31  -          "    Rollovers subfile fields             *
@@ -353,6 +367,7 @@
       *  SRSU71  -          "    Fee Settlement subfile fields        *   126627
       *  SRSU81  -          "    Facility Amendments subfile fields   *   126627
       *  SRSU91  -          "    Manual Utilisations subfile fields   *   126627
+      *  SRSU01  -          "    Fee Rate Change Amndmnt subfile flds *                       CLE071
       *  SRSU12  -  Format Loans subfile fields                       *
       *  SRSU22  -     "   Amendments subfile fields                  *
       *  SRSU32  -     "   Rollovers subfile fields                   *
@@ -362,6 +377,7 @@
       *  SRSU72  -     "   Fee Settlements subfile fields             *   126627
       *  SRSU82  -     "   Facility Amendments subfile fields         *   126627
       *  SRSU92  -     "   Manual Utilisations subfile fields         *   126627
+      *  SRSU02  -     "   Fee Rate Change Amendment subfile fields   *                       CLE071
       *  SRLVAL  -  Validate and position the file pointer            *
       *  SRFVAL  -  Check if facility is valid                        *   124047
       *  SRCURR  -  Get currency's number of decimal places           *
@@ -399,6 +415,19 @@
       *
      C           WFMT      DOWEQ'F '
       *
+     C           *IN31     IFEQ *OFF                                                          CLE071
+     C           *IN32     ANDEQ*OFF                                                          CLE071
+     C           *IN33     ANDEQ*OFF                                                          CLE071
+     C           *IN34     ANDEQ*OFF                                                          CLE071
+     C           *IN35     ANDEQ*OFF                                                          CLE071
+     C           *IN36     ANDEQ*OFF                                                          CLE071
+     C           *IN37     ANDEQ*OFF                                                          CLE071
+     C           *IN38     ANDEQ*OFF                                                          CLE071
+     C           *IN39     ANDEQ*OFF                                                          CLE071
+     C           *IN40     ANDEQ*OFF                                                          CLE071
+     C                     MOVE *OFF      *IN50                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2310C001
      C                     WRITELE2310F0
      C                     WRITELE2310C6
@@ -460,6 +489,9 @@
      C           SENT9     WHNE ' '                                       126627
      C                     MOVE 'S9'      WFMT                            126627
      C                     EXSR SRSUB9                                    126627
+     C           SENT10    WHNE ' '                                                           CLE071
+     C                     MOVE 'S0'      WFMT                                                CLE071
+     C                     EXSR SRSUB0                                                        CLE071
      C/COPY WNCPYSRC,LE2310C002
      C                     ENDSL
      C                     ENDDO                                          125187
@@ -594,6 +626,24 @@
      C                     ELSE                                                               CLE028
      C                     MOVE 'N'       CLE028                                              CLE028
      C                     ENDIF                                                              CLE028
+      *                                                                                       CLE071
+      ** Determine if Fee rate Change Amendment is Installed - CLE071                         CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   PRTCD                                               CLE071
+     C                     PARM '*VERIFY' POPTN                                               CLE071
+     C                     PARM 'CLE071'  PSARD                                               CLE071
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE071
+      *                                                                                       CLE071
+     C           PRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     MOVE *ON       *IN72                                               CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE 'N'       CLE071                                              CLE071
+     C                     MOVE *OFF      *IN72                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
      C/COPY WNCPYSRC,LE2310C004
       *
       ** Open program Display file.
@@ -633,6 +683,7 @@
      C                     MOVE *OFF      *IN48                           126627
      C                     MOVE *OFF      *IN49                           126627
      C                     MOVE *OFF      *IN77
+     C                     MOVE *OFF      *IN30                                               CLE071
      C/COPY WNCPYSRC,LE2310C005
      C                     Z-ADD0         SRRN    40
      C                     Z-ADD0         WRCTR   40
@@ -670,7 +721,8 @@
      C***********1         DO   5         I                               124047
      C***********1         DO   6         I                         124047126627
      C/COPY WNCPYSRC,LE2310C008
-     C           1         DO   9         I                               126627
+     C********** 1         DO   9         I                                            126627 CLE071
+     C           1         DO   10        I                                                   CLE071
      C/COPY WNCPYSRC,LE2310C009
      C                     Z-ADDI         WI
      C                     SUBSTSENTS:WI  WCVAR                           CLE006
@@ -738,6 +790,7 @@
      C**********           LEAVE                                                              CSD027
      C**********           ENDIF                                                              CSD027
      C**********           ENDDO                                                              CSD027
+     C                     MOVE *ON       *IN50                                               CLE071
       *
      C                     ENDSR
       *
@@ -792,6 +845,8 @@
      C                     WRITELE2310C9                                  126627
      C           WFMT      WHEQ 'S9'                                      126627
      C                     WRITELE2310C0                                  126627
+     C           WFMT      WHEQ 'S0'                                                          CLE071
+     C                     WRITELE2310CA                                                      CLE071
      C/COPY WNCPYSRC,LE2310C011
      C                     ENDSL
      C                     MOVEA'00'      *IN,77
@@ -838,6 +893,9 @@
      C           WFMT      WHEQ 'S9'                                      126627
      C           FCLTL2    SETLLLEMNFUL2                                  126627
      C                     READ LEMNFUL2                 79               126627
+     C           WFMT      WHEQ 'S0'                                                          CLE071
+     C           WLFRM     SETLLLEFERCL2                                                      CLE071
+     C                     READ LEFERCL2                 79                                   CLE071
      C/COPY WNCPYSRC,LE2310C013
      C                     ENDSL
       *
@@ -897,6 +955,10 @@
      C                     EXSR SRSU92                                    126627
      C                     WRITELE2310S0                                  126627
      C                     READ LEMNFUL2                 79               126627
+     C           WFMT      WHEQ 'S0'                                                          CLE071
+     C                     EXSR SRSU02                                                        CLE071
+     C                     WRITELE2310SA                                                      CLE071
+     C                     READ LEFERCL2                 79                                   CLE071
      C/COPY WNCPYSRC,LE2310C014
      C                     ENDSL
      C                     ENDDO
@@ -1337,6 +1399,7 @@
      C           SRSUB3    BEGSR
       *
      C                     MOVE *ON       *IN33
+     C                     MOVE *ON       *IN50                                               CLE071
      C           WFMT      DOWEQ'S3'
       *
       ** Check if loan number is valid. If not, use *blanks to
@@ -2565,6 +2628,184 @@
      C                     ENDIF                                          126627
       *                                                                   126627
      C                     ENDSR                                          126627
+      *****************************************************************                       CLE071
+      /EJECT                                                                                  CLE071
+      *****************************************************************                       CLE071
+      * SRSUB0  -  Display Screen for Fee Rate Change Amendment       *                       CLE071
+      * Called by: SRPROC - Program processing                        *                       CLE071
+      * Calls    : SRLVAL - Validate and position the file pointer    *                       CLE071
+      *            SRMCLR - Clear message from the pgm msg queue      *                       CLE071
+      *            SRLOAD - Load a subfile page for display           *                       CLE071
+      *****************************************************************                       CLE071
+     C           SRSUB0    BEGSR                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE *ON       *IN40                                               CLE071
+     C           WFMT      DOWEQ'S0'                                                          CLE071
+      *                                                                                       CLE071
+      ** Check if loan number is valid. If not, use *blanks to                                CLE071
+      ** position the file record pointer then load a subfile page.                           CLE071
+      *                                                                                       CLE071
+     C                     EXSR SRLVAL                                                        CLE071
+     C                     EXSR SRLOAD                                                        CLE071
+      *                                                                                       CLE071
+      ** Display Unauthorised Fee Rate Change Amendment Screen.                               CLE071
+      *                                                                                       CLE071
+     C                     WRITELE2310F0                                                      CLE071
+     C                     WRITELE2310F2                                                      CLE071
+     C                     WRITELE2310C6                                                      CLE071
+     C                     EXSR SRMCLR                                                        CLE071
+     C                     EXFMTLE2310CA                                                      CLE071
+      *                                                                                       CLE071
+      ** If F3 is pressed, exit from program. If F12 is pressed,                              CLE071
+      ** go back to main processing.                                                          CLE071
+      *                                                                                       CLE071
+     C                     SELEC                                                              CLE071
+     C           *INKC     WHEQ *ON                                                           CLE071
+     C                     MOVE '  '      WFMT                                                CLE071
+     C                     LEAVE                                                              CLE071
+     C           *INKL     WHEQ *ON                                                           CLE071
+     C                     MOVE 'F '      WFMT                                                CLE071
+     C                     LEAVE                                                              CLE071
+      *                                                                                       CLE071
+      * If enter pressed, display next selection if any                                       CLE071
+     C                     OTHER                                                              CLE071
+     C           SLFRM     IFEQ *BLANKS                                                       CLE071
+     C           *IN74     ANDEQ*OFF                                                          CLE071
+     C                     MOVE 'F '      WFMT                                                CLE071
+     C                     LEAVE                                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDSL                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDDO                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   SENT10                                              CLE071
+     C                     MOVE *OFF      *IN40                                               CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
+      *****************************************************************                       CLE071
+      /EJECT                                                                                  CLE071
+      *****************************************************************                       CLE071
+      * SRSU01  -  Initialise subfile fields                          *                       CLE071
+      * Called by: SRSU02 - Format Fee Rate Change Amendment subfile  *                       CLE071
+      *                     fields                                    *                       CLE071
+      * Calls    : None                                               *                       CLE071
+      *****************************************************************                       CLE071
+     C           SRSU01    BEGSR                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   SCSNM                                               CLE071
+     C                     MOVE *BLANKS   SFACL                                               CLE071
+     C                     MOVE *BLANKS   SLOAN                                               CLE071
+     C                     MOVE *BLANKS   SFSEQ                                               CLE071
+     C                     MOVE *BLANKS   SFDAT                                               CLE071
+     C                     MOVE *BLANKS   SFCCY                                               CLE071
+     C                     MOVE *BLANKS   SFAMT1                                              CLE071
+     C                     MOVE *BLANKS   SFPIND                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
+      *****************************************************************                       CLE071
+      /EJECT                                                                                  CLE071
+      *****************************************************************                       CLE071
+      * SRSU02  -  Move fields to subfile fields                      *                       CLE071
+      * Called by: SRSUB0 - Display Screen for Fee Rate Change Amndmnt*                       CLE071
+      * Calls    : SRSU90 - Amendmente subfile fields                 *                       CLE071
+      *            SRCURR - Get currency details                      *                       CLE071
+      *****************************************************************                       CLE071
+     C           SRSU02    BEGSR                                                              CLE071
+      *                                                                                       CLE071
+      ** Initialise subfile fields.                                                           CLE071
+      *                                                                                       CLE071
+     C                     EXSR SRSU01                                                        CLE071
+      *                                                                                       CLE071
+      ** Access the Customer Details file                                                     CLE071
+      *                                                                                       CLE071
+     C                     MOVE FCCNUM    W#CNUM  6                                           CLE071
+     C                     CALL 'AOCUSTR0'                                                    CLE071
+     C                     PARM '       ' @RTCD   7        B:Return Code                      CLE071
+     C                     PARM '*KEY   ' @OPTN   7        I:Option                           CLE071
+     C                     PARM W#CNUM    @CNUM  10        O:Format                           CLE071
+     C                     PARM           @CNST   7                                           CLE071
+     C           SDCUST    PARM SDCUST    DSSDY                                               CLE071
+      *                                                                                       CLE071
+     C           @RTCD     IFNE *BLANKS                                                       CLE071
+     C           *LOCK     IN   LDA                                                           CLE071
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************                    CLE071
+     C                     Z-ADD21        DBASE            * DBERR 21                         CLE071
+     C                     MOVEL@OPTN     DBKEY            ***************                    CLE071
+     C                     OUT  LDA                                                           CLE071
+     C                     EXSR *PSSR                                                         CLE071
+      *                                                                                       CLE071
+     C                     ELSE                                                               CLE071
+      *                                                                                       CLE071
+     C                     MOVE '000000'  SFCUST  6                                           CLE071
+     C                     MOVE FCCNUM    SFCUST                                              CLE071
+     C                     MOVELBBCSSN    SCSNM     P                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Facility                                                                             CLE071
+     C           FCFACL    IFNE *ZEROS                                                        CLE071
+     C                     MOVE FCFACL    WFACL   5                                           CLE071
+     C                     MOVE '000/00'  SFACL                                               CLE071
+     C           3         SUBSTWFACL:1   WFACT   3                                           CLE071
+     C           2         SUBSTWFACL:4   WFCNO   2                                           CLE071
+     C                     MOVELWFACT     SFACL                                               CLE071
+     C                     MOVE WFCNO     SFACL                                               CLE071
+     C                     MOVEL*BLANKS   SLOAN                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Loan                                                                                 CLE071
+     C           FCLOAN    IFNE *BLANKS                                                       CLE071
+     C                     MOVELFCLOAN    SLOAN                                               CLE071
+     C                     MOVEL*BLANKS   SFACL                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Fee Sequence                                                                         CLE071
+     C                     MOVE FCFSEQ    SFSEQ                                               CLE071
+      *                                                                                       CLE071
+      ** Fee Rate Change Value Date                                                           CLE071
+     C                     MOVE FCRCVD    ZDAYNO                                              CLE071
+     C                     EXSR ZDATE2                                                        CLE071
+     C                     MOVE ZDATE     SFDAT                                               CLE071
+      *                                                                                       CLE071
+      ** Currency                                                                             CLE071
+     C                     MOVE FCFCCY    SFCCY                                               CLE071
+      *                                                                                       CLE071
+      ** Utilisation amount                                                                   CLE071
+      ** Get the currency's number of decimal places. Format                                  CLE071
+      ** the amount afterwards.                                                               CLE071
+      *                                                                                       CLE071
+     C                     MOVE FCFCCY    PCURR                                               CLE071
+     C                     EXSR SRCURR                                                        CLE071
+      *                                                                                       CLE071
+     C           FCPIND    IFEQ 'P'                                                           CLE071
+      *                                                                                       CLE071
+     C                     Z-ADD3         ZADEC                                               CLE071
+     C                     MOVE *BLANKS   ZFIELD                                              CLE071
+     C                     MOVE FCAMT1    ZFIELD                                              CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVE ZSPACE    SFAMT1                                              CLE071
+      *                                                                                       CLE071
+     C                     ELSE                                                               CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   ZFLD15                                              CLE071
+     C                     MOVE FCAMT1    ZFLD15                                              CLE071
+     C                     Z-ADDA6NBDP    ZDECS                                               CLE071
+     C                     EXSR ZFRPED                                                        CLE071
+     C                     MOVE ZOUT18    SFAMT1                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Fee Rate1                                                                            CLE071
+     C                     Z-ADD5         ZADEC                                               CLE071
+     C                     MOVE *BLANKS   ZFIELD                                              CLE071
+     C                     MOVE FCFRT1    ZFIELD                                              CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVE ZSPACE    SFRAT1                                              CLE071
+      *                                                                                       CLE071
+      ** Percentage Indicator                                                                 CLE071
+     C                     MOVE FCPIND    SFPIND                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
      C/COPY WNCPYSRC,LE2310C015
       /EJECT                                                              124047
       *****************************************************************   124047
@@ -2630,6 +2871,8 @@
      C                     MOVE STFRS     K#FCNO                          124047
      C                     ENDIF                                          124047
       *                                                                   124047
+     C                     MOVE *ON       *IN50                                               CLE071
+      *                                                                                       CLE071
      C                     ENDSR                                          124047
       /EJECT
       *****************************************************************

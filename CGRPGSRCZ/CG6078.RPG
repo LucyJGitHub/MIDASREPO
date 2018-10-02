@@ -1,3 +1,4 @@
+     H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
 /*EXI *  TEXT('Midas CG LE Fee Rate Change Advices')                  *
@@ -26,6 +27,12 @@
      F            FCLTYHHF                          KIGNORE
      F            FCLTYFNF                          KIGNORE
      F            FCLTYZZF                          KIGNORE
+      *
+     FCLOAN   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
       /TITLE FUNCTION OF INDICATORS
       *****************************************************************
       *                                                               *
@@ -193,6 +200,10 @@
      I                                        7   9 DSFC02
      I                                       10  11 DSFC03
      I                                       12  12 DSFC04
+      ** DS to store FCLTY key fields.
+     IDSLOAN      DS
+     I                                        1   6 DSFC05
+     I                                        7   7 DSFC06
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -304,6 +315,11 @@
      C                     KFLD           FCNO
      C                     KFLD           RCTP
       *
+     C           CLOANK    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+      *
+     C           FVFACL    IFNE *ZEROS
      C                     MOVELFVCNUM    CNUM
      C                     MOVELFVFACL    FACT
      C                     MOVE FVFACL    FCNO
@@ -321,6 +337,24 @@
      C                     MOVEL'MEM5004' W0MSGD
      C                     MOVEL'MIDAS  ' W0MSGF
      C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FVLOAN    IFNE *BLANKS
+     C                     MOVELFVLOAN    LNRF
+     C                     MOVEL'A'       RCDT
+     C           CLOANK    CHAINCLOAN                88
+     C*
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'CLOAN   'W0FILE
+     C                     MOVELLNRF      DSFC05
+     C                     MOVELRCDT      DSFC06
+     C                     MOVELDSLOAN    W0KEY
+     C                     Z-ADD14        W0ERNB
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
      C                     ENDIF
       *
      C           EXDETL    TAG
@@ -406,9 +440,9 @@
       *
      C           ##RTCD    IFNE 'CGD1270'
      C                     MOVEL'CG9010  'W0FILE
-     C                     MOVEL##RTCD    W0KEY            ***************
-     C                     Z-ADD13        W0ERNB           * DB ERROR 13 *
-     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL##RTCD    W0KEY
+     C                     Z-ADD13        W0ERNB
+     C                     MOVEL'CGD1286' W0MSGD
      C                     MOVEL'CGUSRMSG'W0MSGF
      C                     EXSR SRERR
      C                     ENDIF
@@ -531,20 +565,6 @@
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
       *
-      ** Currency Description
-     C                     MOVELFVFCCY    ##CCY
-     C                     EXSR SRDCDT
-     C                     MOVELA6CYNM    ##WRK  14
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'CCY_DESC'#@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVEL##WRK     R#DATA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
       ** Fee Calculation Type
      C                     ADD  1         R1
      C                     CLEARR#DATA
@@ -573,6 +593,7 @@
      C                     MOVELR#DEFN    ##R,R1
       *
       ** Fee Rate 2 Before Update
+     C           FVRT2B    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -586,8 +607,10 @@
      C                     MOVEL'5'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Rate 3 Before Update
+     C           FVRT3B    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -601,38 +624,10 @@
      C                     MOVEL'5'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Rate 4 Before Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'FEE RATE'#@RDE
-     C                     MOVE '4'       #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVRT4B    ##DATA
-     C                     MOVEL'Rate  '  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'5'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Rate 5 Before Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'FEE RATE'#@RDE
-     C                     MOVE '5'       #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVRT5B    ##DATA
-     C                     MOVEL'Rate  '  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'5'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 1 Before Update
+     C           FVAM1B    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -645,8 +640,10 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 2 Before Update
+     C           FVAM2B    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -659,8 +656,10 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 3 Before Update
+     C           FVAM3B    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -673,34 +672,7 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Amount 4 Before Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'FEE AMT4'#@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVAM4B    ##DATA
-     C                     MOVEL'Amount'  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'0'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Amount 5 Before Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'FEE AMT5'#@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVAM5B    ##DATA
-     C                     MOVEL'Amount'  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'0'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Percentage Indicator Before Update
      C                     ADD  1         R1
@@ -715,6 +687,7 @@
      C                     MOVELR#DEFN    ##R,R1
       *
       ** Fee Rate 1 After Update
+     C           FVRT1A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -728,8 +701,10 @@
      C                     MOVEL'5'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Rate 2 After Update
+     C           FVRT2A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -743,8 +718,10 @@
      C                     MOVEL'5'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Rate 3 After Update
+     C           FVRT3A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -758,38 +735,10 @@
      C                     MOVEL'5'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Rate 4 After Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'NEW'     #@RDE
-     C                     MOVE 'FEE R4'  #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVRT4A    ##DATA
-     C                     MOVEL'Rate  '  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'5'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Rate 5 After Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'NEW'     #@RDE
-     C                     MOVE 'FEE R5'  #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVRT5A    ##DATA
-     C                     MOVEL'Rate  '  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'5'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 1 After Update
+     C           FVAM1A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -803,8 +752,10 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 2 After Update
+     C           FVAM2A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -818,8 +769,10 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Amount 3 After Update
+     C           FVAM3A    IFNE *ZEROS
      C                     ADD  1         R1
      C                     CLEARR#DATA
      C                     CLEARR#DEFN
@@ -833,36 +786,7 @@
      C                     MOVEL'0'       ##DCPA
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Amount 4 After Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'NEW'     #@RDE
-     C                     MOVE 'FEE A4'  #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVAM4A    ##DATA
-     C                     MOVEL'Amount'  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'0'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Fee Amount 5 After Update
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'NEW'     #@RDE
-     C                     MOVE 'FEE A5'  #@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELFVAM5A    ##DATA
-     C                     MOVEL'Amount'  ##RDEC
-     C                     MOVEL'L'       ##RDET
-     C                     MOVEL'0'       ##DCPA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
+     C                     ENDIF
       *
       ** Fee Percentage Indicator After Update
      C                     ADD  1         R1
@@ -873,18 +797,6 @@
      C                     MOVE 'FEE PC'  #@RDE
      C           ##RDE     CAT  #@RDE:1   ##RDE
      C                     MOVELFVPINA    ##DATA
-     C                     MOVELR#DATA    ##D,R1
-     C                     MOVELR#DEFN    ##R,R1
-      *
-      ** Run date; production time
-     C                     ADD  1         R1
-     C                     CLEARR#DATA
-     C                     CLEARR#DEFN
-     C                     CLEAR#@RDE
-     C                     MOVEL'RUNDAT  '#@RDE
-     C           ##RDE     CAT  #@RDE:1   ##RDE
-     C                     MOVELBJRDNB    ##DATA
-     C                     MOVEL'Date  '  ##RDEC
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
       *
@@ -935,9 +847,17 @@
       *
      C                     CLEARP3PARM
      C                     CLEARP4PARM
+      *
+     C           FVFACL    IFNE *ZEROS
      C                     MOVELCNUM      P4CNUM
      C                     Z-ADDFACT      P4FACT
      C                     Z-ADDFCNO      P4FCNO
+     C                     ENDIF
+      *
+     C           FVLOAN    IFNE *BLANKS
+     C                     MOVELLNRF      P3LNRF
+     C                     ENDIF
+      *
      C                     CALL 'CG6001'
      C                     PARM *BLANKS   W0RTN   7
      C                     PARM           W0CMT   3

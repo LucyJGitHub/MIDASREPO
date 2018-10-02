@@ -44,7 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
@@ -167,6 +167,7 @@
      C     PFLNAME       CASEQ     'LEFEEAD'     GLOB_LEFEEAD
      C     PFLNAME       CASEQ     'LEFEED'      GLOB_LEFEED
      C     PFLNAME       CASEQ     'LEFERCPD'    GLOB_LEFERCPD                                CLE071
+     C     PFLNAME       CASEQ     'LEFERCQD'    GLOB_LEFERCQD                                CLE071
      C     PFLNAME       CASEQ     'LEPARTPD'    GLOB_LEPARTPD
      C     PFLNAME       CASEQ     'LETREFPD'    GLOB_LETREFPD                                CLE106
      C     PFLNAME       CASEQ     'LOAMSDK'     GLOB_LOAMSDK
@@ -363,6 +364,14 @@
       *****************************************************************                       CLE071
      C     GLOB_LEFERCPD BEGSR                                                                CLE071
       /COPY GPCPYSRCG,GPLEFERCPD                                                              CLE071
+     C                   ENDSR                                                                CLE071
+      *****************************************************************                       CLE071
+      /SPACE 5                                                                                CLE071
+      *****************************************************************                       CLE071
+      * Global Updates - Fee Rate Change Amendment Extension File                             CLE071
+      *****************************************************************                       CLE071
+     C     GLOB_LEFERCQD BEGSR                                                                CLE071
+      /COPY GPCPYSRCG,GPLEFERCQD                                                              CLE071
      C                   ENDSR                                                                CLE071
       *****************************************************************                       CLE071
       /SPACE 5                                                                                CLE071

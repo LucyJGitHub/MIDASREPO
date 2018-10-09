@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD038593           Date 09Jun16               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036475           Date 04Dec15               *
       *                 MD034776           Date 10Jul15               *
       *                 CLE164             Date 18Aug14               *
@@ -93,6 +94,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038593 - Added settlement validation for referred accounts.*
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036475 - System error in MR loan events. Put an additional *
@@ -1956,6 +1958,32 @@
 
       ** Validation Iteration
      C                   PARM      '1ST'         ##VALITER
+      *                                                                                     MD038593
+      ** Call account referred validation.                                                  MD038593
+      *                                                                                     MD038593
+     C                   IF        Idx = 0                                                  MD038593
+     C                   CALL      'ZASETINVL2'                                             MD038593
+     C                   PARM                    ReturnCode                                 MD038593
+     C                   PARM      'MAPY'        ##CALP                                     MD038593
+     C                   PARM      WrkLnCCY      ##PCCY                                     MD038593
+     C                   PARM      WrkLnCCY      ##RCCY                                     MD038593
+     C                   PARM      DDCUST        ##CSNM                                     MD038593
+     C                   PARM      V_MRBRCA      ##BRCA                                     MD038593
+     C                   PARM                    InPaySttmt                                 MD038593
+     C                   PARM                    InRecSttmt                                 MD038593
+     C                   PARM      DDACTN        ##ACTN                                     MD038593
+     C                   PARM                    ##PPAY                                     MD038593
+     C                   PARM                    ##PREC                                     MD038593
+     C                   PARM                    OKPayInsDS                                 MD038593
+     C                   PARM                    OKRecInsDS                                 MD038593
+     C                   PARM                    FldNameArr                                 MD038593
+     C                   PARM                    MsgIDArr                                   MD038593
+     C                   PARM                    Idx                                        MD038593
+     C                   PARM                    WFldNamArr                                 MD038593
+     C                   PARM                    WMsgIdArr                                  MD038593
+     C                   PARM                    WMsgDtaArr                                 MD038593
+     C                   PARM                    WIdx                                       MD038593
+     C                   ENDIF                                                              MD038593
                                                                                               CLE034
      C                   IF        DDSTAL = 'Y'                                               CLE034
      C                   EVAL      InPaySttmt = *Blanks                                       CLE034

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD052014           Date 05Oct18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD039203           Date 14Jun16               *
       *                 CDL094             Date 01Sep14               *
       *                 AR720772           Date 19Aug14               *
@@ -89,6 +90,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052014 - Sale Value Date not defaulting correctly for Swap *
+      *             Deals. Should be defaulted with the Core Value    *
+      *             Date entered (CDL099).                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  MD039203 - When creating an FX Deal, the value of Forward    *
@@ -774,6 +778,8 @@
       *                                                                                       CDL099
      C                   IF        CDL099 ='Y'                                                CDL099
       *                                                                                       CDL099
+     C                   MOVE      *BLANKS       SVSVDT            6                        MD052014
+      *                                                                                     MD052014
      C                   EXSR      RESETERRS                                                  CDL099
       *                                                                                       CDL099
       ** Call New Split Value Date Validation Module                                          CDL099
@@ -790,19 +796,25 @@
      C                   Parm                    WMsgIDXAr                                    CDL099
      C                   Parm                    WMsgDtXAr                                    CDL099
      C                   Parm                    OK#SVDT           1                          CDL099
-     C                   Parm                    SVSVDT            6                          CDL099
+     C**********         Parm                    SVSVDT            6                 CDL099 MD052014
+     C                   Parm                    SVSVDT                                     MD052014
       *                                                                                       CDL099
       ** Update Valid File Parameters if Sell Value Date is valid                             CDL099
      C                   IF        OK#SVDT <> 'N'                                             CDL099
       *                                                                                       CDL099
      C                   EVAL      DDSDAT = SVSVDT                                            CDL099
+      *                                                                                     MD052014
+     C                   MOVE      *BLANKS       @@DATE            6                        MD052014
+     C                   Z-ADD     *ZEROS        ValuDtDN          5 0                      MD052014
       *                                                                                       CDL099
       ** Convert to Midas Number                                                              CDL099
      C                   CALLB     'ZAVDATE'                                                  CDL099
      C                   PARM      *BLANK        RetCodeOut                                   CDL099
-     C                   PARM      DDSDAT        @@DATE            6                          CDL099
+     C**********         PARM      DDSDAT        @@DATE            6                 CDL099 MD052014
+     C                   PARM      DDSDAT        @@DATE                                     MD052014
      C                   PARM                    BJDFIN                                       CDL099
-     C                   PARM                    ValuDtDN          5 0                        CDL099
+     C**********         PARM                    ValuDtDN          5 0               CDL099 MD052014
+     C                   PARM                    ValuDtDN                                   MD052014
       *                                                                                       CDL099
       ** Convert to YYYYMMDD format                                                           CDL099
      C                   CALLB     'ZDATE9'                                                   CDL099

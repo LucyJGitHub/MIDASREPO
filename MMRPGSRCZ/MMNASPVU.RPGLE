@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 11Jun14               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -1476,6 +1478,30 @@
      C                   PARM      DDACTN        ##ACTN            1
       ** Validation Iteration
      C                   PARM      '1ST'         ##ValIter         3
+      *                                                                                     MD039547
+      ** Call account referred validation.                                                  MD039547
+      *                                                                                     MD039547
+     C                   CALL      'ZASETINVL2'                                             MD039547
+     C                   PARM                    ReturnCode                                 MD039547
+     C                   PARM                    NASP                                       MD039547
+     C                   PARM                    DDCCY                                      MD039547
+     C                   PARM                    DDCCY                                      MD039547
+     C                   PARM                    Customer                                   MD039547
+     C                   PARM                    DDBrCA                                     MD039547
+     C                   PARM                    InPaySttmt                                 MD039547
+     C                   PARM                    InRecSttmt                                 MD039547
+     C                   PARM                    DDACTN                                     MD039547
+     C                   PARM                    ##PPAY                                     MD039547
+     C                   PARM                    ##PREC                                     MD039547
+     C                   PARM                    OKPayInsDS                                 MD039547
+     C                   PARM                    OKRecInsDS                                 MD039547
+     C                   PARM                    FldNameArr                                 MD039547
+     C                   PARM                    MsgIDArr                                   MD039547
+     C                   PARM                    Idx                                        MD039547
+     C                   PARM                    WFldNamArr                                 MD039547
+     C                   PARM                    WMsgIdArr                                  MD039547
+     C                   PARM                    WMsgDtaArr                                 MD039547
+     C                   PARM                    WIdx                                       MD039547
  
      C     ValSetExit    TAG
  

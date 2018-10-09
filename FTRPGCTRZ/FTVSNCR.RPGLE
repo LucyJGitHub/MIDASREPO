@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037223           Date 20Jul17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037223           Date 20Jul17               *
       *                 MD020347           Date 08May13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR750736           Date 22Oct12               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
       *             in validation.                                    *
@@ -423,7 +425,8 @@
       * If a valid account has been entered,
       * store full account details for FT Transaction Status File
       * record update.
-     C                   If        OKSnco = 'Y'
+     C**********         If        OKSnco = 'Y'                                             MD039547
+     C                   If        OKSnco <> 'N'                                            MD039547
  
       * Set up @SNCDS data structure
      C                   If        @SNCT = 'N' or
@@ -558,7 +561,8 @@
      C                   End
  
       * Find if Retail
-     C                   If        OKSnco = 'Y'
+     C**********         If        OKSnco = 'Y'                                             MD039547
+     C                   If        OKSnco <> 'N'                                            MD039547
      C                   Eval      K#CCY = SPCCY
      C                   Eval      @CCY = SPCCY
  
@@ -648,7 +652,8 @@
      C                   End
      C                   End
  
-     C                   If        OKSnco = 'Y'
+     C**********         If        OKSnco = 'Y'                                             MD039547
+     C                   If        OKSnco <> 'N'                                            MD039547
       *                                                                                     AR750736
       ** Check for block debits on account                                                  AR750736
       *                                                                                     AR750736
@@ -688,7 +693,8 @@
  
      C                   End
       *
-     C                   If        OKSnco = 'Y'
+     C**********         If        OKSnco = 'Y'                                             MD039547
+     C                   If        OKSnco <> 'N'                                            MD039547
  
      C                   MOVE      RETB          WRETB                                        240689
      C                   Eval      K#CNUM = CNUM

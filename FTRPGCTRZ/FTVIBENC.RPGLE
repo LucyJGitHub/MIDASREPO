@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD047369           Date 30Aug17               *      
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *                 MD047369           Date 30Aug17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034709           Date 16Jun15               *
       *                 CSW215             Date 06Apr15               *
@@ -75,10 +76,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
       *  MD047369 - Funds transfter does not check block Dr flag on   *
-      *             beneficary customer account.                      *      
+      *             beneficary customer account.                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034709 - A serious Midas error has occurred is encountered *
       *             upon hitting the Complete button in IPAY          *
@@ -885,20 +887,20 @@
       ** having first formatted field removing blanks and IBAN prefix
       *
      C                   IF        CFT004 = 'Y'
- 
+
      C                   MOVEL     *BLANK        PIBAN                                      AR920574
      C                   IF        BCSL = '/'
      C     34            SUBST     DDBNC1:2      PIBAN
      C                   ELSE
      C                   MOVEL     DDBNC1        PIBAN
      C                   ENDIF
- 
+
      C                   CALL      'AOIBANR3'
      C                   PARM                    PRTCD
      C                   PARM                    PIBAN            47
      C                   PARM                    POWITH           47
      C     P@IBAN        PARM                    PONOBL           34
- 
+
      C     1             SUBST     P@IBAN:1      BCTY1             1
      C     1             SUBST     P@IBAN:2      BCTY2             1
      C     1             SUBST     P@IBAN:3      BDGT1             1
@@ -1012,7 +1014,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If more than one field is entered, validate as an address
@@ -1108,11 +1110,16 @@
       ** If a valid account has been entered store the account type and
       ** the date the account was opened.
       *
-     C                   IF        OKBNC1 = 'Y' and
-     C                             OKBNC2 = 'Y' and
-     C                             OKBNC3 = 'Y' and
-     C                             OKBNC4 = 'Y' and
-     C                             OKBNC5 = 'Y'
+     C**********         IF        OKBNC1 = 'Y' and                                         MD039547
+     C**********                   OKBNC2 = 'Y' and                                         MD039547
+     C**********                   OKBNC3 = 'Y' and                                         MD039547
+     C**********                   OKBNC4 = 'Y' and                                         MD039547
+     C**********                   OKBNC5 = 'Y'                                             MD039547
+     C                   IF        OKBNC1 <> 'N' and                                        MD039547
+     C                             OKBNC2 <> 'N' and                                        MD039547
+     C                             OKBNC3 <> 'N' and                                        MD039547
+     C                             OKBNC4 <> 'N' and                                        MD039547
+     C                             OKBNC5 <> 'N'                                            MD039547
       *
      C                   If        WBNCT = 'R' or
      C                             WBNCT = 'P' or

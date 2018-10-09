@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037223           Date 20Jul17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037223           Date 20Jul17               *
       *                 MD045920           Date 31May17               *
       *                 MD044074           Date 19Apr17               *
       *                 CFT142             Date 20Feb15               *
@@ -114,6 +115,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
       *             in validation.                                    *
@@ -746,7 +748,8 @@
      C                   Movel     'MMA0933'     MsgIdXAr(Idx)
      C                   End
  
-     C                   If        OKOrc1 = 'Y'
+     C**********         If        OKOrc1 = 'Y'                                             MD039547
+     C                   If        OKOrc1 <> 'N'                                            MD039547
  
      C                   Eval      @ORCT = *Blank
      C                   Eval      @ACST3 = *Blank
@@ -763,7 +766,8 @@
      C                   End
  
      C                   BITOFF    '01234567'    WRETB             1                          240689
-     C                   If        OKOrc1 = 'Y'
+     C**********         If        OKOrc1 = 'Y'                                             MD039547
+     C                   If        OKOrc1 <> 'N'                                            MD039547
  
      C                   If        %SUBST(#SORC1:1:1) = '/'                                   CFT032
                                                                                               CFT032
@@ -916,7 +920,8 @@
      C                             %Subst(ORDCST:36:10) <> *Blanks                           250804A
      C                   Exsr      VALRET                                                    250804A
       *                                                                                      250804A
-B4   C                   If        OKOrc1 = 'Y' and                                          250804A
+B4   C**********         If        OKOrc1 = 'Y' and                                  50804A MD039547
+     C                   If        OKOrc1 <> 'N' and                                        MD039547
      C                             @ORCT = *Blanks                                           250804A
      C                   Exsr      VALACC                                                    250804A
 E4   C                   End                                                                 250804A
@@ -999,7 +1004,8 @@ E4   C**********         End                                                    
       *                                                                                       240689
       ** Check Status of Account                                                              240689
       *                                                                                       240689
-     C     OKOrc1        IFEQ      'Y'                                                        240689
+     C*****OKOrc1        IFEQ      'Y'                                               240689 MD039547
+     C     OKOrc1        IFNE      'N'                                                      MD039547
       *                                                                                       240689
       ** Blocked Debit                                                                        240689
       *                                                                                       240689
@@ -1225,7 +1231,8 @@ E4   C**********         End                                                    
       * If 15 char have been entered and multi branched , or
       * 12 characters and single branch , must be a partial account.
  
-     C                   IF        OKOrc1 = 'Y' AND                                         AR863288
+     C**********         IF        OKOrc1 = 'Y' AND                                AR863288 MD039547
+     C                   IF        OKOrc1 <> 'N' and                                        MD039547
      C                             @ORCT = *BLANKS                                          AR863288
                                                                                             AR863288
      C                   If        @MBIN = 'Y'    and
@@ -1375,7 +1382,8 @@ E2   C                   EndIf                                                  
      C                   MOVEL     'N'           WINSWC            1                        BUG24975
      C* If nothing else must be an address
      C* Or a swift ID                                                                       BUG14771
-     C                   If        OKOrc1 = 'Y' and
+     C**********         If        OKOrc1 = 'Y' and                                         MD039547
+     C                   If        OKOrc1 <> 'N' and                                        MD039547
      C                             @ORCT = *Blanks
  
      C                   If        %SUBST(#SORC1:1:1) <> '/'                                  CFT032
@@ -1755,7 +1763,8 @@ E2   C                   EndIf                                                  
      C                   End
      C                   End
  
-     C                   If        OKOrc1 = 'Y'
+     C**********         If        OKOrc1 = 'Y'                                             MD039547
+     C                   If        OKOrc1 <> 'N'                                            MD039547
  
      C                   Eval      K#CNUM = CNUM
      C                   Eval      K#CCY= @CCY
@@ -2643,7 +2652,8 @@ E2   C                   EndIf                                                  
      C                   EndIf                                                                CSW207
                                                                                               CSW207
      C**********         If        PRtCd = *Blanks And                             BUG15065 BUG25228
-     C                   IF        OKORC1 = 'Y' AND                                         BUG25228
+     C**********         IF        OKORC1 = 'Y' AND                                BUG25228 MD039547
+     C                   IF        OKORC1 <> 'N' AND                                        MD039547
      C                             %SUBST(SORC1:1:1) <> '/' And                             BUG15065
      C                             SORC5 <> *Blank                                          BUG15065
      C                   If        %SUBST(SORC5:1:2) <> '1/' And                            BUG15065

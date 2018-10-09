@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD041649           Date 29Sep16               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD041649           Date 29Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
       *                 CDL094             Date 11Jun14               *
@@ -94,6 +95,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD041649 - Validation during authorisation should be executed*
       *  MD046248 - Finastra Rebranding                               *
@@ -1251,6 +1253,29 @@
       *                                                                                      BUG4486
      C                   ENDIF                                                                TCA091
       *                                                                                       TCA091
+      ** Call account referred validation.                                                  MD039547
+      *                                                                                     MD039547
+     C                   CALL      'ZASETINVL2'                                             MD039547
+     C                   PARM                    ReturnCode                                 MD039547
+     C                   PARM      'LEND'        ##CALP                                     MD039547
+     C                   PARM      LO_CCY        ##PCCY                                     MD039547
+     C                   PARM      LO_CCY        ##RCCY                                     MD039547
+     C                   PARM                    ##CSNM                                     MD039547
+     C                   PARM      LO_BRCA       ##BRCA                                     MD039547
+     C                   PARM                    S_PAY                                      MD039547
+     C                   PARM                    S_REC                                      MD039547
+     C                   PARM                    DDACTN                                     MD039547
+     C                   PARM                    ##PPAY                                     MD039547
+     C                   PARM                    ##PREC                                     MD039547
+     C                   PARM                    OKPayInsDS                                 MD039547
+     C                   PARM                    OKRecInsDS                                 MD039547
+     C                   PARM                    FldNameArr                                 MD039547
+     C                   PARM                    MsgIDArr                                   MD039547
+     C                   PARM                    Idx                                        MD039547
+     C                   PARM                    WFldNamArr                                 MD039547
+     C                   PARM                    WMsgIdArr                                  MD039547
+     C                   PARM                    WMsgDtaArr                                 MD039547
+     C                   PARM                    WIdx                                       MD039547
      C     ValSetExit    ENDSR
       /EJECT
       *****************************************************************

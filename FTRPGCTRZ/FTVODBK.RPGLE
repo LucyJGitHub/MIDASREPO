@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037223           Date 20Jul17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037223           Date 20Jul17               *
       *                 MD019914           Date 10Apr13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
       *             in validation.                                    *
@@ -366,7 +368,8 @@
      C                   End
  
      C                   BITOFF    '01234567'    WRETB             1                          240689
-     C                   If        OKOrbk = 'Y'
+     C**********         If        OKOrbk = 'Y'                                             MD039547
+     C                   If        OKOrbk <> 'N'                                            MD039547
  
      C                   Eval      @ORBT = *Blank
      C                   Eval      @ACST4 = *Blank
@@ -390,7 +393,8 @@
      C                   Eval      @ORBT = *Blanks
  
      C                   Else
-     C                   If        OKOrbk = 'Y'
+     C**********         If        OKOrbk = 'Y'                                             MD039547
+     C                   If        OKOrbk <> 'N'                                            MD039547
  
      C* If less than 3 char have been entered could be a NOSTRO
      C                   If        OR02R = *Blanks and
@@ -416,7 +420,8 @@
       * If a valid account has been entered,
       * store full account details for FT Transaction Status File
       * record update.
-     C                   If        OKOrbk = 'Y'
+     C**********         If        OKOrbk = 'Y'                                             MD039547
+     C                   If        OKOrbk <> 'N'                                            MD039547
  
      C                   If        @ORBT = 'N' or
      C                             @ORBT = 'R' or
@@ -496,7 +501,8 @@
       *                                                                                       240689
       ** Check Status of Account                                                              240689
       *                                                                                       240689
-     C     OKOrbk        IFEQ      'Y'                                                        240689
+     C*****OKOrbk        IFEQ      'Y'                                               240689 MD039547
+     C     OKOrbk        IFNE      'N'                                                      MD039547
       *                                                                                       240689
       ** Blocked Debit                                                                        210654
      C                   TESTB     '2'           WRETB                    48                  210654
@@ -621,7 +627,8 @@
      C                   Movel     'MMA0965'     MsgIdXAr(Idx)
      C                   End
  
-     C                   If        OKOrbk = 'Y'
+     C**********         If        OKOrbk = 'Y'                                             MD039547
+     C                   If        OKOrbk <> 'N'                                            MD039547
      C                   Eval      @ORBT = 'N'
  
       * Find if retail
@@ -637,19 +644,19 @@
      C                   Movel     AKEYF         DBKEY
      C                   Exsr      *PSSR
      C                   Else                                                                BUG4581
-      * Check for block debits on account                                                    BUG4581
+      **Check*for*block*debits*on*account******************************             BUG4581 MD039547
      C                   MOVE      RETB          WRETB                                        240689
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD039547
+     C**********         If        *in51 = *ON                                      BUG4581 MD039547
      C**********         Move      'N'           OKOrbk                               BUG4581 CSD089
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SORBK'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                        BUG4581 CSD089
-     C                   Move      'W'           OKOrbk                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORBK'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
-     C                   End                                                                 BUG4581
+     C**********         Move      'W'           OKOrbk                              CSD089 MD039547
+     C**********         Add       1             WIx                                 CSD089 MD039547
+     C**********         Movel     'SORBK'       WFldNmXAr(WIx)                      CSD089 MD039547
+     C**********         Movel     'FTM0014'     WMsgIdXAr(WIx)                      CSD089 MD039547
+     C**********         End                                                        BUG4581 MD039547
      C                   End
  
      C                   Eval      @ACST4 = ACST
@@ -701,20 +708,21 @@
      C                   End
      C                   End
  
-     C                   If        OKOrbk = 'Y'
+     C**********         If        OKOrbk = 'Y'                                             MD039547
+     C                   If        OKOrbk <> 'N'                                            MD039547
      C                   MOVE      RETB          WRETB                                        240689
-      * Check for block debits on account                                                    BUG4581
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+      **Check*for*block*debits*on*account******************************             BUG4581 MD039547
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD039547
+     C**********         If        *in51 = *ON                                      BUG4581 MD039547
      C**********         Move      'N'           OKOrbk                               BUG4581 CSD089
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SORBK'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                        BUG4581 CSD089
-     C                   Move      'W'           OKOrbk                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORBK'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
-     C                   End                                                                 BUG4581
+     C**********         Move      'W'           OKOrbk                              CSD089 MD039547
+     C**********         Add       1             WIx                                 CSD089 MD039547
+     C**********         Movel     'SORBK'       WFldNmXAr(WIx)                      CSD089 MD039547
+     C**********         Movel     'FTM0014'     WMsgIdXAr(WIx)                      CSD089 MD039547
+     C**********         End                                                        BUG4581 MD039547
  
      C                   If        @CCY <> SSMCY
       * Send error to screen
@@ -797,18 +805,18 @@
       *
      C                   If        OKOrbk = 'Y' and
      C                             OKOrbb = 'Y'
-      * Check for block debits on account                                                    BUG4581
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+      **Check*for*block*debits*on*account******************************             BUG4581 MD039547
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD039547
+     C**********         If        *in51 = *ON                                      BUG4581 MD039547
      C**********         Move      'N'           OKOrbk                               BUG4581 CSD089
      C**********         Add       1             Idx                                  BUG4581 CSD089
      C**********         Movel     'SORBK'       FldNamXAr(Idx)                       BUG4581 CSD089
      C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                        BUG4581 CSD089
-     C                   Move      'W'           OKOrbk                                       CSD089
-     C                   Add       1             WIx                                          CSD089
-     C                   Movel     'SORBK'       WFldNmXAr(WIx)                               CSD089
-     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                               CSD089
-     C                   End                                                                 BUG4581
+     C**********         Move      'W'           OKOrbk                              CSD089 MD039547
+     C**********         Add       1             WIx                                 CSD089 MD039547
+     C**********         Movel     'SORBK'       WFldNmXAr(WIx)                      CSD089 MD039547
+     C**********         Movel     'FTM0014'     WMsgIdXAr(WIx)                      CSD089 MD039547
+     C**********         End                                                        BUG4581 MD039547
      C                   Eval      @ORBT = 'P'
      C                   Eval      @ACST4 = ACST
      C                   MOVE      RETB          WRETB                                        240689

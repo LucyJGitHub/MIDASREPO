@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 261791             Date 19Aug14               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 261791             Date 19Aug14               *
       *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR851079           Date 22Oct12               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  261791 - Issue an error message to indicate that the entered *
       *           account is a closed account.                        *
@@ -851,7 +853,8 @@
       ** If a valid account has been entered store the account type and
       ** the date the account was opened.
       *
-     C                   IF        OKACBK = 'Y'
+     C**********         IF        OKACBK = 'Y'                                             MD039547
+     C                   IF        OKACBK <> 'N'                                            MD039547
      C                   IF        WACBT = 'N' or
      C                             WACBT = 'R' or
      C                             WACBT = 'P'

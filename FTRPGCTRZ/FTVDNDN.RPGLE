@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
       *                 MD021276           Date 31Jul13               *
       *                 CFT120             Date 28Sep12               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *
@@ -448,7 +450,8 @@
      C                   Movel     'MMA0947'     MsgIdXAr(Idx)
      C                   End
  
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
      C                   Eval      @DSTT = *Blank
      C                   Eval      @ACST1 = *Blank
      C                   Eval      @DSOPN = 0
@@ -474,7 +477,8 @@
  
       * No errors
      C                   BITOFF    '01234567'    WRETB             1                          240689
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
  
       * If more than 5 char have been entered cannot be a NOSTRO
      C                   If        D05R = *Blanks
@@ -501,7 +505,8 @@
       *                                                                                       240689
       ** Check Status of Account                                                              240689
       *                                                                                       240689
-     C     OKDst1        IFEQ      'Y'                                                        240689
+     C*****OKDst1        IFEQ      'Y'                                               240689 MD039547
+     C     OKDst1        IFNE      'N'                                                      MD039547
       *                                                                                     AR750736
       ** Blocked Debit                                                                      AR750736
       *                                                                                     AR750736
@@ -585,7 +590,8 @@
       *                                                                                       240689
      C                   ENDIF                                                                240689
  
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
      C                   Exsr      VDESEND
      C                   Endif
  
@@ -595,7 +601,8 @@
      C                   Eval      SDST3 = #SDST3
      C                   Eval      SDST4 = #SDST4
  
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
  
       * Set up @DSTDS
      C                   If        @DSTT = 'F' or
@@ -656,7 +663,8 @@
      C                   End
  
       * No Errors
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
  
       * Not a NOSTRO but maybe the name
      C                   If        *IN90 = *On
@@ -782,7 +790,8 @@
      C                   Endif
  
       * No Errors
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
      C                   Move      DRET          K#ACNO
      C     K#ACNO        CHAIN     ACNUMAF                            90
  
@@ -800,7 +809,8 @@
      C                   End
  
       * No Errors
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
      C     SSNCO         IFEQ      *BLANKS                                                    240689
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689
@@ -832,7 +842,8 @@
  
      C                   End
  
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
  
      C                   Eval      K#CNUM = CNUM
      C                   Eval      K#CCY= @CCY
@@ -1018,7 +1029,8 @@ c    C                   Movel     'MMA0951'     MsgIdXAr(Idx)
      C                   Movel     'MMA0953'     MsgIdXAr(Idx)
      C                   End
       *
-     C                   If        OKDst1 = 'Y'
+     C**********         If        OKDst1 = 'Y'                                             MD039547
+     C                   If        OKDst1 <> 'N'                                            MD039547
      C     SSNCO         IFEQ      *BLANKS                                                    240689
      C                   MOVE      RETB          WRETB                                        240689
      C                   ENDIF                                                                240689

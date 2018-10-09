@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD038593  *CREATE  Date 09Jun16               *
+      *  Last Amend No. MD041649           Date 29Sep16               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD038593  *CREATE  Date 09Jun16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041649 - Validation during authorisation should be executed*
+      *  MD039547 - Validate inactive account and a few adjustment on *
+      *             refer account validation.                         *
       *  MD038593 - Validate settlement account refer debit/credit    *
       *             flag.                                             *
       *                                                               *
@@ -161,6 +166,8 @@
       ** Receipt Instructions
 
      C                   IF        ##ACTN <> 'R'
+     C                             OR ##ACTN = 'R' AND ##CALP = 'LEND'                      MD039547
+     C                             AND ##PREC <> 'Y'                                        MD039547
      C                             OR ##ACTN = 'R' AND ##CALP = 'MAPY'
      C                             AND ##PREC <> 'Y'
      C                   IF        ##PREC <> 'Y'
@@ -177,6 +184,11 @@
      C                             AND ##PPAY <> 'Y'
      C                             OR ##ACTN = 'X' AND ##CALP = 'MAPY'
      C                             AND ##PPAY = ' ' AND ##PREC = 'Y'
+     C                             OR ##ACTN = 'R' AND ##CALP = 'LEND'                      MD039547
+     C                             AND ##PREC <> 'Y'                                        MD039547
+     C                             OR ##ACTN = 'X' AND ##PPAY <> 'Y'                        MD041649
+     C                             AND (##CALP = 'LEND' OR ##CALP = 'DEAM'                  MD041649
+     C                               OR ##CALP = 'FXDL' OR ##CALP = 'NASP')                 MD041649
      C                   IF        ##PPAY <> 'Y'
      C                   EXSR      PAYMNT
      C                   ENDIF
@@ -229,6 +241,7 @@
      C                   EVAL      @CYCD = ##RCCY
      C                   EVAL      @ACSN = A#ACSQ
      C                   EVAL      @ACCD = A#ACOD
+     C                   EVAL      @BRCA = DDROBR                                           MD039547
      C                   EXSR      ACACCT
      C                   TESTB     '0'           RETB                     91
      C                   ENDIF
@@ -241,6 +254,7 @@
      C                   EVAL      @BRCA = *BLANKS
      C                   EXSR      ACACCT
      C                   TESTB     '0'           RETB                     91
+     C                   TESTB     '4'           RETB                     93                MD039547
      C                   ENDIF
 
      C                   IF        *IN91 = '1'
@@ -249,6 +263,16 @@
      C                   EVAL      WMsgIDArr(WIdx) = 'ESM1960'
      C                   EVAL      DDRonxOK = 'W'
      C                   ENDIF
+      *                                                                                     MD039547
+      ** Inactive                                                                           MD039547
+      *                                                                                     MD039547
+     C     *IN93         IFEQ      '1'                                                      MD039547
+     C                   ADD       1             WIdx                                       MD039547
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD039547
+     C                   EVAL      WMsgIDArr(WIdx) = '5017861'                              MD039547
+     C                   EVAL      DDPonxOK = 'W'                                           MD039547
+     C                   ENDIF                                                              MD039547
+      *                                                                                     MD039547
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -294,6 +318,7 @@
      C                   EVAL      @CYCD = ##PCCY
      C                   EVAL      @ACSN = A#ACSQ
      C                   EVAL      @ACCD = A#ACOD
+     C                   EVAL      @BRCA = DDPOBR                                           MD039547
      C                   EXSR      ACACCT
      C                   TESTB     '1'           RETB                     92
      C                   ENDIF
@@ -306,6 +331,7 @@
      C                   EVAL      @BRCA = *BLANKS
      C                   EXSR      ACACCT
      C                   TESTB     '1'           RETB                     92
+     C                   TESTB     '4'           RETB                     94                MD039547
      C                   ENDIF
 
      C                   IF        *IN92 = '1'
@@ -314,6 +340,16 @@
      C                   EVAL      WMsgIDArr(WIdx) = 'ESM1961'
      C                   EVAL      DDPonxOK = 'W'
      C                   ENDIF
+      *                                                                                     MD039547
+      ** Inactive                                                                           MD039547
+      *                                                                                     MD039547
+     C     *IN94         IFEQ      '1'                                                      MD039547
+     C                   ADD       1             WIdx                                       MD039547
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                             MD039547
+     C                   EVAL      WMsgIDArr(WIdx) = '5017861'                              MD039547
+     C                   EVAL      DDPonxOK = 'W'                                           MD039547
+     C                   ENDIF                                                              MD039547
+      *                                                                                     MD039547
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -372,6 +408,7 @@
      C     SRINIT        BEGSR
      C                   EVAL      *IN91 = '0'
      C                   EVAL      *IN92 = '0'
+     C                   SETOFF                                       9394                  MD039547
 
       ** Get Module details
 

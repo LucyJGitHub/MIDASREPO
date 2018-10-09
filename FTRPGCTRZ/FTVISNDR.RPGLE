@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 261791             Date 19Aug14               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 261791             Date 19Aug14               *
       *                 262272             Date 20Dec12               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  261791 - Issue an error message to indicate that the entered *
       *           account is a closed account.                        *
@@ -877,16 +879,16 @@
       ** Can be a shortname
      C                   EXSR      SRGA100
      C                   Else
-      * Check for block debits on account                                                    BUG4581
-     C                   TESTB     '2'           RETB                     51                 BUG4581
-     C                   If        *in51 = *ON                                               BUG4581
+      **Check*for*block*debits*on*account******************************             BUG4581 MD039547
+     C**********         TESTB     '2'           RETB                     51        BUG4581 MD039547
+     C**********         If        *in51 = *ON                                      BUG4581 MD039547
      C/COPY WNCPYSRC,FTH00537
-     C                   Move      'N'           OKSND1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDSND1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKSND1                            BUG4581  MD039547
+     C**********         Add       1             Idx                               BUG4581  MD039547
+     C**********         Movel     'DDSND1'      FldNamXAr(Idx)                    BUG4581  MD039547
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581  MD039547
      C/COPY WNCPYSRC,FTH00538
-     C                   End                                                                 BUG4581
+     C**********         End                                                        BUG4581 MD039547
       *
      C                   If        BMRANR <> 'Y'
       *
@@ -1170,7 +1172,8 @@
       ** If a valid Account has been entered store the account type and
       ** the date the account was opened
       *
-     C                   IF        OKSND1 ='Y'
+     C**********         IF        OKSND1 ='Y'                                              MD039547
+     C                   IF        OKSND1 <> 'N'                                            MD039547
       *
      C                   IF        WSNTP = 'F' or
      C                             WSNTP = 'R' or
@@ -1212,16 +1215,16 @@
       *                                                                                       240689
      C                   MOVE      RETB          WRETB                                        240689
       *                                                                                       240689
-      ** Blocked Debit                                                                        240689
-     C                   TESTB     '2'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+      ***Blocked*Debit*************************************************              240689 MD039547
+     C**********         TESTB     '2'           WRETB                    48         240689 MD039547
+     C******IN48         IFEQ      '1'                                               240689 MD039547
      C/COPY WNCPYSRC,FTH00543
-     C                   MOVE      'N'           OKSnd1                                       240689
-     C                   ADD       1             Idx                                          240689
-     C                   MOVEL     'DDSND1'      FldNamXAr(Idx)                               240689
-     C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                                240689
+     C**********         MOVE      'N'           OKSnd1                              240689 MD039547
+     C**********         ADD       1             Idx                                 240689 MD039547
+     C**********         MOVEL     'DDSND1'      FldNamXAr(Idx)                      240689 MD039547
+     C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                       240689 MD039547
      C/COPY WNCPYSRC,FTH00544
-     C                   ENDIF                                                                240689
+     C**********         ENDIF                                                       240689 MD039547
       *                                                                                       240689
       ** Bankrupt/Liquidated                                                                  240689
      C                   TESTB     '6'           WRETB                    48                  240689

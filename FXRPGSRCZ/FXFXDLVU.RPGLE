@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047971           Date 16Oct17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -114,6 +115,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
       *             that side is already netted.                      *     
@@ -1486,6 +1488,30 @@
      C                   PARM      DDACTN        ##ACTN            1
       ** Validation Iteration
      C                   PARM      '1ST'         ##ValIter         3
+      *                                                                                     MD039547
+      ** Call account referred validation.                                                  MD039547
+      *                                                                                     MD039547
+     C                   CALL      'ZASETINVL2'                                             MD039547
+     C                   PARM                    ReturnCode                                 MD039547
+     C                   PARM                    FXDL                                       MD039547
+     C                   PARM                    DDSCCY                                     MD039547
+     C                   PARM                    DDBCCY                                     MD039547
+     C                   PARM                    DDCUST                                     MD039547
+     C                   PARM                    DDBRSN                                     MD039547
+     C                   PARM                    InPaySttmt                                 MD039547
+     C                   PARM                    InRecSttmt                                 MD039547
+     C                   PARM                    DDACTN                                     MD039547
+     C                   PARM                    ##PPAY                                     MD039547
+     C                   PARM                    ##PREC                                     MD039547
+     C                   PARM                    OKPayInsDS                                 MD039547
+     C                   PARM                    OKRecInsDS                                 MD039547
+     C                   PARM                    FldNameArr                                 MD039547
+     C                   PARM                    MsgIDArr                                   MD039547
+     C                   PARM                    Idx                                        MD039547
+     C                   PARM                    WFldNamArr                                 MD039547
+     C                   PARM                    WMsgIdArr                                  MD039547
+     C                   PARM                    WMsgDtaArr                                 MD039547
+     C                   PARM                    WIdx                                       MD039547
 
      C     ValSetExit    TAG
 

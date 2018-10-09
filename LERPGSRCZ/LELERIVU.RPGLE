@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD041649           Date 06Oct16               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD041649           Date 06Oct16               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR702532           Date 13Jan15               *
       *                 MD028338           Date 25Nov14               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  MD041649 - Validation during authorisation should be executed*
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -1682,6 +1684,30 @@
 
      C                   Eval      DDPREC = ##PREC
      C                   Eval      DDPPAY = ##PPAY
+      *                                                                                     MD039547
+      ** Call account referred validation.                                                  MD039547
+      *                                                                                     MD039547
+     C                   CALL      'ZASETINVL2'                                             MD039547
+     C                   PARM                    ReturnCode                                 MD039547
+     C                   PARM      'LERI'        ##CALP                                     MD039547
+     C                   PARM                    ##PCCY                                     MD039547
+     C                   PARM                    ##RCCY                                     MD039547
+     C                   PARM      DDCUST        ##CSNM                                     MD039547
+     C                   PARM                    ##BRCA                                     MD039547
+     C                   PARM                    ##PAYS                                     MD039547
+     C                   PARM                    ##RECS                                     MD039547
+     C                   PARM      DDACTN        ##ACTN                                     MD039547
+     C                   PARM                    ##PPAY                                     MD039547
+     C                   PARM                    ##PREC                                     MD039547
+     C                   PARM                    OKPayInsDS                                 MD039547
+     C                   PARM                    OKRecInsDS                                 MD039547
+     C                   PARM                    FldNameArr                                 MD039547
+     C                   PARM                    MsgIDArr                                   MD039547
+     C                   PARM                    Idx                                        MD039547
+     C                   PARM                    WFldNamArr                                 MD039547
+     C                   PARM                    WMsgIdArr                                  MD039547
+     C                   PARM                    WMsgDtaArr                                 MD039547
+     C                   PARM                    WIdx                                       MD039547
 
 
      C     ValSetExit    TAG

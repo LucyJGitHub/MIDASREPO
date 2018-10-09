@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD049007           Date 15Dec17               *
       *                 MD032213           Date 06Aug15               *
       *                 CLE154             Date 02Aug12               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039547 - Referred account is not properly validated.       *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD049007 - Repayment schedules cannot be completed when      *
@@ -1328,6 +1330,30 @@
      C                   MOVE      FLRSCY        V_RPSCCY                                     CLE031
      C                   MOVE      FLPSCY        V_RPPSCY                                     CLE031
      C                   ENDIF                                                                CLE031
+      *                                                                                     MD039547
+      ** Call account referred validation.                                                  MD039547
+      *                                                                                     MD039547
+     C                   CALL      'ZASETINVL2'                                             MD039547
+     C                   PARM                    ReturnCode                                 MD039547
+     C                   PARM      'LEND'        ##CALP                                     MD039547
+     C                   PARM      WPCurr        ##PCCY                                     MD039547
+     C                   PARM      WRCurr        ##RCCY                                     MD039547
+     C                   PARM      DDCUST        ##CSNM                                     MD039547
+     C                   PARM                    ##BRCA                                     MD039547
+     C                   PARM                    InPaySttmt                                 MD039547
+     C                   PARM                    InRecSttmt                                 MD039547
+     C                   PARM      DDACTN        ##ACTN                                     MD039547
+     C                   PARM                    ##PPAY                                     MD039547
+     C                   PARM                    ##PREC                                     MD039547
+     C                   PARM                    OKPayInsDS                                 MD039547
+     C                   PARM                    OKRecInsDS                                 MD039547
+     C                   PARM                    FldNameArr                                 MD039547
+     C                   PARM                    MsgIDArr                                   MD039547
+     C                   PARM                    Idx                                        MD039547
+     C                   PARM                    WFldNamArr                                 MD039547
+     C                   PARM                    WMsgIdArr                                  MD039547
+     C                   PARM                    WMsgDtaArr                                 MD039547
+     C                   PARM                    WIdx                                       MD039547
 
       ** Perform the additional validations
      C                   CALLB     'LERPSC2VL'

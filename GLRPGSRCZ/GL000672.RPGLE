@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD051779           Date 01Oct18               *
-      *  Prev Amend No. MD045190           Date 07Apr17               *
+      *  Last Amend No. MD052097           Date 08Oct18               *
+      *  Prev Amend No. MD051779           Date 01Oct18               *
+      *                 MD045190           Date 07Apr17               *
       *                 MD045106           Date 03Apr17               *
       *                 CGL185  *CREATE    Date 13Mar17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052097 - Account balance not updated                       *
       *  MD051779 - Missing GLC000672 on delivery                     *
       *  MD045190 - Other Closed FATCA Transaction records besides    *
       *             Closed Retail Accounts are deleted after FATCA    *
@@ -127,6 +129,7 @@
      D ACTY            S              4A
      D JATP            S              1A
      D CUST1           S              6A
+     D WYear           S              4A                                                    MD052097
 
       ** Constants
      D Up              C                   'ABCDEFGHIJKLMNOPQRS-
@@ -170,13 +173,16 @@
 
      C                   MOVE      CNUM          CUST1
      C                   EVAL      JANO = *Blanks
-     C                   EVAL      ACHL = *Blanks
-     C                   EVAL      ACTY = *Blanks
+     C**********         EVAL      ACHL = *Blanks                                           MD052097
+     C**********         EVAL      ACTY = *Blanks                                           MD052097
+     C                   EVAL      ACHL = CUST1                                             MD052097
+     C                   EVAL      ACTY = 'CUST'                                            MD052097
      C                   EVAL      JATP = *Blanks
 
      C     WACCT3        CHAIN     GLCSBAL2
 
-     C                   EVAL      CBYEAR = WSysYear
+     C**********         EVAL      CBYEAR = WSysYear                                        MD052097
+     C                   EVAL      CBYEAR = WYear                                           MD052097
      C                   MOVEL     CNUM          CBCUST
      C                   EVAL      CBCURR = CCY
      C                   EVAL      CBBRCH = BRCA
@@ -231,7 +237,8 @@
 
      C     WACCT3        CHAIN     GLCSBAL2
 
-     C                   EVAL      CBYEAR = WSysYear
+     C**********         EVAL      CBYEAR = WSysYear                                        MD052097
+     C                   EVAL      CBYEAR = WYear                                           MD052097
      C                   MOVEL     CNUM          CBCUST
      C                   EVAL      CBCURR = CCY
      C                   EVAL      CBBRCH = BRCA
@@ -298,12 +305,12 @@
       ** Database error
 
      C     Retcd         IFNE      *BLANKS
-     C     *LOCK         IN        LDA
+     C******LOCK         IN        LDA                                                      MD052097
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     Option        DBKEY
      C                   EXSR      *PSSR
-     C                   OUT       LDA
+     C**********         OUT       LDA                                                      MD052097
      C                   ENDIF
 
      C                   EVAL      WRUND  =  BJRDNB
@@ -332,12 +339,12 @@
      C                   PARM                    PVL10
 
      C                   IF        PRtcd <> *Blanks
-     C     *LOCK         IN        LDA
+     C******LOCK         IN        LDA                                                      MD052097
      C                   EVAL      DBFILE = 'SDSVALPD'
      C                   EVAL      DBKEY = POP01
      C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
-     C                   OUT       LDA
+     C**********         OUT       LDA                                                      MD052097
      C                   ENDIF
 
       ** Get the Day Number DD
@@ -357,6 +364,7 @@
      C**********         EVAL      WSysYearN = WSysYearN - 1                                MD045106
      C                   EVAL      WSysYearN = WSysYearN + 1                                MD045106
      C                   MOVE      WSysYearN     WSysYearC
+     C                   EVAL      WYear = WSysYearC                                        MD052097
      C                   EVAL      WDateFmt = WSysYearC + WMthIx + WDayNo
      C                   EVAL      PDateIN = %DEC(WDateFmt:8:0)
 
@@ -418,11 +426,11 @@
      C     *PSSR         BEGSR
 
      C                   EVAL      Prtcd = '*Error'
-     C     *LOCK         IN        LDA
+     C******LOCK         IN        LDA                                                      MD052097
      C                   EVAL      DBKEY = '*FIRST'
      C                   EVAL      DBFILE = 'GLCSBAPD'
      C                   EVAL      DBASE = 3
-     C                   OUT       LDA
+     C**********         OUT       LDA                                                      MD052097
 
      C                   DUMP
 

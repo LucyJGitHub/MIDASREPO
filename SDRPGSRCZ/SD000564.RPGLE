@@ -11,17 +11,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. CGL157  *CREATE    Date 17Aug17               *
+      *  Last Amend No. MD052038           Date 05Oct18               *
+      *  Prev Amend No. CGL157  *CREATE    Date 17Aug17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052038 - Serious midas error upon input of CUSD MQ/soap    *
       *  CGL157 - CRS Reporting                                       *
       *                                                               *
       *****************************************************************
 
-     FSDCRSHL0  IF   E           K DISK    INFSR(*PSSR)
+     F***SDCRSHL0  IF   E           K DISK    INFSR(*PSSR)                                  MD052038
 
-     FSDCRSDL1  UF A E           K DISK    INFSR(*PSSR)
+     F***SDCRSDL1  UF A E           K DISK    INFSR(*PSSR)                                  MD052038
 
       ** Midas SD Customer Authority Holder
      FSDCUAHL1  IF   E           K DISK

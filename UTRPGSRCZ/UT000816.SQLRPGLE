@@ -2,7 +2,7 @@
      H COPYRIGHT('(c)Finastra International Limited 2018')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas Data correction for Nostro')
+/*EXI *  TEXT('Midas Data correction for Nostro')                     *
       *****************************************************************
       *                                                               *
       *  Midas - Utility                                              *

@@ -59,6 +59,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034521A - Error handling of Blocked account is not the     *
+      *              same across the modules                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR1083047 - Response with '&' causes exception error in      *

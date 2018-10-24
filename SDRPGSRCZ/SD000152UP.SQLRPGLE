@@ -15,13 +15,16 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD042142           Date 08May18               *
-      *  Prev Amend No. MD038440A          Date 08May18               *
+      *  Last Amend No. MD052129           Date 19Oct18               *
+      *  Prev Amend No. MD042142           Date 08May18               *
+      *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052129 - Settlement not updated. Extend fix MD038440A to   *
+      *             the update other fields.                          *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
       *  MD038440A - Incorrect side is being updated for dead trans.  *
@@ -137,7 +140,8 @@
      C+ select LNRF, LTYP, SUTP from CLOANCL
      C+ where CCY = :YyCcy and
      C********PONS = :XxNost and                                                           MD038440A
-     C+       RONS = :XxNost and                                                           MD038440A
+     C********RONS = :XxNost and                                                 MD038440A  MD052129
+     C+       PONS = :XxNost and                                                            MD052129
      C+       RECI = 'D' and
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C+ order by
@@ -193,7 +197,8 @@
      C+ update CLOANCL
      C+ set   PSTM = 00
      C********PONS = '  '                                                                  MD038440A
-     C+      ,RONS = '  '                                                                  MD038440A
+     C********RONS = '  '                                                         MD038440A MD052129
+     C+      ,PONS = '  '                                                                   MD052129
      C+      ,BENN = ''                                                                     MD042142
      C+      ,POBN = ''                                                                     MD042142
      C+      ,POCN = ''                                                                     MD042142
@@ -201,7 +206,8 @@
      C+      ,FACO = ''                                                                     MD042142
      C+ where CCY = :YyCcy and
      C********PONS = :XxNost and                                                           MD038440A
-     C+       RONS = :XxNost and                                                           MD038440A
+     C********RONS = :XxNost and                                                  MD038440A MD052129
+     C+       PONS = :XxNost and                                                            MD052129
      C+       RECI = 'D' and
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C/end-exec
@@ -215,7 +221,8 @@
      C+ select LNRF, LTYP, SUTP, VDAT from CLOANCL
      C+ where CCY = :YyCcy and
      C********RONS = :XxNost and                                                           MD038440A
-     C+       PONS = :XxNost and                                                           MD038440A
+     C********PONS = :XxNost and                                                  MD038440A MD052129
+     C+       RONS = :XxNost and                                                            MD052129
      C+       RECI = 'D' and
      C+       PTYP in (66, 67, 69, 72)
      C+ order by
@@ -269,15 +276,17 @@
 
      C/exec SQL
      C+ update CLOANCL
-     C+ set   RSTM = 00
+     C+ set   RSTM = 00                                                                     MD052129
      C********RONS = '  '                                                                  MD038440A
-     C+      ,PONS = '  '                                                                  MD038440A
-     C+      ,ROBN = ''                                                                     MD042142
-     C+      ,ROCN = ''                                                                     MD042142
+     C********PONS = '  '                                                         MD038440A MD052129
+     C+      ,RONS = '  '                                                                   MD052129
+     C+      ,ROBN = ''                                                            MD042142 MD052129
+     C+      ,ROCN = ''                                                            MD042142 MD052129
      C+      ,MDST = 00                                                                     MD042142
      C+ where CCY = :YyCcy and
      C********RONS = :XxNost and                                                           MD038440A
-     C+       PONS = :XxNost and                                                           MD038440A
+     C********PONS = :XxNost and                                                  MD038440A MD052129
+     C+       RONS = :XxNost and                                                            MD052129
      C+       RECI = 'D' and
      C+       PTYP in (66, 67, 69, 72)
      C/end-exec
@@ -338,17 +347,25 @@
 
      C/exec SQL                                                                             MD042142
      C+ update MMDELDPP                                                                     MD042142
-     C+ set HKPSTM = 00                                                                     MD042142
+     C**set HKPSTM = 00                                                            MD042142 MD052129
+     C+ set HKRSTM = 00                                                                     MD052129
      C*******HKPONS = ''                                                          MD042142 MD038440A
      C+     ,HKRONS = ''                                                                   MD038440A
-     C+     ,HKBENN = ''                                                                    MD042142
-     C+     ,HKPOBN = ''                                                                    MD042142
-     C+     ,HKPOCN = ''                                                                    MD042142
-     C+     ,HKDOPM = ''                                                                    MD042142
-     C+     ,HKMOPM = 00                                                                    MD042142
-     C+     ,HKDOPI = ''                                                                    MD042142
-     C+     ,HKMOPI = ''                                                                    MD042142
-     C+     ,HKPOBR = ''                                                                    MD042142
+     C+     ,HKBENN = ''                                                           MD042142 MD052129
+     C*******HKPOBN = ''                                                           MD042142 MD052129
+     C*******HKPOCN = ''                                                           MD042142 MD052129
+     C*******HKDOPM = ''                                                           MD042142 MD052129
+     C*******HKMOPM = 00                                                           MD042142 MD052129
+     C*******HKDOPI = ''                                                           MD042142 MD052129
+     C*******HKMOPI = ''                                                           MD042142 MD052129
+     C*******HKPOBR = ''                                                           MD042142 MD052129
+     C+     ,HKROBN = ''                                                                    MD052129
+     C+     ,HKROCN = ''                                                                    MD052129
+     C+     ,HKDORM = ''                                                                    MD052129
+     C+     ,HKORCM = 00                                                                    MD052129
+     C+     ,HKDORI = ''                                                                    MD052129
+     C+     ,HKMORI = ''                                                                    MD052129
+     C+     ,HKROBR = ''                                                                    MD052129
      C+ where HKDN38 = :pDLNO                                                               MD042142
      C/end-exec                                                                             MD042142
      C/exec SQL
@@ -361,15 +378,19 @@
 
      C/exec SQL
      C+ update DEALSDC
-     C+ set   PSTM = 00
+     C**set***PSTM = 00                                                                     MD052129
+     C+ set   RSTM = 00                                                                     MD052129
      C********PONS = '  '                                                                  MD038440A
      C+      ,RONS = '  '                                                                  MD038440A
      C+      ,OMDA = '  '                                                                   MD048898
      C+      ,BENN = '        '                                                             MD042142
-     C+      ,POBN = '      '                                                               MD042142
-     C+      ,POCN = '      '                                                               MD042142
+     C********POBN = '      '                                                      MD042142 MD052129
+     C********POCN = '      '                                                      MD042142 MD052129
+     C+      ,ROBN = '      '                                                               MD052129
+     C+      ,ROCN = '      '                                                               MD052129
      C+      ,MDST = 00                                                                     MD042142
-     C+      ,POBR = ''                                                                     MD042142
+     C********POBR = ''                                                            MD042142 MD052129
+     C+      ,ROBR = ''                                                                     MD052129
      C+      ,FACO = ''                                                                     MD042142
      C+ where CCY = :YyCcy and
      C********RONS = :XxNost and                                                            MD048898
@@ -459,9 +480,11 @@
 
      C/exec SQL
      C+ update DEALSDC
-     C+ set   RSTM = 00
+     C**set***RSTM = 00                                                                     MD052129
+     C+ set   PSTM = 00                                                                     MD052129
      C********RONS = '  '                                                                  MD038440A
-     C+      ,RONS = '  '                                                                  MD038440A
+     C********RONS = '  '                                                         MD038440A MD052129
+     C+      ,PONS = '  '                                                                   MD052129
      C+      ,OMDA = '  '                                                                   MD048898
      C+      ,BENN = '        '                                                             MD042142
      C+      ,POBN = '      '                                                               MD042142

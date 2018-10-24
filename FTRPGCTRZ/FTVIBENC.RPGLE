@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *  Last Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD047369A          Date 24Jan18               *
       *                 MD047369           Date 30Aug17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034709           Date 16Jun15               *
@@ -76,6 +77,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034521A - Error handling of Blocked account is not the     *
+      *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
@@ -648,10 +651,14 @@
      C                   TESTB     '3'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00518
-     C                   Move      'N'           OKBNC1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDBNC1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0019'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKBNC1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDBNC1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKBNC1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDBNC1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00519
      C                   End                                                                 BUG4581
       *
@@ -779,10 +786,14 @@
      C                   TESTB     '3'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00520
-     C                   Move      'N'           OKBNC1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDBNC1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0019'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKBNC1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDBNC1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKBNC1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDBNC1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00521
      C                   End                                                                 BUG4581
      C                   MOVE      'P'           WBNCT

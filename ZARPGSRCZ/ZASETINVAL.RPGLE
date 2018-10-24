@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041649           Date 06Oct16               *
-      *  Prev Amend no. MD051239           Date 14Jun18               *
+      *  Last Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD041649           Date 06Oct16               *
+      *                 MD051239           Date 14Jun18               *
       *                 CDL051             Date 02May18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -135,6 +136,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034521A - Error handling of Blocked account is not the     *
+      *              same across the modules                          *
       *  MD041649 - Validation during authorisation should be executed*
       *  MD051239 - [CDL051]- Validation errors for Settlement        *
       *             Payment during Authorization in WIP are not       *
@@ -2158,10 +2161,14 @@
       *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
      C     *IN92         OREQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
-     C                   MOVE      'N'           DDRonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDRONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0991'                        182114 MD034521A
+     C**********         MOVE      'N'           DDRonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                             MD034521A
+     C                   MOVE      'W'           DDRonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
@@ -2481,10 +2488,14 @@
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
-     C                   MOVE      'N'           DDRonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDRONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0991'                        182114 MD034521A
+     C**********         MOVE      'N'           DDRonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                             MD034521A
+     C                   MOVE      'W'           DDRonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
@@ -2643,10 +2654,14 @@
      C                   ELSE                                                                 CLE168
       *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
-     C                   MOVE      'N'           DDRonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDRONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0991'                        182114 MD034521A
+     C**********         MOVE      'N'           DDRonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                             MD034521A
+     C                   MOVE      'W'           DDRonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
@@ -2766,10 +2781,14 @@
       *                                                                                       CLE168
      C     *IN91         IFEQ      '1'
      C******IN92         OREQ      '1'                                                        182114
-     C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = 'DDRONX'
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'
-     C                   MOVE      'N'           DDRonxOK
+     C**********         ADD       1             Idx                                       MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDRONX'                              MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0991'                               MD034521A
+     C**********         MOVE      'N'           DDRonxOK                                  MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0991'                             MD034521A
+     C                   MOVE      'W'           DDRonxOK                                  MD034521A
      C                   END
      C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
@@ -4075,10 +4094,14 @@
       *                                                                                       182114
      C     ##PPAY        IFNE      'Y'                                                        260863
      C     *IN92         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
-     C                   MOVE      'N'           DDPonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDPONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0992'                        182114 MD034521A
+     C**********         MOVE      'N'           DDPonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0992'                             MD034521A
+     C                   MOVE      'W'           DDPonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
@@ -4378,10 +4401,14 @@
       *                                                                                       182114
      C     ##PPAY        IFNE      'Y'                                                        260863
      C     *IN92         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
-     C                   MOVE      'N'           DDPonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDPONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0992'                        182114 MD034521A
+     C**********         MOVE      'N'           DDPonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0992'                             MD034521A
+     C                   MOVE      'W'           DDPonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
@@ -4509,10 +4536,14 @@
       *                                                                                       182114
      C     ##PPAY        IFNE      'Y'                                                        260863
      C     *IN92         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx                                          182114
-     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                                 182114
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                  182114
-     C                   MOVE      'N'           DDPonxOK                                     182114
+     C**********         ADD       1             Idx                                182114 MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDPONX'                       182114 MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0992'                        182114 MD034521A
+     C**********         MOVE      'N'           DDPonxOK                           182114 MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0992'                             MD034521A
+     C                   MOVE      'W'           DDPonxOK                                  MD034521A
      C                   END                                                                  182114
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
@@ -4603,10 +4634,14 @@
      C******IN92         OREQ      '1'                                                        182114
      C     ##PPAY        IFNE      'Y'                                                        260863
      C     *IN92         IFEQ      '1'                                                        182114
-     C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = 'DDPONX'
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'
-     C                   MOVE      'N'           DDPonxOK
+     C**********         ADD       1             Idx                                       MD034521A
+     C**********         EVAL      FldNameArr(Idx) = 'DDPONX'                              MD034521A
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0992'                               MD034521A
+     C**********         MOVE      'N'           DDPonxOK                                  MD034521A
+     C                   ADD       1             WIdx                                      MD034521A
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                            MD034521A
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0992'                             MD034521A
+     C                   MOVE      'W'           DDPonxOK                                  MD034521A
      C                   END
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863

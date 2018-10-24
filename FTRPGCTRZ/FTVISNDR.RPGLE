@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 261791             Date 19Aug14               *
       *                 262272             Date 20Dec12               *
       *                 CFT120             Date 28Sep12               *
@@ -64,6 +65,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034521A - Error handling of Blocked account is not the     *
+      *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  261791 - Issue an error message to indicate that the entered *
@@ -1101,10 +1104,14 @@
      C                   TESTB     '2'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00539
-     C                   Move      'N'           OKSND1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDSND1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKSND1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDSND1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKSND1                                    MD034521A
+     C                   Add       1             WIdx                                      MD034521A
+     C                   Eval      WFldNmXAr(WIdx) = 'DDSND1'                              MD034521A
+     C                   Eval      WMsgIdXAr(WIdx) = 'FTM0014'                             MD034521A
      C/COPY WNCPYSRC,FTH00540
      C                   End                                                                 BUG4581
      C                   MOVEL     CCY           PSendrCcy
@@ -1187,10 +1194,14 @@
      C                   TESTB     '2'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00541
-     C                   Move      'N'           OKSND1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDSND1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKSND1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDSND1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKSND1                                    MD034521A
+     C                   Add       1             WIdx                                      MD034521A
+     C                   Eval      WFldNmXAr(WIdx) = 'DDSND1'                              MD034521A
+     C                   Eval      WMsgIdXAr(WIdx) = 'FTM0014'                             MD034521A
      C/COPY WNCPYSRC,FTH00542
      C                   End                                                                 BUG4581
       *

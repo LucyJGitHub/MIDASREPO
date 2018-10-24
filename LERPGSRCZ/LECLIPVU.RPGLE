@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD041649           Date 06Oct16               *
+      *  Last Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD041649           Date 06Oct16               *
       *                 CLE168             Date 26Feb18               *
       *                 MD034643           Date 11Sep17               *
       *                 MD032110           Date 11Sep17               *
@@ -132,6 +133,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034521A - Error handling of Blocked account is not the     *
+      *              same across the modules                          *
+      *            - Block Accounts should not be dependent to CLE134 *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD041649 - Validation during authorisation should be executed*
       *  CLE168 - Allow Debit of Blocked Account                      *
@@ -1408,10 +1412,10 @@
       *                                                                                      BUG6010
      C                   PARM      *BLANK        ##ValIter                                   BUG6010
       ** Check and override blocked account                                                AR1078092
-     C                   IF        CLE134 = 'Y'                                            AR1078092
-     C                             AND WBLKACCT = 'Y'                                      AR1078092
+     C**********         IF        CLE134 = 'Y'                                  AR1078092 MD034521A
+     C**********                   AND WBLKACCT = 'Y'                            AR1078092 MD034521A
      C                   EXSR      CHKNOVRBLKACCT                                          AR1078092
-     C                   ENDIF                                                             AR1078092
+     C**********         ENDIF                                                   AR1078092 MD034521A
      C                   ENDIF                                                               BUG6010
       *                                                                                     MD039547
       ** Call account referred validation.                                                  MD039547
@@ -2464,10 +2468,10 @@
      C                   PARM      '1ST'         ##ValIter         3
 
       ** Check and override blocked account                                                AR1078092
-     C                   IF        CLE134 = 'Y'                                            AR1078092
-     C                             AND WBLKACCT = 'Y'                                      AR1078092
+     C**********         IF        CLE134 = 'Y'                                  AR1078092 MD034521A
+     C**********                   AND WBLKACCT = 'Y'                            AR1078092 MD034521A
      C                   EXSR      CHKNOVRBLKACCT                                          AR1078092
-     C                   ENDIF                                                             AR1078092
+     C**********         ENDIF                                                   AR1078092 MD034521A
       *                                                                                     MD039547
       ** Call account referred validation.                                                  MD039547
       *                                                                                     MD039547

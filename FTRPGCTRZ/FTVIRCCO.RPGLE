@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 06May13               *
+      *  Last Amend No. MD034521A          Date 14Sep15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 06May13               *
       *                 AR1083047          Date 30Jan13               *
       *                 CFT120             Date 28Sep12               *
       *                 AR572681           Date 11Oct12               *
@@ -662,10 +663,14 @@
      C                   TESTB     '2'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00528
-     C                   Move      'N'           OKRCO1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDRCO1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKRCO1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDRCO1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKRCO1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDRCO1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00529
      C                   End                                                                 BUG4581
       *
@@ -756,10 +761,14 @@
      C                   TESTB     '2'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00530
-     C                   Move      'N'           OKRCO1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDRCO1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKRCO1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDRCO1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKRCO1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDRCO1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00531
      C                   End                                                                 BUG4581
       *
@@ -786,10 +795,14 @@
      C                   TESTB     '2'           WRETB                    48                  240689
      C     *IN48         IFEQ      '1'                                                        240689
      C/COPY WNCPYSRC,FTH00532
-     C                   MOVE      'N'           OKRco1                                       240689
-     C                   ADD       1             Idx                                          240689
-     C                   MOVEL     'DDRCO1'      FldNamXAr(Idx)                               240689
-     C                   MOVEL     'FTM0014'     MsgIdXAr(Idx)                                240689
+     C**********         MOVE      'N'           OKRco1                             240689 MD034521A
+     C**********         ADD       1             Idx                                240689 MD034521A
+     C**********         MOVEL     'DDRCO1'      FldNamXAr(Idx)                     240689 MD034521A
+     C**********         MOVEL     'FTM0014'     MsgIdXAr(Idx)                      240689 MD034521A
+     C                   Move      'W'           OKRCO1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDRCO1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00533
      C                   ENDIF                                                                240689
       *                                                                                       240689
@@ -1218,10 +1231,14 @@
      C                   TESTB     '2'           RETB                     51                 BUG4581
      C                   If        *in51 = *ON                                               BUG4581
      C/COPY WNCPYSRC,FTH00534
-     C                   Move      'N'           OKRCO1                                      BUG4581
-     C                   Add       1             Idx                                         BUG4581
-     C                   Movel     'DDRCO1'      FldNamXAr(Idx)                              BUG4581
-     C                   Movel     'FTM0014'     MsgIdXAr(Idx)                               BUG4581
+     C**********         Move      'N'           OKRCO1                            BUG4581 MD034521A
+     C**********         Add       1             Idx                               BUG4581 MD034521A
+     C**********         Movel     'DDRCO1'      FldNamXAr(Idx)                    BUG4581 MD034521A
+     C**********         Movel     'FTM0014'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+     C                   Move      'W'           OKRCO1                                    MD034521A
+     C                   Add       1             WIx                                       MD034521A
+     C                   Movel     'DDRCO1'      WFldNmXAr(WIx)                            MD034521A
+     C                   Movel     'FTM0014'     WMsgIdXAr(WIx)                            MD034521A
      C/COPY WNCPYSRC,FTH00535
      C                   End                                                                 BUG4581
      C                   IF        BMRANR <> 'Y'                                CFT014

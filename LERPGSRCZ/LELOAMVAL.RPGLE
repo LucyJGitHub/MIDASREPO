@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051873           Date 14Sep18               *
-      *  Prev Amend No. MD027418           Date 18Jul18               *
+      *  Last Amend No. MD052213           Date 26Oct18               *
+      *  Prev Amend No. MD051873           Date 14Sep18               *
+      *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
       *                 CLE158             Date 18Jul18               *
@@ -95,6 +96,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052213 - If CLE158 ON CLE025 OFF, issue overridable error  *
+      *             when facility amount exceeded for backvalued loan *
       *  MD051873 - Issue warning or overridable error on Principal   *
       *             Increase amendment when facility will be exceeded *
       *  MD027418 - Apply CLE158 validation on Auth mode              *
@@ -2560,13 +2563,13 @@
      C     CLE025        ANDEQ     'N'                                                      MD027418
      C     DDATYP        ANDEQ     'PI'                                                     MD027418
      C     CAM_CHTP      ANDEQ     'I'                                                      MD027418
-     C     VDAYNO        ANDGE     BJRDNB                                                   MD027418
+     C*****VDAYNO        ANDGE     BJRDNB                                          MD027418 MD052213
      C     DDACTN        OREQ      'X'                                                      MD051873
      C     CLE158        ANDEQ     'Y'                                                      MD051873
      C     CLE025        ANDEQ     'N'                                                      MD051873
      C     DDATYP        ANDEQ     'PI'                                                     MD051873
      C     CAM_CHTP      ANDEQ     'A'                                                      MD051873
-     C     VDAYNO        ANDGE     BJRDNB                                                   MD051873
+     C*****VDAYNO        ANDGE     BJRDNB                                          MD051873 MD052213
       *
       ** Use Facility CCY to pick facility decimal positions
      C                   CALLB     'AOCURRR0'
@@ -2776,7 +2779,11 @@
      C                   MOVE      'N'           DDAMNTOK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'
+     C                   IF        CLE158 = 'Y' and VDAYNO < BJRDNB                         MD052213
+     C                   EVAL      WMsgIDArr(WIdx) = '5049122'                              MD052213
+     C                   ELSE                                                               MD052213
      C                   EVAL      WMsgIDArr(WIdx)  = 'LEA1029'
+     C                   ENDIF                                                              MD052213
      C                   LEAVE
      C                   ENDIF
       *                                                                                       CLE030
@@ -2962,7 +2969,11 @@
      C                   MOVE      'N'           DDAMNTOK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'DDAMNT'
+     C                   IF        CLE158 = 'Y' and VDAYNO < BJRDNB                         MD052213
+     C                   EVAL      WMsgIDArr(WIdx) = '5049124'                              MD052213
+     C                   ELSE                                                               MD052213
      C                   EVAL      WMsgIDArr(WIdx)  = 'LEL0520'
+     C                   ENDIF                                                              MD052213
      C                   LEAVE
      C                   ENDIF
       *

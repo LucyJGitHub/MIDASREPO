@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD027418           Date 18Jul18               *
+      *  Last Amend No. MD052214           Date 26Oct18               *
+      *  Prev Amend No. MD052213           Date 26Oct18               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
       *                 CLE158             Date 18Jul18               *
@@ -161,6 +163,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052214 - Warning message with outside block not appearing. *
+      *             Use WId instead of WIdx such that other warning   *
+      *             message will not be overridden                    *
+      *  MD052213 - If CLE158 ON CLE025 OFF, issue overridable error  *
+      *             when facility amount exceeded for backvalued loan *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD027418 - Display Warning/Error on auth of insert (CLE158)  *
       *  MD026971 - Issue either overridable error or warning         *
@@ -3726,9 +3733,12 @@ E001 C                   ENDIF
      C                   IF        WFCXRate < WRATM Or                                        CLE106
      C                             WFCXRate > WRATP                                           CLE106
      C                   EVAL      DDFPAMOK = 'W'                                             CLE106
-     C                   EVAL      WIdx = WIdx + 1                                            CLE106
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDFPAM'                                 CLE106
-     C                   EVAL      WMsgIDXAr(WIdx) = 'LEL0079'                                CLE106
+     C**********         EVAL      WIdx = WIdx + 1                                   CLE106 MD052214
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDFPAM'                        CLE106 MD052214
+     C**********         EVAL      WMsgIDXAr(WIdx) = 'LEL0079'                       CLE106 MD052214
+     C                   EVAL      WId = WId + 1                                            MD052214
+     C                   EVAL      WFldNmXAr(WId) = 'DDFPAM'                                MD052214
+     C                   EVAL      WMsgIDXAr(WId) = 'LEL0079'                               MD052214
      C                   ENDIF                                                                CLE106
       *                                                                                     AR882700
      C                   ENDIF                                                              AR882700
@@ -4860,7 +4870,13 @@ E004 C                   ENDIF
      C                   MOVE      'W'           DDCPAMOK
      C                   ADD       1             WId
      C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)
+     C     CLE158        IFEQ      'Y'                                                      MD052213
+     C     WSVVD         ANDLT     BJRDNB                                                   MD052213
+     C                   MOVEL     '5049116'     WMsgIDXAr(WId)                             MD052213
+     C                   ELSE                                                               MD052213
      C                   MOVEL     'LEL0069'     WMsgIDXAr(WId)
+     C                   ENDIF                                                              MD052213
+      *                                                                                     MD052213
      C                   LEAVE
      C**********         ENDIF                                                               BUG4351
       *                                                                                       CLE030
@@ -5117,7 +5133,13 @@ E004 C                   ENDIF
      C                   MOVE      'W'           DDCPAMOK
      C                   ADD       1             WId
      C                   MOVEL     'DDCPAM'      WFldNmXAr(WId)
+     C     CLE158        IFEQ      'Y'                                                      MD052213
+     C     WSVVD         ANDLT     BJRDNB                                                   MD052213
+     C                   MOVEL     '5049118'     WMsgIDXAr(WId)                             MD052213
+     C                   ELSE                                                               MD052213
      C                   MOVEL     'LEL0520'     WMsgIDXAr(WId)
+     C                   ENDIF                                                              MD052213
+      *                                                                                     MD052213
      C                   LEAVE
      C**********         ENDIF                                                               BUG4351
       *
@@ -8736,9 +8758,12 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   IF        PZInd = 'H'                                                CER020
       *                                                                                       CER020
      C                   EVAL      DDISDTOK = 'W'                                             CER020
-     C                   EVAL      WIdx = WIdx + 1                                            CER020
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDISDT'                                 CER020
-     C                   EVAL      WMsgIDXAr(WIdx) = 'LEL0852'                                CER020
+     C**********         EVAL      WIdx = WIdx + 1                                   CER020 MD052214
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDISDT'                        CER020 MD052214
+     C**********         EVAL      WMsgIDXAr(WIdx) = 'LEL0852'                       CER020 MD052214
+     C                   EVAL      WId = WId + 1                                            MD052214
+     C                   EVAL      WFldNmXAr(WId) = 'DDISDT'                                MD052214
+     C                   EVAL      WMsgIDXAr(WId) = 'LEL0852'                               MD052214
       *                                                                                       CER020
      C                   ENDIF                                                                CER020
       *                                                                                       CER020
@@ -8859,9 +8884,12 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   IF        PZInd = 'H'                                                CER020
       *                                                                                       CER020
      C                   EVAL      DDFMDTOK = 'W'                                             CER020
-     C                   EVAL      WIdx = WIdx + 1                                            CER020
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDFMDT'                                 CER020
-     C                   EVAL      WMsgIDXAr(WIdx) = 'LEL0857'                                CER020
+     C**********         EVAL      WIdx = WIdx + 1                                   CER020 MD052214
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDFMDT'                        CER020 MD052214
+     C**********         EVAL      WMsgIDXAr(WIdx) = 'LEL0857'                       CER020 MD052214
+     C                   EVAL      WId = WId + 1                                            MD052214
+     C                   EVAL      WFldNmXAr(WId) = 'DDFMDT'                                MD052214
+     C                   EVAL      WMsgIDXAr(WId) = 'LEL0857'                               MD052214
       *                                                                                       CER020
      C                   ENDIF                                                                CER020
       *                                                                                       CER020

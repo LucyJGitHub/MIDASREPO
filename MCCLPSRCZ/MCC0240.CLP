@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052217           Date 31Oct18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG12454           Date 06Nov06              */
+/*                      BUG12454           Date 06Nov06              */
 /*                      BUG5976            Date 17Feb05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052217 - COB Components MCC001000 00001 failed during COB */
+/*                  run                                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG12454 - Changed OPNQRYF statements for alpha customer    */
 /*                  number                                           */
@@ -40,9 +43,9 @@
 /*   048237 - Speed up Management Accounts                           */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&GRPC &RETC)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -92,30 +95,30 @@
              DCL        VAR(&CMC001) TYPE(*CHAR) LEN(1) VALUE('N')    /*CMC001*/
              DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')     /*CMC001*/
 /*/COPY WNCPYSRC,MCC0240001                                          */
- 
+
 /* Global Monitor Message                                            */
- 
+
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Set up copyright                                                  */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /***Create*GLPOSTL5X*if*is*does*not*exist*to*speedup*OPNQRYF  */      /*048237*/
- 
+
 /*********** RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)           /*048237*/
 /*********** CHGVAR     VAR(&DPLIB) VALUE(&SYSID *TCAT 'DPLIB')       /*048237*/
 /************CHKOBJ     OBJ(&DPLIB/GLPOSTL5X) OBJTYPE(*FILE)          /*048237*/
 /************MONMSG     MSGID(CPF9801) EXEC(CPYF FROMFILE(GLPOSTL5) + /*048237*/
 /************             TOFILE(&DPLIB/GLPOSTL5X) MBROPT(*ADD) +     /*048237*/
 /************             CRTFILE(*YES))                              /*048237*/
- 
+
 /*  Get Group details via access program, DB Error if not found  */
              CHGVAR     VAR(&RETC2) VALUE(*MSG)
              CHGVAR     VAR(&OPTN) VALUE('*KEY   ')
              CALL       PGM(AOHBCGR0) PARM(&RETC2 &OPTN &GRPC &DSFDY)
              IF         COND(&RETC2 *NE '       ') THEN(GOTO ABNOR)
- 
+
              CHGVAR VAR(&PBAS) VALUE(%SST(&DSFDY 34 1))
              CHGVAR VAR(&SCS) VALUE(%SST(&DSFDY 54 8))
              CHGVAR VAR(&ANL) VALUE(%SST(&DSFDY 44 10))
@@ -132,7 +135,7 @@
                           &DSFDY)                                     /*CMC001*/
              IF         COND(&RTCD *EQ ' ') THEN(CHGVAR +
                           VAR(&CMC001) VALUE('Y'))                    /*CMC001*/
- 
+
 /* Set up list of sections to include                                */
              IF         COND(%SST(&SCS 1 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&SECTIONS) VALUE(&SECTIONS *TCAT 'AS'))
@@ -150,7 +153,7 @@
                           VAR(&SECTIONS) VALUE(&SECTIONS *TCAT 'TR'))
              IF         COND(%SST(&SCS 8 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&SECTIONS) VALUE(&SECTIONS *TCAT 'CN'))
- 
+
 /* Sort keys into order specified in &ANL                            */
  LOOP1:      IF         COND(&I *GT 10) THEN(GOTO CMDLBL(EXIT1))
              IF         COND(%SST(&ANL &I 1) *NE ' ') THEN(DO)
@@ -167,7 +170,7 @@
                 ENDDO                                                 /*048237*/
              CHGVAR     VAR(&I) VALUE(&I + 1)
              GOTO       CMDLBL(LOOP1)
- 
+
  EXIT1:      CLOF       OPNID(UPDBALPD)
              MONMSG     (CPF4520)
 /************OVRDBF     FILE(UPDBALPD) TOFILE(GLPOSTL5X) SHARE(*YES)  /*048237*/
@@ -242,12 +245,12 @@
 /**********               'MAPFLD((WPAMT ''PSTA - (PSTA * DRCR * +    */       /*048237*/ /*CGL029*/
 /**********               2)'') (WPDTM ''(PSTD * 1000000 + PTIM)'') + */       /*048237*/ /*CGL029*/
 /**********               (EVDT')                                     */       /*048237*/ /*CGL029*/
- 
+
              CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT +
                           'MAPFLD((ACODQQ 0) (WPAMT ''PSTA - (PSTA * DRCR * +
                           2)'') (WPDTM ''(PSTD * 1000000 + PTIM)'') +
                           (EVDT')                                                         /*CGL029*/
- 
+
              IF         COND(&PBAS *EQ 'P') THEN(CHGVAR +
                          VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'PSTD)'))
              ELSE       CMD(CHGVAR VAR(&OPNQRYF) VALUE(&OPNQRYF +
@@ -258,7 +261,7 @@
 /*   include branch, customer, and a/c sequence in MAPFLD parm     */ /*CMC001*/
 /**/                                                                  /*CMC001*/
              IF         COND(&CMC001 *NE 'Y') THEN(DO)                /*CMC001*/
- 
+
              IF         COND(%SST(&ANL 3 1) *EQ ' ') THEN(CHGVAR +
                           VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '(BRCA +
                           ''''''   '''''')'))
@@ -289,7 +292,7 @@
              IF         COND(%SST(&ANL 10 1) *EQ ' ') THEN(CHGVAR +
                           VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '(ASOC +
                           ''''''      '''''')'))                                        /*BUG12454*/
- 
+
 /************CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '(PDTM +   /*048237*/
 /************             ''%MAX(WTIME)'') (CPNB ''HBPDCT *CAT +      /*048237*/
 /************             HBPDYR *CAT HBPDNY'') (PAMT ''%SUM(WAMT) +  /*048237*/
@@ -306,7 +309,7 @@
 /**********               HBACNB *ZONED 6) (PDTM ''%MAX(WPDTM)'') +            /*048237*/ /*CGL029*/
 /**********               (PAMT ''%SUM(WPAMT)'')) OPNID(UPDBALPD) +            /*048237*/ /*CGL029*/
 /**********               OPTALLAP(*YES)')                                     /*048237*/ /*CGL029*/
- 
+
 /**********  CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '(CPNB +                     /*BUG12454*/
 /**********               ''HBPDCT *CAT HBPDYR *CAT HBPDNY'') +                         /*BUG12454*/
 /**********               (ACODA HBACCD *ZONED 10) (CNUMA HBCUST +                      /*BUG12454*/
@@ -413,7 +416,7 @@
 /**********                  (ACSQA HBACSN *ZONED 2) (ASOCA +        */        /*CMC001*/ /*CGL029*/
 /**********                  HBACNB *ZONED 6)) OPNID(MCFMVMPD) +     */        /*CMC001*/ /*CGL029*/
 /**********                  OPTALLAP(*YES)')                        */        /*CMC001*/ /*CGL029*/
- 
+
 /**********     CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT +                         /*BUG12454*/
 /**********                  'MAPFLD((PDTM ''%MAX(2/PDTM)'') +                          /*BUG12454*/
 /**********                  (PAMT ''%SUM(2/PAMT)'') +                                  /*BUG12454*/
@@ -433,8 +436,13 @@
                 RCLRSC                                                /*CMC001*/
                 CALL       PGM(QCMDEXC) PARM(&OPNQRYF 2000)           /*CMC001*/
 /**/                                                                  /*CMC001*/
-                CPYFRMQRYF FROMOPNID(MCFMVMPD) TOFILE(UPDBALPD) +
-                             MBROPT(*REPLACE) FMTOPT(*NOCHK)          /*CMC001*/
+/**********     CPYFRMQRYF FROMOPNID(MCFMVMPD) TOFILE(UPDBALPD) MBROPT(*REPLACE) +
+/**********                  FMTOPT(*NOCHK) */                               /*CMC001*/ /*MD052217*/
+
+                CPYFRMQRYF FROMOPNID(MCFMVMPD) TOFILE(UPDBALPD) MBROPT(*REPLACE) +
+                             FMTOPT(*MAP *DROP)                                         /*MD052217*/
+
+
 /**/                                                                  /*CMC001*/
              ENDDO                                                    /*CMC001*/
                                                                       /*048237*/
@@ -446,7 +454,7 @@
                           OTST ASOC CPNB EVDT) OPNID(UPDBALPD)')      /*048237*/
                                                                       /*048237*/
              CALL       PGM(QCMDEXC) PARM(&OPNQRYF 2000)
- 
+
 /* Call Rework Average Balances RPG                                  */
              OVRDBF     FILE(GLHIBLL4) MBR(&GRPC)                     /*118387*/
              OVRDBF     FILE(GLAVBLL0) MBR(&GRPC)                     /*118387*/
@@ -460,11 +468,11 @@
                     SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
                     MSGDTA(&MEM) TOMSGQ(MOPERQ)
              ENDDO
- 
+
 /* Reclaim resources                                                 */
              RCLRSC
              GOTO       ENDPGM
- 
+
 ABNOR:       CHGVAR     VAR(&RETC) VALUE('Y')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              SNDPGMMSG  MSG('Rework DR/CR Average Balances ENDED +
@@ -474,5 +482,5 @@ ABNOR:       CHGVAR     VAR(&RETC) VALUE('Y')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DMPCLPGM
              RCLRSC
- 
+
 ENDPGM:      ENDPGM

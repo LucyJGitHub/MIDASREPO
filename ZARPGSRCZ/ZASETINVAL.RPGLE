@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD041649           Date 06Oct16               *
+      *  Last Amend No. MD052228           Date 30Oct18               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD041649           Date 06Oct16               *
       *                 MD051239           Date 14Jun18               *
       *                 CDL051             Date 02May18               *
       *                 CLE168             Date 26Feb18               *
@@ -136,6 +137,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052228 - Overridable message “Settlement account is        *
+      *             Referred” is not displayed after clicking         *
+      *             complete button in MAPY.                          *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD041649 - Validation during authorisation should be executed*
@@ -9000,10 +9004,14 @@
      C     ##PREC        IFNE      'Y'                                                      MD036475
      C                   TESTB     '3'           RETB                     92                MD036475
      C     *IN92         IFEQ      '1'                                                      MD036475
-     C                   ADD       1             Idx                                        MD036475
-     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                               MD036475
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0992'                                MD036475
-     C                   MOVE      'N'           DDRonxOK                                   MD036475
+     C**********         ADD       1             Idx                               MD036475 MD052228
+     C**********         EVAL      FldNameArr(Idx) = 'DDRONX'                      MD036475 MD052228
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0992'                       MD036475 MD052228
+     C**********         MOVE      'N'           DDRonxOK                          MD036475 MD052228
+     C                   ADD       1             WIdx                                       MD052228
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD052228
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM0992'                              MD052228
+     C                   MOVE      'W'           DDRonxOK                                   MD052228
      C                   END                                                                MD036475
      C                   ENDIF                                                              MD036475
                                                                                             MD036475
@@ -9012,10 +9020,14 @@
      C     ##PPAY        IFNE      'Y'                                                      MD036475
      C                   TESTB     '2'           RETB                     91                MD036475
      C     *IN91         IFEQ      '1'                                                      MD036475
-     C                   ADD       1             Idx                                        MD036475
-     C                   EVAL      FldNameArr(Idx) = 'DDPONX'                               MD036475
-     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                MD036475
-     C                   MOVE      'N'           DDPonxOK                                   MD036475
+     C**********         ADD       1             Idx                               MD036475 MD052228
+     C**********         EVAL      FldNameArr(Idx) = 'DDPONX'                      MD036475 MD052228
+     C**********         EVAL      MsgIDArr(Idx) = 'ESM0991'                       MD036475 MD052228
+     C**********         MOVE      'N'           DDPonxOK                          MD036475 MD052228
+     C                   ADD       1             WIdx                                       MD052228
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                             MD052228
+     C                   EVAL      WMsgIDArr(Idx) = 'ESM0991'                               MD052228
+     C                   MOVE      'W'           DDPonxOK                                   MD052228
      C                   END                                                                MD036475
      C                   ENDIF                                                              MD036475
                                                                                             MD036475

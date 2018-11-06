@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD038593           Date 09Jun16               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. MD052228           Date 30Oct18               *
+      *  Prev Amend No. MD038593           Date 09Jun16               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036475           Date 04Dec15               *
       *                 MD034776           Date 10Jul15               *
@@ -94,6 +95,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052228 - Overridable message “Settlement account is        *
+      *             Referred” is not displayed after clicking         *
+      *             complete button in MAPY.                          *
       *  MD038593 - Added settlement validation for referred accounts.*
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -2020,8 +2024,41 @@
      C                   ENDIF                                                              MD036475
      C                   ENDSL                                                              MD036475
                                                                                             MD036475
-     C                   EXSR      SrChkBlkAcc                                              MD036475
+     C**********         EXSR      SrChkBlkAcc                                     MD036475 MD052228
+     C                   EXSR      SrChkAcc                                                 MD052228
       *
+      ** Since ZASETINVL2 validates for both referred debit and credit                      MD052228
+      ** Below additional check on account is needed.                                       MD052228
+      ** For Normal Loan, only issue 'Settlement Account is referred' if:                   MD052228
+      **   MR sign is negative and Account is referred credit                               MD052228
+      **   MR sign is positive and Account is referred debit                                MD052228
+      ** For Part Sold Loan, issue error if:                                                MD052228
+      **   MR sign is negative and Account is referred debit                                MD052228
+      **   MR sign is positive and Account is referred credit                               MD052228
+      ** Error ESM1960 = Account has referred debit status                                  MD052228
+      ** Error ESM1961 = Account has referred credit status                                 MD052228
+                                                                                            MD052228
+     C                   SELECT                                                             MD052228
+     C                   WHEN      V_MRPTYP = 61 or V_MRPTYP = 62 or                        MD052228
+     C                             V_MRPTYP = 63 or V_MRPTYP = 64 or                        MD052228
+     C                             V_MRPTYP = 65 or V_MRPTYP = 68 or                        MD052228
+     C                             V_MRPTYP = 70 or V_MRPTYP = 71                           MD052228
+     C                   IF        DDRSIG = '-'                                             MD052228
+     C                   EVAL      WMsgId = 'ESM1960'                                       MD052228
+     C                   ELSE                                                               MD052228
+     C                   EVAL      WMsgId = 'ESM1961'                                       MD052228
+     C                   ENDIF                                                              MD052228
+     C                   WHEN      V_MRPTYP = 66 or V_MRPTYP = 67 or                        MD052228
+     C                             V_MRPTYP = 69 or V_MRPTYP = 72                           MD052228
+     C                   IF        DDRSIG = '-'                                             MD052228
+     C                   EVAL      WMsgId = 'ESM1961'                                       MD052228
+     C                   ELSE                                                               MD052228
+     C                   EVAL      WMsgId = 'ESM1960'                                       MD052228
+     C                   ENDIF                                                              MD052228
+     C                   ENDSL                                                              MD052228
+                                                                                            MD052228
+     C                   EXSR      SrChkAcc                                                 MD052228
+                                                                                            MD052228
       ***  update valid Manual Repayment settlement instructions
       *
      C                   MOVEL     FLREC         ValidREC
@@ -2820,21 +2857,27 @@
       /EJECT                                                                                MD036475
       *****************************************************************                     MD036475
       *                                                               *                     MD036475
-      * SrChkBlkAcc - Check Settlement Account for Blocked DR/CR      *                     MD036475
+      **SrChkBlkAcc*-*Check*Settlement*Account*for*Blocked*DR/CR*******            MD036475 MD052228
+      * SrChkAcc - Check Settlement Account for Blocked/Referred DR/CR*                     MD052228
       *                                                               *                     MD036475
       *****************************************************************                     MD036475
-     C     SrChkBlkAcc   BEGSR                                                              MD036475
+     C     SrChkAcc      BEGSR                                                              MD036475
                                                                                             MD036475
       ** Remove error if value of WMsgId1 found in array                                    MD036475
                                                                                             MD036475
-     C                   EVAL      PrvIdx = Idx                                             MD036475
+     C**********         EVAL      PrvIdx = Idx                                             MD052228
+     C                   EVAL      PrvIdx = WIdx                                   MD036475 MD052228
      C                   EVAL      W1 = 1                                                   MD036475
-     C     WMsgId        LOOKUP    MsgIDArr(W1)                           98                MD036475
+     C*****WMsgId        LOOKUP    WMsgIDArr(W1)                          98       MD036475 MD052228
+     C     WMsgId        LOOKUP    WMsgIDArr(W1)                          98                MD052228
      C                   IF        *IN98 = *ON                                              MD036475
                                                                                             MD036475
-     C                   EVAL      Idx = Idx - 1                                            MD036475
-     C                   EVAL      FldNameArr(W1) = *BLANKS                                 MD036475
-     C                   EVAL      MsgIDArr(W1) = *BLANKS                                   MD036475
+     C**********         EVAL      Idx = Idx - 1                                   MD036475 MD052228
+     C**********         EVAL      FldNameArr(W1) = *BLANKS                        MD036475 MD052228
+     C**********         EVAL      MsgIDArr(W1) = *BLANKS                          MD036475 MD052228
+     C                   EVAL      WIdx = WIdx - 1                                          MD052228
+     C                   EVAL      WFldNamArr(W1) = *BLANKS                                 MD052228
+     C                   EVAL      WMsgIDArr(W1) = *BLANKS                                  MD052228
                                                                                             MD036475
      C                   IF        ##PREC = ' '                                             MD036475
      C     'DDRONX    '  LOOKUP    FldNameArr(1)                          96                MD036475
@@ -2867,23 +2910,30 @@
       ** Reorganize error array                                                             MD036475
                                                                                             MD036475
      C                   EVAL      W1 = 1                                                   MD036475
-     C     *BLANKS       LOOKUP    FldNameArr(W1)                         98                MD036475
+     C******BLANKS       LOOKUP    FldNameArr(W1)                         98       MD036475 MD052228
+     C     *BLANKS       LOOKUP    WFldNamArr(W1)                         98                MD052228
      C                   IF        W1 < PrvIdx                                              MD036475
      C                   RESET                   TmpFldArr                                  MD036475
      C                   RESET                   TmpMsgArr                                  MD036475
      C                   EVAL      W1 = 1                                                   MD036475
      C                   EVAL      W2 = 1                                                   MD036475
      C                   DOW       W1 <= PrvIdx                                             MD036475
-     C                   IF        FldNameArr(W1) <> *BLANKS and                            MD036475
-     C                             MsgIDArr(W1) <> *BLANKS                                  MD036475
-     C                   EVAL      TmpFldArr(W2) = FldNameArr(W1)                           MD036475
-     C                   EVAL      TmpMsgArr(W2) = MsgIDArr(W1)                             MD036475
+     C**********         IF        FldNameArr(W1) <> *BLANKS and                   MD036475 MD052228
+     C**********                   MsgIDArr(W1) <> *BLANKS                         MD036475 MD052228
+     C**********         EVAL      TmpFldArr(W2) = FldNameArr(W1)                  MD036475 MD052228
+     C**********         EVAL      TmpMsgArr(W2) = MsgIDArr(W1)                    MD036475 MD052228
+     C                   IF        WFldNamArr(W1) <> *BLANKS and                           MD052228
+     C                             WMsgIDArr(W1) <> *BLANKS                                 MD052228
+     C                   EVAL      TmpFldArr(W2) = WFldNamArr(W1)                          MD052228
+     C                   EVAL      TmpMsgArr(W2) = WMsgIDArr(W1)                            MD052228
      C                   EVAL      W2 = W2 + 1                                              MD036475
      C                   ENDIF                                                              MD036475
      C                   EVAL      W1 = W1 + 1                                              MD036475
      C                   ENDDO                                                              MD036475
-     C                   MOVEA(P)  TmpFldArr     FldNameArr                                 MD036475
-     C                   MOVEA(P)  TmpMsgArr     MsgIDArr                                   MD036475
+     C**********         MOVEA(P)  TmpFldArr     FldNameArr                        MD036475 MD052228
+     C**********         MOVEA(P)  TmpMsgArr     MsgIDArr                          MD036475 MD052228
+     C                   MOVEA(P)  TmpFldArr     WFldNamArr                                 MD052228
+     C                   MOVEA(P)  TmpMsgArr     WMsgIDArr                                  MD052228
      C                   ENDIF                                                              MD036475
                                                                                             MD036475
      C                   ENDSR                                                              MD036475

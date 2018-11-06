@@ -11,12 +11,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD041649           Date 29Sep16               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD052228           Date 30Oct18               *
+      *  Prev Amend No. MD041649           Date 29Sep16               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD038593  *CREATE  Date 09Jun16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052228 - Overridable message “Settlement account is        *
+      *             Referred” is not displayed after clicking         *
+      *             complete button in MAPY.                          *
       *  MD041649 - Validation during authorisation should be executed*
       *  MD039547 - Validate inactive account and a few adjustment on *
       *             refer account validation.                         *
@@ -262,6 +266,7 @@
      C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'
      C                   EVAL      WMsgIDArr(WIdx) = 'ESM1960'
      C                   EVAL      DDRonxOK = 'W'
+     C                   EXSR      SRExtChkRefAc                                            MD052228
      C                   ENDIF
       *                                                                                     MD039547
       ** Inactive                                                                           MD039547
@@ -339,6 +344,7 @@
      C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'
      C                   EVAL      WMsgIDArr(WIdx) = 'ESM1961'
      C                   EVAL      DDPonxOK = 'W'
+     C                   EXSR      SRExtChkRefAc                                            MD052228
      C                   ENDIF
       *                                                                                     MD039547
       ** Inactive                                                                           MD039547
@@ -570,7 +576,44 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
-      *****************************************************************
+      *****************************************************************                     MD052228
+      *                                                               *                     MD052228
+      *  SRExtChkRefAc - Extra Check on Account for Referred DR/CR    *                     MD052228
+      *                                                               *                     MD052228
+      *****************************************************************                     MD052228
+     C     SRExtChkRefAc BEGSR                                                              MD052228
+                                                                                            MD052228
+     C                   IF        ##CALP = 'MAPY'                                          MD052228
+                                                                                            MD052228
+      ** Also check for referred credit on Receive Side                                     MD052228
+                                                                                            MD052228
+     C     ##PREC        IFNE      'Y'                                                      MD052228
+     C                   TESTB     '1'           RETB                     92                MD052228
+     C     *IN92         IFEQ      '1'                                                      MD052228
+     C                   ADD       1             WIdx                                       MD052228
+     C                   EVAL      WFldNameArr(WIdx) = 'DDRONX'                             MD052228
+     C                   EVAL      WMsgIDArr(WIdx) = 'ESM1961'                              MD052228
+     C                   MOVE      'W'           DDRonxOK                                   MD052228
+     C                   END                                                                MD052228
+     C                   ENDIF                                                              MD052228
+                                                                                            MD052228
+      ** Also check for referred debit on Payment Side                                      MD052228
+                                                                                            MD052228
+     C     ##PPAY        IFNE      'Y'                                                      MD052228
+     C                   TESTB     '0'           RETB                     91                MD052228
+     C     *IN91         IFEQ      '1'                                                      MD052228
+     C                   ADD       1             WIdx                                       MD052228
+     C                   EVAL      WFldNameArr(WIdx) = 'DDPONX'                             MD052228
+     C                   EVAL      WMsgIDArr(Idx) = 'ESM1960'                               MD052228
+     C                   MOVE      'W'           DDPonxOK                                   MD052228
+     C                   END                                                                MD052228
+     C                   ENDIF                                                              MD052228
+                                                                                            MD052228
+     C                   ENDIF                                                              MD052228
+                                                                                            MD052228
+     C                   ENDSR                                                              MD052228
+      *****************************************************************                     MD052228
+      /EJECT                                                                                MD052228
       *****************************************************************
       *                                                               *
       * SRERR - Exception Errors                                      *

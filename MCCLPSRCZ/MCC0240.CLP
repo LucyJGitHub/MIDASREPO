@@ -441,8 +441,6 @@
 
                 CPYFRMQRYF FROMOPNID(MCFMVMPD) TOFILE(UPDBALPD) MBROPT(*REPLACE) +
                              FMTOPT(*MAP *DROP)                                         /*MD052217*/
-
-
 /**/                                                                  /*CMC001*/
              ENDDO                                                    /*CMC001*/
                                                                       /*048237*/

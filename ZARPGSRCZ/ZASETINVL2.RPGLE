@@ -18,8 +18,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052228 - Overridable message “Settlement account is        *
-      *             Referred” is not displayed after clicking         *
+      *  MD052228 - Overridable message Settlement account is         *
+      *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
       *  MD041649 - Validation during authorisation should be executed*
       *  MD039547 - Validate inactive account and a few adjustment on *

@@ -95,8 +95,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052228 - Overridable message “Settlement account is        *
-      *             Referred” is not displayed after clicking         *
+      *  MD052228 - Overridable message Settlement account is         *
+      *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
       *  MD038593 - Added settlement validation for referred accounts.*
       *  CLE168 - Allow Debit of Blocked Account                      *

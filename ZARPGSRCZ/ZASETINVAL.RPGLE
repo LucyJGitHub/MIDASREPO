@@ -137,8 +137,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052228 - Overridable message “Settlement account is        *
-      *             Referred” is not displayed after clicking         *
+      *  MD052228 - Overridable message Settlement account is         *
+      *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *

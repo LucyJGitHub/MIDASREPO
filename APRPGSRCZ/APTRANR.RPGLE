@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051830           Date 07Nov18               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
@@ -78,6 +79,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051830 - Deal status is still Requires Authorization when  *
+      *             the transaction is amended then rejected in WIP   *
+      *             for NASP Transactions.                            *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
@@ -175,51 +179,51 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
- 
+
       ** Array of Fields in error.
      D FldNameArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D MsgDtaArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNamArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of warning message data.
      D WMsgDtaArr      S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Entry parameters
      D TransType       S              4
      D Parm            S           1000
@@ -258,7 +262,7 @@
      D OKACTN          S              1                                                       CAP210
      D OKTRNN          S              1                                                       CAP210
      D BtnPressed      S             10                                                    AR1090283
- 
+
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  AuthComp               1      1
@@ -267,7 +271,7 @@
      D  TransID                3    303                                                       CSC021
       * Incoming Header                                                                    AR1078092
      D HeadIn        E DS                  EXTNAME(APHEADPD)                               AR1078092
- 
+
       **********************************************************************
       /SPACE 5
       **********************************************************************
@@ -291,7 +295,7 @@
       *
       * Extract entry parameters
      C                   Eval      APParm = Parm
- 
+
       * Clear down buffers
      C                   Eval      Buffer = *BLANKS
      C                   Eval      Buffer2 = *BLANKS
@@ -304,24 +308,24 @@
      C                   Eval      BufferEx7 = *BLANKS                                       BUG4646
      C                   Eval      BufferEx8 = *BLANKS                                       BUG4646
      C                   Eval      BufferEx9 = *BLANKS                                       BUG4646
- 
+
       **--------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
- 
+
      C                   EVAL      HeadIn = ApHead                                         AR1078092
       * Call the required API
- 
+
      C                   EXSR      CALLAPI
- 
+
       * Move the buffers into the full buffer
      C                   EVAL      BufferTotal = Buffer + Buffer2
- 
+
       * Edit the Messages for output
      C                   EXSR      EDTMSGS
- 
+
      C                   SETON                                        LR
      C                   RETURN
       ****************************************************************
@@ -330,14 +334,14 @@
       * Call the required API
       ****************************************************************
      C     CALLAPI       BEGSR
- 
+
      C                   SELECT
- 
+
       * FX deals
      C     TransTYPE     WHENEQ    'FXDL'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'FXFXDLR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -348,13 +352,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * MM Loan/Deposit deals
- 
+
      C     TransTYPE     WHENEQ    'LDNI'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'MMLDNIR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -369,17 +373,17 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    ACTRJ             1                        AR701789
- 
+
       * Incoming payments
- 
+
      C     TransTYPE     WHENEQ    'IPAY'
- 
+
      C                   MOVEL     TransID       DDPREF_In        15
      C*****1****         SUBST     TransID:16    DDACTN_In         1                        AR833200
      C*****1             SUBST     TransID:19    DDACTN_In         1               AR833200 MD039986
      C     10            SUBST     TransID:19    BtnPressed                                AR1090283
      C     1             SUBST     TransID:29    DDACTN_In         1                        MD039986
- 
+
      C                   CALL      'FTIPAYR'
      C                   PARM                    FwdBck
      C                   PARM                    DDPREF_In
@@ -391,17 +395,17 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    BtnPressed                                AR1090283
- 
+
       * Outgoing payments
- 
+
      C     TransTYPE     WHENEQ    'OPAY'
- 
+
      C                   MOVEL     TransID       DDPREF_In
      C*****1****         SUBST     TransID:16    DDACTN_In         1                        AR833200
      C*****1             SUBST     TransID:19    DDACTN_In         1               AR833200 MD039986
      C     10            SUBST     TransID:19    BtnPressed                                 MD039986
      C     1             SUBST     TransID:29    DDACTN_In         1                        MD039986
- 
+
      C                   CALL      'FTOPAYR'
      C                   PARM                    FwdBck
      C                   PARM                    DDPREF_In
@@ -414,14 +418,14 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    BtnPressed                                AR1090283
- 
+
      C     TransTYPE     WHENEQ    'AMAD'
      C     TransTYPE     OREQ      'ACMC'                                                     CRE026
      C     TransTYPE     OREQ      'ACMI'                                                     CRE026
      C     TransTYPE     OREQ      'ACMN'                                                     CRE026
- 
+
      C                   MOVEL     TransID       DDACRF_In
- 
+
      C                   CALL      'GLAMADR'
      C                   PARM                    FwdBck
      C**********         PARM                    DDACRF_In        18                          CGL029
@@ -434,18 +438,18 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
      C                   MOVEL     Buffer9999    Buffer                                     MD044880
      C                   MOVE      Buffer9999    Buffer2                                    MD044880
 
       * SD Customers
- 
+
      C     TransTYPE     WHENEQ    'CUSD'
      C     TransTYPE     OREQ      'CSDU'                                                     CSD079
      C     TransTYPE     OREQ      'CSDV'                                                     CSD079
- 
+
      C                   MOVEL     TransID       DDCUSN_In
- 
+
      C                   CALL      'SDCUSDR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -460,15 +464,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
      C                   MOVEL     Buffer9999    Buffer                                       CER059
      C                   MOVE      Buffer9999    Buffer2                                      CER059
       * SD Securities Customers
- 
+
      C     TransTYPE     WHENEQ    'SECD'
- 
+
      C                   MOVEL     TransID       DDCUSN_In
- 
+
      C                   CALL      'SDSECDR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -479,14 +483,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * PM Portfolio Definition
- 
+
      C     TransTYPE     WHENEQ    'PFDM'
- 
+
      C                   MOVEL     TransID       DDCUSN_In
      C                   EVAL      DDPTFR_In = %SUBST(TransID:7:4)
- 
+
      C                   CALL      'PMPFDMR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -498,15 +502,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * MM Deal Amendments
- 
+
      C     TransTYPE     WHENEQ    'DEAM'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
      C                   EVAL      DDVDAT_In = %SUBST(TransID:7:6)
      C                   EVAL      DDDS38_In = %SUBST(TransID:13:3)
- 
+
      C                   CALL      'MMDEAMR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -519,13 +523,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * GL Collateral Details
- 
+
      C     TransTYPE     WHENEQ    'COLL'
- 
+
      C                   MOVEL     TransID       DDCREF_In
- 
+
      C                   CALL      'GLCOLLR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -536,11 +540,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** GL Collateral Allocations
- 
+
      C     TransTYPE     WHENEQ    'COLA'
- 
+
      C                   EVAL      ADBRCA_IN = %SUBST(TransID:1:3)
      C                   EVAL      ADCUSN_IN = %SUBST(TransID:4:10)
      C                   EVAL      ADMODI_IN = %SUBST(TransID:14:2)
@@ -550,7 +554,7 @@
      C**********         EVAL      ADCREF_IN = %SUBST(TransID:51:10)                          CGL029
      C                   EVAL      ADREAC_IN = %SUBST(TransID:33:24)                          CGL029
      C                   EVAL      ADCREF_IN = %SUBST(TransID:57:10)                          CGL029
- 
+
      C                   CALL      'GLCOLAR'
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -568,15 +572,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Facilities Details
- 
+
      C     TransTYPE     WHENEQ    'FCIP'
- 
+
      C                   MOVEL     TransID       DDCSSN_In
      C                   EVAL      DDFACT_In = %SUBST(TransID:11:3)
      C                   EVAL      DDFCNO_In = %SUBST(TransID:14:2)
- 
+
      C                   CALL      'LEFCIPR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -591,14 +595,14 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    DDPATH          200                       BUG13297A
- 
+
       * LE Loan Details
- 
+
      C     TransTYPE     WHENEQ    'CLIP'
- 
+
      C                   MOVEL     TransID       DDLNRF_In
      C     1             SUBST     TransID:7     DDACTN_In                                   BUG3721
- 
+
      C                   CALL      'LECLIPR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -615,14 +619,14 @@
       *                                                                                     AR804863
      C                   PARM      *BLANK        @ACTRV            1                        AR804863
      C                   PARM      *BLANK        @DEPI             1                        MD044880
- 
+
       * LE Rollover Details
- 
+
      C     TransTYPE     WHENEQ    'LERI'
- 
+
      C                   MOVEL     TransID       DDLNRF_In
      C     1             SUBST     TransID:7     DDACTN_In                                     BUG19
- 
+
      C                   CALL      'LELERIR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -635,15 +639,15 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM      *BLANK        @ACTRV            1                        AR702532
- 
+
       * LE Repayment Schedules
- 
+
      C     TransTYPE     WHENEQ    'RPSC'
- 
+
      C                   EVAL      DDLNRF_In = TransID
      C                   EVAL      DDVDAT_In = %SUBST(TransID:7:6)
      C                   EVAL      DDSEQN_In = %SUBST(TransID:13:3)
- 
+
      C                   CALL      'LERPSCR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -656,15 +660,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Loan Amendments
- 
+
      C     TransTYPE     WHENEQ    'LOAM'
- 
+
      C                   EVAL      DDLNRF_In = TransID
      C                   EVAL      DDVDAT_In = %SUBST(TransID:7:6)
      C                   EVAL      DDSEQN_In = %SUBST(TransID:13:3)
- 
+
      C                   CALL      'LELOAMR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -677,15 +681,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Manual Repayment
- 
+
      C     TransTYPE     WHENEQ    'MAPY'
- 
+
      C                   EVAL      DDLNRF_In = TransID
      C                   EVAL      DDVDAT_In = %SUBST(TransID:7:6)
      C                   EVAL      DDSEQN_In = %SUBST(TransID:13:3)
- 
+
      C                   CALL      'LEMAPYR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -698,13 +702,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * SD Base rates
      C     TransTYPE     WHENEQ    'BSRT'
- 
+
      C                   EVAL      DDCYCD_IN = %SUBST(TransID:1:3)
      C                   EVAL      DDBSRC_IN = %SUBST(TransID:4:2)
- 
+
      C                   CALL      'SDBSRTR'
      C                   PARM                    FwdBck
      C                   PARM                    DDCYCD_IN         3
@@ -715,7 +719,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** LE Fees                                                                             BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100
                                                                                              BUG1100
@@ -742,7 +746,7 @@
                                                                                              BUG1100
       * LE Fee Adjustment
      C     TransTYPE     WHENEQ    'FEAD'
- 
+
      C                   EVAL      DDCNUM_IN = %SUBST(TransID:1:10)
      C                   EVAL      DDFACT_IN = %SUBST(TransID:11:3)
      C                   EVAL      DDFACN_IN = %SUBST(TransID:14:2)
@@ -750,7 +754,7 @@
       *                                                                                       CLE073
      C                   EVAL      DDLOAN_IN = %SUBST(TransID:18:23)                          CLE073
       *                                                                                       CLE073
- 
+
      C                   CALL      'LEFEADR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -767,10 +771,10 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Fee settlement
      C     TransTYPE     WHENEQ    'FEST'
- 
+
      C                   EVAL      DDCNUM_IN = %SUBST(TransID:1:10)
      C                   EVAL      DDFACT_IN = %SUBST(TransID:11:3)
      C                   EVAL      DDFACN_IN = %SUBST(TransID:14:2)
@@ -779,7 +783,7 @@
       *                                                                                       CLE073
      C                   EVAL      DDLOAN_IN = %SUBST(TransID:24:29)                          CLE073
       *                                                                                       CLE073
- 
+
      C                   CALL      'LEFESTR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -797,17 +801,17 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Funding Participant
      C     TransTYPE     WHENEQ    'FPRT'
- 
+
      C                   EVAL      DDPMFC_IN = %SUBST(TransID:1:6)
      C                   EVAL      DDPMFT_IN = %SUBST(TransID:7:3)
      C                   EVAL      DDPMFN_IN = %SUBST(TransID:10:2)
      C                   EVAL      DDCNUM_IN = %SUBST(TransID:12:10)
      C                   EVAL      DDFACT_IN = %SUBST(TransID:22:3)
      C                   EVAL      DDFCNO_IN = %SUBST(TransID:25:2)
- 
+
      C                   CALL      'LEFPRTR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -823,10 +827,10 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Assignments
      C     TransTYPE     WHENEQ    'ASGN'
- 
+
      C                   EVAL      DDBRCA_IN = %SUBST(TransID:1:3)
      C                   EVAL      DDCNAM_IN = %SUBST(TransID:4:6)
      C                   EVAL      DDFACT_IN = %SUBST(TransID:10:3)
@@ -834,7 +838,7 @@
      C                   EVAL      DDMNUM_IN = %SUBST(TransID:15:10)
      C                   EVAL      DDINUM_IN = %SUBST(TransID:25:10)
      C                   EVAL      DDVDTC_IN = %SUBST(TransID:35:6)
- 
+
      C                   CALL      'LEASGNR'
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -851,17 +855,17 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * LE Facility Amendments
      C     TransTYPE     WHENEQ    'FAMD'
- 
+
      C                   EVAL      DDCCSN_IN = %SUBST(TransID:1:10)
      C                   EVAL      DDFACT_IN = %SUBST(TransID:11:3)
      C                   EVAL      DDFCNO_IN = %SUBST(TransID:14:2)
      C                   EVAL      DDFATP_IN = %SUBST(TransID:16:2)
      C                   EVAL      DDVLDT_IN = %SUBST(TransID:18:6)
      C                   EVAL      DDSQNO_IN = %SUBST(TransID:24:3)
- 
+
      C                   CALL      'LEFAMDR'
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -877,12 +881,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * FRA - Forward Rate Agreement deals
      C     TransTYPE     WHENEQ    'FRA '
- 
+
      C                   EVAL      DDDLNO_IN = %SUBST(TransID:1:6)
- 
+
      C                   CALL      'IRFRAR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -893,13 +897,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** Single Currency IRS (SIRS)
- 
+
      C     TransTYPE     WHENEQ    'SIRS'
- 
+
      C                   EVAL      DDDLNO_IN = %SUBST(TransID:1:6)
- 
+
      C                   CALL      'IRSIRSR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -919,13 +923,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** Cross Currency IRS (CIRS)
- 
+
      C     TransTYPE     WHENEQ    'CIRS'
- 
+
      C                   EVAL      DDDLNO_IN = %SUBST(TransID:1:6)
- 
+
      C                   CALL      'IRCIRSR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -945,12 +949,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * SE Securities Details
      C     TransTYPE     WHENEQ    'SECS'
- 
+
      C                   MOVEL     TransID       DDSESN_IN
- 
+
      C                   CALL      'SESECSR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -961,12 +965,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * SE Securities Trades
      C     TransTYPE     WHENEQ    'TRAD'
- 
+
      C                   MOVEL     TransID       DDTDRF_IN
- 
+
      C                   CALL      'SETRADR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -978,23 +982,23 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * Data areas
- 
+
      C     TransTYPE     WHENEQ    'DTAA'
- 
+
      C                   MOVEL     TransID       DataArea
- 
+
      C                   CALL      'AOCDTAAR0'
      C                   PARM                    DataArea         10
      C                   PARM                    Value          2000
      C                   MOVEL     Value         Buffer
- 
+
       * RFT - Request for Transfer
      C     TransTYPE     WHENEQ    'RFTD'
- 
+
      C                   MOVEL     TransID       DDRFTID_In
- 
+
      C                   CALL      'FTM1011R'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1005,13 +1009,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * RFT - Request for Transfer details
      C     TransTYPE     WHENEQ    'RFT2'
- 
+
      C                   EVAL      DDRFTID_IN = %SUBST(TransID:1:15)
      C                   EVAL      DDTRANR_IN = %SUBST(TransID:16:16)
- 
+
      C                   CALL      'FTM1012R'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1023,13 +1027,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** CCT - Customer Credit Transfer
- 
+
      C     TransTYPE     WHENEQ    'CCTD'
- 
+
      C                   MOVEL     TransID       DDCCTID_In
- 
+
      C                   CALL      'FTM1021R'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1040,14 +1044,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** CCT - Customer Credit Transfer details
- 
+
      C     TransTYPE     WHENEQ    'CCT2'
- 
+
      C                   EVAL      DDCCTID_IN = %SUBST(TransID:1:15)
      C                   EVAL      DDTRANR_IN = %SUBST(TransID:16:16)
- 
+
      C                   CALL      'FTM1022R'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1059,13 +1063,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** OTCC - Futures and Options Currency OTC
- 
+
      C     TransTYPE     WHENEQ    'OTCC'
- 
+
      C                   MOVEL     TransID       DDTRNO_In
- 
+
      C                   CALL      'FFOTCCR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1076,13 +1080,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** OTCO - Futures and Options Non currency OTC
- 
+
      C     TransTYPE     WHENEQ    'OTCO'
- 
+
      C                   MOVEL     TransID       DDTRNO_In
- 
+
      C                   CALL      'FFOTCOR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1093,13 +1097,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** EXTR - Futures and Options Exchange-Traded Transactions
- 
+
      C     TransTYPE     WHENEQ    'EXTR'
- 
+
      C                   MOVEL     TransID       DDTRNO_In
- 
+
      C                   CALL      'FFEXTRR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1110,12 +1114,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * SE Depot Movements
      C     TransTYPE     WHENEQ    'DPWI'
      C     TransTYPE     OREQ      'DPWO'
      C     TransTYPE     OREQ      'DPMV'                                                     CAP087
- 
+
      C*******************MOVEL     TransID       TempWork          8                          CAP087
      C*******************MOVEL     TempWork      DDDPRN_IN                                    CAP087
      C*******************MOVE      TempWork      DDDPMV_IN                                    CAP087
@@ -1123,7 +1127,7 @@
      C     10            SUBST     TransID:1     DDDPSS_In        10                          CAP087
      C     6             SUBST     TransID:11    DDDPRN_In                                    CAP087
      C     2             SUBST     TransID:17    DDDPMV_In                                    CAP087
- 
+
      C                   CALL      'SEDPMVR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1136,13 +1140,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       * MM Negotiable Assets Purchased
- 
+
      C     TransTYPE     WHENEQ    'NASP'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'MMNASPR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1153,13 +1157,14 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+     C                   PARM                    ACTRJ                                      MD051830
+
       * MM Negotiable Assets Sold
- 
+
      C     TransTYPE     WHENEQ    'NASS'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'MMNASSR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1170,11 +1175,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
      C     TransTYPE     WHENEQ    'RODL'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'MMRODLR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1185,11 +1190,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
      C     TransTYPE     WHENEQ    'CACF'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'IRCACFR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1202,16 +1207,16 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** CLS Pay-in Schedules Header
- 
+
      C     TransTYPE     WHENEQ    'CLSP'
- 
+
      C                   MOVEL     TransID       PCcy_In
      C                   EVAL      PNost_In = %SUBST(TransID:4:2)
      C                   EVAL      PVDate_In = %SUBST(TransID:6:6)
      C                   EVAL      PSeq_In = %SUBST(TransID:12:2)
- 
+
      C                   CALL      'FXCLSPR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1225,11 +1230,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** CLS Pay-in Schedules Detail
- 
+
      C     TransTYPE     WHENEQ    'CLS2'
- 
+
      C                   MOVEL     TransID       PCcy_In
      C                   EVAL      PNost_In = %SUBST(TransID:4:2)
      C                   EVAL      PVDate_In = %SUBST(TransID:6:6)
@@ -1237,7 +1242,7 @@
      C                   EVAL      PTime_In = %SUBST(TransID:14:4)
       *******************EVAL      PAmt_In = %SUBST(TransID:18:18)                           BUG5671
      C                   EVAL      PDSeq_In = %SUBST(TransID:18:2)                           BUG5671
- 
+
      C                   CALL      'FXCLSPR2'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1254,16 +1259,16 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** INTC Internal Contracts
- 
+
      C     TransTYPE     WHENEQ    'INTC'
- 
+
      C                   EVAL      DDL1DN_IN = %SUBST(TransID:1:6)
      C                   EVAL      DDL2DN_IN = %SUBST(TransID:7:12)
      C                   EVAL      DDBRCD_IN = %SUBST(TransID:13:15)
      C                   EVAL      DDORBR_IN = %SUBST(TransID:16:18)
- 
+
      C                   CALL      'ABINTCR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1277,13 +1282,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** AB Internal Funding Deals
- 
+
      C     TransTYPE     WHENEQ    'FUND'
- 
+
      C                   MOVEL     TransID       DDDLNO_In
- 
+
      C                   CALL      'ABFUNDR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1294,15 +1299,15 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** GL Batch Headers
       ** GL Journal Header Maintenance - Non-retail                                          BUG9009
- 
+
      C     TransTYPE     WHENEQ    'BITH'
      C     TransTYPE     OrEq      'BINH'                                                    BUG9009
- 
+
      C                   MOVEL     TransID       DDBTNB_In
- 
+
      C                   CALL      'GLBITHR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1313,17 +1318,17 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** GL Batch Items
       ** GL Journal Entry Item Maintenance - Non-retail                                      BUG9009
- 
+
      C     TransTYPE     WHENEQ    'BITP'
      C     TransTYPE     OrEq      'BINP'                                                    BUG9009
- 
+
      C                   MOVEL     TransID       DDBTNB_In
      C                   EVAL      DDBTNB_IN = %SUBST(TransID:1:3)
      C                   EVAL      DDBINB_IN = %SUBST(TransID:4:6)
- 
+
      C                   CALL      'GLBITPR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1335,13 +1340,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** SD Spot Rates
- 
+
      C     TransTYPE     WHENEQ    'SPTR'
- 
+
      C                   MOVEL     TransID       DDCYCD_In
- 
+
      C                   CALL      'SDSPTRR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1352,13 +1357,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
       ** IPAY SWIFT API
      C     TransTYPE     WHENEQ    'IPSW'
- 
+
      C                   MOVEL     TransID       DDMSGR_In         8
      C     3             SUBST     TransID:9     DDPART_In         3
- 
+
      C                   CALL      'FTIPSWR'
      C                   PARM                    DDMSGR_In
      C                   PARM                    DDPART_In
@@ -1384,13 +1389,13 @@
      C                   PARM                    MsgDtaArr                                    CSC021
      C                   PARM                    MsgFArray                                    CSC021
      C                   PARM                    APIRetc                                      CSC021
- 
+
       ** FD Forward rates API
- 
+
      C     TransTYPE     WHENEQ    'FWRT'
- 
+
      C                   MOVEL     TransID       DDCCY_In          3
- 
+
      C                   CALL      'FDFWRTR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1401,11 +1406,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
- 
+
      C     TransTYPE     WHENEQ    'INTR'
- 
+
      C                   MOVEL     TransID       DDCYCD_In
- 
+
      C                   CALL      'FDINTRR'
      C                   PARM                    AuthComp
      C                   PARM                    FwdBck
@@ -1731,7 +1736,7 @@
      C                   PARM                    MsgDtaArr                                    CLE134
      C                   PARM                    MsgFArray                                    CLE134
      C                   PARM                    APIRetC                                      CLE134
- 
+
       *                                                                                       CAP210
       ** Dealing Adjustment to Accrued Interest                                               CAP210
       *                                                                                       CAP210
@@ -1829,9 +1834,9 @@
       * If unknown API requested, make sure this is reported back
      C                   OTHER
      C                   EXSR      *PSSR
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5

@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051830           Date 07Nov18               *
-      *  Prev Amend No. MD050345           Date 04Apr18               *
-      *                 MD050342           Date 04Apr18               *
+      *  Last Amend No. MD050345           Date 04Apr18               *
+      *  Pret Amend No. MD050342           Date 04Apr18               *
       *                 CGL157             Date 17Aug15               *
       *                 CFT163             Date 04May18               *
       *                 MD044880           Date 15Jan18               *
@@ -215,9 +214,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051830 - Deal status is still Requires Authorization when  *
-      *             the transaction is amended then rejected in WIP   *
-      *             for NASP Transactions.                            *
       *  MD050345 - Data under CRS Country Details are not aligned to *
       *             their corresponding columns                       *
       *  MD050342 - Mailing Country details is not displayed during   *
@@ -3693,8 +3689,6 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Restore Timestamp field from the record                                            BUG4146
      C     26            SUBST     BUFFER:Bfp    @TimeStamp                                  BUG4146
      C                   ADD       26            Bfp                                         BUG4146
-     C     1             SUBST     BUFFER:Bfp    ACTRJ                                      MD051830
-     C                   ADD       1             Bfp                                        MD051830
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -3732,7 +3726,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4146
-     C                   PARM                    ACTRJ                                      MD051830
      C                   PARM                    DDFOID                                       239400
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020

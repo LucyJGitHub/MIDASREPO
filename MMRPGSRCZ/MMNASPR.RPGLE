@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051830           Date 07Nov18               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 BUG6218            Date 03Jun15               *
@@ -43,9 +42,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051830 - Deal status is still Requires Authorization when  *
-      *             the transaction is amended then rejected in WIP   *
-      *             for NASP Transactions.                            *
       *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -78,12 +74,12 @@
       *  CAP084 - API Wrapper project.                                *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -95,41 +91,41 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
-
+ 
      D DealScnFmt    E DS                  EXTNAME(MMNASPPD)
       * Deal in screen format
-
+ 
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
-
+ 
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
-
+ 
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
       *                                                                                      BUG6218
@@ -138,28 +134,28 @@
                                                                                               CER001
      D RegData       E DS                  EXTNAME(MMNPRXPD)                                  CER001
       ** Regional data in screen format - Lux                                                 CER001
-
+ 
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
-
+ 
      D DealFilFmt    E DS                  EXTNAME(MMDENBPP)
       ** Deal in file format
      D DENBRecIns            477    531                                                       TCA002
      D DENBPayIns            546   1090                                                       TCA002
      D*DENBRecIns************463    531                                                       TCA002
      D*DENBPayIns************532   1090                                                       TCA002
-
+ 
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
      D**FLREC******************1     69                                                       TCA002
      D  FLREC2                21     75                                                       TCA002
       * Receive settlement instructions in file format
-
+ 
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D**FLPAY******************1    559                                                       TCA002
      D  FLPAY2                21    565                                                       TCA002
       * Pay settlement instructions in file format
-
+ 
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
                                                                                               LLN022
@@ -177,24 +173,24 @@
       ** External ds for SAR details                                                          CER001
                                                                                             BUG10401
      D InfData       E DS                  EXTNAME(MMNAIFPD)                                BUG10401
-
+ 
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
       **-----------------------------------------------------------------------
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
-
+ 
      D DDFOID          S             20                                                       239400
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -205,8 +201,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
-     C                   PARM                    ACTRJ             1                        MD051830
-
+ 
       ** Access SAR details file to determine if LLN012                                      LLN022A
       ** FSA Liquidity Report LR extract is installed.                                       LLN022A
       *                                                                                      LLN022A
@@ -226,10 +221,10 @@
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
-
+ 
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,MMNASPM01
-
+ 
       **  Add GBBYUSRMSG to MsgFArray if BOE installed                                       LLN022A
       *                                                                                      LLN022A
      C                   IF        LLN012 = 'Y'                                              LLN022A
@@ -275,7 +270,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -288,7 +283,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      MMNASPRED
@@ -349,15 +344,15 @@
      C                   ENDIF                                                                CER001
      C                   EXSR      ZASETINCVT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
-
+ 
       * Build buffer with required output
       ** Please ensure that when setting up the buffer, new core fields                      BUG6218
       ** are added before the data structure ExtData                                         BUG6218
@@ -368,7 +363,6 @@
      C                                           + CPST     + DSPCP                          BUG6512
      C                                           + BKST     + DSPBK                          BUG6512
      C                                                    + @TimeStamp                       BUG4146
-     C                                           + ACTRJ                                    MD051830
      C                                           + DDFOID                                     239400
      C                                           + InRecSttmt
      C                                           + InPaySttmt
@@ -376,7 +370,7 @@
      C**********                                 + RegData                           CER001 MD044880
      C                                           + ExtData                                   BUG6218
      C                                           + RegData                                  MD044880
-
+ 
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -409,7 +403,7 @@
      C                   PARM      *BLANK        @DLRED            6
       * Front Office ID read
      C                   PARM                    @FTRED           20
-
+ 
      C                   ENDSR
       **********************************************************************
      C     MMNASPRTV     BEGSR
@@ -436,8 +430,6 @@
       * -------
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
-      *                                                                                     MD051830
-     C                   PARM                    ACTRJ                                      MD051830
       * OK - Action code
      C                   PARM      'Y'           DDActnOK          1
       * OK - Deal Number
@@ -455,11 +447,11 @@
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
-
+ 
      C                   ENDSR
       **********************************************************************
      C     MMNASPCVT     BEGSR
-
+ 
      C                   CALLB     'MMNASPCVT'
       * INPUTS
       * ------
@@ -473,7 +465,7 @@
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
-
+ 
      C                   EVAL      DDFOID = HLFRNT                                            239400
                                                                                               239400
      C                   ENDSR

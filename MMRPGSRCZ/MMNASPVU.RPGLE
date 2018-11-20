@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051830           Date 07Nov18               *      
-      *  Prev Amend No. MD039547           Date 20Sep16               *
-      *                 MD044880           Date 15Jan18               *
+      *  Last Amend No. MD039547           Date 20Sep16               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
@@ -75,9 +74,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051830 - Deal status is still Requires Authorization when  *
-      *             the transaction is amended then rejected in WIP   *
-      *             for NASP Transactions.                            *      
       *  MD039547 - Referred account is not properly validated.       *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
@@ -731,7 +727,6 @@
      C                   PARM                    @MsgDtaArr                                  BUG4808
      C                   PARM                    @MsgFArray                                  BUG4808
      C                   PARM                    @APIRetC          1                         BUG4808
-     C                   PARM                    ACTRJ                                      MD051830
      C                   MOVEL     DDACTN        Buffer                                      BUG4808
      C                   ELSE                                                                BUG4808
       * Remerge buffer with all relevant data structures
@@ -746,7 +741,6 @@
      C                                           + CPST     + DSPCP                          BUG6512
      C                                           + BKST     + DSPBK                          BUG6512
      C                                                  + @TimeStamp                         BUG4146
-     C                                           + ACTRJ                                    MD051830
      C                                           + DDFOID                                     239400
      C                                                  + InRecSttmt                         BUG4146
      C**********                                        + InPaySttmt + ExtData         BG3948 CAP086
@@ -792,7 +786,6 @@
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4146
-     C                   PARM                    ACTRJ             1                        MD051830
      C                   PARM                    DDFOID           20                          239400
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN012                                      LLN022A
@@ -1049,8 +1042,6 @@
       * OUTPUTS
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
-      *                                                                                     MD051830
-     C                   PARM                    ACTRJ                                      MD051830
       * OK - Action code
      C                   PARM                    DDActnOK
       * OK - Deal Number
@@ -1271,8 +1262,6 @@
      C                   PARM      'S'           APRespMode
       * Transaction information (DS) from source system
      C                   PARM                    TranIn
-      *                                                                                     MD051830
-     C                   PARM                    ACTRJ                                      MD051830
       * Receive Settlement Currency, Method & Nostro and
       * Payment Settlement Currency, Method & Nostro
       * Extra Data

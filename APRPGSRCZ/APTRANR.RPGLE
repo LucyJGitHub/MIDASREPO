@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051830           Date 07Nov18               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
@@ -79,9 +78,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD051830 - Deal status is still Requires Authorization when  *
-      *             the transaction is amended then rejected in WIP   *
-      *             for NASP Transactions.                            *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *

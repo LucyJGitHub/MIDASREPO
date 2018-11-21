@@ -9,10 +9,11 @@
 /*                                                                  */
 /*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD024838           Date 20Nov18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CSC033            Date     21May07          */
+/*                      CSC033            Date     21May07          */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
@@ -25,6 +26,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD024838 - SCC0401 (SCC2449) COB component not housekeeping*/
+/*                  JRN savefiles. Applied for MD052357             */
 /*       MD046248 - Finastra Rebranding                             */
 /*       CSC033  - Include global libraries in database saves.      */
 /*       211730  - Clear DBdayDTA SAVF file as well. This save file */
@@ -85,7 +88,8 @@
 /**/
 /**************************************************************/
 /*                                                            */
-/* C L E A R   J O U R N A L  R E C E I V E R                 */
+/**C*L*E*A*R***J*O*U*R*N*A*L**R*E*C*E*I*V*E*R******************/                        /*MD024838*/
+/* D E L E T E J O U R N A L  R E C E I V E R                 */                        /*MD024838*/
 /* S A V E   F I L E S                                        */
 /*                                                            */
 /**************************************************************/
@@ -109,10 +113,13 @@
 /**/
              IF         COND(&ODOBAT *EQ 'SAVF') THEN(DO)
 /**/
-/* clear the save file                           */
+/**clear*the*save*file****************************/                                     /*MD024838*/
+/* Delete the savefile                           */                                     /*MD024838*/
 /**/
-                CLRSAVF    FILE(&LIB/&ODOBNM)
- 
+/**********     CLRSAVF    FILE(&LIB/&ODOBNM)     */                                    /*MD024838*/
+                DLTF       FILE(&LIB/&ODOBNM)                                           /*MD024838*/
+                MONMSG     MSGID(CPF0000)                                               /*MD024838*/
+
 /**/
              ENDDO
              ELSE       CMD(DO)
@@ -154,7 +161,8 @@ END_LOOP:
              IF         COND(&GLOBAL *EQ 'Y') THEN(DO)                                    /*CSC033*/
 /**/                                                                                      /*CSC033*/
              CHGVAR     VAR(&BOB_SAVF3) VALUE(&BOB_SAVF)                                  /*CSC033*/
-             CHGVAR     VAR(%SST(&BOB_SAVF3 1 1)) VALUE('G')                              /*CSC033*/
+/**********  CHGVAR     VAR(%SST(&BOB_SAVF3 1 1)) VALUE('G') */                  /*CSC033 MD024838*/
+             CHGVAR     VAR(%SST(&BOB_SAVF3 6 2)) VALUE('GM')                           /*MD024838*/
              CHGVAR     VAR(&BOB_SAVF4) VALUE(&BOB_SAVF3)                                 /*CSC033*/
              CHGVAR     VAR(%SST(&BOB_SAVF4 6 3)) VALUE('GTA')                            /*CSC033*/
 /**/                                                                                      /*CSC033*/

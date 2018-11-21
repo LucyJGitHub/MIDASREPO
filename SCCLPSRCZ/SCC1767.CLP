@@ -9,8 +9,10 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR813190           Date 09Aug11              */
+/*       Last Amend No. MD052357           Date 20Nov18              */
+/*       Prev Amend No. MD024838           Date 20Nov18              */
+/*                      MD046248           Date 27Oct17              */
+/*                      AR813190           Date 09Aug11              */
 /*                      AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CCB016             Date 31Oct07              */
@@ -35,6 +37,9 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD052357 - Added MONMSG CPF3707 to SAVSAVFDTA               */
+/*       MD024838 - SCC0401 (SCC2449) COB component not housekeeping */
+/*                  JRN savefiles. Applied for MD052357              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR813190 - Apply fix AR799678 (Child: AR813191)             */
 /*       AR799678 - ICIFINISH failed component at the live system    */
@@ -242,14 +247,14 @@
                                 &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
                                 &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
                                 &SVALK0 &SVAL10)                               /*CCB016*/
- 
+
 /* If the 'APIProcessingMode' system value is missing then end abnormally */   /*CCB016*/
- 
+
                    IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
                                 CMDLBL(ABNOR))                                 /*CCB016*/
                    ELSE
                               CHGVAR     VAR(&SAVCHG) VALUE(%SST(&SVAL1 1 1))  /*CCB016*/
- 
+
 /*/COPY WNCPYSRC,SCH00001                                            */
              IF         COND((&SAVCHG *NE 'Y') *AND +
                              (&SAVCHG *NE 'N')) THEN(DO)              /*CCB016*/
@@ -395,6 +400,7 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SCC1767004                                        */ /*S01408*/
                                                                       /*S01408*/
+             MONMSG     MSGID(CPF3707)                                                  /*MD024838*/
              MONMSG     MSGID(CPF0000) EXEC(DO)
 /**/
 /*  If error during save send message and terminate                */
@@ -443,6 +449,7 @@
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,SCC1767006                                        */ /*S01408*/
                                                                       /*S01408*/
+             MONMSG     MSGID(CPF3707)                                                  /*MD052357*/
              MONMSG     MSGID(CPF0000) EXEC(DO)
 /**/
 /*  If error during save send message and terminate                */
@@ -578,7 +585,7 @@
              ENDDO                                                                      /*AR799678*/
 /**/
 /*/COPY WNCPYSRC,SCC1767MPE                                          */
- 
+
              GOTO       CMDLBL(END)
 /**/
 /*  Error processing                                                */

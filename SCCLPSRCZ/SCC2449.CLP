@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD024838A          Date 20Nov18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27440           Date 21Apr10              */
 /*                      260790            Date 19Jun09               */
@@ -34,6 +35,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD024838A - Saving of SAVFs done in an in-house program.    */
+/*                   Delete the savefiles instead of renaming them.  */
+/*                   Applied for MD052357                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG27440 - SCC0401 00001 failed                             */
@@ -346,16 +350,18 @@
 /**/
 /**********  IF         COND(&ODOBAT *EQ 'SAVF') THEN(DLTF + */                           /*260790*/
 /**********               FILE(&DILIB/&ODOBNM)) */                                        /*260790*/
-             IF         COND(&ODOBAT *EQ 'SAVF') THEN(DO)                                 /*260790*/
-                 CHGVAR     VAR(&THISREC) VALUE(%SST(&ODOBNM 3 8))                        /*260790*/
-                 IF         COND(&THISREC *GE &CONTROL) THEN(DLTF +
-                          FILE(&DILIB/&ODOBNM))                                           /*260790*/
-                 IF         COND(&THISREC *LT &CONTROL) THEN(DO)                          /*260790*/
-                      CHGVAR     VAR(&COUNTA) VALUE(&THISREC)                             /*260790*/
-                      CHGVAR     VAR(&SAVF_NAME) VALUE('IR' *CAT &COUNTA)                 /*260790*/
-                      CHGSAVF    FILE(&DILIB/&SAVF_NAME) TEXT(&SAVFTEXT)                  /*260790*/
-                 ENDDO                                                                    /*260790*/
-             ENDDO                                                                        /*260790*/
+             IF         COND(&ODOBAT *EQ 'SAVF') THEN(DLTF +
+                          FILE(&DILIB/&ODOBNM))                                        /*MD024838A*/
+/**********  IF         COND(&ODOBAT *EQ 'SAVF') THEN(DO)            */         /*260790 MD024838A*/
+/**********      CHGVAR     VAR(&THISREC) VALUE(%SST(&ODOBNM 3 8))   */         /*260790 MD024838A*/
+/**********      IF         COND(&THISREC *GE &CONTROL) THEN(DLTF +  */                /*MD024838A*/
+/**********               FILE(&DILIB/&ODOBNM))                      */         /*260790 MD024838A*/
+/**********      IF         COND(&THISREC *LT &CONTROL) THEN(DO)     */         /*260790 MD024838A*/
+/**********           CHGVAR     VAR(&COUNTA) VALUE(&THISREC)        */         /*260790 MD024838A*/
+/**********           CHGVAR     VAR(&SAVF_NAME) VALUE('IR' *CAT &COUNTA)*/     /*260790 MD024838A*/
+/**********           CHGSAVF    FILE(&DILIB/&SAVF_NAME) TEXT(&SAVFTEXT)*/      /*260790 MD024838A*/
+/**********      ENDDO                                               */         /*260790 MD024838A*/
+/**********  ENDDO                                                   */         /*260790 MD024838A*/
              ELSE       CMD(DO)
              SNDPGMMSG  MSG('File' *BCAT &ODOBNM *BCAT 'with +
                           attribute' *BCAT &ODOBAT *BCAT 'found in' +

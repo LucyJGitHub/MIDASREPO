@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *  Last Amend No. MD049363           Date 19Sep18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CLE141             Date 08Feb16               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
@@ -403,6 +405,8 @@
      D WSET            S             18A                                                    MD046080
      D WWCCY           S              3A                                                    MD046080
      D CLE034          S              1A                                                    MD046080
+     D K1VDAT          S              5P 0                                                  MD049363
+     D K1LASN          S              3S 0                                                  MD049363
 
       ** Indexes.
 
@@ -2395,6 +2399,13 @@
      C                             AND k_STAL = 'Y'                                         MD046080
      C                   MOVE      *BLANKS       WSET                                       MD046080
      C                   MOVE      k_OSAC        WSET                                       MD046080
+     C                   IF        LASN = 0                                                 MD049363
+     C                   EVAL      K1VDAT = 0                                               MD049363
+     C                   EVAL      K1LASN = 0                                               MD049363
+     C                   ELSE                                                               MD049363
+     C                   EVAL      K1VDAT = VDAT                                            MD049363
+     C                   EVAL      K1LASN = LASN                                            MD049363
+     C                   ENDIF                                                              MD049363
      C                   IF        k_PTYP <> 66                                             MD046080
      C                             AND k_PTYP <> 67                                         MD046080
      C                             AND k_PTYP <> 69                                         MD046080
@@ -2533,6 +2544,8 @@
                                                                                             AR815697
      C     KSTAL         KLIST                                                              MD046080
      C                   KFLD                    k_LNRF                                     MD046080
+     C                   KFLD                    K1VDAT                                     MD049363
+     C                   KFLD                    K1LASN                                     MD049363
      C                   KFLD                    WSET                                       MD046080
                                                                                             MD046080
       ** Parameter List.

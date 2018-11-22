@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD051788           Date 30Aug18               *
+      *  Last Amend No. MD049363           Date 19Sep18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD051788           Date 30Aug18               *
       *                 MD049745B          Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD049745           Date 02Mar18               *
@@ -387,6 +388,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *
       *              missing exchange rate on PDCL                    *
@@ -12411,6 +12413,15 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      KEAMT = WIKAMT                                           MD049745
      C                   EVAL      KIAMT = WIKAMT                                          MD049745A
      C                   ENDIF                                                              MD049745
+      *                                                                                     MD049363
+      ** Override amount if CLE034 is switch on                                             MD049363
+      *                                                                                     MD049363
+     C                   IF        CLE034 = 'Y'                                             MD049363
+     C                             AND STAL = 'Y'                                           MD049363
+     C                   EVAL      KEAMT = ACAMNT                                           MD049363
+     C                   EVAL      KIAMT = ACAMNT                                           MD049363
+     C                   EVAL      KOTHA = WRKPAT                                           MD049363
+     C                   ENDIF                                                              MD049363
      C**********         ENDIF                                                     MD049078 MD049745
      C*****CLE031        IFEQ      'Y'                                             MD046080 MD049078
      C*****CLE034        IFEQ      'Y'                                             MD046080 MD049078
@@ -12518,6 +12529,16 @@ L118 I                             P   72   77 7RTSPL
      C                   EVAL      KEAMT = WPKAMT                                           MD049745
      C                   EVAL      KPAMT = WPKAMT                                          MD049745A
      C                   ENDIF                                                              MD049745
+      *                                                                                     MD049363
+      ** Override amount if CLE034 is switch on                                             MD049363
+      *                                                                                     MD049363
+     C                   IF        CLE034 = 'Y'                                             MD049363
+     C                             AND STAL = 'Y'                                           MD049363
+     C                   EVAL      KEAMT = ACAMNT                                           MD049363
+     C                   EVAL      KPAMT = ACAMNT                                           MD049363
+     C                   EVAL      KOTHA = WRKPAT                                           MD049363
+     C                   EVAL      WPKAMT = ACAMNT                                          MD049363
+     C                   ENDIF                                                              MD049363
      C**********         ENDIF                                                     MD049078 MD049745
      C*****CLE031        IFEQ      'Y'                                             MD046080 MD049078
      C*****CLE034        IFEQ      'Y'                                             MD046080 MD049078
@@ -18441,6 +18462,7 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE034
      C                   Z-ADD     0             WTOTA            13 0
      C                   Z-ADD     0             WRKAMT           13 0
+     C                   Z-ADD     0             WRKPAT           13 0                      MD049363
      C                   MOVE      *BLANK        WRKFLD            1
      C                   Z-ADD     SETP          WSSETP            2 0
      C**********           MOVE OSAC      WSOSAC 12                                    CLE034 CGL029
@@ -18566,6 +18588,10 @@ C    C                   ENDIF                                                  
      C     WSVAMT        MULT      RCPC          WRKAMT
      C                   DIV(H)    100           WRKAMT
      C                   ENDIF
+     C                   IF        CLE034 = 'Y'                                             MD049363
+     C                             AND STAL = 'Y'                                           MD049363
+     C                   EVAL      WRKPAT = WRKAMT                                          MD049363
+     C                   ENDIF                                                              MD049363
       *                                                                                       CLE034
      C     WTOTA         ADD       WRKAMT        WTOTA
       *                                                                                       CLE034

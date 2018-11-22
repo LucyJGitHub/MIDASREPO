@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049745A          Date 16Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049363           Date 19Sep18               *
+      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
       *                 MD046080           Date 21Sep17               *      
       *                 CGL165             Date 17Feb15               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049363 - Percentage allocation error                       *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -380,6 +382,8 @@
      D WSRATE          S             13P 8                                                 MD049745A
      D WREV            S              1A                                                   MD049745A
      D WMINUS          S              1A                                                   MD049745A
+     D KVDAT           S              5P 0                                                  MD049363
+     D KLASN           S              3S 0                                                  MD049363
  
       ** Cache Work Variables and Storage
  
@@ -1521,6 +1525,13 @@
      C                             AND STAL = 'Y'                                           MD046080
      C                   MOVE      *BLANKS       WSET                                       MD046080
      C                   MOVE      OSAC          WSET                                       MD046080
+     C                   IF        ALASN = 999                                              MD049363
+     C                   EVAL      KVDAT = 0                                                MD049363
+     C                   EVAL      KLASN = 0                                                MD049363
+     C                   ELSE                                                               MD049363
+     C                   EVAL      KVDAT = AVDAT                                            MD049363
+     C                   EVAL      KLASN = ALASN                                            MD049363
+     C                   ENDIF                                                              MD049363
      C                   IF        PTYP <> 66                                               MD046080
      C                             AND PTYP <> 67                                           MD046080
      C                             AND PTYP <> 69                                           MD046080
@@ -2079,6 +2090,8 @@
                                                                                             MD046080
      C     KSTAL         KLIST                                                              MD046080
      C                   KFLD                    LNRF                                       MD046080
+     C                   KFLD                    KVDAT                                      MD049363
+     C                   KFLD                    KLASN                                      MD049363
      C                   KFLD                    WSET                                       MD046080
                                                                                             MD046080
      C     KACTN5        KLIST                                                             MD049745A

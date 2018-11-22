@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD051242           Date 25Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049363           Date 19Sep18               *  
+      *  Prev Amend No. MD051242           Date 25Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
       *                 MD048558           Date 21Nov17               *
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049363 - Percentage allocation error                       *
       *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
       *             balance for fee with no settlement currency       *
       *  MD046248 - Finastra Rebranding                               *
@@ -234,6 +236,8 @@
      D Counter         S             10S 0 INZ(*ZEROS)                                      MD051242
      D WKLPUR          S              3A                                                    MD051242
      D WKLSAL          S              3A                                                    MD051242
+     D KVDAT           S              5P 0                                                  MD049363
+     D KLASN           S              3S 0                                                  MD049363
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -382,6 +386,13 @@
      C                             AND STAL = 'Y'
      C                   MOVE      *BLANKS       WSET
      C                   MOVE      L1_OSAC       WSET
+     C                   IF        L1_ALASN = 999                                           MD049363
+     C                   EVAL      KVDAT = 0                                                MD049363
+     C                   EVAL      KLASN = 0                                                MD049363
+     C                   ELSE                                                               MD049363
+     C                   EVAL      KVDAT = L1_AVDAT                                         MD049363
+     C                   EVAL      KLASN = L1_ALASN                                         MD049363
+     C                   ENDIF                                                              MD049363
      C                   IF        PTYP <> 66
      C                             AND PTYP <> 67
      C                             AND PTYP <> 69
@@ -1405,6 +1416,8 @@
 
      C     KSTAL         KLIST
      C                   KFLD                    LNRF
+     C                   KFLD                    KVDAT                                      MD049363
+     C                   KFLD                    KLASN                                      MD049363
      C                   KFLD                    WSET
 
      C     KLOANK        KLIST

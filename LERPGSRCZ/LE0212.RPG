@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD051086           Date 03Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046080           Date 17Sep17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD038254           Date 03Jun16               *
@@ -273,7 +274,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046248 - Finastra Rebranding                               *  
+      *  MD051086 - Loan activity enquiry shows interest paid and not *
+      *             tranferred to past due call loan. Consider PDCL   *
+      *             type 'T' so "PD PRINCIPAL - TFR to" is displayed  *
+      *             when enquiring original loan of PDCL for IN event *
+      *             in history.                                       *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
@@ -282,14 +288,14 @@
       *             Accrue on Last Day Indicator for method 6.        *
       *  MD047806 - Consider zero base rate                           *
       *  MD031179 - Used BRTE instead of BRTEH to correctly display   *
-      *             the starting base rate for newly inserted loans.  *      
+      *             the starting base rate for newly inserted loans.  *
       *  MD035329 - Historic rollover with zero base rate does not    *
       *             appear in Loan Activity Enquiry. Ensure that zero *
       *             rollover rate is also displayed on LOAC. Apply    *
       *             part of fix AR738602.                             *
       *  MD026445 - ROLLOVER - SPREAD event is not displayed on next  *
       *             page. Move 221558 fix before BUG9240 in SR/SRDISH.*
-      *           - Applied for MD035329                              *      
+      *           - Applied for MD035329                              *
       *  MD038254 - Use calculated outstanding interest for RE events *
       *             of loan type 1 and 3 in SRLOAM instead of ZINTR.  *
       *             Partially applied MD-12518                        *
@@ -3333,11 +3339,15 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C           INTAH     SUB  YPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C           CLE034    IFEQ 'Y'                                                         MD046080
      C           INTAH     SUB  WKTOTL    ZFLD15                                            MD046080
      C                     ELSE                                                             MD046080
      C           INTAH     SUB  YPDINT    ZFLD15                                              CLE134
      C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD051086
       *                                                                                       CLE134
      C                     ELSE                                                               CLE134
      C                     Z-ADDINTAH     ZFLD15
@@ -3352,7 +3362,11 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     MOVEL'LEE5400' ZAMSID                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     MOVEL'LEE5410' ZAMSID                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     CLEARZAMSDA                                                        263418
      C                     MOVELYPLON     ZAMSDA                                              CLE134
      C                     EXSR SRTEXT                                                        CLE134
@@ -3369,7 +3383,11 @@
      C           P         ADD  1         P                                                 MD046080
      C                     ENDDO                                                            MD046080
      C                     ELSE                                                             MD046080
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     Z-ADDYPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     Z-ADDYPDINT    ZFLD15                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     EXSR ZSEDIT                                                        CLE134
      C                     MOVE ZOUT21    SAMNT                                               CLE134
      C                     MOVE 'Y'       WDTL1                                               CLE134
@@ -3456,11 +3474,15 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C           INTAH     SUB  YPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C           CLE034    IFEQ 'Y'                                                         MD046080
      C           INTAH     SUB  WKTOTL    ZFLD15                                            MD046080
      C                     ELSE                                                             MD046080
      C           INTAH     SUB  YPDINT    ZFLD15                                              CLE134
      C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD051086
       *                                                                                       CLE134
      C                     ELSE                                                               CLE134
      C                     Z-ADDINTAH     ZFLD15
@@ -3476,7 +3498,11 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     MOVEL'LEE5400' ZAMSID                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     MOVEL'LEE5410' ZAMSID                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     CLEARZAMSDA                                                        263418
      C                     MOVELYPLON     ZAMSDA                                              CLE134
      C                     EXSR SRTEXT                                                        CLE134
@@ -3493,7 +3519,11 @@
      C           P         ADD  1         P                                                 MD046080
      C                     ENDDO                                                            MD046080
      C                     ELSE                                                             MD046080
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     Z-ADDYPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     Z-ADDYPDINT    ZFLD15                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     EXSR ZSEDIT                                                        CLE134
      C                     MOVE ZOUT21    SAMNT                                               CLE134
      C                     MOVE 'Y'       WDTL1                                               CLE134
@@ -3621,11 +3651,15 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C           INTAH     SUB  YPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C           CLE034    IFEQ 'Y'                                                         MD046080
      C           INTAH     SUB  WKTOTL    ZFLD15                                            MD046080
      C                     ELSE                                                             MD046080
      C           INTAH     SUB  YPDINT    ZFLD15                                              CLE134
      C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD051086
       *                                                                                       CLE134
      C                     ELSE                                                               CLE134
      C***********REPT      IFEQ 3                                  154221 159779
@@ -3652,7 +3686,11 @@
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
      C           DSPPDA    ANDEQ'Y'                                                           CLE134
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     MOVEL'LEE5400' ZAMSID                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     MOVEL'LEE5410' ZAMSID                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     CLEARZAMSDA                                                        263418
      C                     MOVELYPLON     ZAMSDA                                              CLE134
      C                     EXSR SRTEXT                                                        CLE134
@@ -3669,7 +3707,11 @@
      C           P         ADD  1         P                                                 MD046080
      C                     ENDDO                                                            MD046080
      C                     ELSE                                                             MD046080
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     Z-ADDYPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     Z-ADDYPDINT    ZFLD15                                              CLE134
+     C                     ENDIF                                                            MD051086
      C                     EXSR ZSEDIT                                                        CLE134
      C                     MOVE ZOUT21    SAMNT                                               CLE134
      C                     MOVE 'Y'       WDTL1                                               CLE134
@@ -3822,11 +3864,15 @@
       *                                                                                       263411
      C           CLE134    IFEQ 'Y'                                                           263411
      C           DSPPDA    ANDEQ'Y'                                                           263411
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C           INTAH     SUB  YPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C           CLE034    IFEQ 'Y'                                                         MD046080
      C           INTAH     SUB  WKTOTL    ZFLD15                                            MD046080
      C                     ELSE                                                             MD046080
      C           INTAH     SUB  YPDINT    ZFLD15                                              263411
      C                     ENDIF                                                            MD046080
+     C                     ENDIF                                                            MD051086
       *                                                                                       263411
      C                     ELSE                                                               263411
      C                     Z-ADDINTAH     ZFLD15
@@ -3841,7 +3887,11 @@
       *                                                                                       263411
      C           CLE134    IFEQ 'Y'                                                           263411
      C           DSPPDA    ANDEQ'Y'                                                           263411
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     MOVEL'LEE5400' ZAMSID                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     MOVEL'LEE5410' ZAMSID                                              263411
+     C                     ENDIF                                                            MD051086
      C                     MOVELYPLON     ZAMSDA                                              263411
      C                     EXSR SRTEXT                                                        263411
      C                     MOVELZAMSTX    SNARR                                               263411
@@ -3857,7 +3907,11 @@
      C           P         ADD  1         P                                                 MD046080
      C                     ENDDO                                                            MD046080
      C                     ELSE                                                             MD046080
+     C           YPDCT     IFNE 'I'                                                         MD051086
+     C                     Z-ADDYPOREI    ZFLD15                                            MD051086
+     C                     ELSE                                                             MD051086
      C                     Z-ADDYPDINT    ZFLD15                                              263411
+     C                     ENDIF                                                            MD051086
      C                     EXSR ZSEDIT                                                        263411
      C                     MOVE ZOUT21    SAMNT                                               263411
      C                     MOVE 'Y'       WDTL1                                               263411
@@ -11450,7 +11504,7 @@
      C/COPY ZSRSRC,ZCONVZ1                                                                    193701
       /EJECT                                                                                  193701
 ** CPY@   **     Copyright statement
-(c) Finastra International Limited 2001           
+(c) Finastra International Limited 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

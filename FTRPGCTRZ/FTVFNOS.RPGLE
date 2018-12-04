@@ -17,12 +17,19 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034926           Date 09Jul15               *
+      *  Last Amend No. MD051752A          Date 30Oct18               *
+      *  Prev Amend No. MD051752           Date 18Sep18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034926           Date 09Jul15               *
       *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051752A- NVDEST not populated when warning is thrown       *
+      *           - Return a 'W' in the OK indicators                 *
+      *           - When warning is thrown, go to the next validaton  *
+      *  MD051752 - Change Refer credit/debit and Inactive errors to  *
+      *             Warning. Deliver Data to make them configurable   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034926 - Value date should not be earlier than the Date    *
       *             Account Opened whether it is a Nostro or a Retail *
@@ -275,21 +282,29 @@
       *** Inactive
      C                   TESTB     '4'           WRETB                    98
      C                   IF        *IN98 = *ON
-     C                   EVAL      OKFNOS = 'N'
-     C                   ADD       1             Idx
-     C                   EVAL      FldNamXAr(Idx) = 'NTFNOS    '
-     C                   EVAL      MsgIdXAr(Idx) = '5047492'
-     C                   GOTO      EMAIN
+     C**********         EVAL      OKFNOS = 'N'                                            MD051752A
+     C                   EVAL      OKFNOS = 'W'                                            MD051752A
+     C**********         ADD       1             Idx                                        MD051752
+     C**********         EVAL      FldNamXAr(Idx) = 'NTFNOS    '                            MD051752
+     C**********         EVAL      MsgIdXAr(Idx) = '5047492'                                MD051752
+     C                   Add       1             WIdx                                       MD051752
+     C                   EVAL      WFldNmXAr(WIdx)= 'NTFNOS    '                            MD051752
+     C                   EVAL      WMsgIdXAr(WIdx)= '5047492'                               MD051752
+     C**********         GOTO      EMAIN                                                   MD051752A
      C                   ENDIF
  
       *** Referred Debit
      C                   TESTB     '0'           WRETB                    98
      C                   IF        *IN98 = *ON
-     C                   EVAL      OKFNOS = 'N'
-     C                   ADD       1             Idx
-     C                   EVAL      FldNamXAr(Idx) = 'NTFNOS    '
-     C                   EVAL      MsgIdXAr(Idx) = '5047493'
-     C                   GOTO      EMAIN
+     C**********         EVAL      OKFNOS = 'N'                                            MD051752A
+     C                   EVAL      OKFNOS = 'W'                                            MD051752A
+     C**********         ADD       1             Idx                                        MD051752
+     C**********         EVAL      FldNamXAr(Idx) = 'NTFNOS    '                            MD051752
+     C**********         EVAL      MsgIdXAr(Idx) = '5047493'                                MD051752
+     C                   Add       1             WIdx                                       MD051752
+     C                   EVAL      WFldNmXAr(WIdx)= 'NTFNOS    '                            MD051752
+     C                   EVAL      WMsgIdXAr(WIdx)= '5047493'                               MD051752
+     C**********         GOTO      EMAIN                                                   MD051752A
      C                   ENDIF
  
       ** Do next validations only if value date is valid

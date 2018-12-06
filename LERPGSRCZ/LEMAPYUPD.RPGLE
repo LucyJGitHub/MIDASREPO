@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD049571           Date 06Feb18               *
+      *  Last Amend No. MD051892           Date 22Sep18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD049571           Date 06Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1002234          Date 12Jan17               *
       *                 MD040186           Date 13Sep16               *
@@ -112,6 +113,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051892 - Proj settlement amnt calculated at defaulted rate *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049571 - Value date of Manual Repayment in Projected       *
       *             Account movement is incorrect                     *
@@ -580,6 +582,9 @@
      D***OTSEN**               15     24                                                      CGL029
      D***OFACO**               25     34                                                      CGL029
      D***OLDSET*                1     34                                                      CGL029
+     D  OSCCY                 41     43                                                     MD051892
+     D  OREXR                 44     50P 8                                                  MD051892
+     D  OREXI                 51     51                                                     MD051892
       *
      D  NewSettlDS     DS
       ***  New settlement details
@@ -593,6 +598,9 @@
      D***WTHRS**               15     24                                                      CGL029
      D***WFACO**               25     34                                                      CGL029
      D***WSETT**                1     34                                                      CGL029
+     D  WSCCY                 41     43                                                     MD051892
+     D  WREXR                 44     50P 8                                                  MD051892
+     D  WREXI                 51     51                                                     MD051892
       *
      D PDateOutZ9      DS                                                                     CLE134
      D  VDATYr                 1      4  0                                                    CLE134
@@ -1714,6 +1722,14 @@
       *
      C**********         MOVE      WSETT         SHSETT           34                          CGL029
      C                   MOVE      WSETT         SHSETT                                       CGL029
+     C     CLE031        IFEQ      'Y'                                                      MD051892
+     C                   MOVE      SCCYK         SHSCCY                                     MD051892
+     C                   Z-ADD     REXRK         SHREXR                                     MD051892
+     C                   MOVE      REXIK         SHREXI                                     MD051892
+     C                   MOVE      PSCYK         SHPSCY                                     MD051892
+     C                   Z-ADD     PEXRK         SHPEXR                                     MD051892
+     C                   MOVE      PEXIK         SHPEXI                                     MD051892
+     C                   ENDIF                                                              MD051892
      C                   EXSR      SRSHAD
      C                   CLEAR                   Z#BSTS
      C                   MOVE      Z#ADTA        Z#ADT1
@@ -1816,6 +1832,11 @@
       *
      C**********         MOVE      OLDSET        SHSETT           34                          CGL029
      C                   MOVE      OLDSET        SHSETT                                       CGL029
+     C     CLE031        IFEQ      'Y'                                                      MD051892
+     C                   MOVE      OSCCY         SHSCCY                                     MD051892
+     C                   Z-ADD     OREXR         SHREXR                                     MD051892
+     C                   MOVE      OREXI         SHREXI                                     MD051892
+     C                   ENDIF                                                              MD051892
      C                   EXSR      SRSHAD
      C                   MOVE      Z#ADTA        Z#BDT1
      C                   MOVE      Z#ADTB        Z#BDT2
@@ -1833,6 +1854,14 @@
       ***  Shadow posting - After Status
 
      C                   MOVE      WSETT         SHSETT
+     C     CLE031        IFEQ      'Y'                                                      MD051892
+     C                   MOVE      SCCYK         SHSCCY                                     MD051892
+     C                   Z-ADD     REXRK         SHREXR                                     MD051892
+     C                   MOVE      REXIK         SHREXI                                     MD051892
+     C                   MOVE      PSCYK         SHPSCY                                     MD051892
+     C                   Z-ADD     PEXRK         SHPEXR                                     MD051892
+     C                   MOVE      PEXIK         SHPEXI                                     MD051892
+     C                   ENDIF                                                              MD051892
      C                   EXSR      SRSHAD
      C                   MOVE      Z#ADTA        Z#ADT1
      C                   MOVE      Z#ADTB        Z#ADT2
@@ -5123,14 +5152,14 @@
      C                   MOVE      ICCY          SHICCY
      C                   ENDIF
       *
-     C     CLE031        IFEQ      'Y'                                                        CLE031
-     C                   MOVE      SCCYK         SHSCCY                                     AR943686
-     C                   Z-ADD     REXRK         SHREXR                                       CLE031
-     C                   MOVE      REXIK         SHREXI                                       CLE031
-     C                   MOVE      PSCYK         SHPSCY                                       CLE031
-     C                   Z-ADD     PEXRK         SHPEXR                                       CLE031
-     C                   MOVE      PEXIK         SHPEXI                                       CLE031
-     C                   ENDIF                                                                CLE031
+     C*****CLE031        IFEQ      'Y'                                              CLE031  MD051892
+     C**********         MOVE      SCCYK         SHSCCY                            AR943686 MD051892
+     C**********         Z-ADD     REXRK         SHREXR                              CLE031 MD051892
+     C**********         MOVE      REXIK         SHREXI                              CLE031 MD051892
+     C**********         MOVE      PSCYK         SHPSCY                              CLE031 MD051892
+     C**********         Z-ADD     PEXRK         SHPEXR                              CLE031 MD051892
+     C**********         MOVE      PEXIK         SHPEXI                              CLE031 MD051892
+     C**********         ENDIF                                                       CLE031 MD051892
       *                                                                                      BUG9225
      C                   MOVE      STAL          SHSTAL                                      BUG9225
       *

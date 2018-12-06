@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052228           Date 30Oct18               *
-      *  Prev Amend No. MD038593           Date 09Jun16               *
+      *  Last Amend No. MD051892           Date 22Sep18               *      
+      *  Prev Amend No. MD052228           Date 30Oct18               *
+      *                 MD038593           Date 09Jun16               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036475           Date 04Dec15               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051892 - Proj settlement amnt calculated at defaulted rate *      
       *  MD052228 - Overridable message Settlement account is         *
       *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
@@ -410,6 +412,9 @@
      D  OOSAC                  3     20                                                       CGL029
      D  OTSEN                 21     30                                                       CGL029
      D  OFACO                 31     40                                                       CGL029
+     D  OSCCY                 41     43                                                     MD051892
+     D  OREXR                 44     50P 8                                                  MD051892
+     D  OREXI                 51     51                                                     MD051892
 
       ** New settlement details
      D  NewStsDS       DS
@@ -420,6 +425,9 @@
      D  WOURS                  3     20                                                       CGL029
      D  WTHRS                 21     30                                                       CGL029
      D  WFACO                 31     40                                                       CGL029
+     D  WSCCY                 41     43                                                     MD051892
+     D  WREXR                 44     50P 8                                                  MD051892
+     D  WREXI                 51     51                                                     MD051892
       *
      D PassDtaDS       DS           512
      D CLE002                  1      1A
@@ -970,6 +978,11 @@
      C                   EVAL      OOSAC = MR_OSAC
      C                   EVAL      OTSEN = MR_TSEN
      C                   EVAL      OFACO = MR_FACO
+     C     CLE031        IFEQ      'Y'                                                      MD051892
+     C                   EVAL      OSCCY = MR_SCCY                                          MD051892
+     C                   EVAL      OREXR = MR_REXR                                          MD051892
+     C                   EVAL      OREXI = MR_REXI                                          MD051892
+     C                   ENDIF                                                              MD051892
      C                   EVAL      ValidMAPY = MAPYFilFmt
      C                   ENDIF
 
@@ -2130,6 +2143,11 @@
      C                   MOVEL     WOSAC         WOURS
      C                   MOVEL     WTSEN         WTHRS
      C                   MOVEL     FLBENN        WFACO
+     C     CLE031        IFEQ      'Y'                                                      MD051892
+     C                   EVAL      WSCCY = FLRSCY                                           MD051892
+     C                   EVAL      WREXR = FLREXR                                           MD051892
+     C                   EVAL      WREXI = FLREXI                                           MD051892
+     C                   ENDIF                                                              MD051892
       *
       ***  Perform the additional validations
       *

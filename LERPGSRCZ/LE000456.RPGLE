@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049363           Date 19Sep18               *
-      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *  Last Amend No. MD052008           Date 05Oct18               *
+      *  Prev Amend No. MD051940           Date 21Sep18               *   
+      *                 MD049363           Date 19Sep18               *
+      *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
       *                 MD046080           Date 21Sep17               *      
@@ -54,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052008 - Rounding off issue on PDCL amount using           *
+      *             settlement account with partial balance           *
+      *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
+      *             conversion rounding error.                        *      
       *  MD049363 - Percentage allocation error                       *
       *  MD049745A - Corruption of Original currency of Loans and     *
       *              PDCLs incorrect postings                         *
@@ -681,10 +687,32 @@
       *
       ** If Available Balance is debit set it to zero
       *
+     C                   IF        PAMT <> 0 AND OTHA <> 0                                  MD051940
+     C                   EVAL      PAMT = OTHA                                              MD051940
+     C                   ENDIF                                                              MD051940
+     C                   IF        IAMT <> 0 AND OTHA <> 0                                  MD051940
+     C                   EVAL      IAMT = OTHA                                              MD051940
+     C                   ENDIF                                                              MD051940
+                                                                                            MD051940
      C                   Z-ADD     W@Avail       W@Av
      C                   IF        WDrcr = 'D'
      C                   Z-ADD     0             W@Av
      C                   ENDIF
+      *                                                                                     MD052008
+      ** Available balance should be converted to Loan Ccy  before calling                  MD052008
+      ** LEC000473. This will be deducted from PAMT or IAMT which is already in             MD052008
+      ** Loan Ccy.                                                                          MD052008
+      *                                                                                     MD052008
+     C                   EVAL      WZCCY = ECCY                                             MD052008
+     C                   IF        CLE031 = 'Y'                                             MD052008
+     C                   IF        W@AV <> 0                                                MD052008
+     C                   EVAL      WWEAMT = EAMT                                            MD052008
+     C                   EVAL      EAMT = W@AV                                              MD052008
+     C                   EXSR      SrConvert                                                MD052008
+     C                   EVAL      W@AV = EAMT                                              MD052008
+     C                   EVAL      EAMT = WWEAMT                                            MD052008
+     C                   ENDIF                                                              MD052008
+     C                   ENDIF                                                              MD052008
       *
       ** If Principal Repayment is negative, set it to positive
       *
@@ -721,16 +749,16 @@
       ** Flag to ignore past due interest
       *
      C                   EVAL      WignoreI = *BLANKS
-     C                   IF        CLE031 = 'Y'                                            MD049745A
-     C                   EVAL      WWEAMT = EAMT                                           MD049745A
-     C                   EVAL      EAMT = PAMT                                             MD049745A
-     C                   EXSR      SrConvert                                               MD049745A
-     C                   EVAL      PAMT = EAMT                                             MD049745A
-     C                   EVAL      EAMT = IAMT                                             MD049745A
-     C                   EXSR      SrConvert                                               MD049745A
-     C                   EVAL      IAMT = EAMT                                             MD049745A
-     C                   EVAL      EAMT = WWEAMT                                           MD049745A
-     C                   ENDIF                                                             MD049745A
+     C**********         IF        CLE031 = 'Y'                                   MD049745A MD052008
+     C**********         EVAL      WWEAMT = EAMT                                  MD049745A MD052008
+     C**********         EVAL      EAMT = PAMT                                    MD049745A MD052008
+     C**********         EXSR      SrConvert                                      MD049745A MD052008
+     C**********         EVAL      PAMT = EAMT                                    MD049745A MD052008
+     C**********         EVAL      EAMT = IAMT                                    MD049745A MD052008
+     C**********         EXSR      SrConvert                                      MD049745A MD052008
+     C**********         EVAL      IAMT = EAMT                                    MD049745A MD052008
+     C**********         EVAL      EAMT = WWEAMT                                  MD049745A MD052008
+     C**********         ENDIF                                                    MD049745A MD052008
       *
       ** Generate PDCL - CALL LEC000473
       *
@@ -769,9 +797,12 @@
      C                   PARM      ALASN         W@LASN
      C                   PARM                    W@AVDAT
      C                   PARM                    W@Type
-     C                   PARM                    WSCCY                                     MD049745A
-     C                   PARM                    WSIND                                     MD049745A
-     C                   PARM                    WSRATE                                    MD049745A
+     C**********         PARM                    WSCCY                            MD049745A MD052008
+     C                   PARM      *BLANKS       WSCCY                                      MD052008
+     C**********         PARM                    WSIND                            MD049745A MD052008
+     C                   PARM      *BLANKS       WSIND                                      MD052008
+     C**********         PARM                    WSRATE                           MD049745A MD052008
+     C                   PARM      *ZEROS        WSRATE                                     MD052008
       *
       ** Output parm
       **  Past Due Principal
@@ -783,18 +814,18 @@
      C                   PARM      *BLANKS       w@FELN
      C                   PARM      'LEC000456'   W@PGNM
      C                   PARM      BlockCredit   W@BCR                                     MD021423E
-     C                   IF        CLE031 = 'Y'                                            MD049745A
-     C                   EVAL      WREV = 'Y'                                              MD049745A
-     C                   EVAL      WWEAMT = EAMT                                           MD049745A
-     C                   EVAL      EAMT = PAMT                                             MD049745A
-     C                   EXSR      SrConvert                                               MD049745A
-     C                   EVAL      PAMT = EAMT                                             MD049745A
-     C                   EVAL      EAMT = IAMT                                             MD049745A
-     C                   EXSR      SrConvert                                               MD049745A
-     C                   EVAL      IAMT = EAMT                                             MD049745A
-     C                   EVAL      EAMT = WWEAMT                                           MD049745A
-     C                   EVAL      WREV = ' '                                              MD049745A
-     C                   ENDIF                                                             MD049745A
+     C**********         IF        CLE031 = 'Y'                                   MD049745A MD052008
+     C**********         EVAL      WREV = 'Y'                                     MD049745A MD052008
+     C**********         EVAL      WWEAMT = EAMT                                  MD049745A MD052008
+     C**********         EVAL      EAMT = PAMT                                    MD049745A MD052008
+     C**********         EXSR      SrConvert                                      MD049745A MD052008
+     C**********         EVAL      PAMT = EAMT                                    MD049745A MD052008
+     C**********         EVAL      EAMT = IAMT                                    MD049745A MD052008
+     C**********         EXSR      SrConvert                                      MD049745A MD052008
+     C**********         EVAL      IAMT = EAMT                                    MD049745A MD052008
+     C**********         EVAL      EAMT = WWEAMT                                  MD049745A MD052008
+     C**********         EVAL      WREV = ' '                                     MD049745A MD052008
+     C**********         ENDIF                                                    MD049745A MD052008
       *
       ** If Return code is NOINTPD, then ignore interest
       *
@@ -863,7 +894,7 @@
      C                   EVAL      w@adjamt = w@adjamt + EAMT
      C                   ENDIF
      C                   EVAL      EAMT = W@Opdam
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -896,7 +927,7 @@
      C                             AND WIgnoreI <> 'Y'
      C                   EVAL      EAMT = W@OPdInt
      C                   EVAL      EAMT = EAMT * WMult
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -932,7 +963,7 @@
      C                   ENDIF
      C                   IF        W@Opdam <> 0
      C                   EVAL      EAMT = W@Opdam
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -961,7 +992,7 @@
      C                   MOVE      'XI'          Wf10
      C                   MOVEL     Wf10          AKEY
      C                   ENDIF
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -987,6 +1018,16 @@
       ** If Total Past Due does not match original value of EAMT
       ** - create a new account key xxRyy----B for the difference
       *
+     C                   IF        CLE031 = 'Y'                                             MD052008
+     C                   EVAL      WWEAMT = EAMT                                            MD052008
+     C                   EVAL      WREV = 'Y'                                               MD052008
+     C                   EVAL      EAMT = W@PDAMT                                           MD052008
+     C                   EXSR      SrConvert                                                MD052008
+     C                   EVAL      W@PDAMT= EAMT                                            MD052008
+     C                   EVAL      EAMT = WWEAMT                                            MD052008
+     C                   EVAL      WREV = ' '                                               MD052008
+     C                   ENDIF                                                              MD052008
+                                                                                            MD052008
      C                   IF        w@Pdamt <> wRepaym
      C                   EVAL      EAMT = WRepaym - W@Pdamt
       *
@@ -1060,7 +1101,7 @@
      C                   IF        W@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -1095,7 +1136,7 @@
      C                   IF        W@OEAMT < 0
      C                   EVAL      EAMT = EAMT * -1
      C                   ENDIF
-     C                   EXSR      SrConvert                                                MD046080
+     C**********         EXSR      SrConvert                                       MD046080 MD052008
      C                   IF        CLE031 = 'Y'                                            MD049745A
      C                   EVAL      ECCY = CCY                                              MD049745A
      C                   ENDIF                                                             MD049745A
@@ -1124,6 +1165,16 @@
       ** If Total Past Due does not match original value of EAMT
       ** - create a new account key xxRyy----B for the difference
       *
+     C                   IF        CLE031 = 'Y'                                             MD052008
+     C                   EVAL      WWEAMT = EAMT                                            MD052008
+     C                   EVAL      WREV = 'Y'                                               MD052008
+     C                   EVAL      EAMT = W@PDAMT                                           MD052008
+     C                   EXSR      SrConvert                                                MD052008
+     C                   EVAL      W@PDAMT= EAMT                                            MD052008
+     C                   EVAL      WREV = ' '                                               MD052008
+     C                   EVAL      EAMT = WWEAMT                                            MD052008
+     C                   ENDIF                                                              MD052008
+                                                                                            MD052008
      C                   EVAL      W@Totak = W@Pdamt + W@Avail
      C                   IF        w@Totak <> wRepaym
      C                   EVAL      EAMT = WRepaym - W@Totak

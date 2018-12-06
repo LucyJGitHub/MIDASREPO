@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD051890           Date 17Sep18               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD041649           Date 29Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051890 - Missing Principal Projection on Nostro Account    *
       *  MD039547 - Referred account is not properly validated.       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD041649 - Validation during authorisation should be executed*
@@ -1216,6 +1218,7 @@
      C                   EVAL      S_Rec = *Blanks                                            CLE034
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
+     C                   IF        DDACTN <> 'X'                                            MD051890
      C                   EVAL      VREC = FLREC
      C                   EVAL      VRECEx = FLRONS                                            CGL029
      C                   EVAL      V_LARSTM = FLRSTM                                          CGL029
@@ -1250,6 +1253,7 @@
       *                                                                                      BUG4486
      C                   EVAL      V_LASETP= FLRSTM                                          BUG4486
      C                   EVAL      V_LAOSAC= FLRONS                                          BUG4486
+     C                   ENDIF                                                              MD051890
       *                                                                                      BUG4486
      C                   ENDIF                                                                TCA091
       *                                                                                       TCA091

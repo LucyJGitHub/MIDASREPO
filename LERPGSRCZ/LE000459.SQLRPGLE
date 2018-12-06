@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD051931           Date 23Sep18               *
+      *  Prev Amend No. MD051946           Date 23Sep18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD046080           Date 17Sep17               *
       *                 CLE164             Date 18Aug14               *
       *                 AR989420           Date 17Jun13               *
       *                 AR815697           Date 06Jun13               *
@@ -36,6 +38,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051931 - Oustanding PDCL Z amount not paid but has         *
+      *             sufficient balance                                *
+      *  MD051946 - LEACCTPD amount was converted first then reduced  *
+      *             by reconverting back the amount of LEREMRPD       *
+      *             to PDCL currency                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
@@ -474,8 +481,10 @@
      C     k_LNRF        READE(E)  LEREMRPD                                                 AR786878
                                                                                             AR786878
      C                   DOW       NOT %EOF(LEREMRPD)                                       AR786878
-     C                   EVAL      wKTPRAM = wKTPRAM + m_SEPRAM                             AR786878
-     C                   EVAL      wKTINTA = wKTINTA + m_SEINTA                             AR786878
+     C**********         EVAL      wKTPRAM = wKTPRAM + m_SEPRAM                    AR786878 MD051946
+     C**********         EVAL      wKTINTA = wKTINTA + m_SEINTA                    AR786878 MD051946
+     C                   EVAL      wKTPRAM = wKTPRAM + M_PRAM                               MD051946
+     C                   EVAL      wKTINTA = wKTINTA + M_INTA                               MD051946
      C                   EVAL      WKREMR = 'Y'                                             AR815697
      C     k_LNRF        READE(E)  LEREMRPD                                                 AR786878
      C                   ENDDO                                                              AR786878
@@ -516,32 +525,43 @@
      C                   EVAL      P_SESUTP = K_SUTP
      C                   MOVEL     K_LTYP        P_SELTY1
      C                   EVAL      P_SETAMT = K_CPAM + DSINTDUE
-     C                   EVAL      WINAMT = P_SETAMT                                        MD046080
-     C                   EXSR      SrConvert                                                MD046080
-     C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
+     C**********         EVAL      WINAMT = P_SETAMT                               MD046080 MD051946
+     C**********         EXSR      SrConvert                                       MD046080 MD051946
+     C**********         EVAL      P_SETAMT = WOUTAMT                              MD046080 MD051946
      C                   EVAL      P_SEPRAM = K_CPAM
-     C                   EVAL      WINAMT = P_SEPRAM                                        MD046080
-     C                   EXSR      SrConvert                                                MD046080
-     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
+     C**********         EVAL      WINAMT = P_SEPRAM                               MD046080 MD051946
+     C**********         EXSR      SrConvert                                       MD046080 MD051946
+     C**********         EVAL      P_SEPRAM = WOUTAMT                              MD046080 MD051946
      C                   EVAL      P_SEINTA = DSINTDUE
-     C                   EVAL      WINAMT = P_SEINTA                                        MD046080
-     C                   EXSR      SrConvert                                                MD046080
-     C                   EVAL      P_SEINTA = WOUTAMT                                       MD046080
+     C**********         EVAL      WINAMT = P_SEINTA                               MD046080 MD051946
+     C**********         EXSR      SrConvert                                       MD046080 MD051946
+     C**********         EVAL      P_SEINTA = WOUTAMT                              MD046080 MD051946
      C                   EVAL      P_SEIPFL = *BLANKS
      C**********         EVAL      P_SEFILE = 'LT'                                            CLE164
                                                                                             AR786878
      C                   IF        WKTPRAM <> 0 or WKTINTA <> 0                             AR786878
      C                   EVAL      DSIntDue    = DSIntDue - WKTINTA                         AR786878
      C                   EVAL      P_SEINTA    = DSIntDue                                   AR786878
-     C                   EVAL      WINAMT = P_SEINTA                                        MD046080
-     C                   EXSR      SrConvert                                                MD046080
-     C                   EVAL      P_SEINTA = WOUTAMT                                       MD046080
+     C**********         EVAL      WINAMT = P_SEINTA                               MD046080 MD051946
+     C**********         EXSR      SrConvert                                       MD046080 MD051946
+     C**********         EVAL      P_SEINTA = WOUTAMT                              MD046080 MD051946
      C                   EVAL      K_CPAM      = K_CPAM - WKTPRAM                           AR786878
      C                   EVAL      P_SEPRAM    = K_CPAM                                     AR786878
-     C                   EVAL      WINAMT = P_SEPRAM                                        MD046080
-     C                   EXSR      SrConvert                                                MD046080
-     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
+     C**********         EVAL      WINAMT = P_SEPRAM                               MD046080 MD051946
+     C**********         EXSR      SrConvert                                       MD046080 MD051946
+     C**********         EVAL      P_SEPRAM = WOUTAMT                              MD046080 MD051946
      C                   ENDIF                                                              AR786878
+                                                                                            MD051946
+     C                   EVAL      WINAMT = P_SEPRAM                                        MD051946
+     C                   EVAL      P_SEPRLN = P_SEPRAM                                      MD051931
+     C                   EXSR      SrConvert                                                MD051946
+     C                   EVAL      P_SEPRAM = WOUTAMT                                       MD051946
+                                                                                            MD051946
+     C                   EVAL      WINAMT = P_SEINTA                                        MD051946
+     C                   EVAL      P_SEINLN = P_SEINTA                                      MD051931
+     C                   EXSR      SrConvert                                                MD051946
+     C                   EVAL      P_SEINTA = WOUTAMT                                       MD051946
+                                                                                            MD051946
                                                                                               CLE164
       ** Retrieve Date values for LEACCTPD                                                    CLE164
                                                                                               CLE164
@@ -552,6 +572,7 @@
      C                   IF        DSINTDUE <> 0                                            AR217562
      C**********         EVAL      P_SETAMT = DSINTDUE                             AR217562 MD046080
      C                   EVAL      WINAMT = DSINTDUE                                        MD046080
+     C                   EVAL      P_SETALN = WINAMT                                        MD051931
      C                   EXSR      SrConvert                                                MD046080
      C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
      C                   EVAL      P_SEPRAM = 0                                             AR217562
@@ -608,6 +629,7 @@
      C**********         EVAL      P_SETAMT = K_CPAM                               AR217562 MD046080
      C**********         EVAL      P_SEPRAM = K_CPAM                               AR217562 MD046080
      C                   EVAL      WINAMT = K_CPAM                                          MD046080
+     C                   EVAL      P_SETALN = WINAMT                                        MD051931
      C                   EXSR      SrConvert                                                MD046080
      C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
      C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
@@ -828,15 +850,22 @@
      C                             AND K_PTYP <> 67                                         MD046080
      C                             AND K_PTYP <> 69                                         MD046080
      C                             AND K_PTYP <> 72                                         MD046080
-     C                   EVAL      WCCY1 = K_PSCY                                           MD046080
-     C                   EVAL      WRATE = K_PEXR                                           MD046080
-     C                   EVAL      WMDIN = K_PEXI                                           MD046080
+     C**********         EVAL      WCCY1 = K_PSCY                                  MD046080 MD051946
+     C**********         EVAL      WRATE = K_PEXR                                  MD046080 MD051946
+     C**********         EVAL      WMDIN = K_PEXI                                  MD046080 MD051946
+     C                   EVAL      WCCY2 = K_SCCY                                           MD051946
+     C                   EVAL      WRATE = K_REXR                                           MD051946
+     C                   EVAL      WMDIN = K_REXI                                           MD051946
      C                   ELSE                                                               MD046080
-     C                   EVAL      WCCY1 = K_SCCY                                           MD046080
-     C                   EVAL      WRATE = K_REXR                                           MD046080
-     C                   EVAL      WMDIN = K_REXI                                           MD046080
+     C**********         EVAL      WCCY1 = K_SCCY                                  MD046080 MD051946
+     C**********         EVAL      WRATE = K_REXR                                  MD046080 MD051946
+     C**********         EVAL      WMDIN = K_REXI                                  MD046080 MD051946
+     C                   EVAL      WCCY2 = K_PSCY                                           MD051946
+     C                   EVAL      WRATE = K_PEXR                                           MD051946
+     C                   EVAL      WMDIN = K_PEXI                                           MD051946
      C                   ENDIF                                                              MD046080
-     C                   EVAL      WCCY2 = K_CCY                                            MD046080
+     C**********         EVAL      WCCY2 = K_CCY                                   MD046080 MD051946
+     C                   EVAL      WCCY1 = K_CCY                                            MD051946
                                                                                             MD046080
       ** If one of currencies is blank, skip conversion                                     MD046080
                                                                                             MD046080
@@ -880,7 +909,8 @@
      C                   PARM                    WNBDP2                                     MD046080
      C                   PARM                    WOUTAMT                                    MD046080
                                                                                             MD046080
-     C                   EVAL      P_SEACCY = WCCY1                                         MD046080
+     C**********         EVAL      P_SEACCY = WCCY1                                MD046080 MD051946
+     C                   EVAL      P_SEACCY = WCCY2                                         MD051946
      C                   ENDIF                                                              MD046080
      C                   ELSE                                                               MD046080
      C                   EVAL      WOUTAMT = WINAMT                                         MD046080

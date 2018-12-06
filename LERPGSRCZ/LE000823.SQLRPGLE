@@ -14,14 +14,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD049363           Date 19Sep18               *  
-      *  Prev Amend No. MD051242           Date 25Jun18               *
+      *  Last Amend No. MD051944           Date 22Sep18               *
+      *  Prev Amend No. MD049865           Date 06Aug18               *
+      *                 MD051242           Date 25Jun18               *      
+      *                 MD049363           Date 19Sep18               *  
+      *                 MD051242           Date 25Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
       *                 MD048558           Date 21Nov17               *
       *                 MD046080  *CREATE  Date 17Sep17               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051944 - Settlement entries from Principal Increase        *
+      *             event is rounded down                             *
+      *  MD049865 - Component LEC000823 failed in COB                 *      
       *  MD049363 - Percentage allocation error                       *
       *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
       *             balance for fee with no settlement currency       *
@@ -610,6 +616,16 @@
      C                   EXSR      SRHASH                                                   MD048557
 
      C                   MOVEA     L1_AKEY       AKY
+     C                   CALL      'AOCURRR0'                                               MD051944
+     C                   PARM      *Blanks       @RTCD                                      MD051944
+     C                   PARM      '*KEY'        @OPTN                                      MD051944
+     C                   PARM      BJCYCD        WCCY1                                      MD051944
+     C     SDCURR        PARM                    DSSDY                                      MD051944
+                                                                                            MD051944
+      ** Save necessary details                                                             MD051944
+                                                                                            MD051944
+     C                   EVAL      WNBDP1 = A6NBDP                                          MD051944
+                                                                                            MD051944
      C                   CALL      'AOCURRR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*KEY'        @OPTN
@@ -619,12 +635,25 @@
      C     L1_ECCY       IFEQ      BJCYCD
      C                   Z-ADD     L1_EAMT       BSAMT            13 0
      C                   ELSE
-     C     A6MDIN        IFEQ      'M'
-     C     L1_EAMT       MULT      A6SPRT        BSAMT
-     C                   ELSE
-     C     L1_EAMT       DIV       A6SPRT        BSAMT
+     C*****A6MDIN        IFEQ      'M'                                                      MD051944
+     C*****L1_EAMT       MULT      A6SPRT        BSAMT                                      MD051944
+     C**********         ELSE                                                               MD051944
+     C*****L1_EAMT       DIV       A6SPRT        BSAMT                                      MD051944
+     C**********         ENDIF                                                              MD051944
+      *                                                                                     MD051944
+     C                   CALL      'ZCONVZ1'                                                MD051944
+     C                   PARM      L1_EAMT       WINAMT                                     MD051944
+     C                   PARM      A6SPRT        WRATE                                      MD051944
+     C                   PARM      A6MDIN        WMDIN                                      MD051944
+     C                   PARM      L1_ECCY       WCCY1                                      MD051944
+     C                   PARM      BJCYCD        WCCY2                                      MD051944
+     C                   PARM      A6NBDP        WNBDP1                                     MD051944
+     C                   PARM      WNBDP1        WNBDP2                                     MD051944
+     C                   PARM                    WOUTAMT                                    MD051944
+      *                                                                                     MD051944
+     C                   EVAL      BSAMT = WOUTAMT                                          MD051944
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD051944
       *
       ** Format xxSyycccbP key for Base Currency Equivalent of Spot Trade
       ** a/c in purchase currency

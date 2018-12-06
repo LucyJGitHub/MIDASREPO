@@ -12,8 +12,15 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049363           Date 19Sep18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD051958           Date 24Sep18               *
+      *  Prev Amend No. MD051957           Date 24Sep18               *
+      *                 MD051944           Date 22Sep18               *
+      *                 MD051921           Date 19Sep18               *
+      *                 MD051874           Date 12Sep18               *
+      *                 MD051845           Date 03Sep18               *
+      *                 MD051695           Date 08Aug18               *      
+      *                 MD049363           Date 19Sep18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD051788           Date 30Aug18               *
       *                 MD049745B          Date 29Jun18               *
       *                 MD049745A          Date 16Mar18               *
@@ -388,6 +395,19 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051958 - Maturity postings displayed incorrect actual      *
+      *             postings in ACMV                                  *
+      *  MD051957 - Missing S keys on maturity, frequency based       *
+      *             repayment and RPSC events                         *
+      *  MD051944 - Settlement entries from Principal Increase        *
+      *             event is rounded down                             *
+      *  MD051921 - B key for PDCL X is generated using loan ccy      *
+      *             instead of settlement ccy                         *
+      *  MD051874  - PDCL created is converted to settlement currency *
+      *              instead of original loan                         *
+      *  MD051845  - Error in component LEC06A 03001 where system     *
+      *              generated blank currency for PDCL Accounts       *
+      *  MD051695 - CLE031 Regression and Settlement Change           *      
       *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *
@@ -1932,6 +1952,12 @@
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
      D WPARML          S             20A   INZ('LECalcBasis6LeapYear')                      MD035545
      D WPARML1         S             20A   INZ('RepayDateOnMaturity')                       MD045091
+     D wSettleCCY      S              3A   INZ(*BLANKS)                                     MD051695
+     D wLoanCCY        S              3A   INZ(*BLANKS)                                     MD051695
+     D wSettleAMT      S             13P 0 INZ(*ZEROS)                                      MD051695
+     D wLoanAMT        S             13P 0 INZ(*ZEROS)                                      MD051695
+     D wLoanInd        S              1A   INZ(*OFF)                                        MD051845
+     D wSettleInd      S              1A   INZ(*OFF)                                        MD051845
      I*                                                                   S01408
       *                                                                                       CLE134
      ILKEYF1DF                                                                                CLE134
@@ -5657,6 +5683,14 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      'SDCURRPD'    DBFILE                                     ***S0119
 0740 C                   GOTO      ENDDBE                                                      S0119
      C                   END                                                                   S0119
+      *                                                                                     MD051944
+     C     CLE031        IFEQ      'Y'                                                      MD051944
+     C                   MOVE      BJCYCD        XCCY                                       MD051944
+     C                   EXSR      CCYDSP                                                   MD051944
+     C     *IN99         IFEQ      '0'                                                      MD051944
+     C                   Z-ADD     XDECP         BANBDP            1 0                      MD051944
+     C                   ENDIF                                                              MD051944
+     C                   ENDIF                                                              MD051944
 0741 C**
 0742 C**   SET UP COUNT FIELDS
 0743 C**
@@ -6925,8 +6959,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
-     C     CLE134        OREQ      'Y'                                                        CLE134
-     C     AUTOX         ANDEQ     'C'                                                        CLE134
+     C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
+     C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
      C**********         EVAL      WCLE134 = 'Y'                                  MD049078 MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
@@ -7441,8 +7475,8 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        IFEQ      'Y'                                                        CLE134
       *                                                                                       CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
-     C     CLE134        OREQ      'Y'                                                        CLE134
-     C     AUTOX         ANDEQ     'C'                                                        CLE134
+     C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
+     C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
      C**********         EVAL      WCLE134 = 'Y'                                  MD049078 MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
@@ -7685,8 +7719,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
-     C     CLE134        OREQ      'Y'                                                        CLE134
-     C     AUTOX         ANDEQ     'C'                                                        CLE134
+     C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
+     C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C     CLE134        OREQ      'Y'                                                        262967
      C     AUTOL         ANDEQ     'C'                                                        262967
       *                                                                                       CLE134
@@ -7795,13 +7829,23 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on and indicator 89 is off then                                 CLE031
       ** set work type to end and call SR/SETCCY                                              CLE031
       *                                                                                       CLE031
+     C                   EVAL      wLoanInd = *OFF                                          MD051845
+     C                   EVAL      wSettleInd = *OFF                                        MD051845
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
      C                   MOVE      'E'           WTYPE
+     C                   EXSR      SETLOAN                                                  MD051695
      C                   EXSR      SETCCY
+     C                   EXSR      SETSETTLE                                                MD051695
      C                   ENDIF
      C                   ENDIF
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETLOAN                                                  MD051695
+     C                   ENDIF                                                              MD051695
      C  N89              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETSETTLE                                                MD051695
+     C                   ENDIF                                                              MD051695
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     *IN89         ANDEQ     '0'                                                      MD049745
      C                   EVAL      WPKAMT = ACAMNT                                          MD049745
@@ -8360,8 +8404,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
-     C     CLE134        OREQ      'Y'                                                        CLE134
-     C     AUTOX         ANDEQ     'C'                                                        CLE134
+     C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
+     C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
      C                   EVAL      WCLE134 = 'Y'                                           MD049745B
      C     LTYP1A        IFEQ      'X'                                                        CLE134
@@ -8533,6 +8577,8 @@ L118 I                             P   72   77 7RTSPL
                                                                                             AR786878
      C     CLE134        IFEQ      'Y'                                                      AR786878
      C     AUTO          ANDEQ     'C'                                                      AR786878
+     C*****CLE134        OREQ      'Y'                                             AR786878 MD051957
+     C*****AUTOX         ANDEQ     'C'                                             AR786878 MD051957
      C     CLE134        OREQ      'Y'                                                      AR786878
      C     AUTOX         ANDEQ     'C'                                                      AR786878
      C     CLE134        OREQ      'Y'                                                      AR786878
@@ -8677,10 +8723,14 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on and indicator 89 is off then set                             CLE031
       ** work type to 'end' and call SR/SETCCY                                                CLE031
       *                                                                                       CLE031
+     C                   EVAL      wLoanInd = *OFF                                          MD051845
+     C                   EVAL      wSettleInd = *OFF                                        MD051845
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
      C                   MOVE      'E'           WTYPE
+     C                   EXSR      SETLOAN                                                  MD051695
      C                   EXSR      SETCCY
+     C                   EXSR      SETSETTLE                                                MD051695
       *                                                                                       CLE031
      C**********           MOVE OSAC      OSACSV 12                                    CLE031 CGL029
      C                   MOVE      OSAC          OSACSV
@@ -8699,7 +8749,13 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE031
      C                   ENDIF
       *                                                                                       CLE031
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETLOAN                                                  MD051695
+     C                   ENDIF                                                              MD051695
 1346 C  N89              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETSETTLE                                                MD051695
+     C                   ENDIF                                                              MD051695
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     *IN89         ANDEQ     '0'                                                      MD049745
      C                   EVAL      WPKAMT = ACAMNT                                          MD049745
@@ -9693,6 +9749,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                     AR700107
      C     CLE134        IFEQ      'Y'                                                      AR700107
      C     AUTO          ANDEQ     'C'                                                      AR700107
+     C*****CLE134        OREQ      'Y'                                             AR786878 MD051957
+     C*****AUTOX         ANDEQ     'C'                                             AR700107 MD051957
      C     CLE134        OREQ      'Y'                                                      AR700107
      C     AUTOX         ANDEQ     'C'                                                      AR700107
      C     CLE134        OREQ      'Y'                                                      AR700107
@@ -9747,14 +9805,24 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on and indicator 89 is off then                                 CLE031
       ** set work type to 'end' and goto SR/SETCCY                                            CLE031
       *                                                                                       CLE031
+     C                   EVAL      wLoanInd = *OFF                                          MD051845
+     C                   EVAL      wSettleInd = *OFF                                        MD051845
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
      C                   MOVE      'E'           WTYPE
+     C                   EXSR      SETLOAN                                                  MD051695
      C                   EXSR      SETCCY
+     C                   EXSR      SETSETTLE                                                MD051695
      C                   ENDIF
       *                                                                                       CLE031
 1535 C**N89*****           EXSR AKYOUT                                                      AR317587
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETLOAN                                                  MD051695
+     C                   ENDIF                                                              MD051695
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETSETTLE                                                MD051695
+     C                   ENDIF                                                              MD051695
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     *IN89         ANDEQ     *OFF                                                     MD049745
      C                   EVAL      WPKAMT = ACAMNT                                          MD049745
@@ -10065,14 +10133,24 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on and indicator 89 is off then set                             CLE031
       ** work type to 'end' and goto SR/SETCCY                                                CLE031
       *                                                                                       CLE031
+     C                   EVAL      wLoanInd = *OFF                                          MD051845
+     C                   EVAL      wSettleInd = *OFF                                        MD051845
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
      C                   MOVE      'E'           WTYPE
+     C                   EXSR      SETLOAN                                                  MD051695
      C                   EXSR      SETCCY
+     C                   EXSR      SETSETTLE                                                MD051695
      C                   ENDIF
       *                                                                                       CLE031
 1584 C**N89*****           EXSR AKYOUT                                                      AR317587
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETLOAN                                                  MD051695
+     C                   ENDIF                                                              MD051695
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETSETTLE                                                MD051695
+     C                   ENDIF                                                              MD051695
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C                   EVAL      WPKAMT = ACAMNT                                          MD049745
      C                   ENDIF                                                              MD049745
@@ -12184,6 +12262,19 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      AMTP          WPOST                                     MD020134A
      C                   ENDIF                                                             MD020134A
      C                   ENDIF                                                             MD020134A
+                                                                                            MD051695
+     C     NEWCOB        IFEQ      'Y'                                                      MD051695
+     C     AKY(3)        ANDEQ     'R'                                                      MD051695
+     C     AKY(10)       ANDEQ     'B'                                                      MD051695
+     C     AMTP          ANDEQ     'MR'                                                     MD051695
+     C     INTA          ANDEQ     TAMT                                                     MD051695
+     C     AKY(1)        IFEQ      'X'                                                      MD051695
+     C     AKY(1)        OREQ      'Y'                                                      MD051695
+     C     AKY(1)        OREQ      'Z'                                                      MD051695
+     C                   EVAL      WPOST = 'IP'                                             MD051695
+     C                   ENDIF                                                              MD051695
+     C                   ENDIF                                                              MD051695
+                                                                                            MD051695
       *                                                                                       CLE134
       ** set LEPK1DP fields                                                                   CLE134
       *                                                                                       CLE134
@@ -12902,10 +12993,14 @@ L118 I                             P   72   77 7RTSPL
       ** If feature CLE031 is on and indicator 89 is off then                                 CLE031
       ** set work type to 'end' and call SR/SETCCY                                            CLE031
       *                                                                                       CLE031
+     C                   EVAL      wLoanInd = *OFF                                          MD051845
+     C                   EVAL      wSettleInd = *OFF                                        MD051845
      C     CLE031        IFEQ      'Y'
      C     *IN89         ANDEQ     *OFF
      C                   MOVE      'E'           WTYPE
+     C                   EXSR      SETLOAN                                                  MD051695
      C                   EXSR      SETCCY
+     C                   EXSR      SETSETTLE                                                MD051695
       *                                                                                       CLE031
      C**********           MOVE OSAC      OSACSV 12                                    CLE031 CGL029
      C                   MOVE      OSAC          OSACSV
@@ -12923,22 +13018,34 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
       *                                                                                       CLE031
      C                   ENDIF
+     C     CLE031        IFEQ      'Y'                                                      MD051695
+     C                   EXSR      GETLOAN                                                  MD051695
+     C                   ENDIF                                                              MD051695
       *                                                                                       CLE031
 1742 C**N89*****           EXSR AKYOUT                                                        CLE028
      C     AMTP          IFEQ      'MA'
      C                   EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051874
+     C                   EXSR      GETSETTLE                                                MD051874
+     C                   ENDIF                                                              MD051874
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C                   EVAL      WIKAMT = ACAMNT                                          MD049745
      C                   ENDIF                                                              MD049745
      C                   ELSE
      C  N89
 1742 CANN77              EXSR      AKYOUT
+     C     CLE031        IFEQ      'Y'                                                      MD051874
+     C                   EXSR      GETSETTLE                                                MD051874
+     C                   ENDIF                                                              MD051874
      C     CLE031        IFEQ      'Y'                                                      MD049745
      C     *IN77         ANDEQ     '0'                                                      MD049745
      C     *IN89         ANDEQ     '0'                                                      MD049745
      C                   EVAL      WIKAMT = ACAMNT                                          MD049745
      C                   ENDIF                                                              MD049745
      C                   ENDIF
+     C*****CLE031        IFEQ      'Y'                                             MD051695 MD051874
+     C**********         EXSR      GETSETTLE                                       MD051695 MD051874
+     C**********         ENDIF                                                     MD051695 MD051874
       *                                                                                       262967
       ** WORIGA = Y: Original Loan Repayment must generate                                    262967
       ** an additiona account key XI                                                          262967
@@ -14021,8 +14128,8 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE134
      C     CLE134        IFEQ      'Y'                                                        CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
-     C     CLE134        OREQ      'Y'                                                        CLE134
-     C     AUTOX         ANDEQ     'C'                                                        CLE134
+     C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
+     C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
      C                   EVAL      WCLE134 = 'Y'                                            MD049078
      C     LTYP1A        IFEQ      'X'                                                        CLE134
@@ -17667,17 +17774,17 @@ C    C                   ENDIF                                                  
       ** Call subroutine CCYDSP to use the currency arrays to reduce down                     CLE034
       ** processing times                                                                     CLE034
       *                                                                                       CLE034
-     C                   IF        SETP = 14                                               AR1083003
-     C                   EVAL      XCCY = YKCCY                                            AR1083003
-     C                   ELSE                                                              AR1083003
+     C**********         IF        SETP = 14                                      AR1083003 MD051958
+     C**********         EVAL      XCCY = YKCCY                                   AR1083003 MD051958
+     C**********         ELSE                                                     AR1083003 MD051958
      C                   MOVE      CCYL          XCCY
-     C                   ENDIF                                                             AR1083003
+     C**********         ENDIF                                                    AR1083003 MD051958
       *                                                                                    AR1083003
      C                   EXSR      CCYDSP
       *                                                                                    AR1083003
-     C                   IF        SETP = 14                                               AR1083003
-     C                   EVAL      W6NBDP = XDECP                                          AR1083003
-     C                   ENDIF                                                             AR1083003
+     C**********         IF        SETP = 14                                      AR1083003 MD051958
+     C**********         EVAL      W6NBDP = XDECP                                 AR1083003 MD051958
+     C**********         ENDIF                                                    AR1083003 MD051958
       *                                                                                       CLE034
       ***Call*AOCURRR0*to*get*details*for*event*currency***************                CLE031 CLE034
       *****************************************************************                CLE031 CLE034
@@ -17707,6 +17814,8 @@ C    C                   ENDIF                                                  
      C                   MOVE      'Y'           WPROC             1
      C                   MOVE      *BLANKS       WCCY              3
      C**********           Z-ADDA6NBDP    W6NBDP  10                                   CLE031 CLE034
+      *                                                                                     MD051958
+     C                   Z-ADD     XDECP         W6NBDP                                     MD051958
       *                                                                                       CLE031
       ** If work type is 'Start'                                                              CLE031
       *                                                                                       CLE031
@@ -17795,6 +17904,8 @@ C    C                   ENDIF                                                  
      C                   MOVE      'N'           WPROC
       *                                                                                       CLE031
      C                   ELSE
+     C                   MOVE      WCCY          XCCY                                       MD051958
+     C                   EXSR      CCYDSP                                                   MD051958
       *                                                                                       CLE031
       ***Call*AOCURRR0*to*get*details*of*work*currency*****************                CLE031 CLE034
       *                                                                                       CLE031
@@ -18037,6 +18148,7 @@ C    C                   ENDIF                                                  
       *****************************************************************                       CLE031
      C     SETTLE        BEGSR                                                  ** SETTLE SR **
       *                                                                                       CLE031
+     C                   EVAL      SVFLD = *BLANKS                                          MD051921
      C                   MOVEA     AKY           AKYSV            10
       *                                                                                       CLE031
      C     WPROC         IFEQ      'Y'
@@ -18121,11 +18233,21 @@ C    C                   ENDIF                                                  
      C     WECCY         IFEQ      BJCYCD
      C                   Z-ADD     WKAMT         BSAMT            13 0
      C                   ELSE
-     C     WEMDIN        IFEQ      'M'
-     C     WKAMT         MULT      WESPRT        BSAMT
-     C                   ELSE
-     C     WKAMT         DIV       WESPRT        BSAMT
-     C                   ENDIF
+     C*****WEMDIN        IFEQ      'M'                                                      MD051944
+     C*****WKAMT         MULT      WESPRT        BSAMT                                      MD051944
+     C**********         ELSE                                                               MD051944
+     C*****WKAMT         DIV       WESPRT        BSAMT                                      MD051944
+     C**********         ENDIF                                                              MD051944
+     C                   MOVE      WECCY         ZCCYI                                      MD051944
+     C                   MOVE      BJCYCD        ZCCYO                                      MD051944
+     C                   Z-ADD     W6NBDP        ZCDPI                                      MD051944
+     C                   Z-ADD     BANBDP        ZCDPO                                      MD051944
+     C                   Z-ADD     WKAMT         ZAMTCI                                     MD051944
+     C                   Z-ADD     *ZEROS        ZAMTCO                                     MD051944
+     C                   Z-ADD     WESPRT        ZEXCH                                      MD051944
+     C                   MOVE      WEMDIN        ZMD                                        MD051944
+     C                   EXSR      ZCONV                                                    MD051944
+     C                   Z-ADD     ZAMTCO        BSAMT                                      MD051944
      C                   ENDIF
       *                                                                                       CLE031
       ** Format xxSyycccbP key for Base Currency Equivalent of Spot Trade                     CLE031
@@ -19527,6 +19649,59 @@ C    C                   ENDIF                                                  
      C                   EVAL      wFCPDPGrpID = '***'                                        CLE164
                                                                                               CLE164
      C                   ENDSR                                                                CLE164
+      *****************************************************************                     MD051695
+     C/EJECT                                                                                MD051695
+      *****************************************************************                     MD051695
+      *                                                               *                     MD051695
+      *  SETSETTLE - Setter for Settlement currency and amount        *                     MD051695
+      *                                                               *                     MD051695
+      *****************************************************************                     MD051695
+     C     SETSETTLE     BEGSR                                                              MD051695
+     C                   MOVEL     CCYL          wSettleCCY                                 MD051695
+     C                   Z-ADD     ACAMNT        wSettleAMT                                 MD051695
+     C                   EVAL      wSettleInd = *ON                                         MD051845
+     C                   ENDSR                                                              MD051695
+      *****************************************************************                     MD051695
+     C/EJECT                                                                                MD051695
+      *****************************************************************                     MD051695
+      *                                                               *                     MD051695
+      *  SETLOAN   - Setter for Loan currency and amount              *                     MD051695
+      *                                                               *                     MD051695
+      *****************************************************************                     MD051695
+     C     SETLOAN       BEGSR                                                              MD051695
+     C                   MOVEL     CCYL          wLoanCCY                                   MD051695
+     C                   Z-ADD     ACAMNT        wLoanAMT                                   MD051695
+     C                   EVAL      wLoanInd = *ON                                           MD051845
+     C                   ENDSR                                                              MD051695
+      *****************************************************************                     MD051695
+     C/EJECT                                                                                MD051695
+      *****************************************************************                     MD051695
+      *                                                               *                     MD051695
+      *  GETSETTLE - Getter for Settlement currency and amount        *                     MD051695
+      *                                                               *                     MD051695
+      *****************************************************************                     MD051695
+     C     GETSETTLE     BEGSR                                                              MD051695
+     C                   IF        wSettleInd = *ON                                         MD051845
+     C                   MOVEL     wSettleCCY    CCYL                                       MD051695
+     C                   Z-ADD     wSettleAMT    ACAMNT                                     MD051695
+     C                   ENDIF                                                              MD051845
+     C                   ENDSR                                                              MD051695
+      *****************************************************************                     MD051695
+     C/EJECT                                                                                MD051695
+      *****************************************************************                     MD051695
+      *                                                               *                     MD051695
+      *  GETLOAN   - Getter for Loan currency and amount              *                     MD051695
+      *                                                               *                     MD051695
+      *****************************************************************                     MD051695
+     C     GETLOAN       BEGSR                                                              MD051695
+     C                   IF        wLoanInd = *ON                                           MD051845
+     C                   MOVEL     wLoanCCY      CCYL                                       MD051695
+     C                   Z-ADD     wLoanAMT      ACAMNT                                     MD051695
+     C                   ENDIF                                                              MD051845
+     C                   ENDSR                                                              MD051695
+      *****************************************************************                     MD051695
+     C/EJECT                                                                                MD051695
+      *****************************************************************                     MD051695
                                                                                               CLE164
      C***/COPY*ZSRSRC,ZFWDT                                                            S01195 CLE134
      C***/COPY*ZSRSRC,ZACCH                                                            S01195 CLE134
@@ -20575,6 +20750,7 @@ C    C                   ENDIF                                                  
      O                  65   IACDL              113P                                       AR1056323
      O                  65   ICBS               114                                        AR1056323
      O                       ACOF               116                                        AR1056323
+     O                       WPOST              118                                         MD051695
      O                       FACOL              128                                        AR1056323
      O                 N32   FACO               128                                        AR1056323
      O                       PRFC               132                                        AR1056323

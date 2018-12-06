@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051931           Date 23Sep18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CLE164             Date 18Aug14               *
       *                 MD023287           Date 06May14               *
@@ -42,6 +43,8 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051931 - Oustanding PDCL Z amount not paid but has         *
+      *             sufficient balance                                *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
@@ -328,6 +331,7 @@
      D DSOFCXRT        S             15  9 INZ
      D DSPart          S              1    INZ('N')
      D DSRpyAmt        S             15  0 INZ
+     D SavRepayAmt     S             15  0 INZ                                              MD051931
      D W@FCUS          S              6
      D W@LOAN          S              6
      D W@FACL          S              5
@@ -447,6 +451,7 @@
      D CLE025          S              1    INZ('N')
      D CLE028          S              1    INZ('N')
      D CLE134          S              1    INZ('N')
+     D ConvertFlag     S              1N   INZ(*ON)                                         MD051931
       *  =============
       ** Rename fields
       *  =============
@@ -682,14 +687,18 @@
 
      C                   IF        K_SEPRAM <> 0
      C                   EVAL      DSRepayAmt = K_SEPRAM
+     C                   EVAL      SavRepayAmt = K_SEPRLN                                   MD051931
      C                   ELSE
      C                   EVAL      DSRepayAmt = K_SEINTA
+     C                   EVAL      SavRepayAmt = K_SEINLN                                   MD051931
      C                   ENDIF
 
       ** Equate payment amount on what is available.
 
+     C                   EVAL      ConvertFlag =*ON                                         MD051931
      C                   IF        Wbalance >= DSRepayAmt
      C                   EVAL      Wbalance = Wbalance - DSRepayAmt
+     C                   EVAL      ConvertFlag =*OFF                                        MD051931
      C                   ELSE
      C                   EVAL      DSRepayAmt = Wbalance
      C                   EVAL      Wbalance = 0
@@ -2858,17 +2867,27 @@
       *****************************************************************                     MD046080
      C     SRCvtAmt      BEGSR                                                              MD046080
                                                                                             MD046080
+     C                   IF        ConvertFlag = *OFF                                       MD051931
+     C                   EVAL      WOUTAMT = SavRepayAmt                                    MD051931
+     C                   LEAVESR                                                            MD051931
+     C                   ENDIF                                                              MD051931
      C                   IF        PTYP <> 66                                               MD046080
      C                             AND PTYP <> 67                                           MD046080
      C                             AND PTYP <> 69                                           MD046080
      C                             AND PTYP <> 72                                           MD046080
-     C                   EVAL      WCCY1 = p_PSCY                                           MD046080
-     C                   EVAL      WRATE = p_PEXR                                           MD046080
-     C                   EVAL      WIND1 = p_PEXI                                           MD046080
+     C**********         EVAL      WCCY1 = p_PSCY                                  MD046080 MD051931
+     C**********         EVAL      WRATE = p_PEXR                                  MD046080 MD051931
+     C**********         EVAL      WIND1 = p_PEXI                                  MD046080 MD051931
+     C                   EVAL      WCCY1 = p_SCCY                                           MD051931
+     C                   EVAL      WRATE = p_REXR                                           MD051931
+     C                   EVAL      WIND1 = p_REXI                                           MD051931
      C                   ELSE                                                               MD046080
-     C                   EVAL      WCCY1 = p_SCCY                                           MD046080
-     C                   EVAL      WRATE = p_REXR                                           MD046080
-     C                   EVAL      WIND1 = p_REXI                                           MD046080
+     C**********         EVAL      WCCY1 = p_SCCY                                  MD046080 MD051931
+     C**********         EVAL      WRATE = p_REXR                                  MD046080 MD051931
+     C**********         EVAL      WIND1 = p_REXI                                  MD046080 MD051931
+     C                   EVAL      WCCY1 = p_PSCY                                           MD051931
+     C                   EVAL      WRATE = p_PEXR                                           MD051931
+     C                   EVAL      WIND1 = p_PEXI                                           MD051931
      C                   ENDIF                                                              MD046080
      C                   EVAL      WCCY2 = CCY                                              MD046080
      C                   IF        WIND1 = 'M'                                              MD046080

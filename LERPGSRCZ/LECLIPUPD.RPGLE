@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD040789           Date 24Jan18               *
+      *  Last Amend No. MD051922           Date 15OCt18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD040789           Date 24Jan18               *
       *                 MD046370           Date 07Nov17               *
       *                 260408             Date 06Oct17               *
       *                 MD046248           Date 27Oct17               *
@@ -152,6 +153,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051922 - PDCL Y with same ccy settlement defaulted exchange*
+      *             rate and divide indicator when enquired or amended*
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD040789 - LE1150P1 is not generated during authorization of *
       *             maturity amendment.                               *
@@ -3730,6 +3733,14 @@
      C                   EVAL      PSCY = L_CLPSCY                                            CLE031
      C                   EVAL      PEXR = L_CLPEXR                                            CLE031
      C                   EVAL      PEXI = L_CLPEXI                                            CLE031
+     C                   IF        MPHAS = 'C'                                              MD051922
+     C                   IF        REXR = *ZEROS                                            MD051922
+     C                   EVAL      REXI = *BLANKS                                           MD051922
+     C                   ENDIF                                                              MD051922
+     C                   IF        PEXR = *ZEROS                                            MD051922
+     C                   EVAL      PEXI = *BLANKS                                           MD051922
+     C                   ENDIF                                                              MD051922
+     C                   ENDIF                                                              MD051922
      C                   ENDIF                                                                CLE031
                                                                                               CLE106
      C                   IF        CLE106 = 'Y'                                               CLE106
@@ -4351,6 +4362,14 @@
      C                   EVAL      PSCY = L_CLPSCY                                            CLE031
      C                   EVAL      PEXR = L_CLPEXR                                            CLE031
      C                   EVAL      PEXI = L_CLPEXI                                            CLE031
+     C                   IF        MPHAS = 'C'                                              MD051922
+     C                   IF        REXR = *ZEROS                                            MD051922
+     C                   EVAL      REXI = *BLANKS                                           MD051922
+     C                   ENDIF                                                              MD051922
+     C                   IF        PEXR = *ZEROS                                            MD051922
+     C                   EVAL      PEXI = *BLANKS                                           MD051922
+     C                   ENDIF                                                              MD051922
+     C                   ENDIF                                                              MD051922
      C                   ENDIF                                                                CLE031
                                                                                               CLE106
      C                   IF        CLE106 = 'Y'                                               CLE106

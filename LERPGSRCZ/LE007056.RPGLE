@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049363           Date 19Sep18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD051900           Date 19Sep18               *      
+      *  Prev Amend No. MD049363           Date 19Sep18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051900 - Adjustment on MAPY from rounded up settlement     *
+      *             amount                                            *      
       *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049745A - Corruption of Original currency of Loans and     *
@@ -368,6 +371,7 @@
      D P@NATN          S              5  0
      D WSkip           S              1
      D Pdclt           S              1
+     D ConvertFlag     S              1N   INZ(*OFF)                                        MD051900
 
      D                 DS
 
@@ -663,9 +667,11 @@
 
      C                   IF        Wbalance >= DSRepayAmt
      C                   EVAL      Wbalance = Wbalance - DSRepayAmt
+     C                   EVAL      ConvertFlag = *OFF                                       MD051900
      C                   ELSE
      C                   EVAL      DSRepayAmt = Wbalance
      C                   EVAL      Wbalance = 0
+     C                   EVAL      ConvertFlag = *ON                                        MD051900
      C                   ENDIF
      C                   EVAL      DSRpyAmt = DSRepayAmt
 
@@ -790,9 +796,17 @@
                                                                                             MD046080
       ** Convert amount to loan currency when CLE031 is *ON                                 MD046080
      C                   IF        CLE031 = 'Y'                                             MD046080
+     C                   IF        ConvertFlag = *ON                                        MD051900
      C                   EVAL      WINAMT = DSRpyAmt                                        MD046080
      C                   EXSR      SrConvert                                                MD046080
      C                   EVAL      DSRpyAmt = WOUTAMT                                       MD046080
+     C                   ELSE                                                               MD051900
+     C                   IF        K_SEPRAM <> 0                                            MD051900
+     C                   EVAL      DSRpyAmt = K_PRAM                                        MD051900
+     C                   ELSE                                                               MD051900
+     C                   EVAL      DSRpyAmt = K_INTA                                        MD051900
+     C                   ENDIF                                                              MD051900
+     C                   ENDIF                                                              MD051900
      C                   ENDIF                                                              MD046080
 
       ** Principal.
@@ -2487,7 +2501,8 @@
      C                   PARM                    WNBDP2                                     MD046080
      C                   PARM                    WOUTAMT                                    MD046080
                                                                                             MD046080
-     C                   EVAL      CCY = WCCY1                                              MD046080
+     C**********         EVAL      CCY = WCCY1                                     MD046080 MD051900
+     C                   EVAL      CCY = WCCY2                                              MD051900
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
      C                   ENDSR                                                              MD046080

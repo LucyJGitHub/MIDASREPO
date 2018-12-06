@@ -23,8 +23,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD051242           Date 29Jun18               *
-      *  Prev Amend No. MD049745A          Date 16Mar18               *
+      *  Last Amend No. MD052008           Date 05Oct18               *
+      *  Prev Amend No. MD051940           Date 21Sep18               *
+      *                 MD051242           Date 29Jun18               *
+      *                 MD049745A          Date 16Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CGL165             Date 17Feb15               *
@@ -45,6 +47,10 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052008 - Rounding off issue on PDCL amount using           *
+      *             settlement account with partial balance           *
+      *  MD051940 - PDCL X, Y, Z amount is incorrect as a result of   *
+      *             conversion rounding error.                        *
       *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
       *             balance for fee with no settlement currency       *
       *  MD049745A - Corruption of Original currency of Loans and     *
@@ -538,7 +544,11 @@
      C     Updack        BEGSR
 
      C                   EVAL      w@Pdamt = 0
+     C                   IF        LKOTHA = 0                                               MD051940
      C                   EVAL      w@Origp = LKEAMT
+     C                   ELSE                                                               MD051940
+     C                   EVAL      w@Origp = LKOTHA                                         MD051940
+     C                   ENDIF                                                              MD051940
      C                   EVAL      Lkaamt = P@BLAF
      C                   EVAL      LKIPFL = 'P'
      C                   Z-ADD     1             WMult
@@ -580,6 +590,11 @@
      C                   MOVE      'D'           Wf10
      C                   MOVEL     Wf10          LKAKEY
      C                   UPDATE    LKEYFEDF
+      *                                                                                     MD051940
+     C                   IF        LKOTHA <> 0                                              MD051940
+     C                   EVAL      w@Pdamt = LKOTHA                                         MD051940
+     C                   EVAL      WSCCY = *BLANKS                                          MD051940
+     C                   ENDIF                                                              MD051940
 
       ** when the repayment is partly past due, update account key
       ** field xxRyy--nnD or fffR---nnD and create new account key
@@ -619,7 +634,8 @@
 
       ** write new account key: field xxRyy--nnD or fffR---nnD
 
-     C                   EVAL      LKEAMT = W@Pdamt
+     C**********         EVAL      LKEAMT = W@Pdamt                                         MD052008
+     C                   EVAL      LKEAMT = W@AVAIL                                         MD052008
      C                   MULT      WMult         LKEAMT
                                                                                             MD046080
       ** Convert amount to loan currency when CLE031 is *ON                                 MD046080
@@ -630,6 +646,13 @@
      C                   EXSR      SRCvtAmt                                                 MD046080
      C                   EVAL      LKEAMT = WOUTAMT                                         MD046080
      C                   EVAL      LKECCY = FEFCCY                                          MD046080
+     C                   ENDIF                                                              MD051940
+      ** Available balance is now in loan currency. Now deduct this from repayment          MD052008
+      ** amount to get past due amount                                                      MD052008
+     C                   EVAL      LKEAMT = W@ORIGP - LKEAMT                                MD052008
+     C                   EVAL      W@PDAMT = LKEAMT                                         MD052008
+     C                   EVAL      WSCCY   = *BLANKS                                        MD052008
+      *                                                                                     MD052008
      C                   IF        LKEAMT > 0                                               MD051242
      C                   EVAL      w@adjamt = w@adjamt + LKEAMT                             MD051242
      C                   ELSE                                                               MD051242
@@ -640,9 +663,10 @@
      C                   EVAL      WMINUS = 'Y'                                             MD051242
      C                   ELSE                                                               MD051242
      C                   EVAL      WMINUS = ' '                                             MD051242
-     C                   ENDIF                                                              MD051242
+     C**********         ENDIF                                                     MD051242 MD051940
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
+     C                   EVAL      LKAAMT = 0                                               MD052008
      C                   MOVEL     LKAKEY        Wf10
      C                   MOVE      'D'           Wf10
      C                   MOVEL     Wf10          LKAKEY
@@ -650,9 +674,9 @@
      C                   ADD       1             W@NewRc
 
       ** Put back the original value before convert                                         MD046080
-     C                   IF        CLE031 = 'Y'                                             MD046080
-     C                   EVAL      LKEAMT = ORWAMT                                          MD046080
-     C                   ENDIF                                                              MD046080
+     C**********         IF        CLE031 = 'Y'                                    MD046080 MD051940
+     C**********         EVAL      LKEAMT = ORWAMT                                 MD046080 MD051940
+     C**********         ENDIF                                                     MD046080 MD051940
                                                                                             MD046080
       ** when reverse
 
@@ -894,14 +918,14 @@
      C                   ENDIF
                                                                                             MD046080
       ** Convert amount to loan currency when CLE031 is *ON                                 MD046080
-     C                   IF        CLE031 = 'Y'                                             MD046080
-     C                   EVAL      WINAMT = LKEAMT                                          MD046080
-     C                   EVAL      ORWAMT = LKEAMT                                          MD046080
-     C                   EXSR      SRCvtAmt                                                 MD046080
-     C                   EVAL      W@OrigP = WOUTAMT                                        MD046080
-     C                   ELSE                                                               MD046080
-     C                   EVAL      W@OrigP = LKEAMT                                         MD046080
-     C                   ENDIF                                                              MD046080
+     C**********         IF        CLE031 = 'Y'                                    MD046080 MD051940
+     C**********         EVAL      WINAMT = LKEAMT                                 MD046080 MD051940
+     C**********         EVAL      ORWAMT = LKEAMT                                 MD046080 MD051940
+     C**********         EXSR      SRCvtAmt                                        MD046080 MD051940
+     C**********         EVAL      W@OrigP = WOUTAMT                               MD046080 MD051940
+     C**********         ELSE                                                      MD046080 MD051940
+     C**********         EVAL      W@OrigP = LKEAMT                                MD046080 MD051940
+     C**********         ENDIF                                                     MD046080 MD051940
                                                                                             MD046080
      C     WPastDue      IFEQ      'Y'
      C     WPastDue      OREQ      'P'
@@ -1028,6 +1052,14 @@
       *****************************************************************                     MD046080
      C     SRCvtAmt      BEGSR                                                              MD046080
                                                                                             MD046080
+     C                   IF        wPastDue = 'Y'                                           MD051940
+     C                   IF        LKOTHA <> 0                                              MD051940
+     C                   EVAL      WOUTAMT = LKOTHA                                         MD051940
+     C                   EVAL      WSCCY = *BLANKS                                          MD051940
+     C                   LEAVESR                                                            MD051940
+     C                   ENDIF                                                              MD051940
+     C                   ENDIF                                                              MD051940
+                                                                                            MD051940
       ** If CLE034 switched ON, get settlement details fro LESTALPD                         MD046080
      C                   IF        CLE034 = 'Y'                                             MD046080
      C                             AND FESTAL = 'Y'                                         MD046080

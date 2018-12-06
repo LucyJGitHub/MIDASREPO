@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052228           Date 30Oct18               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend no. MD051877A          Date 02Oct18               *
+      *  Prev Amend no. MD051877           Date 22Sep18               *
+      *                 MD051932           Date 22Sep18               *      
+      *                 MD052228           Date 30Oct18               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD041649           Date 06Oct16               *
       *                 MD051239           Date 14Jun18               *
       *                 CDL051             Date 02May18               *
@@ -137,6 +140,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051877A - Highlighted field not correct                    *
+      *  MD051877 - Incorrect mapping on error field                  *
+      *  MD051932 - No validation when invalid rate is entered on     *
+      *             exhange rate field of settlement tabs             *      
       *  MD052228 - Overridable message Settlement account is         *
       *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
@@ -1800,6 +1807,14 @@
      C                   PARM                    ZADIG                                        CLE031
      C**********         PARM      *BLANKS       ZAVAL                                 CLE031 CLE106
       *                                                                                       CLE031
+     C     DDREXR        IFNE      *BLANKS                                                  MD051932
+     C     ZALIGNok      ANDNE     'Y'                                                      MD051932
+     C                   ADD       1             Idx                                        MD051932
+     C                   EVAL      FldNameArr(Idx) = 'DDRexr'                               MD051932
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0865'                                MD051932
+     C                   MOVE      'N'           DDRexrOK                                   MD051932
+     C                   ENDIF                                                              MD051932
+      *                                                                                     MD051932
      C**********         MOVE      ZAVAL         WMREXR           14 0                 CLE031 CLE106
      C*****ZAVAL         IFEQ      *BLANKS                                             CLE031 CLE106
      C                   MOVE      ZFIELD        WMREXR           14 0                        CLE106
@@ -1863,9 +1878,18 @@
      C**********         EVAL      FldNameArr(Idx) = 'DDRexr'                          CLE031 CLE106
      C                   EVAL      FldNameArr(Idx) = 'DDRSCY'                                 CLE106
      C                   EVAL      MsgIDArr(Idx) = 'ESM0814'                                  CLE031
-     C                   MOVE      'N'           DDRexrOK                                     CLE031
+     C**********         MOVE      'N'           DDRexrOK                            CLE031 MD051877
+     C                   MOVE      'N'           DDRscyOK                                   MD051877
      C                   ENDIF                                                                CLE031
       *                                                                                       CLE031
+     C     DDRSCY        IFNE      *BLANKS                                                  MD051932
+     C     DDRONS        ANDEQ     *BLANKS                                                  MD051932
+     C                   ADD       1             Idx                                        MD051932
+     C                   EVAL      FldNameArr(Idx) = 'DDRSCY'                               MD051932
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0816'                                MD051932
+     C                   MOVE      'N'           DDRscyOK                                   MD051932
+     C                   ENDIF                                                              MD051932
+      *                                                                                     MD051932
      C     DDRexrOK      IFNE      'N'                                                        CLE031
      C                   MOVEL     *BLANKS       ZMDIX                                        CLE031
      C     DDREXR        IFEQ      *BLANKS                                                    CLE031
@@ -3756,6 +3780,14 @@
      C                   PARM                    ZADIG                                        CLE031
      C**********         PARM      *BLANKS       ZAVAL                                 CLE031 CLE106
       *                                                                                       CLE031
+     C     DDPEXR        IFNE      *BLANKS                                                  MD051932
+     C     ZALIGNok      ANDNE     'Y'                                                      MD051932
+     C                   ADD       1             Idx                                        MD051932
+     C                   EVAL      FldNameArr(Idx) = 'DDPexr'                               MD051932
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0866'                                MD051932
+     C                   MOVE      'N'           DDPexrOK                                   MD051932
+     C                   ENDIF                                                              MD051932
+      *                                                                                     MD051932
      C**********         MOVE      ZAVAL         WMPEXR           14 0                 CLE031 CLE106
      C*****ZAVAL         IFEQ      *BLANKS                                             CLE031 CLE106
      C                   MOVE      ZFIELD        WMPEXR           14 0                        CLE106
@@ -3816,11 +3848,21 @@
      C     DDPSCY        IFEQ      ##PCCY                                                     CLE031
      C     DDPSCY        ANDNE     *BLANKS                                                    CLE031
      C                   ADD       1             Idx                                          CLE031
-     C                   EVAL      FldNameArr(Idx) = 'DDPexr'                                 CLE031
+     C**********         EVAL      FldNameArr(Idx) = 'DDPexr'                       CLE031 MD051877A
+     C                   EVAL      FldNameArr(Idx) = 'DDPscy'                              MD051877A
      C                   EVAL      MsgIDArr(Idx) = 'ESM0815'                                  CLE031
-     C                   MOVE      'N'           DDPexrOK                                     CLE031
+     C**********         MOVE      'N'           DDPexrOK                            CLE031 MD051877
+     C                   MOVE      'N'           DDPscyOK                                   MD051877
      C                   ENDIF                                                                CLE031
       *                                                                                       CLE031
+     C     DDPSCY        IFNE      *BLANKS                                                  MD051932
+     C     DDPONS        ANDEQ     *BLANKS                                                  MD051932
+     C                   ADD       1             Idx                                        MD051932
+     C                   EVAL      FldNameArr(Idx) = 'DDPSCY'                               MD051932
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0817'                                MD051932
+     C                   MOVE      'N'           DDPscyOK                                   MD051932
+     C                   ENDIF                                                              MD051932
+      *                                                                                     MD051932
      C     DDPexrOK      IFNE      'N'                                                        CLE031
      C                   MOVEL     *BLANKS       ZMDIX                                        CLE031
      C     DDPEXR        IFEQ      *BLANKS                                                    CLE031

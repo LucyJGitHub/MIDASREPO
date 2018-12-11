@@ -11,11 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. CUP041   *CREATE   Date 11Sep13               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD051849           Date 11Dec18               *
+      *  Prev Amend No. CUP041   *CREATE   Date 11Sep13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051849 - Include member type TBL in the database upgrade   *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *                                                               *
       *****************************************************************
@@ -62,6 +63,7 @@
      C+ (
      C+     AUMBTP = 'PF'
      C+ or  AUMBTP = 'SQLTBL'
+     C+ or  AUMBTP = 'TBL'                                                                  MD051849
      C+ )
      C+ order by
      C+ AUIPTY asc

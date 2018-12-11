@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037057           Date 22Mar16               *
+      *  Last Amend No. MD051683           Date 23Oct18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037057           Date 22Mar16               *
       *                 AR856140           Date 22Mar16               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -50,9 +51,9 @@
      F                                     COMMIT
      F                                     INCLUDE(DEAMSDJF)
      F                                     INFSR(*PSSR)                                      BUG8069
- 
+
      D**  Array for aligning integer/decimal portions of amount
- 
+
       **  Data Structure for aligning integer/decimal purchase amount
      D                 DS            18
      D  @@AINT                 1     15  0
@@ -479,10 +480,11 @@
       *                                                                                     AR856140
      C                   Eval      MergedNum = %ABS(FNum) * 1000                            AR856140
      C                                         + %ABS(LNum)                                 AR856140
-     C                   If        FNum < 0                                                 AR856140
+     C**********         If        FNum < 0                                        AR856140 MD051683
+     C                   If        FNum < 0 OR LNum < 0                                     MD051683
      C                   Eval      MergedNum = 0 - MergedNum                                AR856140
      C                   EndIf                                                              AR856140
                                                                                             AR856140
      C                   Return    MergedNum                                                AR856140
      P                 E                                                                    AR856140
- 
+

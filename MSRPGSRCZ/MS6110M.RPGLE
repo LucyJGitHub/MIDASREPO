@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD048231           Date 17Jan18               *
-      *  Prev Amend No. AR214111           Date 26Jun15               *
+      *  Last Amend No. MD051744           Date 19Nov18               *
+      *  Prev Amend No. MD048231           Date 17Jan18               *
+      *                 AR214111           Date 26Jun15               *
       *                 250527             Date 19Aug14               *
       *                 251373             Date 30Jan08               *
       *                 MD023406           Date 12Nov13               *
@@ -78,6 +79,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051744 - Added system value 'UseSysPrefixInHeader' to check*
+      *             if midas system prefix will be used in incoming   *
+      *             message header.                                   *
       *  MD048231 - Removed/Changed fix 251373 in order to process    *
       *             PAPER network messages using MQ queue             *
       *  AR214111 - Incoming messages were not retrieved properly by  *
@@ -431,6 +435,7 @@
                                                                                             MD048231
       ** Declared variable for system value setting                                         MD048231
      D MMMPaper        S              1A                                                    MD048231
+     D PrefixInHeader  S              1A                                                    MD051744
                                                                                               CTI004
       /EJECT
       *****************************************************************
@@ -1127,6 +1132,9 @@
      C**********         MOVEL     MCSYTM        MDCID                               CSW039 BUG14494
      C**********         MOVEL     CINONE        MDCID                               BUG14494 257554
      C**********         MOVEL     MCSYTM        MDCID                               257554 AR214111
+     C     PrefixInHeaderIFEQ      'Y'                                                      MD051744
+     C                   MOVEL     MCSYTM        MDCID                                      MD051744
+     C                   ENDIF                                                              MD051744
      C*****              MOVEL     CINONE        MDCID                                        CSW039
 
       ** Clear message buffer
@@ -2494,6 +2502,35 @@
       ** Pop subroutine
      C                   clear                   @STK(Q)
      C                   sub       1             Q
+      *                                                                                     MD051744
+      ** Get system value to consider midas system prefix in header                         MD051744
+     C                   EVAL      PSysVal01 = 'UseSysPrefixInHeader'                       MD051744
+     C                   CALLB     'AOSVALR0'                                               MD051744
+     C                   PARM      *BLANKS       PRtCd             7                        MD051744
+     C                   PARM                    PSysVal01                                  MD051744
+     C                   PARM                    PCurSet01                                  MD051744
+     C                   PARM                    PSysVal02                                  MD051744
+     C                   PARM                    PCurSet02                                  MD051744
+     C                   PARM                    PSysVal03                                  MD051744
+     C                   PARM                    PCurSet03                                  MD051744
+     C                   PARM                    PSysVal04                                  MD051744
+     C                   PARM                    PCurSet04                                  MD051744
+     C                   PARM                    PSysVal05                                  MD051744
+     C                   PARM                    PCurSet05                                  MD051744
+     C                   PARM                    PSysVal06                                  MD051744
+     C                   PARM                    PCurSet06                                  MD051744
+     C                   PARM                    PSysVal07                                  MD051744
+     C                   PARM                    PCurSet07                                  MD051744
+     C                   PARM                    PSysVal08                                  MD051744
+     C                   PARM                    PCurSet08                                  MD051744
+     C                   PARM                    PSysVal09                                  MD051744
+     C                   PARM                    PCurSet09                                  MD051744
+     C                   PARM                    PSysVal10                                  MD051744
+     C                   PARM                    PCurSet10                                  MD051744
+                                                                                            MD051744
+     C                   IF        PrtCd = *BLANKS                                          MD051744
+     C                   MOVEL     PCurSet01     PrefixInHeader                             MD051744
+     C                   ENDIF                                                              MD051744
      C                   endsr
       /EJECT                                                                                  245310
       **********************************************************************                  245310

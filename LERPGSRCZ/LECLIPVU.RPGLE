@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD052134           Date 18Oct18               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD041649           Date 06Oct16               *
       *                 CLE168             Date 26Feb18               *
       *                 MD034643           Date 11Sep17               *
@@ -133,6 +134,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052134 - Serious Midas Error Occurred when attempting to   *
+      *             input a LE Particiapation Sold                    *
+      *           - Applied for MD052132.                             * 
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *            - Block Accounts should not be dependent to CLE134 *
@@ -1169,12 +1173,14 @@
 
      C                   WHEN         DDACTN = 'X' OR DDACTN = 'Q'
       *  Processing for Authorize or Release
+     C                   EXSR      SetupAmd                                                 MD052134
+     C                   EVAL      ExtData = C_EXTDATA                                      MD052134
      C                   EXSR      ValidateTr
      C                   If        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
-     C                   EXSR      SetupAmd                                                 MD044880
-     C                   EVAL      ExtData = C_EXTDATA                                      MD044880
+     C**********         EXSR      SetupAmd                                        MD044880 MD052134
+     C**********         EVAL      ExtData = C_EXTDATA                             MD044880 MD052134
       *                                                                                       LLN022
       ** If BOE installed, validate fields.                                                  LLN022A
       *                                                                                      LLN022A

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051958           Date 24Sep18               *
-      *  Prev Amend No. MD051957           Date 24Sep18               *
+      *  Last Amend No. MD038508           Date 02May16               *      
+      *  Prev Amend No. MD051958           Date 24Sep18               *
+      *                 MD051957           Date 24Sep18               *
       *                 MD051944           Date 22Sep18               *
       *                 MD051921           Date 19Sep18               *
       *                 MD051874           Date 12Sep18               *
@@ -395,6 +396,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038508 - Incorrect interest accrual generated on PDP phase *
+      *             for loans with interest calculation basis 6       *
+      *             during a leap year.                               *      
       *  MD051958 - Maturity postings displayed incorrect actual      *
       *             postings in ACMV                                  *
       *  MD051957 - Missing S keys on maturity, frequency based       *
@@ -5160,7 +5164,8 @@ L118 I                             P   72   77 7RTSPL
      C                   PARM      *BLANKS       @RTCD                                      MD027475
      C                   PARM      SVAL(2)       P@OP01           20                        MD027475
      C                   PARM      *BLANKS       P@VL01          200                        MD027475
-     C                   PARM      *BLANKS       P@OP02           20                        MD027475
+     C**********         PARM      *BLANKS       P@OP02           20               MD027475 MD038508
+     C                   PARM      WPARML        P@OP02           20                        MD038508
      C                   PARM      *BLANKS       P@VL02          200                        MD027475
      C                   PARM      *BLANKS       P@OP03           20                        MD027475
      C                   PARM      *BLANKS       P@VL03          200                        MD027475

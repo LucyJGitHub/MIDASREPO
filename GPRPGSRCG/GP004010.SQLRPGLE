@@ -15,8 +15,9 @@
       *                                                               *
       *     (c) Finastra International Limited 2012                   *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CBF023             Date 04Jan17               *
+      *  Last Amend No. MD042109           Date 26Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CBF023             Date 04Jan17               *
       *                 MD035820           Date 11May16               *
       *                 AR1097353          Date 26Mar13               *
       *                 AR1036892          Date 27Sep12               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042109 - Updates, amendments and deletes do not show on    *
+      *             BFTC audit reports                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CBF023 - Soft Delete Feature on Security Related Modules     *
       *  MD035820 - Zone Details in report are not the same from the  *
@@ -1316,8 +1319,23 @@
 
      C**********         IF        NIRptDS(6) = 0                                          AR1036892
      C**********         EVAL      TmpDat02 = %DATE(%SUBST(FRECR:1:10):*ISO)               AR1036892
-     C                   IF        NIRptDS(6) = 0                                          AR1036892
+     C                   EVAL      TmpDat02 = *LOVAL                                        MD042109
+      ** Approved Date                                                                      MD042109
+     C                   IF        NIRptDS(7) = 0                                           MD042109
+     C**********         IF        NIRptDS(6) = 0                                 AR1036892 MD042109
      C                   EVAL      TmpDat02 = %DATE(%SUBST(FREAP:1:10):*ISO)               AR1036892
+     C                   ELSE                                                               MD042109
+      ** Last Modified Date                                                                 MD042109
+     C                   IF        NIRptDS(5) = 0                                           MD042109
+     C                   EVAL      TmpDat02 = %DATE(%SUBST(FCMOD:1:10):*ISO)                MD042109
+     C                   ELSE                                                               MD042109
+      ** Created on Date                                                                    MD042109
+     C                   IF        NIRptDS(6) = 0                                           MD042109
+     C                   EVAL      TmpDat02 = %DATE(%SUBST(FRECR:1:10):*ISO)                MD042109
+     C                   ENDIF                                                              MD042109
+     C                   ENDIF                                                              MD042109
+     C                   ENDIF                                                              MD042109
+     C                   IF        TmpDat02 <> *LOVAL                                       MD042109
      C                   EVAL      DatNum02 = %DEC(TmpDat02)
      C                   EVAL      PDateIN  = DatNum02
      C                   EXSR      SRZDateO

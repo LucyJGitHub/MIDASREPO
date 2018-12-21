@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052279           Date 14Nov18               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 MD041917           Date 20Dec16               *
       *                 MD040412           Date 17Aug16               *
@@ -113,6 +114,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052279 - Negative rate loan got unexpected error 45021183  *
+      *             (Entry is not allowed for discounted loans or zero*
+      *             interests) and 45021165 (Valid rate is req. if no *
+      *             base rate input).                                 *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
@@ -1587,10 +1592,10 @@
      C     CLE036        ANDEQ     'Y'                                                      BUG10225
      C                   Z-ADD     WSVRS         WINTT                                        CLE035
      C                   ENDSL
-      ** When the interest is negative, set it to zero.                                     BUG10226
-     C     WINTT         IFLT      *ZEROS                                                   BUG10226
-     C                   EVAL      WINTT = *ZEROS                                           BUG10226
-     C                   ENDIF                                                              BUG10226
+      ***When*the*interest*is*negative,*set*it*to*zero.                            BUG10226 MD052279
+     C*****WINTT         IFLT      *ZEROS                                          BUG10226 MD052279
+     C**********         EVAL      WINTT = *ZEROS                                  BUG10226 MD052279
+     C**********         ENDIF                                                     BUG10226 MD052279
       *
      C     DDSPINOK      IFNE      'N'
      C                   MOVEL     DDSPIN        CCLSPIN

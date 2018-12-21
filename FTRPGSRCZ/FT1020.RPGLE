@@ -14,12 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR978435           Date 17Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 BUG26775 *CREATE   Date 20Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR978435 - MT103 was generated even though Beneficiary       *
+      *             Bank/Non bank indicator is 'Y'. (Child: AR978436) *      
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG26775 - Validate message type If 103 OR 202               *
@@ -321,10 +324,11 @@
  
      C     BNIND         BEGSR
  
-     C                   IF        BBSWFI = 'Y'
+     C**********         IF        BBSWFI = 'Y'                                             AR978435
+     C                   IF        BBSWFI = 'Y' OR BBBNBI = 'Y'                             AR978435
      C                   EVAL      CTYP = 'B'
-     C                   ELSEIF    BBSWFI <> 'N' AND BBBNBI = 'Y'
-     C                   EVAL      CTYP = 'B'
+     C**********         ELSEIF    BBSWFI <> 'N' AND BBBNBI = 'Y'                           AR978435
+     C**********         EVAL      CTYP = 'B'                                               AR978435
      C                   ENDIF
  
      C                   ENDSR

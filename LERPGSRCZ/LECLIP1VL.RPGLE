@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052214           Date 26Oct18               *
-      *  Prev Amend No. MD052213           Date 26Oct18               *
+      *  Last Amend No. MD052327           Date 17Nov18               *
+      *  Prev Amend No. MD052214           Date 26Oct18               *
+      *                 MD052213           Date 26Oct18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD027418           Date 18Jul18               *
       *                 MD026971           Date 18Jul18               *
@@ -163,6 +164,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052327 - A serious MIDAS error occurred while Inserting    *
+      *             a New Participation Sold                          *
       *  MD052214 - Warning message with outside block not appearing. *
       *             Use WId instead of WIdx such that other warning   *
       *             message will not be overridden                    *
@@ -1083,6 +1086,7 @@
      D BDCHolInd       S              7A                                                      CLE141
      D LoanBDC         S             60A                                                      CLE141
      D DayNo           S              5  0                                                    CLE141
+     D DayNoZ          S              5  0                                                  MD052327
                                                                                               CLE141
       ** Index for arrays of error message ids etc                                            CLE141
      D Ix              S                   LIKE(Idx)                                          CLE141
@@ -5950,7 +5954,8 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   CALLB     'LEVBDYLE'                                                 CLE141
      C                   PARM      *BLANKS       BDCHolInd                                    CLE141
      C                   PARM      CurLocPR      LoanBDC                                      CLE141
-     C                   PARM      WSVRD         DayNo                                        CLE141
+     C**********         PARM      WSVRD         DayNo                               CLE141 MD052327
+     C                   PARM      WSVRD         DayNoZ                                     MD052327
      C                   IF        BDCHolInd = 'HOLIDAY'                                      CLE141
      C                   EVAL      DDRLDTOK = 'W'                                             CLE141
      C                   EVAL      WId = WId + 1                                              CLE141

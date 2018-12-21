@@ -10,9 +10,10 @@
       *  GLAMAD1VL -  Account Master Details Validation               *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *                                                               *	
+      *  Last Amend No. AR1021393          Date 13Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 CGL165             Date 23Feb15               *
       *                 CER069             Date 03Jul14               *
       *                 MD024336A          Date 19Aug14               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1021393 - Wrong balances on account statement. If stmt freq*
+      *              changed from non-'E' to 'E', issue warning msg   *
+      *              RE72060. (Child: AR1021396)                      *
+      *            - Applied for MD052264.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CGL165 - Dual Withholding Tax                                *
@@ -1424,6 +1429,15 @@
      C                   Else
      C                   Eval      WDAY = %Subst(DDNSTD:3)
      C                   EndIf
+      *                                                                                    AR1021393
+      ** If Amend, include the current stmt freq value in the parameter                    AR1021393
+      *                                                                                    AR1021393
+     C     DDACTN        IfEq      'A'                                                     AR1021393
+     C     AMORED        AndNe     BJRDNB                                                  AR1021393
+     C                   MoveL     AMSTFQ        WWSTFQ            1                       AR1021393
+     C                   Else                                                              AR1021393
+     C                   MoveL     DDSTFQ        WWSTFQ                                    AR1021393
+     C                   EndIf                                                             AR1021393
       *
       * Reset variables updated by each module
  
@@ -1455,6 +1469,7 @@
      C                   Parm                    WDAY
       *
      C                   Parm                    CGL184                                       CGL184
+     C                   Parm                    WWSTFQ                                    AR1021393
       * OUTPUTS
       *
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1468,6 +1483,12 @@
      C                   Parm                    DDStFqOk
      C                   Parm                    DDENoCOk
      C                   Parm                    DDNSDNOk
+                                                                                           AR1021393
+      * Warning message IDs/message data (arrays) from/to caller                           AR1021393
+                                                                                           AR1021393
+     C                   PARM                    WFldNmXAr                                 AR1021393
+     C                   PARM                    WMsgIDXAr                                 AR1021393
+     C                   PARM                    WMsgDtXAr                                 AR1021393
  
       * Update error info with that returned from the validation module
  

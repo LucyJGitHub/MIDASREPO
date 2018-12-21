@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. AR1021393          Date 13Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD025568           Date 11Mar14               *
       *                 CGL001             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1021393 - Wrong balances on account statement. If stmt freq*
+      *              changed from non-'E' to 'E', issue warning msg   *
+      *              RE72060. (Child: AR1021396)                      *
+      *            - Applied for MD052264.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  MD025568 - Incorrect error message displayed upon            *
@@ -110,6 +115,15 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
+                                                                                           AR1021393
+      ** Array of Fields with warnings.                                                    AR1021393
+     D WFldNmXAr       S             10A   DIM(XArrayMax)                                  AR1021393
+                                                                                           AR1021393
+      ** Array of warning message IDs                                                      AR1021393
+     D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)                     AR1021393
+                                                                                           AR1021393
+      ** Array of warning message data.                                                    AR1021393
+     D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                   AR1021393
  
       ** Valid Frequency Data
      D***Frequency       C                   CONST('ABDEFLMQRSTWXYZ')                         CGL001
@@ -201,6 +215,14 @@
      C                   MOVEL     '5046261'     MsgIDXAr(Idx)                              MD025568
      C                   EndIf
      C/COPY WNCPYSRC,GLH00725
+      *                                                                                    AR1021393
+      ** If amended from non-'E' to 'E', send warning message                              AR1021393
+      *                                                                                    AR1021393
+     C     DDStFq        IfEq      'E'                                                     AR1021393
+     C     DDStFq        AndNE     WWSTFQ                                                  AR1021393
+     C                   Movel     'DDStFq'      WFldNmXAr(1)                              AR1021393
+     C                   Movel     '5049211'     WMsgIDXAr(1)                              AR1021393
+     C                   EndIf                                                             AR1021393
       *
      C                   ENDSR
       *****************************************************************
@@ -333,6 +355,7 @@
       ** Day no in next statement date field
      C                   Parm                    WDAY              2
      C                   Parm                    CGL184            1                          CGL184
+     C                   Parm                    WWSTFQ            1                       AR1021393
       *
       ** OUTPUTS
       *
@@ -347,6 +370,12 @@
      C                   Parm                    DDStFqOk          1
      C                   Parm                    DDENoCOk          1
      C                   Parm                    DDNSDNOk          1
+                                                                                           AR1021393
+      * Warning message IDs/message data (arrays) from/to caller                           AR1021393
+                                                                                           AR1021393
+     C                   Parm                    WFldNmXAr                                 AR1021393
+     C                   Parm                    WMsgIDXAr                                 AR1021393
+     C                   Parm                    WMsgDtXAr                                 AR1021393
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================

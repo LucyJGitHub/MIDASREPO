@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034366           Date 09Sep15               *
+      *  Last Amend No. AR1021393          Date 13Nov18               *
+      *  Prev Amend No. 224697             Date 13Nov18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034366           Date 09Sep15               *
       *                 MD042832           Date 23Nov16               *
       *                 MD034725           Date 27Jul16               *
       *                 MD035554           Date 25May16               *
@@ -128,6 +130,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1021393 - Wrong balances on account statement. Use balance *
+      *              from GLACBTPD only if a/c not opened on rundate. *
+      *              (Child: AR1021396)                               *
+      *            - Applied for MD052264.                            *
+      *  224697 - Wrong balances on account statement. If change      *
+      *           frequency is from non-'E' to 'E', ECFB should be the*
+      *           start-of-day LDBL (taken from file GLACBTL0), and   *
+      *           EPNO with LSTP. If change frequency is from 'E' to  *
+      *           non-'E', CFSB should be updated with ECFB, LSTP with*
+      *           EPNO and LSTD with LMVD.                            *
+      *         - Applied for AR1021393 (Child: AR1021396)            *
+      *         - Applied for MD052264.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034366 - CRE005 failuers in COB. Added timestamp field to  *
       *             ensure that latest rate change record is used.    *
@@ -2677,11 +2691,14 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      AC_ANAM=AMANAM
      C**********         EVAL      AC_STFQ=AMSTFQ                                             204105
      C                   EVAL      AC_ECFB=AMECFB
+      *                                                                                       224697
       ** If Change of Frequency with new frequency 'E': extra carried
       ** forward balance equal to Ledger balance
+      *                                                                                       224697
      C                   IF        AC_STFQ<>*BLANK
      C**********         IF        AC_STFQ<>'E' and AMSTFQ='E'                              MD027195
      C                   IF        BA_STFQ<>'E' and AMSTFQ='E'                              MD027195
+     C                             and AC_ORED<>BJRDNB                                     AR1021393
      C/COPY WNCPYSRC,GLH00798
      C**********         Z-ADD     AC_LDBL       AC_ECFB                                    MD027195
      C     AccntKey      CHAIN     GLACBTL0                           31                    MD027195
@@ -2694,7 +2711,18 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   Z-ADD     0             AC_ECFB                                    MD033852
      C                   ENDIF                                                              MD033852
                                                                                             MD033852
+     C                   Z-ADD     AC_LSTP       AC_EPNO                                      224697
      C                   ENDIF
+      *                                                                                       224697
+      ** If change of Frequency with new frequency NOT 'E':                                   224697
+      ** C/f Stmt balance should be taken from Extras S/f Stmt bal                            224697
+      ** and Last Statement Page no. from Extra Stat Page no.                                 224697
+      *                                                                                       224697
+     C                   IF        AC_STFQ='E' and AMSTFQ<>'E'                                224697
+     C                   Z-ADD     AC_ECFB       AC_CFSB                                      224697
+     C                   Z-ADD     AC_EPNO       AC_LSTP                                      224697
+     C                   Z-ADD     AC_LMVD       AC_LSTD                                      224697
+     C                   ENDIF                                                                224697
      C                   ENDIF
       *                                                                                       CTI005
      C     AC_NACSG      IFEQ      'T'                                                        CTI005

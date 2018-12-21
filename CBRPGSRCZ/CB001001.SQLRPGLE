@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD048901A          Date 05Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 MD021155           Date 19Jul13               *
       *                 MD020661A          Date 19Jun13               *
       *                 MD020661           Date 28May13               *
@@ -31,6 +32,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD048901A - Not possible to check Fusion Banking Midas Dash  *
+      *              Dash Board (still 2 unauthorised Items)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD021155 - COB Restructure Phase 1 remnants                  *
@@ -158,7 +161,8 @@
      C+ where
      C*+*****DLUATH = 'Y'                                                                  MD020661A
      C*+*****and DLVAL <> 0                                                                MD020661A
-     C+     DLVAL <> 0                                                                     MD020661A
+     C******DLVAL <> 0                                                           MD020661A MD048901A
+     C+     DLVAL <> '00000'                                                               MD048901A
      C+     and DLMSID = :SYSID                                                            AR1089839
      C/END-EXEC
       *
@@ -242,9 +246,11 @@
      C/END-EXEC
 
      C**********         IF        DSVAL <> *BLANKS                                        AR1091294
-     C                   IF        DLVAL <> *ZEROS                                         AR1091294
+     C**********         IF        DLVAL <> *ZEROS                               AR1091294 MD048901A
+     C                   IF        DLVAL <> '00000'                                        MD048901A
 
-     C                   EVAL      DLVAL = *ZEROS                                          AR1092065
+     C**********         EVAL      DLVAL = *ZEROS                                AR1092065 MD048901A
+     C                   EVAL      DLVAL = '00000'                                         MD048901A
      C                   EXSR      SHWSCRN
 
      C                   ENDIF

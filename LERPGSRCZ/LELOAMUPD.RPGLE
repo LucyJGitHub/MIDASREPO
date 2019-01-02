@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR848765           Date 30Jun15               *
+      *  Last Amend No. MD047554           Date 11Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR848765           Date 30Jun15               *
       *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 AR547813           Date 13Nov15               *
@@ -98,6 +99,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
+      *             with recalculated amount based on newly inserted, *
+      *             amended, or reversed PI, BC, or SC.               *
+      *           - All fields for loan reference should be alpha     *
+      *             numeric.                                          *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR848765 - During amend of Principal Increase, value of OSAC *
       *             is not updated correctly, Instead of PONS/RONS,   *
@@ -1293,6 +1299,7 @@
       *
       ** Save the current principal amount of the record
      C                   Z-ADD     PRAM          WPRAM            13 0
+     C                   Z-ADD     PRAM          OPRAM                                      MD047554     
       *
       ** Update on shadow files should only be done if not a Risk loan
      C     PTYP          IFNE      70
@@ -3487,6 +3494,11 @@
      C     CLE055        andeq     'Y'                                                     AR1035362
      C     LAAMTP        andeq     'PI'                                                    AR1035362
      C     BPLMAU        andeq     'Y'                                                     AR1035362
+      *                                                                                     MD047554
+     C                   EVAL      OLNRF = LALNRF                                           MD047554
+     C                   EVAL      OVDAT = SHVDAT                                           MD047554
+     C                   EVAL      OLASN = SHLASN                                           MD047554
+     C                   EVAL      OMPRAM = PRAM                                            MD047554     
       *
      C     LAAMTP        IFEQ      'PI'
       *
@@ -3521,25 +3533,57 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+      ** Create shadow posting of Interest and Maturity during                              MD047554
+      ** insert, reversal, or amendment of amount                                           MD047554
+      *                                                                                     MD047554
+     C     DDACTN        IFEQ      'I'                                                      MD047554
+     C     DDACTN        OREQ      'A'                                                      MD047554
+     C     OPRAM         ANDNE     PRAM                                                     MD047554
+     C     DDACTN        OREQ      'R'                                                      MD047554
+     C                   CALL      'LE2041  '                                               MD047554
+     C                   PARM                    OLNRF             6                        MD047554
+     C                   PARM                    OVDAT             5 0                      MD047554
+     C                   PARM                    OLASN             3 0                      MD047554
+     C                   PARM                    OMPRAM           13 0                      MD047554
+     C                   PARM                    DDATYP                                     MD047554
+     C                   PARM                    DDACTN                                     MD047554
+     C                   PARM                    OPRAM            13 0                      MD047554
+     C                   PARM      *BLANKS       @RTCD                                      MD047554
+     C                   ENDIF                                                              MD047554
+      *                                                                                     MD047554
      C                   ENDIF
       *
      C                   MOVEL     SHLNRF        OLNRF                                        264065
      C                   MOVEL     SHVDAT        OVDAT                                        264065
      C                   MOVEL     SHLASN        OLASN                                        264065
      C                   MOVEL     SHPRAM        OMPRAM                                       264065
+      *                                                                                     MD047554
+     C                   IF        DDATYP <> 'PI'                                           MD047554
+      *                                                                                     MD047554
+     C                   IF        LAPCOB <> *BLANKS                                        MD047554
+     C                   EVAL      @RTCD = '*LEBTCH'                                        MD047554
+     C                   ELSE                                                               MD047554
+     C                   EVAL      @RTCD = *BLANKS                                          MD047554
+     C                   ENDIF                                                              MD047554
+      *                                                                                     MD047554
+     C                   EVAL      OPRAM = *ZERO                                            MD047554
+      *                                                                                     MD047554     
      C                   CALL      'LE2041  '                                                 264065
-     C                   PARM                    OLNRF             6 0                        264065
+     C**********         PARM                    OLNRF             6 0               264065 MD047554
+     C                   PARM                    OLNRF             6                        MD047554
      C                   PARM                    OVDAT             5 0                        264065
      C                   PARM                    OLASN             3 0                        264065
      C                   PARM                    OMPRAM           13 0                        264065
      C                   PARM                    AMTP                                         264065
      C                   PARM                    DDACTN                                       264065
+     C                   PARM                    OPRAM                                      MD047554     
      C                   PARM      *BLANKS       @RTCD                                      AR868380
                                                                                               264065
      C     @RTCD         IFEQ      '*RECLCK'                                                AR868380
      C                   MOVEL     '*RECLCK'     @@RTCD                                     AR868380
      C                   GOTO      EXIT                                                     AR868380
      C                   ENDIF                                                              AR868380
+     C                   ENDIF                                                              MD047554
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01192
       *

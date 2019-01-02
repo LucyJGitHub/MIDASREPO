@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047554           Date 11Oct17               *      
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR943686           Date 23Sep16               *
       *                 MD040830           Date 14Sep16               *
       *                 CLE154             Date 02Aug12               *
@@ -81,6 +82,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
+      *             with recalculated amount based on newly inserted, *
+      *             amended, or reversed RE. Check the change of the  *
+      *             autosettle indicator and call LE2041.             *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031: System generating wrong projected move-   *
@@ -1523,6 +1528,13 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                     MD047554
+      ** Store inital value of autosettle indicator during amendment                        MD047554
+      *                                                                                     MD047554
+     C                   MOVE      *BLANKS       OAUTO                                      MD047554
+     C     RPCHTP        IFEQ      'A'                                                      MD047554
+     C                   MOVE      AUTO          OAUTO             1                        MD047554
+     C                   ENDIF                                                              MD047554
       *
       ***  Set up the following fields for action Insert
       *
@@ -1954,6 +1966,15 @@ B001 C     RPCHTP        IFEQ      'I'
       *
      C                   MOVE      OSBR          SHOSBR
      C                   MOVE      CHTP          SHCHTP
+      *                                                                                     MD047554
+      ** If Autosettle indicator has been changed from Y to N, treat                        MD047554
+      ** as reversal for shadow posting.                                                    MD047554
+      *                                                                                     MD047554
+     C     RPCHTP        IFEQ      'A'                                                      MD047554
+     C     OAUTO         ANDEQ     'Y'                                                      MD047554
+     C     RPAUTO        ANDEQ     'N'                                                      MD047554
+     C                   EVAL      SHCHTP = 'R'                                             MD047554
+     C                   ENDIF                                                              MD047554
       *
      C     CEU004        IFEQ      'Y'
      C                   MOVE      SCCY          SHSCCY
@@ -1986,6 +2007,18 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   ELSE
      C                   MOVE      *BLANKS       @RTCD
      C                   ENDIF
+      *                                                                                     MD047554
+      ** If Autosettle Indicator has been amended from N to Y,                              MD047554
+      ** treat as newly inserted repayment to create shadow                                 MD047554
+      ** posting. Blank out Z#BSTS to create VALUE posting.                                 MD047554
+      *                                                                                     MD047554
+     C                   MOVEL     *BLANKS       #AAUTO            1                        MD047554
+     C     RPCHTP        IFEQ      'A'                                                      MD047554
+     C     OAUTO         ANDEQ     'N'                                                      MD047554
+     C     RPAUTO        ANDEQ     'Y'                                                      MD047554
+     C                   MOVE      *BLANKS       Z#BSTS                                     MD047554
+     C                   EVAL      #AAUTO = 'Y'                                             MD047554
+     C                   ENDIF                                                              MD047554
       *
      C                   CALL      'AOOULAU0'
      C                   PARM                    @RTCD
@@ -2007,6 +2040,15 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+      *                                                                                     MD047554
+     C                   EVAL      OPRAM = *Zero                                            MD047554
+     C                   EVAL      OCHTP = RPCHTP                                           MD047554
+      *                                                                                     MD047554
+     C     RPCHTP        IFEQ      'A'                                                      MD047554
+     C     OAUTO         ANDEQ     'Y'                                                      MD047554
+     C     RPAUTO        ANDEQ     'N'                                                      MD047554
+     C                   EVAL      OCHTP = 'R'                                              MD047554
+     C                   ENDIF                                                              MD047554
       *                                                                                       264065
      C     PRAM          IFNE      0                                                          264065
      C     TAMT          ORNE      0                                                          264065
@@ -2015,12 +2057,15 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   MOVEL     SHLASN        OLASN                                        264065
      C                   MOVEL     SHPRAM        OMPRAM                                       264065
      C                   CALL      'LE2041  '                                                 264065
-     C                   PARM                    OLNRF             6 0                        264065
+     C**********         PARM                    OLNRF             6 0               264065 MD047554
+     C                   PARM                    OLNRF             6                        MD047554
      C                   PARM                    OVDAT             5 0                        264065
      C                   PARM                    OLASN             3 0                        264065
      C                   PARM                    OMPRAM           13 0                        264065
      C                   PARM                    AMTP                                         264065
-     C                   PARM                    RPCHTP                                       264065
+     C**********         PARM                    RPCHTP                              264065 MD047554
+     C                   PARM                    OCHTP             1                        MD047554
+     C                   PARM                    OPRAM            13 0                      MD047554
      C                   PARM      *BLANKS       @RTCD                                      AR868380
       *                                                                                     AR868380
      C     @RTCD         IFEQ      '*RECLCK'                                                AR868380

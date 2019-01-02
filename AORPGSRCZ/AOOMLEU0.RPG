@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *  Last Amend No. MD047554           Date 11Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
@@ -73,6 +74,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
+      *             with recalculated amount based on newly inserted, *
+      *             amended, or reversed MR, RE, PI, SC, or BC.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
@@ -469,6 +473,7 @@
      I              SETP                            SETPL
      I              BRTE                            BRTEL
      I              SPIN                            SPINL
+     I              WTIN                            WTINL                                   MD047554
      I              INTC                            INTCL
      I              ORED                            OREDL
      I              IRCF                            IRCFL
@@ -846,6 +851,8 @@
      C                     PARM           BRLAMT                                              218984
      C                     PARM           ARLAMT                                              218984
      C                     PARM           NCCY                                                218984
+     C                     PARM           #OPRAM 130                                        MD047554
+     C                     PARM           #ACTN   1                                         MD047554
       *
       **  Set up subroutine stack name
       *
@@ -907,6 +914,7 @@
       *
      C                     MOVELZ#BSTS    #BRCID  2
      C                     MOVELZ#ASTS    #ARCID  2
+     C                     MOVE *BLANKS   FPASS   1                                         MD047554
       *
       *-------------------------------------------------------------------
       *
@@ -959,6 +967,7 @@
       *
      C                     Z-ADD*ZERO     $$VDSN           * NO LOAM OMIT
      C                     MOVEL*BLANK    ##REVI
+     C                     MOVEL'Y'       FPASS                                             MD047554
       *
       ** Loans
       *
@@ -1139,6 +1148,18 @@
      C           ##STAL    ANDEQ'Y'                                                           220754
      C                     EXSR SR34B                                                         CLE034
      C                     ENDIF                                                              CLE034
+      *                                                                                     MD047554
+      ***  If the tax is "gross" of interest, subtract the calculated                       MD047554
+      ***  withholding tax from the interest due                                            MD047554
+      *                                                                                     MD047554
+     C           WTIN      IFEQ 'G'                                                         MD047554
+     C           ##AMT     ANDNE0                                                           MD047554
+     C           WTIN      OREQ 'R'                                                         MD047554
+     C           ##AMT     ANDNE0                                                           MD047554
+     C           WTRT      DIV  100       TAXINT 117                                        MD047554
+     C           ##AMT     MULT TAXINT    TAXAMT 150H                                       MD047554
+     C                     SUB  TAXAMT    ##AMT                                             MD047554
+     C                     ENDIF                                                            MD047554
       *
       ** Pass movement to write program (with appropriate instructions)
       *
@@ -1217,6 +1238,18 @@
      C           ##STAL    ANDEQ'Y'                                                           220754
      C                     EXSR SR34B                                                         CLE034
      C                     ENDIF                                                              CLE034
+      *                                                                                     MD047554
+      ** If the tax is "gross" of interest, subtract the calculated                         MD047554
+      ** withholding tax from the interest due                                              MD047554
+      *                                                                                     MD047554
+     C           WTIN      IFEQ 'G'                                                         MD047554
+     C           ##AMT     ANDNE0                                                           MD047554
+     C           WTIN      OREQ 'R'                                                         MD047554
+     C           ##AMT     ANDNE0                                                           MD047554
+     C           WTRT      DIV  100       TAXINT 117                                        MD047554
+     C           ##AMT     MULT TAXINT    TAXAMT 150H                                       MD047554
+     C                     SUB  TAXAMT    ##AMT                                             MD047554
+     C                     ENDIF                                                            MD047554
       *
       ** Pass movement to write program (with appropriate instructions)
       *
@@ -1362,15 +1395,29 @@
      C           #BRCID    OREQ *BLANKS
      C           RECIL     ANDEQ'R'
      C                     MOVEL'Y'       WSAME   3
+      *                                                                                     MD047554
+      ** Process amendment of principal amount in PI, or if                                 MD047554
+      ** change of autosettle indicator from Y to N in RE                                   MD047554
+      ** (#ACTN=R to process it as reversal).                                               MD047554
+      *                                                                                     MD047554
+     C           AMTPL     IFEQ 'PI'                                                        MD047554
+     C           #OPRAM    ANDNEPRAML                                                       MD047554
+     C           RECIL     ANDNE'R'                                                         MD047554
+     C           AMTPL     OREQ 'RE'                                                        MD047554
+     C           RECIL     ANDNE'R'                                                         MD047554
+     C           #ACTN     ANDEQ'R'                                                         MD047554
+     C                     MOVEL'N'       WSAME                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
      C                     ELSE
      C                     MOVEL'N'       WSAME
      C                     ENDIF
      C*                                                                                       221505
-     C           RLDT      IFNE 0                                                             221505
-     C           VDATH     ANDGTRLDT                                                          221505
-     C           VDATL     ANDGTRLDT                                                          221505
-     C                     EXSR SRROLL                                                        221505
-     C                     ENDIF                                                              221505
+     C********** RLDT      IFNE 0                                                    221505 MD047554
+     C********** VDATH     ANDGTRLDT                                                 221505 MD047554
+     C********** VDATL     ANDGTRLDT                                                 221505 MD047554
+     C**********           EXSR SRROLL                                               221505 MD047554
+     C**********           ENDIF                                                     221505 MD047554
       *
      C                     SELEC
      C           VDATH     WHLE VDATL
@@ -1422,7 +1469,11 @@
       *
       ** If date present (ie not call)
       *
-     C                     Z-ADDCPAM      ##AMT
+      ** Use the calculated current principal amount of the                                 MD047554
+      ** loan based on all movements.                                                       MD047554
+      *                                                                                     MD047554
+     C**********           Z-ADDCPAM      ##AMT                                             MD047554
+     C                     Z-ADDWCUPR     ##AMT                                             MD047554
       *                                                                                       224582
      C           INTC      IFEQ 'Y'                                                           224582
      C                     ADD  WCALC     ##AMT                                               224582
@@ -2930,6 +2981,14 @@
       *                                                               *
       *****************************************************************
      C           SRHIST    BEGSR
+      *                                                                                     MD047554
+      ** Process rollover date                                                              MD047554
+      *                                                                                     MD047554
+     C           RLDT      IFGT 0                                                           MD047554
+     C           RLDT      ANDLEVDATH                                                       MD047554
+     C           NCCY      ANDEQ*BLANKS                                                     MD047554
+     C                     EXSR SRROLL                                                      MD047554
+     C                     ENDIF                                                            MD047554
       *
      C                     Z-ADDVDATH     OMEND
      C                     EXSR SRRPAY
@@ -2978,6 +3037,13 @@
       *
      C           AMTPH     WHEQ 'IN'
      C                     ADD  INTAH     WINPD
+      *                                                                                     MD047554
+      ** Include withholding tax in interest paid like IPRD.                                MD047554
+      *                                                                                     MD047554
+     C           WTXAH     IFNE 0                                                           MD047554
+     C           WTIN      ANDEQ'G'                                                         MD047554
+     C                     ADD  WTXAH     WINPD                                             MD047554
+     C                     ENDIF                                                            MD047554
      C           INTC      IFEQ 'Y'
      C                     ADD  INTAH     WCUPR
      C                     ENDIF
@@ -3068,6 +3134,15 @@
       *                                                               *
       *****************************************************************
      C           SRLOAM    BEGSR
+      *                                                                                     MD047554
+      ** Process Rollover Date                                                              MD047554
+      *                                                                                     MD047554
+     C           RLDT      IFGT 0                                                           MD047554
+     C           RLDT      ANDLEVDATL                                                       MD047554
+     C           NCCY      ANDEQ*BLANKS                                                     MD047554
+     C                     EXSR SRROLL                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
      C           WSAME     IFEQ 'Y'
      C                     GOTO PARES
      C                     ENDIF
@@ -3088,7 +3163,47 @@
      C                     SELEC
      C           AMTPL     WHEQ 'PT'
      C           AMTPL     OREQ 'PI'
+      *                                                                                     MD047554
+     C           FPASS     IFNE 'Y'                                                         MD047554
+      *                                                                                     MD047554
+      ** During before status (FPASS=' '), use previous principal increase                  MD047554
+      ** amount if the record is equal to the PI being amended, else use                    MD047554
+      ** current value for reversal, and for live PIs.                                      MD047554
+      *                                                                                     MD047554
+     C           VDATL     IFEQ ##OVDT                                                      MD047554
+     C           LASNL     ANDEQ##LASN                                                      MD047554
+     C           AMTPL     ANDEQ'PI'                                                        MD047554
+      *                                                                                     MD047554
+      ** If PI amount was changed, update WCUPR with the old amount                         MD047554
+      ** (#OPRAM).                                                                          MD047554
+      *                                                                                     MD047554
+     C           #ACTN     IFEQ 'A'                                                         MD047554
+     C                     ADD  #OPRAM    WCUPR                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+      ** If actual reversal of PI, still include old PI amount for                          MD047554
+      ** the recalculation of interest for reversal posting.                                MD047554
+      *                                                                                     MD047554
+     C           RECIL     IFEQ 'R'                                                         MD047554
+     C           #ACTN     ANDEQ'R'                                                         MD047554
+     C                     ADD  PRAML     WCUPR                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+      ** If a different PI record.                                                          MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+     C                     ADD  PRAML     WCUPR                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+      *                                                                                     MD047554
+      ** During after status (FPASS='Y'), process live PIs only.                            MD047554
+      *                                                                                     MD047554
+     C           RECIL     IFNE 'R'                                                         MD047554
      C                     ADD  PRAML     WCUPR
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C                     ENDIF                                                            MD047554
       *
      C           AMTPL     WHEQ 'PF'
      C                     SUB  PRAML     WCUPR
@@ -3104,8 +3219,26 @@
      C           PRAML     MULT FCXR      WPRAML
      C                     ENDIF
      C                     ENDIF
+      *                                                                                     MD047554
+     C           FPASS     IFNE 'Y'                                                         MD047554
       *
+     C                     SUB  WPRAML    WCUPR                                             MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
      C                     SUB  WPRAML    WCUPR
+      *                                                                                     MD047554
+      ** If Autosettle indicator has been changed from Y to N,                              MD047554
+      ** treat the repayment as reversal, return the amount.                                MD047554
+      ** (If auto ind was changed, #ACTN is 'R')                                            MD047554
+      *                                                                                     MD047554
+     C           VDATL     IFEQ ##OVDT                                                      MD047554
+     C           LASNL     ANDEQ##LASN                                                      MD047554
+     C           #ACTN     ANDEQ'R'                                                         MD047554
+     C           RECIL     ANDNE'R'                                                         MD047554
+     C                     ADD  WPRAML    WCUPR                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C                     ENDIF                                                            MD047554
       *
      C           AMTPL     WHEQ 'MR'
      C           VDATL     IFEQ NIDT
@@ -3146,20 +3279,94 @@
      C                     Z-ADDWPRAML    WPRAM
      C                     Z-ADDZINTR     WINTA
      C                     ENDIF
+      *                                                                                     MD047554
+     C           FPASS     IFNE 'Y'                                                         MD047554
+      *                                                                                     MD047554
      C                     SUB  WPRAM     WCUPR
      C           VDATL     IFEQ NIDT
      C                     SUB  WINTA     ZFIRST
      C                     ELSE
      C                     ADD  WINTA     WINPD
      C                     ENDIF
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+      *                                                                                     MD047554
+     C                     SUB  WPRAM     WCUPR                                             MD047554
+     C           VDATL     IFEQ NIDT                                                        MD047554
+     C                     SUB  WINTA     ZFIRST                                            MD047554
+     C                     ELSE                                                             MD047554
+     C                     ADD  WINTA     WINPD                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+      ** If Autosettle indicator has been changed from Y to N,                              MD047554
+      ** treat the repayment as reversal. (#ACTN is 'R' if there                            MD047554
+      ** is a change in auto ind.)                                                          MD047554
+      *                                                                                     MD047554
+     C           VDATL     IFEQ ##OVDT                                                      MD047554
+     C           LASNL     ANDEQ##LASN                                                      MD047554
+     C           #ACTN     ANDEQ'R'                                                         MD047554
+     C           RECIL     ANDNE'R'                                                         MD047554
+     C                     ADD  WPRAM     WCUPR                                             MD047554
+     C           VDATL     IFEQ NIDT                                                        MD047554
+     C                     ADD  WINTA     ZFIRST                                            MD047554
+     C                     ELSE                                                             MD047554
+     C                     SUB  WINTA     WINPD                                             MD047554
+     C                     ENDIF                                                            MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C                     ENDIF                                                            MD047554
       *
      C           AMTPL     WHEQ 'BC'
+      *                                                                                     MD047554
+     C           FPASS     IFNE 'Y'                                                         MD047554
+      *                                                                                     MD047554
+      ** During Insert of BC and record was read.                                           MD047554
+      *                                                                                     MD047554
+     C           #ACTN     IFNE 'R'                                                         MD047554
+     C           ##OVDT    ANDEQVDATL                                                       MD047554
+     C           ##LASN    ANDEQLASNL                                                       MD047554
+      *                                                                                     MD047554
+      ** Do nothing, use the old base rate code                                             MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+     C                     Z-ADDBRTEL     WCUBR                                             MD047554
+     C                     EXSR SRNEWI                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+      ** FPASS is 'Y', process live BC.                                                     MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+     C           RECIL     IFEQ 'D'                                                         MD047554
      C                     Z-ADDBRTEL     WCUBR
      C                     EXSR SRNEWI
+     C                     ENDIF                                                            MD047554
+     C                     ENDIF                                                            MD047554
       *
      C           AMTPL     WHEQ 'SC'
+      *                                                                                     MD047554
+      ** If newly inserted SC, use the old rate on first pass.                              MD047554
+      ** Use the new rate on the calculation for the after status.                          MD047554
+      *                                                                                     MD047554
+     C           FPASS     IFNE 'Y'                                                         MD047554
+      *                                                                                     MD047554
+     C           #ACTN     IFNE 'R'                                                         MD047554
+     C           ##OVDT    ANDEQVDATL                                                       MD047554
+     C           ##LASN    ANDEQLASNL                                                       MD047554
+      *                                                                                     MD047554
+      ** Do not use new rate when calculating the amount to                                 MD047554
+      ** be reversed.                                                                       MD047554
+      *                                                                                     MD047554
+     C                     ELSE                                                             MD047554
+     C                     Z-ADDRTSPL     WCUSP                                             MD047554
+     C                     EXSR SRNEWI                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      * FPASS is 'Y'                                                                        MD047554
+     C                     ELSE                                                             MD047554
+     C           RECIL     IFEQ 'D'                                                         MD047554
      C                     Z-ADDRTSPL     WCUSP
      C                     EXSR SRNEWI
+     C                     ENDIF                                                            MD047554
+     C                     ENDIF                                                            MD047554
       *
      C           AMTPL     WHEQ 'SA'
      C           STAIH     IFEQ *BLANK
@@ -3322,6 +3529,15 @@
      C                     Z-ADDNLRA      RAMT                                                221505
      C                     Z-ADDNFCE      FCXR                                                221505
      C                     MOVELNFMD      FMDI                                                221505
+     C                     ELSE                                                             MD047554
+     C           NRTS      IFGT 0                                                           MD047554
+     C           NBRA      ORGT 0                                                           MD047554
+     C                     Z-ADDNRTS      WCUSP                                             MD047554
+     C                     Z-ADDNBRA      WCUBR                                             MD047554
+     C                     MOVELNSIN      SPIN                                              MD047554
+     C                     EXSR SRNEWI                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
      C                     ENDIF                                                              221505
      C*                                                                                       221505
      C                     MOVEL'Y'       ROLLED  1                                           221505

@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *      
-      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *  Last Amend No. MD047554           Date 11Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD030939           Date 12Jul17               *
       *                 MD021236           Date 12Jul17               *
@@ -136,7 +137,11 @@
      F*                                                                  *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD046248 - Finastra Rebranding                               *      
+      *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
+      *             with recalculated amount based on New Spread Rate,*
+      *             New Base Rate, New Interest Calculation Basis,    *
+      *             or New Maturity Date brought by Rollover.         *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -474,6 +479,7 @@
      I              SETP                            SETPL                                     201672
      I              BRTE                            BRTEL                                     201672
      I              SPIN                            SPINL                                     201672
+     I              WTIN                            WTINL                                   MD047554
      I              INTC                            INTCL                                     201672
      I              ORED                            OREDL                                     201672
      I              IRCF                            IRCFL                                     201672
@@ -580,6 +586,7 @@
      I              CHTP                            LACHTP
      I              TNLU                            LATNLU                                    CLE033
      I              STAL                            LASTAL                                    221936
+     I              WTIN                            LAWTIN                                  MD047554
      I*                                                                                       CLE033
      ILOAMSDHF                                                                                CLE033
      I              TNLU                            LHTNLU                                    CLE033
@@ -3953,6 +3960,7 @@
      C**********           Z-ADD0         ZINTRS                                      201672 221505R
      C                     Z-ADD0         IPDUE  130                                          225849
      C                     MOVE ' '       WAIAJ   1                                         MD024998
+     C                     MOVEL'N'       ROLLED  1                                         MD047554
       *                                                                                     MD024998
      C           RUND      IFEQ OMMAT                                                       MD024998
      C           NRPD      ANDEQ0                                                           MD024998
@@ -4017,6 +4025,17 @@
      C                     ENDDO                                                              201672
       *                                                                                       201672
      C           PARES     TAG                                                                201672
+      *                                                                                     MD047554
+      ** For newly inserted loan with rollover details amendment                            MD047554
+      ** or for loan with historic records and loan amendments                              MD047554
+      ** earlier than rollover date.                                                        MD047554
+      *                                                                                     MD047554
+     C           RLDT      IFGT 0                                                           MD047554
+     C           CLE031    ANDNE'Y'                                                         MD047554
+     C           NCCY      ANDEQ*BLANKS                                                     MD047554
+     C           ROLLED    ANDEQ'N'                                                         MD047554
+     C                     EXSR SRROLL                                                      MD047554
+     C                     ENDIF                                                            MD047554
       *                                                                                      221505R
       ** For call loans, need to make sure have processed the next                           221505R
       ** interest payment date, so that the interest amount has been                         221505R
@@ -4049,6 +4068,14 @@
       *                                                                                       201672
      C           SRHIST    BEGSR                                                              201672
       *                                                                                       201672
+      ** PROCESS ROLLOVER DATE                                                              MD047554
+      *                                                                                     MD047554
+     C           RLDT      IFGT 0                                                           MD047554
+     C           RLDT      ANDLEVDATH                                                       MD047554
+     C           NCCY      ANDEQ*BLANKS                                                     MD047554
+     C                     EXSR SRROLL                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
      C                     Z-ADDVDATH     OMEND                                               201672
      C                     EXSR SRRPAY                                                        201672
       *                                                                                     MD028338
@@ -4097,6 +4124,13 @@
       *                                                                                       201672
      C           AMTPH     WHEQ 'IN'                                                          201672
      C                     ADD  INTAH     WINPD                                               201672
+      *                                                                                     MD047554
+      ** Include withholding tax in interest paid like IPRD.                                MD047554
+      *                                                                                     MD047554
+     C           WTXAH     IFNE 0                                                           MD047554
+     C           WTIN      ANDEQ'G'                                                         MD047554
+     C                     ADD  WTXAH     WINPD                                             MD047554
+     C                     ENDIF                                                            MD047554
      C           INTC      IFEQ 'Y'                                                           201672
      C                     ADD  INTAH     WCUPR                                               201672
      C                     ENDIF                                                              201672
@@ -4175,6 +4209,12 @@
       *                                                                                       201672
      C           SRLOAM    BEGSR                                                              201672
       *                                                                                       201672
+     C           RLDT      IFGT 0                                                           MD047554
+     C           RLDT      ANDLEVDATL                                                       MD047554
+     C           NCCY      ANDEQ*BLANKS                                                     MD047554
+     C                     EXSR SRROLL                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
      C                     Z-ADDVDATL     OMEND                                               201672
      C                     EXSR SRRPAY                                                        201672
       *                                                                                       201672
@@ -4482,6 +4522,33 @@
      C                     ENDDO                                                              201672
      C                     ENDDO                                                              201672
      C                     ENDSR                                                              201672
+      *****************************************************************                     MD047554
+      * Subroutine  :  SRROLL - Rollover date processing for interest *                     MD047554
+      *                         calculation.                          *                     MD047554
+      *****************************************************************                     MD047554
+     C           SRROLL    BEGSR                                                            MD047554
+      *                                                                                     MD047554
+     C                     Z-ADDRLDT      OMEND                                             MD047554
+     C                     EXSR SRRPAY                                                      MD047554
+      *                                                                                     MD047554
+     C           WLICD     IFNE RLDT                                                        MD047554
+     C                     Z-ADDRLDT      ZIEND                                             MD047554
+     C                     EXSR SRINCL                                                      MD047554
+     C                     Z-ADDRLDT      ZIBEG                                             MD047554
+     C                     ADD  ZINTR     WCALC                                             MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C           NRTS      IFGT 0                                                           MD047554
+     C           NBRA      ORGT 0                                                           MD047554
+     C                     Z-ADDNRTS      WCUSP                                             MD047554
+     C                     Z-ADDNBRA      WCUBR                                             MD047554
+     C                     MOVELNSIN      SPIN                                              MD047554
+     C                     EXSR SRNEWI                                                      MD047554
+     C                     ENDIF                                                            MD047554
+      *                                                                                     MD047554
+     C                     MOVEL'Y'       ROLLED                                            MD047554
+      *                                                                                     MD047554
+     C                     ENDSR                                                            MD047554
       *****************************************************************                       201672
       ** Subroutine  :  SRCURR                                        *                       CLE031
       ** Function    :  Check currency details                        *                       CLE031

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051892           Date 22Sep18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD047554           Date 11Oct17               *      
+      *  Prev Amend No. MD051892           Date 22Sep18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD049571           Date 06Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1002234          Date 12Jan17               *
@@ -113,6 +114,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
+      *             with recalculated amount based on newly inserted, *
+      *             amended, or reversed MR. Call LE2041 and include  *
+      *             current value of principal amount OPRAM as one of *
+      *             the parameters.                                   *      
       *  MD051892 - Proj settlement amnt calculated at defaulted rate *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049571 - Value date of Manual Repayment in Projected       *
@@ -5285,6 +5291,7 @@
      C                   PARM                    OMPRAM           13 0                        264065
      C                   PARM                    AMTP                                         264065
      C                   PARM                    WWACTN                                       264065
+     C                   PARM                    MRPRAM                                     MD047554
      C                   PARM      *BLANKS       ##RTCD                                     AR868380
       *                                                                                     AR868380
      C     ##RTCD        IFEQ      '*RECLCK'                                                AR868380
@@ -5340,26 +5347,31 @@
      C     ReadCLPONS    IFNE      MRPONS                                                    BUG4513
      C     SETT09        ANDNE     'Y'                                                       BUG8458
      C     AOOULE        OREQ      'Y'                                                       BUG8458
+      *                                                                                     MD047554
+      ** Processing of manual repayment amound should be done                               MD047554
+      ** in the AO program to correctly recalculate interest                                MD047554
+      ** and principal amounts.                                                             MD047554
+      *                                                                                     MD047554     
                                                                                              BUG6223
-     C                   IF        PTYP = 66 or PTYP = 67 or                                 BUG6223
-     C                             PTYP = 69 or PTYP = 72                                    BUG6223
+     C**********         IF        PTYP = 66 or PTYP = 67 or                        BUG6223 MD047554
+     C**********                   PTYP = 69 or PTYP = 72                           BUG6223 MD047554
       *                                                                                      BUG4513
       * For Insert                                                                           BUG4513
-     C     MRCHTP        IFEQ      'I'                                                       BUG4513
+     C*****MRCHTP        IFEQ      'I'                                              BUG4513 MD047554
      C                   MOVE      *BLANKS       @RTCD                                       BUG4513
      C*****ReadCLCPAM    ADD       PRAM          ReadCLCPAM                          BUG4513  237242
      C                   MOVEL     ReadLoan      Z#BSTS                                      BUG4513
-     C     ReadCLCPAM    SUB       PRAM          ReadCLCPAM                                  BUG4513
+     C*****ReadCLCPAM    SUB       PRAM          ReadCLCPAM                         BUG4513 MD047554
      C                   MOVEL     ReadLoan      Z#ASTS                                      BUG4513
-     C                   ENDIF                                                               BUG4513
+     C**********         ENDIF                                                      BUG4513 MD047554
       * For Reverse                                                                          BUG4513
-     C     MRCHTP        IFEQ      'R'                                                       BUG4513
-     C                   MOVE      *BLANKS       @RTCD                                       BUG4513
-     C     ReadCLCPAM    SUB       PRAM          ReadCLCPAM                                  BUG4513
-     C                   MOVEL     ReadLoan      Z#BSTS                                      BUG4513
-     C     ReadCLCPAM    ADD       PRAM          ReadCLCPAM                                  BUG4513
-     C                   MOVEL     ReadLoan      Z#ASTS                                      BUG4513
-     C                   ENDIF                                                               BUG4513
+     C*****MRCHTP        IFEQ      'R'                                              BUG4513 MD047554
+     C**********         MOVE      *BLANKS       @RTCD                              BUG4513 MD047554
+     C*****ReadCLCPAM    SUB       PRAM          ReadCLCPAM                         BUG4513 MD047554
+     C**********         MOVEL     ReadLoan      Z#BSTS                             BUG4513 MD047554
+     C*****ReadCLCPAM    ADD       PRAM          ReadCLCPAM                         BUG4513 MD047554
+     C**********         MOVEL     ReadLoan      Z#ASTS                             BUG4513 MD047554
+     C**********         ENDIF                                                      BUG4513 MD047554
       *                                                                                       237242
       ** For Authorise                                                                        237242
      C     MRCHTP        IFEQ      'X'                                                        237242
@@ -5369,27 +5381,27 @@
      C                   MOVEL     ReadLoan      Z#ASTS                                       237242
      C                   ENDIF                                                                237242
       *                                                                                      BUG4513
-     C                   CALL      'AOOULEU0'                                                BUG4513
-     C                   PARM                    @RTCD                                       BUG4513
-     C                   PARM                    Z#BSTS                                      BUG4513
-     C                   PARM                    Z#ASTS                                      BUG4513
-     C                   PARM                    Z#WSTS                                      BUG4513
-     C                   PARM                    Z#BSTK                                      BUG4513
-     C                   PARM                    Z#ASTK                                      BUG4513
-     C                   PARM      *BLANKS       CLONQD                                       CER049
-      *                                                                                     AR868380
-     C     @RTCD         IFEQ      '*RECLCK'                                                AR868380
-     C                   MOVEL     '*RECLCK'     @@RTCD                                     AR868380
-     C                   GOTO      EXIT                                                     AR868380
-     C                   ENDIF                                                              AR868380
-      *                                                                                      BUG4513
-     C     @RTCD         IFEQ      '*ERROR*'                                                 BUG4513
-     C                   MOVE      *ON           *INU8                                       BUG4513
-     C                   MOVE      *ON           *INU7                                       BUG4513
-     C                   EXSR      *PSSR                                                     BUG4513
-     C                   ENDIF                                                               BUG4513
-      *                                                                                      BUG4513
-     C                   ENDIF                                                               BUG6223
+     C**********         CALL      'AOOULEU0'                                       BUG4513 MD047554
+     C**********         PARM                    @RTCD                              BUG4513 MD047554
+     C**********         PARM                    Z#BSTS                             BUG4513 MD047554
+     C**********         PARM                    Z#ASTS                             BUG4513 MD047554
+     C**********         PARM                    Z#WSTS                             BUG4513 MD047554
+     C**********         PARM                    Z#BSTK                             BUG4513 MD047554
+     C**********         PARM                    Z#ASTK                             BUG4513 MD047554
+     C**********         PARM      *BLANKS       CLONQD                              CER049 MD047554
+      **********                                                                   AR868380 MD047554
+     C*****@RTCD         IFEQ      '*RECLCK'                                       AR868380 MD047554
+     C**********         MOVEL     '*RECLCK'     @@RTCD                            AR868380 MD047554
+     C**********         GOTO      EXIT                                            AR868380 MD047554
+     C**********         ENDIF                                                     AR868380 MD047554
+      **********                                                                    BUG4513 MD047554
+     C*****@RTCD         IFEQ      '*ERROR*'                                        BUG4513 MD047554
+     C**********         MOVE      *ON           *INU8                              BUG4513 MD047554
+     C**********         MOVE      *ON           *INU7                              BUG4513 MD047554
+     C**********         EXSR      *PSSR                                            BUG4513 MD047554
+     C**********         ENDIF                                                      BUG4513 MD047554
+      **********                                                                    BUG4513 MD047554
+     C**********         ENDIF                                                      BUG6223 MD047554
       *                                                                                      BUG6223
      C                   ENDIF                                                               BUG4513
      C/COPY WNCPYSRC,LEH01194

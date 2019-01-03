@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD038508           Date 02May16               *      
-      *  Prev Amend No. MD051958           Date 24Sep18               *
+      *  Last Amend No. MD049309           Date 14Feb18               *      
+      *  Prev Amend No. MD038508           Date 02May16               *      
+      *                 MD051958           Date 24Sep18               *
       *                 MD051957           Date 24Sep18               *
       *                 MD051944           Date 22Sep18               *
       *                 MD051921           Date 19Sep18               *
@@ -396,6 +397,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049309 - LE: Records disappeared in CLOANZTD file          *      
       *  MD038508 - Incorrect interest accrual generated on PDP phase *
       *             for loans with interest calculation basis 6       *
       *             during a leap year.                               *      
@@ -1446,6 +1448,7 @@
      F**********                           PREFIX(H_)                              MD046080 MD049078
       ** Midas LE Loan amendments extension file                                              CRE073
      FCLOANZI0  UF   E           K DISK    INFSR(*PSSR)                                       CLE164
+     F                                     COMMIT                                           MD049309
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0450FFP1                                           S01408
      F*                                                                   S01408

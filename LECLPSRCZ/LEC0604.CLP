@@ -8,9 +8,10 @@
 /*     LEC0604  -  HISTORY PROCESSING                               */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD046161           Date 09Aug17              */
+/*                                                                   */
+/*       Last Amend No. MD049309           Date 14Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD046161           Date 09Aug17              */
 /*                      AR786878           Date 05Jun13              */
 /*                      CCB022B            Date 06Aug12              */
 /*                      AR1080820          Date 26Jan13              */
@@ -46,7 +47,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD049309 - LE: Records disappeared in CLOANZTD file         */
+/*       MD046248 - Finastra Rebranding                             */
 /*       MD046161 - Database error on COB component LEC60A.         */
 /*       AR786878 - New processing for manual repayment and         */
 /*                  repayment schedule for PDCL's. (Child:AR786879) */
@@ -139,6 +141,9 @@
                  IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
                                THEN(GOTO CMDLBL(ENDPGM))                                  /*CLE134*/
              ENDDO                                                                        /*CLE134*/
+/** Start commitment control for batch jobs with file updates        */                 /*MD049309*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)               /*MD049309*/
+                                                                                        /*MD049309*/
 /*/COPY WNCPYSRC,LEC0604016                                          */
 /**/
 /*           DCLDTAARA  DTAARA(LESTAT)                              *  *S01179*/
@@ -527,6 +532,7 @@
  *****************************VALUE('OLD')                            /*S01189*/
 /************CHGDTAARA  DTAARA(LESTAT) VALUE(&LESTAT)*/               /*S01189*/
 /******************DLCOBJ     OBJ((LESTAT *DTAARA *EXCLRD))*/         /*S01189*/
+                   COMMIT                                                               /*MD049309*/
                    CHGVAR     VAR(&STAT) VALUE('N')                   /*S01189*/
                    CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     /*S01189*/
 /**/
@@ -548,6 +554,13 @@
                 ENDDO
 /**/
              ENDDO
+             ELSE       CMD(DO)                                                         /*MD049309*/
+                SNDPGMMSG  MSG('LEC0604 ended abnormally') TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ MRUNQ)                                       /*MD049309*/
+                MONMSG     MSGID(CPF0000 MCH0000)                                       /*MD049309*/
+                ROLLBACK                                                                /*MD049309*/
+                CHGJOB     SWS(XXXXXX11)                                                /*MD049309*/
+             ENDDO                                                                      /*MD049309*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027396           Date 19Aug14              */
+/*       Last Amend No. MD049309           Date 14Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD027396           Date 19Aug14              */
 /*                      AR996830           Date 25Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      263074             Date 01Aug12              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049309 - LE: Records disappeared in CLOANZTD file         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027396 - XPSTTOM not being cleared before component starts*/
 /*                  that causes previous days posting posts again.   */
@@ -112,6 +114,9 @@
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CDL045*/
              CHGVAR     VAR(&SAR) VALUE('CDL045')                                         /*CDL045*/
                                                                                           /*CDL045*/
+/** Start commitment control for batch jobs with file updates        */                 /*MD049309*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)               /*MD049309*/
+                                                                                        /*MD049309*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CDL045*/
                                                                                           /*CDL045*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
@@ -373,8 +378,11 @@
      IF COND(%SWITCH(XXXXXX11)) THEN(DO)
  
 /***********SNDPGMMSG  MSG('Job terminated, database in error.') +/*  /*CLE007*/
- DBERR:      SNDPGMMSG  MSG('Job terminated, database in error.') +
-                          TOMSGQ(MOPERQ MRUNQ)                        /*CLE007*/
+/***DBERR:*     SNDPGMMSG  MSG('Job terminated, database in error.') +*/                /*MD049309*/
+/**********               TOMSGQ(MOPERQ MRUNQ)                       */          /*CLE007 MD049309*/
+ DBERR:      ROLLBACK                                                                   /*MD049309*/
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*MD049309*/
  
      ENDDO
      ELSE CMD(DO)
@@ -419,7 +427,7 @@
          ENDDO                                                                            /*CDL045*/
  
 /* If the component has completed successfully reset the status field */
- 
+     COMMIT                                                                             /*MD049309*/
      IF COND(&CLE007 *NE 'Y') THEN(DO)                                /*CLE007*/
      CLRPFM LEFEEAD                                                  /*095606*/
      ENDDO                                                            /*CLE007*/
@@ -430,6 +438,7 @@
      ENDDO
  
 END:
+     ENDCMTCTL                                                                          /*MD049309*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
  

@@ -8,9 +8,10 @@
 /*     LEC0605  -  DAILY MAINTENANCE PHASE - 2                      */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD048608           Date 20Nov17              */
+/*                                                                   */
+/*       Last Amend No. MD049309           Date 14Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD048608           Date 20Nov17              */
 /*                      MD031676           Date 17Dec14              */
 /*                      MD023527           Date 18Nov13              */
 /*                      MD022967           Date 21Oct13              */
@@ -63,6 +64,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     MD049309 - LE: Records disappeared in CLOANZTD file          */
 /*     MD046248 - Finastra Rebranding                               */
 /*     MD048608 - Component LEC0609B seq 01001 failed               */
 /*     MD031676 - Component LEC06A 0010 Failed during COB           */
@@ -195,6 +197,10 @@
                  IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
                                THEN(GOTO CMDLBL(ENDPGM))                                  /*CLE134*/
              ENDDO                                                                        /*CLE134*/
+                                                                                        /*MD049309*/
+/** Start commitment control for batch jobs with file updates        */                 /*MD049309*/
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) CMTSCOPE(*JOB)               /*MD049309*/
+                                                                                        /*MD049309*/
 /**/                                                                  /*091793*/
 /* Before doing anything make sure that any missing members     */                      /*AR544189*/
 /* are reinstated */                                                                    /*AR544189*/
@@ -955,14 +961,21 @@
 /*                                                           */
                 ENDDO
 /**/
+                COMMIT                                                                  /*MD049309*/
              ENDDO
 /*/COPY WNCPYSRC,LEC0605020                                          */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD049309*/
+                        GOTO       CMDLBL(ABNOR)                                        /*MD049309*/
+             ENDDO                                                                      /*MD049309*/
              GOTO       CMDLBL(ENDPGM)                                /*091793*/
 ABNOR:       SNDPGMMSG  MSG('LEC0605 ended abnormally') TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ MRUNQ)                        /*091793*/
              MONMSG     MSGID(CPF0000 MCH0000)                        /*091793*/
+             ROLLBACK                                                                   /*MD049309*/
              CHGJOB     SWS(XXXXXX11)                                 /*105061*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
-ENDPGM:      ENDPGM
+/***ENDPGM:  ENDPGM                                                  */                 /*MD049309*/
+ ENDPGM:     ENDCMTCTL                                                                  /*MD049309*/
+             ENDPGM                                                                     /*MD049309*/

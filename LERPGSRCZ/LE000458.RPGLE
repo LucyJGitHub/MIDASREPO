@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD048575           Date 07Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE164             Date 18Aug14               *
       *                 AR1097202          Date 28Mar13               *
       *                 AR1063739            Date 03Dec12             *
       *                 AR741212             Date 14Oct12             *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048575 - LE: MR amount transfered to PDCL                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR1097202 - LEC000479 00001 failed                           *
@@ -345,6 +347,7 @@
      C                   MOVE      A_ATYP        IATYP                                      AR741212
      C                   ENDIF                                                              AR741212
       *                                                                                     AR741212
+     C                   EXSR      SrNostro                                                 MD048575
  
      C                   ENDSR
       *****************************************************************
@@ -506,6 +509,33 @@
      C                   ENDIF
  
      C                   ENDSR
+      *****************************************************************                     MD048575
+      *                                                               *                     MD048575
+      * SrNostro - Subroutine to retrive Nosto Details                *                     MD048575
+      *                                                               *                     MD048575
+      *****************************************************************                     MD048575
+     C     SrNostro      BEGSR                                                              MD048575
+      *                                                                                     MD048575
+     C                   CALL      'AONOSTR0'                                               MD048575
+     C                   PARM      *BLANKS       @RTCD                                      MD048575
+     C                   PARM      '*KEY   '     @OPTN                                      MD048575
+     C                   PARM      WWCUST        @CUSN                                      MD048575
+     C                   PARM      WWCURR        @CURR                                      MD048575
+     C                   PARM      WWACOD        @ACCD                                      MD048575
+     C                   PARM      WWACSQ        @ACSN                                      MD048575
+     C                   PARM      *BLANKS       @NONB                                      MD048575
+     C                   PARM      WWBRCD        @BRCA                                      MD048575
+     C                   PARM      *BLANKS       @CSSN                                      MD048575
+     C                   PARM      *BLANKS       @PNOI                                      MD048575
+     C     SDNOST        PARM      SDNOST        DSFDY                                      MD048575
+      *                                                                                     MD048575
+      ** Check if full account exists in SDNOSTPD                                           MD048575
+      *                                                                                     MD048575
+     C                   IF        (@RTCD = *BLANKS)                                        MD048575
+     C                   EVAL      IATYP = 'N'                                              MD048575
+     C                   ENDIF                                                              MD048575
+      *                                                                                     MD048575
+     C                   ENDSR                                                              MD048575
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -564,4 +564,6 @@
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
-ENDPGM:      ENDPGM
+/***ENDPGM:**ENDPGM                                                  */                 /*MD049309*/
+ ENDPGM:     ENDCMTCTL                                                                  /*MD049309*/
+             ENDPGM                                                                     /*MD049309*/

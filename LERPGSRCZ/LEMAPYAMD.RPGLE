@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 10May13               *
+      *  Last Amend No. MD049594           Date 15Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 10May13               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049594 - LEM0610 error message will only be thrown if      *
+      *             DDPASD is changed to 'Y' from 'N'/'' or to 'N'/'' *
+      *             from 'Y'.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -54,12 +58,12 @@
       *  CAP077 - Lending API enhancements - Manual Repayments        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -71,69 +75,69 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Manual Repayment in Screen Format
      D NwMaPyScnFmt  E DS                  EXTNAME(LEMAPYPD)
- 
+
       ** Manual Repayments OK indicators
      D ErrorMaPy     E DS                  EXTNAME(LEEMAPYPD)
- 
+
       * (Current) Loan in Screen Format
      D CrMapyScnFmt  E DS                  EXTNAME(LEMAPYPD)
      D                                     PREFIX(@)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ***  DS for Access Objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  DS Returns from Access Objects
- 
+
      D Idx             S              3P 0
                                                                                             MD000091
       **                                                                                    MD000091
@@ -144,24 +148,24 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ***  Compare fields with amended values.
       *
@@ -177,12 +181,12 @@
      C     ResetErrs     ANDEQ     'Y'
      C                   EXSR      RESETFLDS
      C                   ENDIF
- 
+
       *** Return
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -360,6 +364,9 @@
       *-----------------------------------------*
       *
      C     DDPASD        IFNE      @DDPASD
+     C     DDPASD        ANDEQ     'Y'                                                      MD049594
+     C     DDPASD        ORNE      @DDPASD                                                  MD049594
+     C     @DDPASD       ANDEQ     'Y'                                                      MD049594
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDPASD'
      C                   EVAL      MsgIDArr(Idx)   = 'LEM0610'
@@ -367,6 +374,8 @@
      C                   EVAL      BLen = %Len(%Trim(@DDPASD))                              MD000091
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDPASD)                  MD000091
      C                   EVAL      DDPASDok        = 'N'
+     C                   ELSE                                                               MD049594
+     C                   MOVEL     @DDPASD       DDPASD                                     MD049594
      C                   END
       *
       *-----------------------------------------*
@@ -390,7 +399,7 @@
       * RESETFLDS - Reset fields in Error                             *
       *****************************************************************
      C     RESETFLDS     BEGSR
- 
+
       *
       ***  Reset fields in error to 'current' values
       *    =========================================
@@ -398,51 +407,51 @@
      C     DDLNRFok      IFEQ      'N'
      C                   MOVEL     @DDLNRF       DDLNRF
      C                   END
- 
+
      C     DDVALDok      IFEQ      'N'
      C                   MOVEL     @DDVALD       DDVALD
      C                   END
- 
+
      C     DDSEQNok      IFEQ      'N'
      C                   MOVEL     @DDSEQN       DDSEQN
      C                   END
- 
+
      C     DDEVALok      IFEQ      'N'
      C                   MOVEL     @DDEVAL       DDEVAL
      C                   END
- 
+
      C     DDESEQok      IFEQ      'N'
      C                   MOVEL     @DDESEQ       DDESEQ
      C                   END
- 
+
      C     DDCUSTok      IFEQ      'N'
      C                   MOVEL     @DDCUST       DDCUST
      C                   END
- 
+
      C     DDRPRIok      IFEQ      'N'
      C                   MOVEL     @DDRPRI       DDRPRI
      C                   END
- 
+
      C     DDRINTok      IFEQ      'N'
      C                   MOVEL     @DDRINT       DDRINT
      C                   END
- 
+
      C     DDRPENok      IFEQ      'N'
      C                   MOVEL     @DDRPEN       DDRPEN
      C                   END
- 
+
      C     DDRTOTok      IFEQ      'N'
      C                   MOVEL     @DDRTOT       DDRTOT
      C                   END
- 
+
      C     DDPASDok      IFEQ      'N'
      C                   MOVEL     @DDPASD       DDPASD
      C                   END
- 
+
      C     DDWOFFok      IFEQ      'N'
      C                   MOVEL     @DDWOFF       DDWOFF
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -450,7 +459,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  Inputs
@@ -473,9 +482,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

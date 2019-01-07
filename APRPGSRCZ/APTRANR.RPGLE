@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052550           Date 07Jan19               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *               . MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052550 - Missed out line of code during reversal of        *
+      *             fix MD-51830.                                     *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
@@ -1153,7 +1156,6 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
-     C                   PARM                    ACTRJ                                      MD051830
 
       * MM Negotiable Assets Sold
 

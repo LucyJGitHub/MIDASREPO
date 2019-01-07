@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049309           Date 14Feb18               *      
-      *  Prev Amend No. MD038508           Date 02May16               *      
+      *  Last Amend No. MD052549           Date 07Jan19               *      
+      *  Prev Amend No. MD049309           Date 14Feb18               *      
+      *                 MD038508           Date 02May16               *      
       *                 MD051958           Date 24Sep18               *
       *                 MD051957           Date 24Sep18               *
       *                 MD051944           Date 22Sep18               *
@@ -397,6 +398,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052549 - Remove extra codes caused by MD-51957 fix         *
+      *             incorporation.                                    *      
       *  MD049309 - LE: Records disappeared in CLOANZTD file          *      
       *  MD038508 - Incorrect interest accrual generated on PDP phase *
       *             for loans with interest calculation basis 6       *
@@ -8587,8 +8590,6 @@ L118 I                             P   72   77 7RTSPL
      C     AUTO          ANDEQ     'C'                                                      AR786878
      C*****CLE134        OREQ      'Y'                                             AR786878 MD051957
      C*****AUTOX         ANDEQ     'C'                                             AR786878 MD051957
-     C     CLE134        OREQ      'Y'                                                      AR786878
-     C     AUTOX         ANDEQ     'C'                                                      AR786878
      C     CLE134        OREQ      'Y'                                                      AR786878
      C     AUTOL         ANDEQ     'C'                                                      AR786878
      C                   MOVEL     LTYP          LTYP1A                                     AR786878

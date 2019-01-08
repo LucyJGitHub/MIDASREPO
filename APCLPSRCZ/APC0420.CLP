@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR925993           Date 13Jul16              */
+/*       Last Amend No. AR566732           Date 12Apr18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR925993           Date 13Jul16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG21873           Date 08Jan09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR566732 - Confirmation for Lending transaction not produce.*/
+/*                  Change condition to also check LE Module is      */
+/*                  switched on, then produce confo on job LEC0212A. */
+/*                - Applied for MD-50255.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR925993 - Rollover rate fixing does not produce            */
 /*                  confirmation. APCONFS will submit LEC3165 if     */
@@ -148,8 +153,14 @@
  
 /* LENDING MODULE */
  
+/*********   IF         COND((%SST(&MMOD 28 1) *EQ 'Y') *OR  +   */                     /*AR566732*/
+/*********                 (%SST(&MMOD 36 1) *EQ 'Y')) THEN(DO)  */                     /*AR566732*/
+/**/                                                                                    /*AR566732*/
+/** Also check lending module is switch on  */                                          /*AR566732*/
+/**/                                                                                    /*AR566732*/
              IF         COND((%SST(&MMOD 28 1) *EQ 'Y') *OR  +
-                           (%SST(&MMOD 36 1) *EQ 'Y')) THEN(DO)
+                             (%SST(&MMOD 36 1) *EQ 'Y') *OR +
+                             (%SST(&MMOD 10 1) *EQ 'Y')) THEN(DO)                       /*AR566732*/
  
 /* Receive DTAQ APLECNFDQ if LTRIX file for LE had changed */
  

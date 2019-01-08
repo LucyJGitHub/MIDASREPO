@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043639           Date 27Jan17               *
+      *  Last Amend No. MD050279           Date 06Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043639           Date 27Jan17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050279 - Generate empty reports with 'NO DATA' when        *
+      *             no record in GPAUCHPD.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043639 - Audit report name is same for all functions.      *
       *             Fix is to rename the Audit report according to    *
@@ -57,6 +60,8 @@
      D TOT             S            132    DIM(150)
      D TOTC            S            132    DIM(150)
      D LIN             S              1    DIM(132) ASCEND
+     D #AINPT          S              4    DIM(9999) ASCEND                                 MD050279
+     D #ABRCD          S              3    DIM(9999) ASCEND                                 MD050279
  
  
      D MON             S              3    DIM(12) CTDATA PERRCD(12)
@@ -278,6 +283,174 @@
       ****************************************************************
      C     CHG_BRCA_INPT BEGSR
  
+      * If a branch is 'skipped', generate all reports for that branch with 'NO DATA'       MD050279
+     C     *INL2         IFEQ      *ON                                                      MD050279
+     C     AHBRCA        ANDNE     *BLANKS                                                  MD050279
+                                                                                            MD050279
+     C     AHBRCA        DOWNE     #ABRCD(#XB)                                              MD050279
+     C     #ABRCD(#XB)   ANDNE     *BLANKS                                                  MD050279
+      * Save current branch                                                                 MD050279
+     C                   MOVEL     AHBRCA        SAV_AHBRCA        3                        MD050279
+     C     #ABRCD(#XB)   CHAIN     SDBRCHD0                           60                    MD050279
+      * for new branch reset file pointer                                                   MD050279
+     C                   Z-ADD     1             #XF                                        MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                   MOVEL     #AINPT(#XF)   ##INPT            4                        MD050279
+                                                                                            MD050279
+     C     Printf_Open   IFEQ      'Y'                                                      MD050279
+     C                   Z-ADD     3             NoOfOutLines                               MD050279
+     C                   EXSR      PAGE_CHG_CHK                                             MD050279
+     C                   EXCEPT    ENDREPORT                                                MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   EVAL      PrintF_Open = 'N'                                        MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C                   IF        AURename = 'Y'                                           MD050279
+     C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'GPAU'+%Trim(##INPT)+'P1)'            MD050279
+     C                   EVAL      qcLen=%Len(%Trim(qcOvr))                                 MD050279
+     C                   CALL      'QCMDEXC'                                                MD050279
+     C                   PARM                    qcOvr                                      MD050279
+     C                   PARM                    qcLen                                      MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                                                                                      MD050279
+      * Restore current branch                                                              MD050279
+     C                   MOVEL     SAV_AHBRCA    AHBRCA                                     MD050279
+     C                   ADD       1             #XB                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
+      * When branch is changed, generate rest of reports for previous branch                MD050279
+     C     *INL2         IFEQ      *ON                                                      MD050279
+     C     AHBRCA        ANDNE     *BLANKS                                                  MD050279
+     C     AHBRCA        ANDEQ     #ABRCD(#XB)                                              MD050279
+      * this should not be done when previous branch is blank                               MD050279
+     C     #XB           ANDNE     1                                                        MD050279
+                                                                                            MD050279
+      * Save current branch first                                                           MD050279
+     C                   MOVEL     AHBRCA        SAV_AHBRCA        3                        MD050279
+      * and replave with previous branch                                                    MD050279
+     C                   MOVEL     PREV_BRCA     AHBRCA                                     MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                   MOVEL     #AINPT(#XF)   ##INPT            4                        MD050279
+                                                                                            MD050279
+     C     Printf_Open   IFEQ      'Y'                                                      MD050279
+     C                   Z-ADD     3             NoOfOutLines                               MD050279
+     C                   EXSR      PAGE_CHG_CHK                                             MD050279
+     C                   EXCEPT    ENDREPORT                                                MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   EVAL      PrintF_Open = 'N'                                        MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C                   IF        AURename = 'Y'                                           MD050279
+     C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'GPAU'+%Trim(##INPT)+'P1)'            MD050279
+     C                   EVAL      qcLen=%Len(%Trim(qcOvr))                                 MD050279
+     C                   CALL      'QCMDEXC'                                                MD050279
+     C                   PARM                    qcOvr                                      MD050279
+     C                   PARM                    qcLen                                      MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                                                                                      MD050279
+      * for new branch reset file pointer                                                   MD050279
+     C                   Z-ADD     1             #XF                                        MD050279
+     C                   ADD       1             #XB                                        MD050279
+      * Restore current branch                                                              MD050279
+     C                   MOVEL     SAV_AHBRCA    AHBRCA                                     MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
+     C     *INL2         IFEQ      *ON                                                      MD050279
+     C     AHBRCA        ANDNE     *BLANKS                                                  MD050279
+     C     AHBRCA        ANDEQ     #ABRCD(#XB)                                              MD050279
+     C     #XB           ANDEQ     1                                                        MD050279
+     C                   ADD       1             #XB                                        MD050279
+     C     AHBRCA        CHAIN     SDBRCHD0                           60                    MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
+     C     *INL2         IFEQ      *ON                                                      MD050279
+     C     AHBRCA        ANDNE     *BLANKS                                                  MD050279
+     C     AHBRCA        CHAIN     SDBRCHD0                           60                    MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
+      * If a file is 'skipped', generate reports for skipped files with 'NO DATA'           MD050279
+     C     AHBRCA        IFNE      *BLANKS                                                  MD050279
+     C     *INL1         ANDEQ     *ON                                                      MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                             AND #AINPT(#XF) <> AHINPT                                MD050279
+     C                   MOVEL     #AINPT(#XF)   ##INPT                                     MD050279
+                                                                                            MD050279
+     C     Printf_Open   IFEQ      'Y'                                                      MD050279
+     C                   Z-ADD     3             NoOfOutLines                               MD050279
+     C                   EXSR      PAGE_CHG_CHK                                             MD050279
+     C                   EXCEPT    ENDREPORT                                                MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   EVAL      PrintF_Open = 'N'                                        MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C                   IF        AURename = 'Y'                                           MD050279
+     C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'GPAU'+%Trim(##INPT)+'P1)'            MD050279
+     C                   EVAL      qcLen=%Len(%Trim(qcOvr))                                 MD050279
+     C                   CALL      'QCMDEXC'                                                MD050279
+     C                   PARM                    qcOvr                                      MD050279
+     C                   PARM                    qcLen                                      MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                                                                                      MD050279
+      **Restore current branch                                                              MD050279
+     C**                 MOVEL     SAV_AHBRCA    AHBRCA                                     MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
+      * If input has no branch, remove it from the array                                    MD050279
+     C     AHBRCA        IFEQ      *BLANKS                                                  MD050279
+     C*                  Z-ADD     1             I                 5 0                      MD050279
+     C*    AHINPT        LOOKUP    #AINPT(I)                              99                MD050279
+     C*                  EVAL      #AINPT(I) = *BLANKS                                      MD050279
+     C*                  SORTA     #AINPT                                                   MD050279
+     C                   ENDIF                                                              MD050279
+      * Save current branch                                                                 MD050279
+     C     AHBRCA        IFNE      *BLANKS                                                  MD050279
+     C                   MOVEL     AHBRCA        PREV_BRCA         3                        MD050279
+     C                   ENDIF                                                              MD050279
+                                                                                            MD050279
       * Close then open printer file
  
      C     Printf_Open   IFEQ      'Y'
@@ -560,8 +733,82 @@
      C                   Z-ADD     3             NoOfOutLines
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    ENDREPORT
+                                                                                            MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+      * and print rest of the report for that branch                                        MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                   MOVEL     #AINPT(#XF)   ##INPT                                     MD050279
+                                                                                            MD050279
+     C                   IF        AURename = 'Y'                                           MD050279
+     C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'GPAU'+%Trim(##INPT)+'P1)'            MD050279
+     C                   EVAL      qcLen=%Len(%Trim(qcOvr))                                 MD050279
+     C                   CALL      'QCMDEXC'                                                MD050279
+     C                   PARM                    qcOvr                                      MD050279
+     C                   PARM                    qcLen                                      MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+                                                                                            MD050279
+      * and finally print all reports for any branch no reported yet                        MD050279
+                                                                                            MD050279
+     C     #ABRCD(#XB)   DOWNE     *BLANKS                                                  MD050279
+     C     #ABRCD(#XB)   CHAIN     SDBRCHD0                           60                    MD050279
+     C                   EVAL      AHBRCA = #ABRCD(#XB)                                     MD050279
+      * for new branch reset file pointer                                                   MD050279
+     C                   Z-ADD     1             #XF                                        MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                   MOVEL     #AINPT(#XF)   ##INPT            4                        MD050279
+                                                                                            MD050279
+     C                   IF        AURename = 'Y'                                           MD050279
+     C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD050279
+     C                   EVAL      qcOvr=%Trim(qcOvr)+'GPAU'+%Trim(##INPT)+'P1)'            MD050279
+     C                   EVAL      qcLen=%Len(%Trim(qcOvr))                                 MD050279
+     C                   CALL      'QCMDEXC'                                                MD050279
+     C                   PARM                    qcOvr                                      MD050279
+     C                   PARM                    qcLen                                      MD050279
+     C                   ENDIF                                                              MD050279
+      *                                                                                     MD050279
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                                                                                      MD050279
+     C                   ADD       1             #XB                                        MD050279
+     C                   ENDDO                                                              MD050279
+                                                                                            MD050279
      C                   ELSE
       *                                                                                     MD043639
+      * If no details, print all reports for all branches                                   MD050279
+                                                                                            MD050279
+     C     #ABRCD(#XB)   DOWNE     *BLANKS                                                  MD050279
+     C     #ABRCD(#XB)   CHAIN     SDBRCHD0                           60                    MD050279
+     C                   EVAL      AHBRCA = #ABRCD(#XB)                                     MD050279
+      * for new branch reset file pointer                                                   MD050279
+     C                   Z-ADD     1             #XF                                        MD050279
+                                                                                            MD050279
+     C                   DOW       #AINPT(#XF) <> *BLANKS                                   MD050279
+     C                   MOVEL     #AINPT(#XF)   AHINPT                                     MD050279
+                                                                                            MD050279
      C                   IF        AURename = 'Y'                                           MD043639
      C                   EVAL      qcOvr='OVRPRTF FILE(GPAUZRPTP1) TOFILE(*LIBL'            MD043639
      C                   EVAL      qcOvr=%Trim(qcOvr)+'/GPAUZRPTP1) SPLFNAME('              MD043639
@@ -572,15 +819,29 @@
      C                   PARM                    qcLen                                      MD043639
      C                   ENDIF                                                              MD043639
       *                                                                                     MD043639
-     C                   OPEN      GPAUZRPTP1
-     C                   EXSR      SRRCFP1
-     C                   Z-ADD     3             NoOfOutLines
-     C                   EXSR      PAGE_CHG_CHK
-     C                   EXCEPT    NODATA
+     C     #AINPT(#XF)   CHAIN     GPAUIPD0                           99                    MD050279
+     C                   OPEN      GPAUZRPTP1                                               MD050279
+     C                   EXSR      SRRCFP1                                                  MD050279
+     C                   Z-ADD     99            LineNumber                                 MD050279
+     C                   Z-ADD     1             PageNumber                                 MD050279
+     C                   EXCEPT    PAGEHEAD                                                 MD050279
+     C                   EXCEPT    NODATA                                                   MD050279
+     C                   CLOSE     GPAUZRPTP1                                               MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   ENDDO                                                              MD050279
+     C                                                                                      MD050279
+     C                   ADD       1             #XB                                        MD050279
+     C                   ENDDO                                                              MD050279
+                                                                                            MD050279
+     C**********         OPEN      GPAUZRPTP1                                               MD050279
+     C**********         EXSR      SRRCFP1                                                  MD050279
+     C**********         Z-ADD     3             NoOfOutLines                               MD050279
+     C**********         EXSR      PAGE_CHG_CHK                                             MD050279
+     C**********         EXCEPT    NODATA                                                   MD050279
      C                   ENDIF
  
       * Close printer file
-     C                   CLOSE     GPAUZRPTP1
+     C**********         CLOSE     GPAUZRPTP1                                               MD050279
  
      C                   ENDSR
       ****************************************************************
@@ -663,6 +924,32 @@
      C                   MOVEL     PSVal1        AURename          1                        MD043639
      C                   ENDIF                                                              MD043639
  
+      * Load all Audit Files                                                                MD050279
+     C                   Z-ADD     0             #XF               5 0                      MD050279
+     C     *LOVAL        SETLL     GPAUIPPD                                                 MD050279
+     C                   READ      GPAUIPPD                                                 MD050279
+     C                   DOW       NOT %EOF(GPAUIPPD)                                       MD050279
+     C                   ADD       1             #XF                                        MD050279
+     C                   MOVEL     AIINPT        #AINPT(#XF)                                MD050279
+     C                   READ      GPAUIPPD                                                 MD050279
+     C                   ENDDO                                                              MD050279
+      * Initialize pointer                                                                  MD050279
+     C                   Z-ADD     1             #XF                                        MD050279
+                                                                                            MD050279
+      * Load all Brnaches                                                                   MD050279
+     C                   Z-ADD     0             #XB               5 0                      MD050279
+     C     *LOVAL        SETLL     GZSDBRCHL0                                               MD050279
+     C                   READ      GZSDBRCHL0                                               MD050279
+     C                   DOW       NOT %EOF(GZSDBRCHL0)                                     MD050279
+     C     I#ZONE        IFEQ      A8ZONE                                                   MD050279
+     C                   ADD       1             #XB                                        MD050279
+     C                   MOVEL     A8BRCD        #ABRCD(#XB)                                MD050279
+     C                   ENDIF                                                              MD050279
+     C                   READ      GZSDBRCHL0                                               MD050279
+     C                   ENDDO                                                              MD050279
+      * Initialize pointer                                                                  MD050279
+     C                   Z-ADD     1             #XB                                        MD050279
+                                                                                            MD050279
      C                   ENDSR
       ********************************************************************
       /SPACE 5

@@ -12,16 +12,17 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052549           Date 07Jan19               *      
-      *  Prev Amend No. MD049309           Date 14Feb18               *      
-      *                 MD038508           Date 02May16               *      
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD052549           Date 07Jan19               *
+      *                 MD049309           Date 14Feb18               *
+      *                 MD038508           Date 02May16               *
       *                 MD051958           Date 24Sep18               *
       *                 MD051957           Date 24Sep18               *
       *                 MD051944           Date 22Sep18               *
       *                 MD051921           Date 19Sep18               *
       *                 MD051874           Date 12Sep18               *
       *                 MD051845           Date 03Sep18               *
-      *                 MD051695           Date 08Aug18               *      
+      *                 MD051695           Date 08Aug18               *
       *                 MD049363           Date 19Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD051788           Date 30Aug18               *
@@ -398,12 +399,15 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
       *  MD052549 - Remove extra codes caused by MD-51957 fix         *
-      *             incorporation.                                    *      
-      *  MD049309 - LE: Records disappeared in CLOANZTD file          *      
+      *             incorporation.                                    *
+      *  MD049309 - LE: Records disappeared in CLOANZTD file          *
       *  MD038508 - Incorrect interest accrual generated on PDP phase *
       *             for loans with interest calculation basis 6       *
-      *             during a leap year.                               *      
+      *             during a leap year.                               *
       *  MD051958 - Maturity postings displayed incorrect actual      *
       *             postings in ACMV                                  *
       *  MD051957 - Missing S keys on maturity, frequency based       *
@@ -416,7 +420,7 @@
       *              instead of original loan                         *
       *  MD051845  - Error in component LEC06A 03001 where system     *
       *              generated blank currency for PDCL Accounts       *
-      *  MD051695 - CLE031 Regression and Settlement Change           *      
+      *  MD051695 - CLE031 Regression and Settlement Change           *
       *  MD049363 - Percentage allocation error                       *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD051788  - Dump Error 'Attempt to Divide by zero' due to    *

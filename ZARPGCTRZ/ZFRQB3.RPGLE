@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amend No. MD050139           Date 26Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CGL184             Date 07Dec16               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Remove call and condition to CGL184 on copy *
+      *            sources.                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by missed code in CGL184. Amended due to changes  *
@@ -48,9 +52,9 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for GENERAL LEDGER details
       *
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL184
-      ** EXTERNAL DS FOR SAR DETAILS                                                          CGL184
-                                                                                              CGL184
+     D*SCSARD***     E DS                  EXTNAME(SCSARDPD)                         CGL184 MD050139
+      ***EXTERNAL*DS*FOR*SAR*DETAILS***********************************              CGL184 MD050139
+      **********                                                                     CGL184 MD050139
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
@@ -84,19 +88,19 @@
      C                   ENDIF
       *
      C                   ENDIF
-      *                                                                                       CGL184
-      ** Check if CGL184 is installed.                                                        CGL184
-      *                                                                                       CGL184
-     C                   CALLB     'AOSARDR0'                                                 CGL184
-     C                   PARM      *BLANKS       PRtCd             7                          CGL184
-     C                   PARM      '*VERIFY'     POptn             7                          CGL184
-     C                   PARM      'CGL184'      PSard             6                          CGL184
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CGL184
-                                                                                              CGL184
-     C                   MOVE      'N'           CGL184            1                          CGL184
-     C                   IF        PRtCd = *BLANKS                                            CGL184
-     C                   EVAL      CGL184 = 'Y'                                               CGL184
-     C                   ENDIF                                                                CGL184
+      **********                                                                     CGL184 MD050139
+      ***Check*if CGL184 is installed.                                               CGL184 MD050139
+      **********                                                                     CGL184 MD050139
+     C**********         CALLB     'AOSARDR0'                                        CGL184 MD050139
+     C**********         PARM      *BLANKS       PRtCd             7                 CGL184 MD050139
+     C**********         PARM      '*VERIFY'     POptn             7                 CGL184 MD050139
+     C**********         PARM      'CGL184'      PSard             6                 CGL184 MD050139
+     C*****SCSARD        PARM      SCSARD        DSFDY                               CGL184 MD050139
+      **********                                                                     CGL184 MD050139
+     C**********         MOVE      'N'           CGL184            1                 CGL184 MD050139
+     C**********         IF        PRtCd = *BLANKS                                   CGL184 MD050139
+     C**********         EVAL      CGL184 = 'Y'                                      CGL184 MD050139
+     C**********         ENDIF                                                       CGL184 MD050139
       *
      C                   EXSR      ZFRQB3
       *
@@ -152,7 +156,7 @@
       *
      C     ZFREQ         WHENEQ    'D'
      C     ZFREQ         OREQ      'K'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C     ZDAYNO        ADD       1             ZDAYNO
       *
       ** W - weekly
@@ -181,7 +185,7 @@
       *
      C     ZFREQ         WHENEQ    'M'
      C     ZFREQ         OREQ      'G'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZMTH          ADD       1             ZMTH
       *
@@ -201,7 +205,7 @@
       *
      C     ZFREQ         WHENEQ    'Q'
      C     ZFREQ         OREQ      'H'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZMTH          ADD       3             ZMTH
       *
@@ -215,7 +219,7 @@
       *
      C     ZFREQ         WHENEQ    'Y'
      C     ZFREQ         OREQ      'O'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C                   Z-ADD     ZMDAY         ZDAY
      C     ZYEAR         ADD       1             ZYEAR             2 0
       *
@@ -325,10 +329,10 @@
       ** Reformat date and ensure valid for non-daily frequency
       *
      C     ZFREQ         IFNE      'D'
-     C     CGL184        ANDEQ     'N'                                                      MD045010
-     C     ZFREQ         ORNE      'D'                                                      MD045010
+     C*****CGL184        ANDEQ     'N'                                             MD045010 MD050139
+     C*****ZFREQ         ORNE      'D'                                             MD045010 MD050139
      C     ZFREQ         ANDNE     'K'                                                      MD045010
-     C     CGL184        ANDEQ     'Y'                                                      MD045010
+     C*****CGL184        ANDEQ     'Y'                                             MD045010 MD050139
       *
       ** Validate month
       *
@@ -385,11 +389,11 @@
      C     ZERR          IFEQ      '1'
      C     ZFREQ         ORNE      'B'
      C     ZFREQ         ANDNE     'D'
-     C     CGL184        ANDEQ     'N'                                                        CGL184
-     C     ZFREQ         ORNE      'B'                                                        CGL184
-     C     ZFREQ         ANDNE     'D'                                                        CGL184
+     C*****CGL184        ANDEQ     'N'                                               CGL184 MD050139
+     C*****ZFREQ         ORNE      'B'                                               CGL184 MD050139
+     C*****ZFREQ         ANDNE     'D'                                               CGL184 MD050139
      C     ZFREQ         ANDNE     'K'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C                   LEAVE
      C                   ENDIF
       *
@@ -410,7 +414,7 @@
      C     ZIND          IFEQ      'H'
      C     ZFREQ         IFEQ      'D'
      C     ZFREQ         OREQ      'K'                                                        CGL184
-     C     CGL184        ANDEQ     'Y'                                                        CGL184
+     C*****CGL184        ANDEQ     'Y'                                               CGL184 MD050139
      C                   ADD       1             ZDAYNO
      C                   ELSE
      C                   SUB       1             ZDAYNO

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1036834          Date 24Jun13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050278           Date 08May18               *      
+      *  Prev Amend No. AR1036834          Date 24Jun13               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD040535           Date 21Oct16               *
       *                 MD027755           Date 26Jan15               *
       *                 226483             Date 29Oct14               *
@@ -103,6 +104,8 @@
       *                                                                *
       *----------------------------------------------------------------*
       *                                                                *
+      *  MD050278 - LE: Manual Repayment missing from Facility        *
+      *             History                                           *      
       *  AR1036834 - PDCL repayments do not update facility details.  *
       *              Prevent output to ACTNPDK to trigger update of   *
       *              FM/FN on first run of LER020. (Child: AR1036835) *
@@ -878,6 +881,21 @@
      C                     MOVE '1'       *IN30                                             MD040535
      C                     ENDIF                                                            MD040535
      C                     ENDIF                                                            MD040535
+      *                                                                                     MD050278
+     C           NEWCOB    IFEQ 'N'                                                         MD050278
+     C           LAUTO     ANDEQ'C'                                                         MD050278
+     C           AUTO      ANDEQ'C'                                                         MD050278
+     C           AMTP      ANDNE'RV'                                                        MD050278
+      *                                                                                     MD050278
+     C                     EXSR RTVSA                                                       MD050278
+      *                                                                                     MD050278
+     C           WTYPE     IFNE 'X'                                                         MD050278
+     C           WTYPE     ANDNE'Y'                                                         MD050278
+     C           WTYPE     ANDNE'Z'                                                         MD050278
+     C           OATYP     ANDEQ'N'                                                         MD050278
+     C                     MOVE '1'       *IN30                                             MD050278
+     C                     ENDIF                                                            MD050278
+     C                     ENDIF                                                            MD050278
       *                                                                                       CLE134
      C           NEWCOB    IFEQ 'N'                                                           CLE134
      C********** AUTO      ANDEQ'C'                                                  CLE134 AR567487
@@ -2607,6 +2625,51 @@
      C                     ENDSR
       *
      C/EJECT
+      ********************************************************************                  MD050278
+      *                                                                  *                  MD050278
+      *  RTVSA - RETRIEVE SETTLEMENT ACCOUNT DETAILS                     *                  MD050278
+      *                                                                  *                  MD050278
+      *  CALLED FROM: MAIN PROCESSING                                    *                  MD050278
+      *                                                                  *                  MD050278
+      *  CALLS: LE000458                                                 *                  MD050278
+      *                                                                  *                  MD050278
+      ********************************************************************                  MD050278
+      *                                                                                     MD050278
+     C           RTVSA     BEGSR                                                            MD050278
+     C                     CALL 'LE000458'                                                  MD050278
+     C                     PARM *BLANKS   RETCOD  7                                         MD050278
+     C                     PARM           IACKEY 14                                         MD050278
+     C                     PARM           CCY                                               MD050278
+     C                     PARM           LNRF                                              MD050278
+     C                     PARM *BLANKS   IFCNUM  6                                         MD050278
+     C                     PARM *ZEROS    IFLOAN  60                                        MD050278
+     C                     PARM *ZEROS    IFFACL  50                                        MD050278
+     C                     PARM *ZEROS    IFSEQ   20                                        MD050278
+     C                     PARM *ZEROS    IFCOD   20                                        MD050278
+     C                     PARM           SCCY                                              MD050278
+     C                     PARM           OSAC                                              MD050278
+     C                     PARM           SETP                                              MD050278
+  ** C                     PARM           OLNO                                              MD050278
+     C                     PARM           OSBR                                              MD050278
+      *                                                                                     MD050278
+     C                     PARM *BLANKS   SEBRCA  3                                         MD050278
+     C                     PARM *BLANKS   SECNUM  6                                         MD050278
+     C                     PARM *BLANKS   SEACCY  3                                         MD050278
+     C                     PARM *ZEROS    SEACOD 100                                        MD050278
+     C                     PARM *ZEROS    SEACSQ  20                                        MD050278
+     C                     PARM *BLANKS   OATYP   1                                         MD050278
+     C           RETCOD    IFEQ '*ERROR*'                                                   MD050278
+     C           *LOCK     IN   LDA                                                         MD050278
+     C                     Z-ADD101       DBASE                                             MD050278
+     C                     MOVEL*BLANKS   DBFILE                                            MD050278
+     C                     MOVEL*BLANKS   DBKEY                                             MD050278
+     C                     MOVEL'LER020  'DBPGM                                             MD050278
+     C                     SETON                     U7U8                                   MD050278
+     C                     OUT  LDA                                                         MD050278
+     C                     EXSR *PSSR                                                       MD050278
+     C                     EXSR ZSFAU                                                       MD050278
+     C                     ENDIF                                                            MD050278
+     C                     ENDSR                                                            MD050278
      C********************************************************************
      C*
      C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS

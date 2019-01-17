@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD050231           Date 25Mar18               *
+      *  Last Amend No. MD050212           Date 02Apr18               *      
+      *  Peev Amend No. CLE071             Date 18Jul18               *
+      *                 MD050231           Date 25Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073B            Date 25Sep17               *
       *                 CER073A            Date 05Sep17               *
@@ -104,6 +105,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD050231 - Failed global replication process during switchon *
       *  MD046248 - Finastra Rebranding                               *

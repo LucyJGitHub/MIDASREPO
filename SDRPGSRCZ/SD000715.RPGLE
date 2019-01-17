@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD051230           Date 08Jun18               *
-      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051230           Date 08Jun18               *
+      *                 MD040734           Date 23Aug16               *
       *               . CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051230 - Authorise of customer record in CUSD gets serious *
       *             midas error message                               *
       *  MD040734 - CRS Exception other than Due Diligence is still   *

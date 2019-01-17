@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD039670           Date 11Aug16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD039670           Date 11Aug16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041709           Date 28Sep16               *
       *                 MD027474           Date 11Jun14               *
       *                 MD027483           Date 16Jun14               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD039670 - FATCA Housekeeping program                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000715 failure. Adjusted customer    *

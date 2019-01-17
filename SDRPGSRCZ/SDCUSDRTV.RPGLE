@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041527           Date 22Sep16               *
-      *  Prev Amend No. MD041337           Date 16Sep16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD041527           Date 22Sep16               *
+      *                 MD041337           Date 16Sep16               *
       *                 MD039670           Date 26Jul16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD035388           Date 20Oct15               *
@@ -143,6 +144,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD041527 - Customer cannot be amended after deleting         *
       *             Additional Customer Details                       *
       *  MD041337 - Customer cannot be enquired after deleting        *

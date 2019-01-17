@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL157             Date 17Aug15               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. CGL157             Date 17Aug15               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044440           Date 01Mar17               *
       *                 MD042966           Date 20Dec16               *
       *                 MD036489           Date 11Nov15               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CGL157 - CRS Reporting                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044440 - Authority Holder System Value not updated upon    *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051191           Date 05Jun18               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051191           Date 05Jun18               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD035388           Date 20Oct15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051191 - US Phone Number field in FATCA Information tab    *
       *             blanks out after amendment authorisation          *
       *  CGL177 - CRS Reporting Phase 2                               *

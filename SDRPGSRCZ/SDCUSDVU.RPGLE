@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD023188           Date 20Sep18               *
-      *  Prev Amend No. MD051305           Date 19Jun18               *
+      *  Last Amend No. MD050212           Date 02Apr18               *      
+      *  Prev Amend No. MD023188           Date 20Sep18               *
+      *                 MD051305           Date 19Jun18               *
       *                 MD050345           Date 04Apr18               *
       *                 MD050052           Date 16Mar18               *
       *                 CGL157             Date 17Aug15               *
@@ -144,6 +145,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *      
       *  MD023188 - European tax status disappears after re-inserting *
       *             customer details by country of tax. Remove part   *
       *             of AR784700 as it is causing blank tax status.    *

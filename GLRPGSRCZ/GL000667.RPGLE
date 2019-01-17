@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD045308           Date 18Apr17               *
-      *  Prev Amend No. MD045261           Date 12Apr17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD045308           Date 18Apr17               *
+      *                 MD045261           Date 12Apr17               *
       *                 MD045251           Date 12Apr17               *
       *                 MD045220           Date 11Apr17               *
       *                 MD045210           Date 07Apr17               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD045308 - XML Account closed value is incorrect             *
       *  MD045261 - Misplaced Payment in FATCA XML                    *
       *  MD045251 - Misplaced <ftc:AccountHolder> tag                 *

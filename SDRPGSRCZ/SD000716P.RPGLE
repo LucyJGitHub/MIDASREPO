@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041709           Date 28Sep16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041709           Date 28Sep16               *
       *                 MD030151           Date 05Sep14               *
       *                 MD030165           Date 03Sep14               *
       *                 MD027545           Date 01Aug14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041709 - Component SDC000716 failure. Adjusted customer    *
       *             counter to 10 numeric.                            *

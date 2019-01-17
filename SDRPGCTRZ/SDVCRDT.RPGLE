@@ -17,13 +17,15 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037883A          Date 31Mar16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037883A          Date 31Mar16               *
       *                 MD035076           Date 21Jul15               *
       *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037883A - Unable to Authorise Amendment on Customer Details*
       *  MD035076 - Unable to delete a customer where Creation Date   *

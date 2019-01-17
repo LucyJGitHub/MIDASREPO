@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050231           Date 25Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD050231           Date 25Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
       *                 CGL052             Date 02Dec15               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *  MD050231 - Failed global replication process during switchon *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
@@ -337,6 +339,7 @@ B    D #_ZN            S             10    DIM(999)                             
      C     PFLNAME       CASEQ     'SDCRSDPD  '  GLOB_SDCRSDPD                              MD050231
      C     PFLNAME       CASEQ     'SDCRSHPD  '  GLOB_SDCRSHPD                              MD050231
      C     PFLNAME       CASEQ     'SDCTTXPD  '  GLOB_SDCTTXPD                              MD050231
+     C     PFLNAME       CASEQ     'SDCUSTXC  '  GLOB_SDCUSTXC                              MD050212
      C                   ENDCS
      C                   ENDIF
 
@@ -1119,6 +1122,12 @@ O                                                                               
      C     GLOB_SDCTTXPD BEGSR                                                              MD050231
       /COPY GPCPYSRCG,GPSDCTTXPD                                                            MD050231
      C                   ENDSR                                                              MD050231
+      *****************************************************************                     MD050212
+      * Global Updates - Customer Extension C Details                                       MD050212
+      *****************************************************************                     MD050212
+     C     GLOB_SDCUSTXC BEGSR                                                              MD050212
+      /COPY GPCPYSRCG,GPSDCUSTXC                                                            MD050212
+     C                   ENDSR                                                              MD050212     
       *****************************************************************                       CGL155
       /SPACE 5                                                                                CGL155
       *****************************************************************

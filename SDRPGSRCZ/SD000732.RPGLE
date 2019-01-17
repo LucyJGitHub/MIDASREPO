@@ -28,8 +28,9 @@
       *                                                               *                     MD027669
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD051218           Date 06Jun18               *
-      *  Prev Amend No. MD040497           Date 18Aug16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051218           Date 06Jun18               *
+      *                 MD040497           Date 18Aug16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051218 - US Indicia Tool not running properly              *
       *  MD040497 - US Indicia Changed not recorded in Customer       *
       *             Information History                               *

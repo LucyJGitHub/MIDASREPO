@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD045308           Date 18Apr17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050212           Date 02Apr18               *      
+      *  Prev Amend No. MD045308           Date 18Apr17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043973           Date 03Feb17               *
       *                 MD042683           Date 22Nov16               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD045308 - XML Account closed value is incorrect (Recompile) *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043973 - FATCA Account closed file entries are not         *

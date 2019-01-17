@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050572           Date 03May18               *
-      *  Prev Amend No. MD040734           Date 23Aug16               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD050572           Date 03May18               *
+      *                 MD040734           Date 23Aug16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036459           Date 06Nov15               *
       *                 MD036375           Date 02Nov15               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD050572 - Exception 14 and 15 is not being displayed /      *
       *             triggered                                         *
       *  MD040734 - CRS Exception other than Due Diligence is still   *

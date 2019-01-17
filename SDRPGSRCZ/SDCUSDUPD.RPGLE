@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051563           Date 19Jul18               *
-      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *  Last Amend No. MD050212           Date 02Apr18               *
+      *  Prev Amend No. MD051563           Date 19Jul18               *
+      *                 MD051393           Date 29Jun18               *
       *                 MD051206           Date 11Jun18               *
       *                 MD051230           Date 08Jun18               *
       *                 MD041429           Date 22Sep16               *
@@ -140,6 +141,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *  MD051563 - On COB run, Component GOC0100 failed due to       *
       *             Customer Related Duplicate Key Error              *
       *  MD051393 - Serious midas error                               *
@@ -2785,6 +2787,7 @@
      C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Extension file - SDCUSTXC                                                            CGL132
      C                   EVAL      XCCUST = A_CUCUST                                          CGL132
+     C                   EVAL      XCBRCH = A_CUBRCD                                        MD050212
       ** Alternative Country of Citizenship                                                   CGL132
      C                   EVAL      XCACCZ=A_XCACCZ                                            CGL132
       ** Creation Date                                                                        CGL132
@@ -3958,6 +3961,7 @@
      C**********         IF        CGL132 = 'Y'                                    MD030958 MD042407
       ** Alternative Country of Citizenship                                                   CGL132
      C                   EVAL      XCACCZ=A_XCACCZ                                            CGL132
+     C                   EVAL      XCBRCH = A_CUBRCD                                        MD050212
       ** Creation Date                                                                        CGL132
      C                   EVAL      XCCRDT=A_XCCRDT                                            CGL132
       ** Dormant Indicator                                                                    CGL132

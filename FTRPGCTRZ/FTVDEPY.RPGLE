@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039573           Date 22Jul16               *
+      *  Last Amend No. MD052422           Date 09Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039573           Date 22Jul16               *
       *                 AR924563           Date 05Nov14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052422 - Introduce a new warning message that will be      *
+      *             displayed if Ordering Customer and Beneficiary    *
+      *             are both blank, Settlement Type = '08', and       *
+      *             Details of Payment is not blank. Also, warning    *
+      *             message ID MMA1060 is amended to indicate that it *
+      *             is just a warning message.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039573 - Manual construct of corr bank chgs for HKD        *
       *  AR924563 - '-' should not be present in 1st character of     *
@@ -81,7 +88,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -100,52 +107,52 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **********************************************************************
       /EJECT                                                               *
       **********************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      **COPY*FTCPYSRC,SFTVALCSLE                                                               257144
       /COPY FTCPYSRC,SFTVALCSLL                                                               257144
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                               CSD089
@@ -157,45 +164,45 @@
                                                                                               CSD089
       ** Array of warning message data.                                                       CSD089
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)                      CSD089
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D*TranInSecB****E*DS***               EXTNAME(FTOPY3PD)                    CFT014
      D TranInPrmB    E DS                  EXTNAME(FTOPY1APD)                               BUG26775
      D TranInSecB    E DS                  EXTNAME(FTOPY3PD)                                BUG26775
      D TranInThiA    E DS                  EXTNAME(FTOPY4PD)                    CFT014
- 
+
       * Flags to indicate whether transaction fields are valid
      D*OKFlagsDS*****E*DS***               EXTNAME(FTEOPY2PD)                   CFT014
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY3PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
      D/COPY FTCPYSRC,SFTADDRILE
- 
+
      D SDTPDS          DS           175
      D  DSDTP1                 1     35
      D  DSDTP2                36     70
      D  DSDTP3                71    105
      D  DSDTP4               106    140
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CSD089
       ** Index for arrays of warning message ids etc                                          CSD089
      D WIx             S              3P 0                                                    CSD089
- 
+
       * This prog only
      D ADLINE          S              1
      D ADSLON          S              1
@@ -213,7 +220,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
       *
      C                   Eval      RetCodeIn = *BlankS
@@ -229,11 +236,11 @@
      C                   Eval      DSDTP2 = SDTP2
      C                   Eval      DSDTP3 = SDTP3
      C                   Eval      DSDTP4 = SDTP4
- 
+
       * Validate
       *
      C                   Exsr      VDETPAY
- 
+
       ** If an error was found, set the return code appropriately
       *
      C                   If        OKDtp1 = 'N' or
@@ -249,7 +256,7 @@
      C                   Eval      RetCodeIn = 'Warning'                                      CSD089
      C                   End                                                                  CSD089
      C                   End
- 
+
       * RETURN
       *
      C                   RETURN
@@ -260,7 +267,7 @@
       ******************************************************************
      C*
      C     VDETPAY       BEGSR
- 
+
       *                                                                                     BUG26775
       ** Check if Ordering Customer/Beneficiary ia s bank                                   BUG26775
       *                                                                                     BUG26775
@@ -285,9 +292,9 @@
       * blank as :70: not on MT200 series messages
      C                   If        SDTPDS <> *Blanks and
      C                             SORC1 = 'MT202'
-     C                             OR SDTPDS <> *BLANKS                                     BUG26775
-     C                             AND CTYP = 'B'                                           BUG26775
-     C                             AND SSTTP = '08'                                         AR924563
+     C**********                   OR SDTPDS <> *BLANKS                            BUG26775 MD052422
+     C**********                   AND CTYP = 'B'                                  BUG26775 MD052422
+     C**********                   AND SSTTP = '08'                                AR924563 MD052422
       * Send error to screen
      C**********         Move      'N'           OKDtp1                                     MD039573
      C**********         Add       1             Idx                                        MD039573
@@ -298,19 +305,32 @@
      C                   Movel     'SDTP1'       wFldNmXAr(wIx)                             MD039573
      C                   Movel     'MMA1060'     wMsgIDXAr(WIx)                             MD039573
      C                   End
- 
+      *                                                                                     MD052422
+      ** If MT202 is to be generated and Details of Payment if not blank,                   MD052422
+      ** send a warning message as :70: is not included in MT2xx series msgs                MD052422
+      *                                                                                     MD052422
+     C                   IF        SDTPDS <> *BLANKS                                        MD052422
+     C                             AND SORC1 <> 'MT202'                                     MD052422
+     C                             AND CTYP = 'B'                                           MD052422
+     C                             AND SSTTP = '08'                                         MD052422
+     C                   MOVE      'W'           OKDtp1                                     MD052422
+     C                   ADD       1             wIx                                        MD052422
+     C                   MOVEL     'SDTP1'       wFldNmXAr(wIx)                             MD052422
+     C                   MOVEL     'MMA4040'     wMsgIDXAr(WIx)                             MD052422
+     C                   ENDIF
+
       * No errors
      C                   If        OKDtp1 = 'Y'
- 
+
       * Validate details of payment
      C                   If        SDTPDS <> *Blanks
- 
+
       * Prevent first check in ADCHK subroutine
       * Validate as an address
      C                   Eval      ADLINE = ' '
      C                   Movel(P)  SDTPDS        ADDRSS
      C                   Exsr      ADCHK
- 
+
       *  Depending on the indicators, highlight the field in error
       *
      C                   If        *IN92 = *On
@@ -320,7 +340,7 @@
      C                   Movel     'SDTP1'       FldNamXAr(Idx)
      C                   Movel     'MMA1059'     MsgIdXAr(Idx)
      C                   End
- 
+
      C                   If        AD#1 = 'Y'
      C**********         Move      'N'           OKDtp1                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -331,7 +351,7 @@
      C                   Movel     'SDTP1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#2 = 'Y'
      C**********         Move      'N'           OKDtp2                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -342,7 +362,7 @@
      C                   Movel     'SDTP2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#3 = 'Y'
      C**********         Move      'N'           OKDtp3                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -353,7 +373,7 @@
      C                   Movel     'SDTP3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   If        AD#4 = 'Y'
      C**********         Move      'N'           OKDtp4                                       CSD089
      C**********         Add       1             Idx                                          CSD089
@@ -364,40 +384,40 @@
      C                   Movel     'SDTP4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIDXAr(WIx)                               CSD089
      C                   End
- 
+
      C                   End
      C                   End
- 
+
      C                   ENDSR
      C*****************************************************************
      C* END OF DETAILS OF PAYMENT VALIDATION                          *
      C*****************************************************************
      C/EJECT
- 
+
       * Subroutine ADCHK
      E/COPY FTCPYSRC,SFTADDRCLE
- 
+
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
- 
+
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
      C***********        Parm                    TranInSecB                     CFT014
      C                   Parm                    TranInPrmB                                 BUG26775
      C                   Parm                    TranInSecB                                 BUG26775
      C                   Parm                    TranInThiA                     CFT014
- 
+
       * OUTPUTS
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
@@ -407,21 +427,21 @@
      C                   Parm                    WFldNmXAr                                    CSD089
      C                   Parm                    WMsgIDXAr                                    CSD089
      C                   Parm                    WMsgDtaXAr                                   CSD089
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** =================================================================
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

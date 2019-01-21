@@ -19,8 +19,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD052398           Date 19Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -44,6 +45,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052398 - DL: FX netting: The FX Netting contains a deal    *
+      *             with status unmatch. Fix is to remove the 'IF'    *
+      *             condition statement DDMTCH IFEQ *BLANK.           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  245619 - Correct Sell Ind defaulting.                        *
@@ -63,12 +67,12 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
      FFXNETML1  IF   E           K DISK    INFSR(*PSSR)
      FSDCGRPL2  IF   E           K DISK    INFSR(*PSSR)
      FSDCPTTL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG6251
      F/COPY WNCPYSRC,FXH00197
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -87,77 +91,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of deal types                                                                 BUG6251
      D @TT             S              2A   DIM(40)                                           BUG6251
                                                                                              BUG6251
       ** External data structure for Customer codes file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DSNETR          DS            19
       ** Dummy Net Reference
      D  DMBRCA                 1      3
@@ -165,31 +169,31 @@
      D  DBSCCY                 8     10
      D  DCUSGP                11     16
      D  DSSEQN                17     19
- 
+
      D DSVALD          DS             4
       ** Value Date
      D  DDAYNO                 1      2
      D  DMONTH                 3      4
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
       ** Value Date
      D @VDYNO          S              5P 0
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -209,11 +213,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -222,17 +226,17 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
       ** BSINV - Buy/Sell Indicator Validation
- 
+
      C                   EXSR      BSINV
- 
+
       ** MTCHV - Manual Match Indicator validation
- 
+
      C                   EXSR      MTCHV
- 
+
       ** If an error was found, set the return code appropriately
- 
+
      C     DDNbuyOK      IFEQ      'N'
      C     DDNselOK      OREQ      'N'
      C     DDMtchOK      OREQ      'N'
@@ -445,7 +449,7 @@
      C                   ENDIF
       *
       ** Default Matched Deal Indicator
-     C     DDMTCH        IFEQ      *BLANK
+     C*****DDMTCH        IFEQ      *BLANK                                                   MD052398
      C                   MOVE      'N'           DDMTCH
      C     DDNBUY        IFEQ      'Y'
      C     DDNSEL        OREQ      'Y'
@@ -462,7 +466,7 @@
      C                   MOVE      'Y'           DDMTCH
      C                   ENDIF
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052398
       *
       ** Update Matched indicator field
      C     DDMtchOK      IFEQ      'Y'
@@ -639,7 +643,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -693,9 +697,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

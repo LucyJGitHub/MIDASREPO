@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052134           Date 18Oct18               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. MD052478           Date 15Jan19               *
+      *  Prev Amend No. MD052134           Date 18Oct18               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD041649           Date 06Oct16               *
       *                 CLE168             Date 26Feb18               *
@@ -134,6 +135,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052478 - Dump occur in LECLIPR due to parameter mismatch.  *
       *  MD052134 - Serious Midas Error Occurred when attempting to   *
       *             input a LE Particiapation Sold                    *
       *           - Applied for MD052132.                             * 
@@ -1492,6 +1494,8 @@
      C                   PARM                    @MsgFArray                                  BUG4685
      C                   PARM                    @APIRetC          1                         BUG4685
      C                   PARM                    @ACTRV                                     AR804863
+     C                   PARM                    @DEPI             1                        MD052478
+      *                                                                                     MD052478
      C                   MOVEL     DDACTN        @SACTN            1                         BUG4685
      C                   MOVEL     Buffer        TranInPrim                                  BUG4685
      C                   MOVE      @SACTN        DDACTN                                      BUG4685

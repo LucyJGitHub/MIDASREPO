@@ -12,14 +12,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD048216           Date 30Oct17               *
+      *  Prev Amend No. MD036674           Date 26Nov15               *
+      *                 CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039450           Date 04Aug16               *
       *                 MD031723 *REWRITE  Date 09Jan15               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD048216 - Fee- system in COB did not see the Credit account *
+      *              at the time of processing and created PDCL ZZ    * 
+      *  MD036674 - CLE164 Downgrade Performance issues               *
+      *           - Applied for MD-48954                              *           
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039450 - Improve COB component LEC000495 performance       *
@@ -187,7 +193,7 @@
      D wSEFILE         s             10a   inz(*blanks)
      D wSEAAMT         s             10a   inz(*blanks)
      D wSEIPFL         s             10a   inz(*blanks)
-     D wSQLTable       s             10a   inz(*blanks)
+     D***wSQLTable       s             10a   inz(*blanks)                                   MD036674
 
      D isFound         s               n
      D wLibrary        s             10a   inz(*blanks)
@@ -209,7 +215,7 @@
      D aColName        s             10a   dim(35)
      D aValName        s           2000a   dim(35)
      D aFilName        s             10a   dim(7)
-     D aTblName        s             10a   dim(4)
+     D***aTblName        s             10a   dim(4)                                         MD036674
 
       /free
 
@@ -252,9 +258,9 @@
                       MAX_ARRAY = 1000;
                    endif;
 
-                   exsr prepareAdjTable;
+      //          exsr prepareAdjTable;                                                     MD036674
 
-                   exsr clearExtractTables;
+      //          exsr clearExtractTables;                                                  MD036674
 
                    exsr resetIdentityColumn;
 
@@ -301,33 +307,33 @@
        //                                                            *
        //*************************************************************
 
-       begsr prepareAdjTable;
+       // begsr prepareAdjTable;                                                            MD036674
 
-                   CommandStr =  'CLRPFM FILE(GLACPMPD)';
-                   exsr SrCommand;
+       //            CommandStr =  'CLRPFM FILE(GLACPMPD)';                                 MD036674
+       //            exsr SrCommand;                                                        MD036674
 
-                   CommandStr =  'CLRPFM FILE(GLACRMPD)';
-                   exsr SrCommand;
+       //            CommandStr =  'CLRPFM FILE(GLACRMPD)';                                 MD036674
+       //            exsr SrCommand;                                                        MD036674
 
-                   CommandStr =  'CPYF FROMFILE(ACPO1) ' +
-                                 ' TOFILE(GLACPMPD) ' +
-                                 ' MBROPT(*REPLACE) ' +
-                                 ' RCDFMT(APOSTPDF) ';
-                   exsr SrCommand;
+       //            CommandStr =  'CPYF FROMFILE(ACPO1) ' +                                MD036674
+       //                          ' TOFILE(GLACPMPD) ' +                                   MD036674
+       //                          ' MBROPT(*REPLACE) ' +                                   MD036674
+       //                          ' RCDFMT(APOSTPDF) ';                                    MD036674
+       //           exsr SrCommand;                                                         MD036674
 
-                   CommandStr =  'CPYF FROMFILE(GLACPOL0) ' +
-                                 ' TOFILE(GLACPMPD) ' +
-                                 ' MBROPT(*ADD) ' +
-                                 ' RCDFMT(APOSTPDF) ';
-                   exsr SrCommand;
+       //            CommandStr =  'CPYF FROMFILE(GLACPOL0) ' +                             MD036674
+       //                          ' TOFILE(GLACPMPD) ' +                                   MD036674
+       //                          ' MBROPT(*ADD) ' +                                       MD036674
+       //                          ' RCDFMT(APOSTPDF) ';                                    MD036674
+       //            exsr SrCommand;                                                        MD036674
 
-                   CommandStr =  'CPYF FROMFILE(ACPO1) ' +
-                                 ' TOFILE(GLACRMPD) ' +
-                                 ' MBROPT(*ADD) ' +
-                                 ' RCDFMT(APOSTRAF) ';
-                   exsr SrCommand;
+       //            CommandStr =  'CPYF FROMFILE(ACPO1) ' +                                MD036674
+       //                          ' TOFILE(GLACRMPD) ' +                                   MD036674
+       //                          ' MBROPT(*ADD) ' +                                       MD036674
+       //                          ' RCDFMT(APOSTRAF) ';                                    MD036674
+       //            exsr SrCommand;                                                        MD036674
 
-       endsr;
+       // endsr;                                                                            MD036674
 
        //*************************************************************
        //                                                            *
@@ -341,18 +347,18 @@
        //                                                            *
        //*************************************************************
 
-       begsr clearExtractTables;
+        //begsr clearExtractTables;                                                         MD036674
 
-                   aTblName(1) = 'LETMPLTD';
-                   aTblName(2) = 'LETBL1TD';
-                   aTblName(3) = 'LEXTRCTD';
+        //           aTblName(1) = 'LETMPLTD';                                              MD036674
+        //           aTblName(2) = 'LETBL1TD';                                              MD036674
+        //           aTblName(3) = 'LEXTRCTD';                                              MD036674
 
-                   for i = START to MAX_EXTR;
-                      wSQLTable = %Trim(aTblName(i));
-                      exsr clearTable;
-                   endfor;
-                   Commit;
-       endsr;
+        //           for i = START to MAX_EXTR;                                             MD036674
+        //              wSQLTable = %Trim(aTblName(i));                                     MD036674
+        //            exsr clearTable;                                                      MD036674
+        //            endfor;                                                               MD036674
+        //            Commit;                                                               MD036674
+        // endsr;                                                                           MD036674
 
        //*************************************************************
        /EJECT
@@ -367,21 +373,21 @@
        //                                                            *
        //*************************************************************
 
-       begsr clearTable;
+       // begsr clearTable;                                                                 MD036674
 
-                   wSqlStr = 'delete from ' + wSQLTable;
-                   exec sql
-                   execute immediate :wSqlStr;
+       //            wSqlStr = 'delete from ' + wSQLTable;                                  MD036674
+       //            exec sql                                                               MD036674
+       //            execute immediate :wSqlStr;                                            MD036674
 
-                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
-                      dBase    = 001;
-                      dBfile   = wSQlTable;
-                      dBkey    = *BLANKS;
-                      dBpgm    = 'LE000495';
-                      exsr *pssr;
-                   endif;
+       //             if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;                        MD036674
+       //               dBase    = 001;                                                     MD036674
+       //               dBfile   = wSQlTable;                                               MD036674
+       //                dBkey    = *BLANKS;                                                MD036674
+       //               dBpgm    = 'LE000495';                                              MD036674
+       //               exsr *pssr;                                                         MD036674
+       //            endif;                                                                 MD036674
 
-       endsr;
+       // endsr;                                                                            MD036674
 
        //*************************************************************
        /EJECT
@@ -706,6 +712,14 @@
                                 ' or  (REVI = 1 and EAMT < 0) ';
                    endif;
 
+       //                                                                                   MD048216
+                   if aFilName(i) = 'LEPK2DPD' or aFilName(i) = 'LEPK3DPD';               //MD048216
+                      wSqlStr = %Trim(wSqlStr) +                                          //MD048216
+                                ' and (LKREVI = 0 and LKEAMT > 0) ' +                     //MD048216
+                                ' or  (LKREVI = 1 and LKEAMT < 0) ';                      //MD048216
+                   endif;                                                                 //MD048216
+       //                                                                                   MD048216
+
                    exec sql
                    execute immediate :wSqlStr;
 
@@ -722,7 +736,7 @@
        //*************************************************************
        /EJECT
        //*************************************************************
-       //                                                            *
+       //                                                            * 
        // processCustomerBalances - This subroutine will extract a   *
        // =======================   subset of LETMPLTD wherein it    *
        // will only retrieve the first occurence of a settlement     *

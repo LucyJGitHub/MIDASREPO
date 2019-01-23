@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD051931           Date 23Sep18               *
-      *  Prev Amend No. MD051946           Date 23Sep18               *
+      *  Last Amend No. MD036674           Date 26Nov15               *      
+      *  Prev Amend No. MD051931           Date 23Sep18               *
+      *                 MD051946           Date 23Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 CLE164             Date 18Aug14               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036674 - CLE164 Downgrade Performance Issues               *
+      *           - Applied for MD-48954                              *      
       *  MD051931 - Oustanding PDCL Z amount not paid but has         *
       *             sufficient balance                                *
       *  MD051946 - LEACCTPD amount was converted first then reduced  *
@@ -141,6 +144,36 @@
 
      D KACACNO         S                   INZ LIKE(ACACNO)
 
+      ** Local Variables                                                                    MD036674
+     D Sysvalue        S             20A                                                    MD036674
+     D PVl01           S            200A                                                    MD036674
+     D LTypPref        S              1A                                                    MD036674
+     D LoanType        S              2A                                                    MD036674
+     D SubType         S              2A                                                    MD036674
+     D Nbrcds          S              4  0                                                  MD036674
+     D NbrcdsF         S              4  0                                                  MD036674
+     D index           S              4  0                                                  MD036674
+     D ARRINDX         S              4  0                                                  MD036674
+     D V_LNTY          S              2A                                                    MD036674
+     D V_LNST          S              2A                                                    MD036674
+     D V_LTST          S              4A                                                    MD036674
+     D V_CLTY          S              2A                                                    MD036674
+     D V_CLST          S              2A                                                    MD036674
+     D V_LTSTF         S              4A                                                    MD036674
+                                                                                            MD036674
+     D V_XINTR         S            200A                                                    MD036674
+     D V_XINTM         S            200A                                                    MD036674
+     D V_XPRIN         S            200A                                                    MD036674
+     D V_XPRIM         S            200A                                                    MD036674
+     D V_YINTR         S            200A                                                    MD036674
+     D V_YINTM         S            200A                                                    MD036674
+     D V_YPRIN         S            200A                                                    MD036674
+     D V_YPRIM         S            200A                                                    MD036674
+     D V_ZINTR         S            200A                                                    MD036674
+     D V_ZINTM         S            200A                                                    MD036674
+     D V_ZPRIN         S            200A                                                    MD036674
+     D V_ZPRIM         S            200A                                                    MD036674
+                                                                                            MD036674
       ** Passed Parameters
 
       ** Overlays
@@ -167,6 +200,15 @@
      D                                     PREFIX(k_)                                      AR1022006
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                MD046080
 
+      ** Loans Repayment Priority                                                           MD036674
+     D LoanRPR       E DS                  EXTNAME(CLOANZTD)                                MD036674
+     D                                     PREFIX(RP_)                                      MD036674
+      ** Loan Type Sub Types                                                                MD036674
+     D DSSDLOAN      E DS                  EXTNAME(SDLOANPD)                                MD036674
+     D                                     PREFIX(SD_)                                      MD036674
+     D SDKEY                          4A   INZ DIM(1000)                                    MD036674
+     D SDKEYFE                        4A   INZ DIM(200)                                     MD036674
+                                                                                            MD036674
       ** Additional Field Definitions
      D WSKIP           S              1
      D PDCLT           S              1
@@ -947,6 +989,85 @@
      C                   MOVE      'N'           CLE031                                     MD046080
      C                   ENDIF                                                              MD046080
                                                                                             MD046080
+      ** Load System values for PDPCAT to local variables                                   MD036674
+                                                                                            MD036674
+     C                   CALL      'AOSVALR0'                                               MD036674
+     C                   PARM                    RTNCDE            7                        MD036674
+     C                   PARM      'PDPCAT_XINTR'SVALK1           20                        MD036674
+     C                   PARM                    SVAL1           200                        MD036674
+     C                   PARM      'PDPCAT_XINTM'SVALK2           20                        MD036674
+     C                   PARM                    SVAL2           200                        MD036674
+     C                   PARM      'PDPCAT_XPRIN'SVALK3           20                        MD036674
+     C                   PARM                    SVAL3           200                        MD036674
+     C                   PARM      'PDPCAT_XPRIM'SVALK4           20                        MD036674
+     C                   PARM                    SVAL4           200                        MD036674
+     C                   PARM      'PDPCAT_YINTR'SVALK5           20                        MD036674
+     C                   PARM                    SVAL5           200                        MD036674
+     C                   PARM      'PDPCAT_YINTM'SVALK6           20                        MD036674
+     C                   PARM                    SVAL6           200                        MD036674
+     C                   PARM      'PDPCAT_YPRIN'SVALK7           20                        MD036674
+     C                   PARM                    SVAL7           200                        MD036674
+     C                   PARM      'PDPCAT_YPRIM'SVALK8           20                        MD036674
+     C                   PARM                    SVAL8           200                        MD036674
+     C                   PARM      'PDPCAT_ZINTR'SVALK9           20                        MD036674
+     C                   PARM                    SVAL9           200                        MD036674
+     C                   PARM      'PDPCAT_ZINTM'SVALK0           20                        MD036674
+     C                   PARM                    SVAL10          200                        MD036674
+                                                                                            MD036674
+     C                   IF        RTNCDE = *blanks                                         MD036674
+                                                                                            MD036674
+     C                   EVAL      V_XINTR = SVAL1                                          MD036674
+     C                   EVAL      V_XINTM = SVAL2                                          MD036674
+     C                   EVAL      V_XPRIN = SVAL3                                          MD036674
+     C                   EVAL      V_XPRIM = SVAL4                                          MD036674
+     C                   EVAL      V_YINTR = SVAL5                                          MD036674
+     C                   EVAL      V_YINTM = SVAL6                                          MD036674
+     C                   EVAL      V_YPRIN = SVAL7                                          MD036674
+     C                   EVAL      V_YPRIM = SVAL8                                          MD036674
+     C                   EVAL      V_ZINTR = SVAL9                                          MD036674
+     C                   EVAL      V_ZINTM = SVAL10                                         MD036674
+                                                                                            MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+     C                   CALL      'AOSVALR0'                                               MD036674
+     C                   PARM                    RTNCDE            7                        MD036674
+     C                   PARM      'PDPCAT_ZPRIN'SVALK1           20                        MD036674
+     C                   PARM                    SVAL1           200                        MD036674
+     C                   PARM      'PDPCAT_ZPRIM'SVALK2           20                        MD036674
+     C                   PARM                    SVAL2           200                        MD036674
+     C                   PARM                    SVALK3           20                        MD036674
+     C                   PARM                    SVAL3           200                        MD036674
+     C                   PARM                    SVALK4           20                        MD036674
+     C                   PARM                    SVAL4           200                        MD036674
+     C                   PARM                    SVALK5           20                        MD036674
+     C                   PARM                    SVAL5           200                        MD036674
+     C                   PARM                    SVALK6           20                        MD036674
+     C                   PARM                    SVAL6           200                        MD036674
+     C                   PARM                    SVALK7           20                        MD036674
+     C                   PARM                    SVAL7           200                        MD036674
+     C                   PARM                    SVALK8           20                        MD036674
+     C                   PARM                    SVAL8           200                        MD036674
+     C                   PARM                    SVALK9           20                        MD036674
+     C                   PARM                    SVAL9           200                        MD036674
+     C                   PARM                    SVALK0           20                        MD036674
+     C                   PARM                    SVAL10          200                        MD036674
+                                                                                            MD036674
+     C                   IF        RTNCDE = *blanks                                         MD036674
+                                                                                            MD036674
+     C                   EVAL      V_ZPRIN = SVAL1                                          MD036674
+     C                   EVAL      V_ZPRIM = SVAL2                                          MD036674
+                                                                                            MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+      ** Cache the Loan Type Sub Type with Overdraft flag set to Y from                     MD036674
+      ** SDLOANPD                                                                           MD036674
+                                                                                            MD036674
+     C                   EXSR      LOADSDLOAN                                               MD036674
+                                                                                            MD036674
+      ** Cache the Loan Type Sub Type for Overdraft Flag set to Y from                      MD036674
+      ** SDFEEPD                                                                            MD036674
+     C                   EXSR      LOADSDFEE                                                MD036674
+                                                                                            MD036674
      C                   ENDSR                                                                263605
       *****************************************************************                       263605
       /EJECT
@@ -993,6 +1114,18 @@
      C                   EVAL      OFACA = wFACTD                                             CLE164
      C                   EVAL      OFSQA = *ZEROS                                             CLE164
                                                                                               CLE164
+      * Check first if the record is already existing in CLOANZTD                           MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ select * into :LoanRPR                                                              MD036674
+     C+ from CLOANZTD where                                                                 MD036674
+     C+ lxlnrf = :K_LNRF and                                                                MD036674
+     C+ lxcate = :P_SECATC and                                                              MD036674
+     C+ lxcust = :K_CNUM                                                                    MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C                   IF        SQLCOD <> 0                                              MD036674
+                                                                                            MD036674
      C                   CALL      'LE000801'                                                 CLE164
      C                   PARM      *BLANK        PRTCD                                        CLE164
      C                   PARM      P_SECATC      PCATC                                        CLE164
@@ -1005,7 +1138,57 @@
      C                   PARM      *ZEROS        PREPR                                        CLE164
      C                   PARM      *ZEROS        PCAPR                                        CLE164
      C                   PARM      *BLANK        POVFL                                        CLE164
+                                                                                            MD036674
+     C                   ELSE                                                               MD036674
                                                                                               CLE164
+      ** Get required fields from files instead                                             MD036674
+                                                                                            MD036674
+     C     'PDPCAT_'     CAT       P_SECATC      Sysvalue                                   MD036674
+     C                   EVAL      Sysvalue = %TRIM(Sysvalue)                               MD036674
+                                                                                            MD036674
+     C                   EXSR      GETPCAPR                                                 MD036674
+                                                                                            MD036674
+     C                   EVAL      PREPR = RP_LXREPR                                        MD036674
+     C                   EVAL      PCAPR = %INT(PVl01)                                      MD036674
+                                                                                            MD036674
+      ** Get Overdraft Flag from SDLOANPD                                                   MD036674
+                                                                                            MD036674
+     C                   EVAL      LoanType = K_LTYP                                        MD036674
+     C                   EVAL      SubType = K_SUTP                                         MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ select LTYP, SUTP into                                                              MD036674
+     C+ :LoanType, :SubType                                                                 MD036674
+     C+ from CLOANCL where                                                                  MD036674
+     C+ LNRF = :K_ORLN                                                                      MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C                   EVAL      LTypPref = %SUBST(K_LTYP:1:1)                            MD036674
+     C                   IF        LTypPref = 'X' or                                        MD036674
+     C                             LtypPref = 'Y'                                           MD036674
+                                                                                            MD036674
+     C                   EVAL      ArrIndx = 0                                              MD036674
+     C     LoanType      CAT       SubType       V_LTST                                     MD036674
+     C                   EVAL      ArrIndx = %LOOKUP(V_LTST : SDKEY)                        MD036674
+                                                                                            MD036674
+      ** ArrIndx is 0 if the current Loan type Sub Type is not existing in the cache        MD036674
+      ** which means the Overdraft flag is N                                                MD036674
+     C                   ELSEIF    LtypPref = 'Z'                                           MD036674
+                                                                                            MD036674
+     C                   EVAL      ArrIndx = 0                                              MD036674
+     C     LoanType      CAT       SubType       V_LTSTF                                    MD036674
+     C                   EVAL      ArrIndx = %LOOKUP(V_LTSTF : SDKEYFE)                     MD036674
+                                                                                            MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+     C                   IF        ArrIndx = 0                                              MD036674
+     C                   EVAL      POVFL = 'N'                                              MD036674
+     C                   ELSE                                                               MD036674
+     C                   EVAL      POVFL = 'Y'                                              MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
      C                   EVAL      P_SECAPR = PCAPR                                           CLE164
      C                   EVAL      P_SEREPR = PREPR                                           CLE164
      C                   EVAL      P_SEOVFL = POVFL                                           CLE164
@@ -1067,6 +1250,125 @@
      C                   ENDSR                                                                CLE164
       /EJECT                                                                                  CLE164
       *****************************************************************                       CLE164
+     C*    GETPCAPR - Get Priority using system values                *                     MD036674
+      *****************************************************************                     MD036674
+     C     GETPCAPR      BEGSR                                                              MD036674
+     C                   SELECT                                                             MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_XINTR'                                MD036674
+     C                   EVAL      PVl01 = V_XINTR                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_XINTM'                                MD036674
+     C                   EVAL      PVl01 = V_XINTM                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_XPRIN'                                MD036674
+     C                   EVAL      PVl01 = V_XPRIN                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_XPRIM'                                MD036674
+     C                   EVAL      PVl01 = V_XPRIM                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_YINTR'                                MD036674
+     C                   EVAL      PVl01 = V_YINTR                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_YINTM'                                MD036674
+     C                   EVAL      PVl01 = V_YINTM                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_YPRIN'                                MD036674
+     C                   EVAL      PVl01 = V_YPRIN                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_YPRIM'                                MD036674
+     C                   EVAL      PVl01 = V_YPRIM                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_ZINTR'                                MD036674
+     C                   EVAL      PVl01 = V_ZINTR                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_ZINTM'                                MD036674
+     C                   EVAL      PVl01 = V_ZINTM                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_ZPRIN'                                MD036674
+     C                   EVAL      PVl01 = V_ZPRIN                                          MD036674
+     C                   WHEN      Sysvalue = 'PDPCAT_ZPRIM'                                MD036674
+     C                   EVAL      PVl01 = V_ZPRIM                                          MD036674
+     C                   ENDSL                                                              MD036674
+                                                                                            MD036674
+     C                   ENDSR                                                              MD036674
+      *****************************************************************                     MD036674
+      *    LOADSDLOAN - Get Loan Type Sub Type with overdraft flag set*                     MD036674
+      *                 to Y from SDLOANPD                            *                     MD036674
+      *****************************************************************                     MD036674
+     C     LOADSDLOAN    BEGSR                                                              MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ select count(*) into:Nbrcds                                                         MD036674
+     C+ from SDLOANPD where                                                                 MD036674
+     C+ AYOVRD = 'Y'                                                                        MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ declare C1 cursor for                                                               MD036674
+     C+ select AYLNTY, AYLNST                                                               MD036674
+     C+ from SDLOANPD where                                                                 MD036674
+     C+ AYOVRD = 'Y'                                                                        MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ open C1                                                                             MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C                   Eval      Index = 1                                                MD036674
+     C                   IF        Nbrcds <> 0                                              MD036674
+                                                                                            MD036674
+     C     Index         DOUEQ     Nbrcds                                                   MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ fetch next                                                                          MD036674
+     C+ from C1                                                                             MD036674
+     C+ into: V_LNTY, : V_LNST                                                              MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C     V_LNTY        CAT       V_LNST        SDKEY(Index)                               MD036674
+     C                   EVAL      Index = Index + 1                                        MD036674
+     C                   ENDDO                                                              MD036674
+                                                                                            MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ close C1                                                                            MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C                   ENDSR                                                              MD036674
+      *****************************************************************                     MD036674
+      *    LOADSDFEE - Get The loan type sub type with overdraft flag *                     MD036674
+      *                set to Y from SDFEEPD                          *                     MD036674
+      *****************************************************************                     MD036674
+     C     LOADSDFEE     BEGSR                                                              MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ select count(*) into:NbrcdsF                                                        MD036674
+     C+ from SDFEEPD where                                                                  MD036674
+     C+ AUOVRA = 'Y'                                                                        MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ declare C2 cursor for                                                               MD036674
+     C+ select AUCLTY, AUCLST                                                               MD036674
+     C+ from SDFEEPD where                                                                  MD036674
+     C+ AUOVRA = 'Y' and                                                                    MD036674
+     C+ AUCLTY <> '' and                                                                    MD036674
+     C+ AUCLST <> ''                                                                        MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C/exec SQL                                                                             MD036674
+     C+ open C2                                                                             MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C                   Eval      Index = 1                                                MD036674
+     C                   IF        NbrcdsF <> 0                                             MD036674
+                                                                                            MD036674
+     C     Index         DOUEQ     NbrcdsF                                                  MD036674
+     C/exec SQL                                                                             MD036674
+     C+ fetch next                                                                          MD036674
+     C+ from C2                                                                             MD036674
+     C+ into: V_CLTY, : V_CLST                                                              MD036674
+     C/end-exec                                                                             MD036674
+                                                                                            MD036674
+     C     V_CLTY        CAT       V_CLST        SDKEYFE(Index)                             MD036674
+     C                   EVAL      Index = Index + 1                                        MD036674
+                                                                                            MD036674
+     C                   ENDDO                                                              MD036674
+     C                   ENDIF                                                              MD036674
+                                                                                            MD036674
+     C                   ENDSR                                                              MD036674
+      ******************************************************************************************
      C/COPY ZACPYSRC,PSSR_ILEB
      C/EJECT
 **  CPY@

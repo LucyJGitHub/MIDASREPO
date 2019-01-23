@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD048216           Date 30Oct17               *
+      *  Prev Amend No. MD036674           Date 26Nov15               *      
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 MD032020           Date 23Jan15               *
       *                 MD031853           Date 18Jan15               *
       *                 MD027718           Date 23Sep14               *
@@ -20,6 +22,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD048216 - Fee- system in COB did not see the Credit account *
+      *               at the time of processing and created PDCL ZZ   *
+      *  MD036674 - CLE164 Downgrade Performance issues               *
+      *           - Applied for MD-48954                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD032020 - LE000496P1 report cleared balance is not equal    *
@@ -306,7 +312,7 @@
                                                                                             MD027718
      C                   EVAL      ADJUST = 0                                               MD027718
      C/EXEC SQL                                                                             MD027718
-     C+  SELECT SUM(EAMT) INTO :ADJUST                                                      MD027718
+     C+  SELECT COALESCE(SUM(EAMT),0) INTO :ADJUST                                 MD027718 MD036674
      C+  FROM LEPK1DPD WHERE                                                                MD027718
      C+  SECNUM = :P@CNUM AND                                                               MD027718
      C+  SEACCY = :P@SCCY AND                                                               MD027718
@@ -319,9 +325,39 @@
      C                   EVAL      P@BLAF -= ADJUST                                         MD027718
      C                   EVAL      P@CLBL -= ADJUST                                         MD027718
                                                                                             MD027718
+     C                   EVAL      ADJUST = 0                                               MD048216
+     C/EXEC SQL                                                                             MD048216
+     C+  SELECT COALESCE(SUM(LKEAMT),0) INTO :ADJUST                                        MD048216
+     C+  FROM LEPK2DPD WHERE                                                                MD048216
+     C+  SECNUM = :P@CNUM AND                                                               MD048216
+     C+  SEACCY = :P@SCCY AND                                                               MD048216
+     C+  SEACOD = :P@ACOD AND                                                               MD048216
+     C+  SEACSQ = :P@ACSQ AND                                                               MD048216
+     C+  SEBRCA = :P@BRCA AND                                                               MD048216
+     C+  LKREVI   = 1 AND                                                                   MD048216
+     C+  LKEAMT > 0                                                                         MD048216
+     C/END-EXEC                                                                             MD048216
+     C                   EVAL      P@BLAF -= ADJUST                                         MD048216
+     C                   EVAL      P@CLBL -= ADJUST                                         MD048216
+                                                                                            MD048216
+     C                   EVAL      ADJUST = 0                                               MD048216
+     C/EXEC SQL                                                                             MD048216
+     C+  SELECT COALESCE(SUM(LKEAMT),0) INTO :ADJUST                                        MD048216
+     C+  FROM LEPK3DPD WHERE                                                                MD048216
+     C+  SECNUM = :P@CNUM AND                                                               MD048216
+     C+  SEACCY = :P@SCCY AND                                                               MD048216
+     C+  SEACOD = :P@ACOD AND                                                               MD048216
+     C+  SEACSQ = :P@ACSQ AND                                                               MD048216
+     C+  SEBRCA = :P@BRCA AND                                                               MD048216
+     C+  LKREVI   = 1 AND                                                                   MD048216
+     C+  LKEAMT > 0                                                                         MD048216
+     C/END-EXEC                                                                             MD048216
+     C                   EVAL      P@BLAF -= ADJUST                                         MD048216
+     C                   EVAL      P@CLBL -= ADJUST                                         MD048216
+                                                                                            MD048216
      C                   EVAL      ADJUST = 0                                               MD027718
      C/EXEC SQL                                                                             MD027718
-     C+  SELECT SUM(EAMT) INTO :ADJUST                                                      MD027718
+     C+  SELECT COALESCE(SUM(EAMT),0) INTO :ADJUST                                 MD027718 MD036674
      C+  FROM LEPK1DPD WHERE                                                                MD027718
      C+  SECNUM = :P@CNUM AND                                                               MD027718
      C+  SEACCY = :P@SCCY AND                                                               MD027718

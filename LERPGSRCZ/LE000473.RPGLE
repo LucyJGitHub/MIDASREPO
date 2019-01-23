@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD047999           Date 27Sep18               *
+      *  Last Amend No. MD050296           Date 19Apr18               *      
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD047999           Date 27Sep18               *
       *                 MD051788           Date 30Aug18               *
       *                 MD049572           Date 18Feb18               *
       *                 MD049745A          Date 16Mar18               *
@@ -102,6 +103,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050296 - PDCL Loan Reference incorrect.                    *
+      *           - Add the missing line MD022807I                    *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD047999 - PDCL loans goes in repair due to incorrect        *
       *             Settlement (Recompile)                            *
@@ -4181,6 +4184,7 @@
      C                   EVAL      PFldType = *BLANK                                       MK022807B
      C                   EVAL      PFldAttr = *BLANK                                       MK022807B
      C                   EXSR      SRFmtWMsg                                               MK022807B
+     C                   MOVEL     @@PDCL        MQLOAN                           MK022807I MD050296
       *
       ** Customer
      C                   EVAL      PFldTag  = 'DDCUST'

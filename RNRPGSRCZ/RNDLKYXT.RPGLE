@@ -1,6 +1,6 @@
      h debug   alwnull(*usrctl)
      h fixnbr(*zoned : *inputpacked)
-     h copyright('(c) Misys International Banking Systems Ltd. 2005')
+     h copyright('(c) Finastra International Limited. 2005')
  
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -11,10 +11,11 @@
       *                                                               *
       *  RNDLKYXT   - Midas FRS DL Account Keys Extract               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited. 2005                     *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD038258           Date 13Apr16               *
-      *  Prev Amend No. MD037489           Date 11Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038258           Date 13Apr16               *
+      *                 MD037489           Date 11Feb16               *
       *                 MD037485           Date 11Feb16               *
       *                 MD036881           Date 17Dec15               *
       *                 MD031720           Date 07Jan15               *
@@ -20,6 +21,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038258 - Bulk update does not work correctly for fees      *
       *           - Priorities are not updated for fees when ran in   *
       *             command line                                      *

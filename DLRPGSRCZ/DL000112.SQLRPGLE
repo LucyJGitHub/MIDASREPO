@@ -10,7 +10,7 @@
       *  DL000112 - Midas DL Cancelled Deals report program           *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2017            *
+      *  (c) Finastra International Limited 2017                      *
       *                                                               *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CDL098 *CREATE     Date 06Oct17               *

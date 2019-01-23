@@ -13,8 +13,7 @@
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
       *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
-      *                 CDL098 *CREATE     Date 06Oct17               *
+      *  Prev Amend No. CDL098 *CREATE     Date 06Oct17               *
       *                 nnnnnn             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*

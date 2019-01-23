@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited. 2009')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD Todays Credit Interest Posting List')
@@ -14,7 +14,7 @@
       *            primarily from Customer Incomes File and Customer  *
       *            Details by Country of Tax.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited. 2009                     *
       *                                                               *
       *  Last Amend No. MD046248           Date 05Feb18               *
       *  Prev Amend No. CDL099             Date 06Oct17               *

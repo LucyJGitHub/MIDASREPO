@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD028276           Date 25Nov14              */
+/*       Last Amend No. MD048071           Date 08Nov17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD028276           Date 25Nov14              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -51,6 +52,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD048071 - Input Cycle Batch Job DLC1921 Looping. Add error */
+/*                  monitoring after ROLLBACK so that when it fails  */
+/*                  job will end.                                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD028276 - MT341 messages generated not saved on MGF341TR   */
 /*                  during IC                                        */
@@ -167,6 +171,7 @@
              DCL        VAR(&CSW2013) TYPE(*CHAR) LEN(7) VALUE('       ')               /*MD028276*/
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)                                  /*MD028276*/
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                 /*MD028276*/
+             DCL        VAR(&COMACT) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD048071*/
                                                                                         /*MD028276*/
 /* Declare SDBANKPD for run-date */
              DCLF       FILE(SDBANKPD)
@@ -218,6 +223,8 @@
 /**********  STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) **/        /*CAP006*/
              STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                              /*CAP006*/
+                                                                                        /*MD048071*/
+             CHGVAR     VAR(&COMACT) VALUE('Y')                                         /*MD048071*/
  
 /* Create LDA */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
@@ -862,7 +869,10 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
  
+             IF         COND(&COMACT = 'Y')  THEN(DO)                                   /*MD048071*/
              ROLLBACK                                                 /*CSW005*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                  /*MD048071*/
+             ENDDO                                                                      /*MD048071*/
  
 /**END:*****    ENDCMTCTL                                             /*CAP006*/
  END:                                                                 /*CAP006*/

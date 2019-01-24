@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050139           Date 23Mar18               *      
-      *  Prev Amend No. AR698122           Date 11Oct17               *
+      *  Last Amend No. MD050018           Date 05Nov18               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 AR698122           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
       *                 MD047993           Date 23Sep17               *
@@ -275,14 +276,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
+      *             for Input Cycle Principal Increase Events to PDCL *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
-      *            ZFREQ/ZFRQ*.                                       *      
+      *            ZFREQ/ZFRQ*.                                       *
       *  AR698122 - Wrong interest projection from back valued BC.    *
       *             No need to retrieve historic rate for BC, rate is *
       *             already updated from loamsdk. (Child: AR698123).  *
       *           - Applied for MD047554.                             *
-      *  MD046248 - Finastra Rebranding                               *  
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
@@ -291,14 +294,14 @@
       *             Accrue on Last Day Indicator for method 6.        *
       *  MD047806 - Consider zero base rate                           *
       *  MD031179 - Used BRTE instead of BRTEH to correctly display   *
-      *             the starting base rate for newly inserted loans.  *      
+      *             the starting base rate for newly inserted loans.  *
       *  MD035329 - Historic rollover with zero base rate does not    *
       *             appear in Loan Activity Enquiry. Ensure that zero *
       *             rollover rate is also displayed on LOAC. Apply    *
       *             part of fix AR738602.                             *
       *  MD026445 - ROLLOVER - SPREAD event is not displayed on next  *
       *             page. Move 221558 fix before BUG9240 in SR/SRDISH.*
-      *           - Applied for MD035329                              *      
+      *           - Applied for MD035329                              *
       *  MD038254 - Use calculated outstanding interest for RE events *
       *             of loan type 1 and 3 in SRLOAM instead of ZINTR.  *
       *             Partially applied MD-12518                        *
@@ -904,6 +907,8 @@
      F            LEPDUFD0                          KRENAMELEPDUFDA                           263418
      FLEPDUFL6IF  E           K        DISK                                                   263418
      F            LEPDUFD0                          KRENAMELEPDUFD6                           263418
+     FLEPDUEL9IF  E           K        DISK                                                 MD050018
+     F            LEPDUED0                          KRENAMELEPDUED9                         MD050018
       *
      F/COPY WNCPYSRC,LE0212F001
       /EJECT
@@ -1170,6 +1175,20 @@
      I              YTKIAAC                         YTIAAC                                    CLE134
      I              YTKIASE                         YTIASE                                    CLE134
      I              YTKIACY                         YTIACY                                    CLE134
+     ILEPDUED9                                                                              MD050018
+      *                                                                                     MD050018
+      ** Rename LEPDUED0 fields that are too long.                                          MD050018
+      *                                                                                     MD050018
+     I              YTKPACL                         YTPACL                                  MD050018
+     I              YTKPABR                         YTPABR                                  MD050018
+     I              YTKPAAC                         YTPAAC                                  MD050018
+     I              YTKPASE                         YTPASE                                  MD050018
+     I              YTKPACY                         YTPACY                                  MD050018
+     I              YTKIACL                         YTIACL                                  MD050018
+     I              YTKIABR                         YTIABR                                  MD050018
+     I              YTKIAAC                         YTIAAC                                  MD050018
+     I              YTKIASE                         YTIASE                                  MD050018
+     I              YTKIACY                         YTIACY                                  MD050018
      I            DS
       ** Redefine PRINRO from HISTSHQ as char
      I                                        1  130PRINRO
@@ -1318,6 +1337,8 @@
       *                                                                                       CLE134
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I              'RepayDateOnMaturity 'C         WPARMM                                  MD045091
+     I              'PDCLPAMVPIAC'        C         AOPIAC                                  MD050018
+      *                                                                                     MD050018
      I/COPY ZSRSRC,ZINTDYZ1
      I/COPY ZSRSRC,ZDATE9Z2
      I/COPY ZSRSRC,ZDAT10Z1                                               126017
@@ -4633,6 +4654,7 @@
      C           DSLTY1    ANDNE'Y'                                                           CLE134
      C           DSLTY1    ANDNE'Z'                                                           CLE134
       *                                                                                       CLE134
+     C                     MOVEL*BLANKS   WPPIAC                                            MD050018
      C                     MOVE YBRCA     KYBRCA                                              CLE134
      C                     MOVE YPLON     KYPLON                                              CLE134
      C                     MOVE YPDCT     KYPDCT                                              CLE134
@@ -4640,6 +4662,25 @@
      C           KPDUE4    SETLLLEPDUEL4                                                      CLE134
      C           KPDUE4    READELEPDUEL4                 22                                   CLE134
       *                                                                                       263411
+     C           WKPIAC    IFEQ 'Y'                                                         MD050018
+     C           *IN22     ANDEQ'1'                                                         MD050018
+      *                                                                                     MD050018
+     C           KPDUE9    SETLLLEPDUEL9                                                    MD050018
+     C           KPDUE9    READELEPDUEL9                 22                                 MD050018
+      *                                                                                     MD050018
+     C           *IN22     DOWEQ*OFF                                                        MD050018
+     C           YPCBIC    IFEQ 'I'                                                         MD050018
+     C           YPFRNT    ANDNE'LE000473'                                                  MD050018
+     C           YPOREP    IFNE *ZERO                                                       MD050018
+     C           YPOREI    ORNE *ZERO                                                       MD050018
+     C                     MOVEL'P'       WPPIAC  1                                         MD050018
+     C                     LEAVE                                                            MD050018
+     C                     ENDIF                                                            MD050018
+     C                     ENDIF                                                            MD050018
+     C           KPDUE9    READELEPDUEL9                 22                                 MD050018
+     C                     ENDDO                                                            MD050018
+     C                     ENDIF                                                            MD050018
+      *                                                                                     MD050018
      C********** YPOREP    IFNE 0                                                     CLE134 263411A
      C           DSPDCT    IFEQ 'P'                                                          263411A
      C**********           Z-ADDYPOREP    WORIGP 150                                 CLE134 AR948604
@@ -4667,6 +4708,11 @@
      C           P         ANDLE30                                                          MD046080
       *                                                                                       CLE134
      C           KPDUE4    READELEPDUEL4                 22                                   CLE134
+      *                                                                                     MD050018
+     C           *IN22     IFEQ *ON                                                         MD050018
+     C           WKPIAC    ANDEQ'Y'                                                         MD050018
+     C           KPDUE9    READELEPDUEL9                 22                                 MD050018
+     C                     ENDIF                                                            MD050018
       *                                                                                       263411
      C********** YPOREP    IFNE 0                                                     CLE134 263411A
      C           DSPDCT    IFEQ 'P'                                                          263411A
@@ -4687,12 +4733,14 @@
      C                     ENDIF                                                            MD046080
      C                     ENDDO                                                              CLE134
       *                                                                                     AR720887
+     C           WPPIAC    IFEQ *BLANKS                                                     MD050018
      C           AMTPH     IFNE 'ST'                                                        AR720887
      C           *IN22     IFEQ '0'                                                         AR720887
      C           YLCD      ANDNEKYLCD                                                       AR720887
      C                     MOVE '1'       *IN22                                             AR720887
      C                     ENDIF                                                            AR720887
      C                     ENDIF                                                            AR720887
+     C                     ENDIF                                                            MD050018
       *                                                                                       CLE134
      C           *IN22     IFEQ *OFF                                                          CLE134
      C                     MOVE 'Y'       DSPPDA                                              CLE134
@@ -5897,7 +5945,8 @@
      C                     MOVE AMTPL     AMTPH                                               263361
      C                     MOVE LNRFL     KYPLON                                              CLE134
      C                     MOVE VDATL     KYPDVD                                              CLE134
-     C                     Z-ADDINTAL     DSOLAM                                              CLE134
+     C**********           Z-ADDINTAL     DSOLAM                                     CLE134 MD050018
+     C                     Z-ADDPRAML     DSOLAM                                            MD050018
      C                     MOVE 'I'       DSPDCT                                              CLE134
      C                     MOVE LASNL     DSLASN                                              CLE134
      C                     Z-ADDLCDL      KYLCD                                             AR720887
@@ -9514,6 +9563,11 @@
      C                     KFLD           KYPDVD                                              CLE134
      C                     KFLD           KYPOSQ                                              CLE134
       *                                                                                       CLE134
+     C           KPDUE9    KLIST                                                            MD050018
+     C                     KFLD           KYPORG                                            MD050018
+     C                     KFLD           KYPLON                                            MD050018
+     C                     KFLD           KYPDVD                                            MD050018
+      *                                                                                     MD050018
      C           KPDU4A    KLIST                                                              CLE134
      C                     KFLD           KYBRCA                                              CLE134
      C                     KFLD           KYPLON                                              CLE134
@@ -9719,6 +9773,9 @@
       ** Check system value 'RepayDateOnMaturity'                                           MD045091
       *                                                                                     MD045091
      C                     MOVELWPARMM    SVALK1                                            MD045091
+     C           CLE134    IFEQ 'Y'                                                         MD050018
+     C                     MOVELAOPIAC    SVALK2                                            MD050018
+     C                     ENDIF                                                            MD050018
       *                                                                                     MD045091
      C                     CALL 'AOSVALR0'                                                  MD045091
      C                     PARM           RTNCDE                                            MD045091
@@ -9752,6 +9809,7 @@
      C                     EXSR *PSSR                                                       MD045091
      C                     ELSE                                                             MD045091
      C                     MOVELSVAL1     REDATM  1                                         MD045091
+     C                     MOVELSVAL2     WKPIAC  1                                         MD050018
      C                     ENDIF                                                            MD045091
       *
      C/COPY WNCPYSRC,LE0212C013
@@ -11463,7 +11521,7 @@
      C/COPY ZSRSRC,ZCONVZ1                                                                    193701
       /EJECT                                                                                  193701
 ** CPY@   **     Copyright statement
-(c) Finastra International Limited 2001           
+(c) Finastra International Limited 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

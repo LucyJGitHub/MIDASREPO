@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051922           Date 15OCt18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD050007           Date 05Nov18               *
+      *  Prev Amend No. MD051922           Date 15OCt18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD040789           Date 24Jan18               *
       *                 MD046370           Date 07Nov17               *
       *                 260408             Date 06Oct17               *
@@ -153,6 +154,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
+      *             Accnt Movement for Payment Accnt (Retail/Nostro)  *
       *  MD051922 - PDCL Y with same ccy settlement defaulted exchange*
       *             rate and divide indicator when enquired or amended*
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -530,6 +533,7 @@
       ** Past Due & Original Loan Link                                                     AR1079502
      FLEPDUELC  UF   E           K DISK    INFSR(*PSSR)                                    AR1079502
      F                                     RENAME(LEPDUED0:LEPDUEDC)                       AR1079502
+     F                                     RENAME(LEPDUFD0:LEPDUFDC)                        MD050007
      F                                     COMMIT                                          AR1079502
      FCLOANC    IF   E           K DISK    INFSR(SRERR) PREFIX(TF)                          MD021554
      F                                     RENAME(CLOANCLF:CLOANCTF)                        MD021554
@@ -1097,6 +1101,8 @@
      D FWRDYS          S              2S 0                                                  AR318769
      D ZNRDYS          S              2P 0                                                  AR318769
       *                                                                                     AR318769
+     D PDCLPayAc       S              1A                                                    MD050007
+      *                                                                                     MD050007
      D/COPY WNCPYSRC,LECLIPPD01
                                                                                               CLE164
       ** +--------------------------------------+                                             CLE164
@@ -2709,7 +2715,9 @@
       *                                                                                     MD041714
      C                   IF        CLE134      = 'Y'           AND                          MD041714
      C                             (%SUBST(LTYP: 1: 1) = 'X'   OR                           MD041714
-     C                              %SUBST(LTYP: 1: 1) = 'Y')                               MD041714
+     C                              %SUBST(LTYP: 1: 1) = 'Y'   OR                           MD050007
+     C                              %SUBST(LTYP: 1: 1) = 'Z')                               MD050007
+     C**********                    %SUBST(LTYP: 1: 1) = 'Y')                      MD041714 MD050007
      C                   EXSR      SrUpdLEPDUE                                              MD041714
      C                   ENDIF                                                              MD041714
                                                                                             MD041714
@@ -7520,8 +7528,12 @@
      C                   EVAL      PTREF = PCRFL                                             CSF011A
                                                                                            AR317473A
       ** If this is a new PDCL, only do shadow posting if Decrease ='N'                    AR317473A
+      ** Perform below codes only when PDCLPAMVPayAC is set to N                            MD050007
                                                                                            AR317473A
      C                   SETOFF                                       99                   AR317473A
+                                                                                            MD050007
+     C                   IF        PDCLPayAc = 'N'                                          MD050007
+                                                                                            MD050007
      C                   IF        CLE134      = 'Y'           AND                         AR317473A
      C                             CHTP        = 'I'           AND                         AR317473A
      C                             (%SUBST(LTYP: 1: 1) = 'Y'   OR                          AR317473A
@@ -7553,6 +7565,8 @@
      C                   ENDIF                                                             AR317473A
      C                   ENDIF                                                             AR317473A
      C                   ENDIF                                                             AR317473A
+                                                                                            MD050007
+     C                   ENDIF                                                              MD050007
       *
       ***  Do on-line updates to PRONO, MEMOS, OLPOS and RSACMTPD
       ***  only if not a Guarantee loan, if its a Guarantee loan then
@@ -9442,6 +9456,7 @@
      C                   ENDIF                                                                CLE141
                                                                                               CRE073
      C                   EVAL      SVALK1 = 'AutoEndCalcLoanFee'                            MD046370
+     C                   EVAL      SVALK2 = 'PDCLPAMVPayAC'                                 MD050007
      C                   CALLB     'AOSVALR0'                                               MD046370
      C                   PARM      *BLANKS       PRtCd                                      MD046370
      C                   PARM                    SVALK1           20                        MD046370
@@ -9467,6 +9482,7 @@
       *                                                                                     MD046370
      C                   IF        PRtCd = *BLANKS                                          MD046370
      C                   MOVEL     SVAL1         AutoEndFee        1                        MD046370
+     C                   MOVEL     SVAL2         PDCLPayAc                                  MD050007
      C                   ELSE                                                               MD046370
      C     *LOCK         IN        LDA                                                      MD046370
      C                   EVAL      DBFile = 'SDSVALPD'                                      MD046370
@@ -9916,12 +9932,17 @@
       * SrUpdLEPDUE - Update Past Due and Original Loan Link         *                     AR1079502
       ****************************************************************                     AR1079502
      C     SrUpdLEPDUE   BEGSR                                                             AR1079502
+                                                                                            MD050007
+      ** Delete record to LEPDUEPD when PDCL Principal/Interest Loan                        MD050007
+      ** Delete record to LEPDUFPD when PDCL Fee                                            MD050007
+                                                                                            MD050007
      C     LNRF          CHAIN     LEPDUELC                           97                   AR1079502
      C                   DOW       *IN97 = '0'                                             AR1079502
      C**********         EVAL      YRECI = 'R'                                    AR1079502 MD041714
      C**********         EVAL      YTYLC = 'R'                                    AR1079502 MD041714
      C**********         UPDATE    LEPDUEDC                                       AR1079502 MD041714
-     C                   DELETE    LEPDUEDC                                                 MD041714
+     C**********         DELETE    LEPDUEDC                                        MD041714 MD050007
+     C                   DELETE    LEPDUELC                                                 MD050007
      C     LNRF          READE     LEPDUELC                               97               AR1079502
      C                   ENDDO                                                             AR1079502
      C                   ENDSR                                                             AR1079502

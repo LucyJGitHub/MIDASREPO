@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050139           Date 23Mar18               *
-      *  Prev Amend No. MD052549           Date 07Jan19               *
+      *  Last Amend No. MD050018           Date 05Nov18               *
+      *  Prev Amend No. MD050007           Date 05Nov18               *
+      *                 MD050139           Date 23Mar18               *
+      *                 MD052549           Date 07Jan19               *
       *                 MD049309           Date 14Feb18               *
       *                 MD038508           Date 02May16               *
       *                 MD051958           Date 24Sep18               *
@@ -399,6 +401,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
+      *             for Input Cycle Principal Increase Events to PDCL *
+      *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
+      *             Accnt Movement for Payment Accnt (Retail/Nostro)  *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
       *            ZFREQ/ZFRQ*.                                       *
@@ -1418,6 +1424,10 @@
      FLEPDUFL1  UF   E           K DISK    INFSR(*PSSR)                                       CLE134
      FLEPDUFL6  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
      F                                     RENAME(LEPDUFD0:LEPDUFD6)                          CLE134
+     FLEPDUELE  IF   E           K DISK    INFSR(*PSSR)                                     MD050018
+     F                                     RENAME(LEPDUED0:LEPDUEDE)                        MD050018
+     FLEPDUFLE  IF   E           K DISK    INFSR(*PSSR)                                     MD050018
+     F                                     RENAME(LEPDUFD0:LEPDUFDE)                        MD050018
      FACCNT     IF   E           K DISK    INFSR(*PSSR)                                       CLE134
      F                                     IGNORE(ACCNTACF)                                   CLE134
      F                                     IGNORE(ACCNTAAF)                                   CLE134
@@ -1960,12 +1970,16 @@
      D  @FTYP          S              3A                                                      CLE164
      D***WSKEY          S              1A                                          MD048557 MD049078
      D WACAMT          S             13P 0                                                  MD048557
+     D PDCLPayAc       S              1A                                                    MD050007
+     D PDCLPIAcc       S              1A                                                    MD050018
       *                                                                                       CLE134
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
      D WPARML          S             20A   INZ('LECalcBasis6LeapYear')                      MD035545
      D WPARML1         S             20A   INZ('RepayDateOnMaturity')                       MD045091
+     D WPARML2         C                   CONST('PDCLPAMVPayAC')                           MD050007
+     D WPARML3         C                   CONST('PDCLPAMVPIAC')                            MD050018
      D wSettleCCY      S              3A   INZ(*BLANKS)                                     MD051695
      D wLoanCCY        S              3A   INZ(*BLANKS)                                     MD051695
      D wSettleAMT      S             13P 0 INZ(*ZEROS)                                      MD051695
@@ -5219,9 +5233,11 @@ L118 I                             P   72   77 7RTSPL
      C                   PARM      *BLANKS       @RTCD                                      MD045091
      C                   PARM      WPARML1       P@OP01                                     MD045091
      C                   PARM      *BLANKS       P@VL01                                     MD045091
-     C                   PARM      *BLANKS       P@OP02                                     MD045091
+     C**********         PARM      *BLANKS       P@OP02                            MD045091 MD050007
+     C                   PARM      WPARML2       P@OP02                                     MD050007
      C                   PARM      *BLANKS       P@VL02                                     MD045091
-     C                   PARM      *BLANKS       P@OP03                                     MD045091
+     C**********         PARM      *BLANKS       P@OP03                            MD045091 MD050018
+     C                   PARM      WPARML3       P@OP03                                     MD050018
      C                   PARM      *BLANKS       P@VL03                                     MD045091
      C                   PARM      *BLANKS       P@OP04                                     MD045091
      C                   PARM      *BLANKS       P@VL04                                     MD045091
@@ -5252,6 +5268,14 @@ L118 I                             P   72   77 7RTSPL
       ** Save value of 'RepayDateOnMaturity'                                                MD045091
       *                                                                                     MD045091
      C                   MOVEL     P@VL01        REDATM            1                        MD045091
+      *                                                                                     MD050007
+      ** Save value of 'PDCLPAMVPayAC'                                                      MD050007
+      *                                                                                     MD050007
+     C                   MOVEL     P@VL02        PDCLPayAc                                  MD050007
+      *                                                                                     MD050018
+      ** Save value of 'PDCLPAMVPIAC'                                                       MD050018
+      *                                                                                     MD050018
+     C                   MOVEL     P@VL03        PDCLPIAcc                                  MD050018
       *                                                                                       CLE034
       ** Access SAR details to check if CLE034 is installed                                   CLE034
       *                                                                                       CLE034
@@ -7086,13 +7110,28 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
       ** If PDCL generated in I/C and field YDECRE = 'N'                                      CLE134
-      ** then use take on account                                                             CLE134
+      ***then*use take*on*account**************************************              CLE134 MD050007
       *                                                                                       CLE134
      C     NEWCOB        IFEQ      'N'                                                        CLE134
      C     WPDCLA        ANDEQ     'Y'                                                        CLE134
      C                   MOVE      OSAC          WOSAC                                        CLE134
      C                   MOVE      SETP          WSETP                                        CLE134
      C                   MOVE      OSBR          WOSBR                                        CLE134
+      *                                                                                     MD050007
+      ** If system value PDCLPAMVPayAC is 'Y', then create value date                       MD050007
+      ** account key to PDCL payment account (OSAC/OSBR read from ACTN5DK)                  MD050007
+      ** Else, use PDCLs take-on account                                                    MD050007
+      *                                                                                     MD050007
+     C     PDCLPayAC     IFEQ      'Y'                                                      MD050007
+      *                                                                                     MD050007
+     C     YPDINT        IFNE      0                                                        MD050007
+     C     YPCPAM        ANDNE     0                                                        MD050007
+     C                   Z-ADD     YPDINT        ACAMNT                   89                MD050007
+     C  N89              EXSR      AKYOUT                                                   MD050007
+     C                   Z-ADD     YPCPAM        ACAMNT                   89                MD050007
+     C                   ENDIF                                                              MD050007
+      *                                                                                     MD050007
+     C                   ELSE                                                               MD050007
      C                   CLEAR                   OSAC                                         CLE134
       *                                                                                       CLE134
       ** Access ACCNTAB by Interest take on account                                           CLE134
@@ -7131,6 +7170,7 @@ L118 I                             P   72   77 7RTSPL
      C                   EXSR      STAKEA                                                     CLE134
       *                                                                                       CLE134
      C                   ENDIF                                                                CLE134
+     C                   ENDIF                                                              MD050007
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE034
       ** If CLE034 is installed                                                               CLE034
@@ -7490,6 +7530,8 @@ L118 I                             P   72   77 7RTSPL
      C     CLE134        IFEQ      'Y'                                                        CLE134
       *                                                                                       CLE134
      C     AUTO          ANDEQ     'C'                                                        CLE134
+     C     CLE134        OREQ      'Y'                                                      MD050018
+     C     AUTOL         ANDEQ     'C'                                                      MD050018
      C*****CLE134        OREQ      'Y'                                               CLE134 MD051957
      C*****AUTOX         ANDEQ     'C'                                               CLE134 MD051957
      C                   MOVEL     LTYP          LTYP1A            1                          CLE134
@@ -7537,6 +7579,55 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEA     BKAKY         AKY(6)                                        15336
 1218 C                   MOVE      'I'           AKY(9)
 1219 C                   MOVE      'A'           AKY(10)
+      *                                                                                     MD050018
+      ** If system value PDCLPAMVPIAC is 'Y' and PDCL's Principal                           MD050018
+      ** Increase is entered in IC, then use new account key xxVyy---IP                     MD050018
+      *                                                                                     MD050018
+     C     NEWCOB        IFEQ      'N'                                                      MD050018
+     C     PDCLPIAcc     ANDEQ     'Y'                                                      MD050018
+     C     WPDCLL        ANDEQ     'Y'                                                      MD050018
+      *                                                                                     MD050018
+     C     KPDLOAN       KLIST                                                              MD050018
+     C                   KFLD                    LNRF                                       MD050018
+     C                   KFLD                    VDAT                                       MD050018
+     C                   KFLD                    LASN                                       MD050018
+      *                                                                                     MD050018
+     C     KPDFEE        KLIST                                                              MD050018
+     C                   KFLD                    LNRF                                       MD050018
+     C                   KFLD                    VDAT                                       MD050018
+      *                                                                                     MD050018
+      ** Check if manual PI inserted to PDCL generated by a loan                            MD050018
+      *                                                                                     MD050018
+     C     LTYP1A        IFEQ      'X'                                                      MD050018
+     C     LTYP1A        OREQ      'Y'                                                      MD050018
+      *                                                                                     MD050018
+     C     KPDLOAN       CHAIN     LEPDUELE                           29                    MD050018
+     C                   IF            *IN29 = *OFF                                         MD050018
+     C                             and YPCBIC = 'I'                                         MD050018
+     C                             and YPIUSE <> 'LE000473'                                 MD050018
+     C                             and %SUBST(YPFRNT:1:8) <> 'LE000473'                     MD050018
+     C                   MOVE      'P'           AKY(10)                                    MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   ELSE                                                               MD050018
+      *                                                                                     MD050018
+      ** Check if manual PI inserted to PDCL generated by a fee                             MD050018
+      *                                                                                     MD050018
+     C     KPDFEE        SETLL     LEPDUFLE                                                 MD050018
+     C     KPDFEE        READE     LEPDUFLE                               29                MD050018
+     C     *IN29         DOWEQ     *OFF                                                     MD050018
+     C                   IF            YPOREP = PRAM                                        MD050018
+     C                             and YPCBIC = 'I'                                         MD050018
+     C                             and YPIUSE <> 'LE000473'                                 MD050018
+     C                             and %SUBST(YPFRNT:1:8) <> 'LE000473'                     MD050018
+     C                   MOVE      'P'           AKY(10)                                    MD050018
+     C                   LEAVE                                                              MD050018
+     C                   ENDIF                                                              MD050018
+     C     KPDFEE        READE     LEPDUFLE                               29                MD050018
+     C                   ENDDO                                                              MD050018
+      *                                                                                     MD050018
+     C                   ENDIF                                                              MD050018
+     C                   ENDIF                                                              MD050018
       *                                                                                       CLE134
       ** if PDCL has been generated by COB or it has been generated                           CLE134
       ** during I/C and YDECRE is 'N' then create account key                                 CLE134

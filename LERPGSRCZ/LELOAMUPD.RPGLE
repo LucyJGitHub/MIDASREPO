@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD047554           Date 11Oct17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050018           Date 05Nov18               *
+      *  Prev Amend No. MD047554           Date 11Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR848765           Date 30Jun15               *
       *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
@@ -99,11 +100,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
+      *             for Input Cycle Principal Increase Events to PDCL *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed PI, BC, or SC.               *
       *           - All fields for loan reference should be alpha     *
-      *             numeric.                                          *      
+      *             numeric.                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  AR848765 - During amend of Principal Increase, value of OSAC *
       *             is not updated correctly, Instead of PONS/RONS,   *
@@ -237,33 +240,33 @@
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
       ** Midas LE Loan Amendment Details
      FLOAMD     UF A E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(LOAMSDHF)
- 
+
       ** Midas LE Loan Transaction Index Detail
      F***LTRIX**** UF   F   43        DISK    INFSR(*PSSR) COMMIT                           AR322732
      FLTRIX     O  A F   45        DISK    INFSR(*PSSR) COMMIT                              AR322732
      F                                     INFDS(FLDTX)
- 
+
       ** Midas LE Customer loans
      FCLOAN     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     INCLUDE(CLOANCLF)
      F                                     PREFIX(LO_)
- 
+
       ** Midas LE Customer Lending Facility File
      FFCLTY     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
      F                                     PREFIX(FA_)
- 
+
       ** Midas LE Loan amendment fee index file
      FLEFELAL0  UF A E           K DISK    INFSR(*PSSR) COMMIT
- 
+
       ** Midas LE Lending fees master detail inputs
      FLEFEEDL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
- 
+
       *                                                                                     MD023203
      FLEFEEDL0  UF   E           K DISK    INFSR(*PSSR)                                     MD023203
      F                                     COMMIT                                           MD023203
@@ -298,6 +301,17 @@
      F                                     IGNORE(LOAMSDHF)                                AR1021983
      F                                     RENAME(LOAMSDKF:LOMKSDKF)                       AR1021983
      F                                     RENAME(LOAMSZ1F:LOMKSZ1F)                       AR1021983
+      ** PDCL Loan Link file                                                                MD050018
+     FLEPDUELE  UF A E           K DISK    COMMIT                                           MD050018
+     F                                     INFSR(*PSSR)                                     MD050018
+     FLEPDUEL6  UF   E           K DISK    COMMIT                                           MD050018
+     F                                     INFSR(*PSSR)                                     MD050018
+     F                                     RENAME(LEPDUED0:LEPDUED6)                        MD050018
+     FLEPDUFLA  UF A E           K DISK    COMMIT                                           MD050018
+     F                                     INFSR(*PSSR)                                     MD050018
+     FLEPDUFLE  UF   E           K DISK    COMMIT                                           MD050018
+     F                                     INFSR(*PSSR)                                     MD050018
+     F                                     RENAME(LEPDUFD0:LEPDUFDE)                        MD050018
                                                                                               CLE134
       ** PDP Transaction Log File sent to MQ                                                  CLE134
      F***LEMQLGL0  UF   E           K DISK    INFSR(*PSSR)                          CLE134 MD022807I
@@ -316,7 +330,7 @@
       **   Automatically included D-specs        
       **   ==============================        
       ** +--------------------------------------+
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
@@ -340,7 +354,7 @@
       **----------------------------------------------------------------
       *
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
@@ -352,14 +366,15 @@
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
      D*PSysValOME      C                   CONST('OMEIndicator')                      BUG8241 CSC054
      D PSysValPEA      C                   CONST('PEAIndicator')                              CSC054
+     D PSysValPIAC     C                   CONST('PDCLPAMVPIAC')                            MD050018
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
@@ -367,30 +382,30 @@
                                                                                             AR656363
      D WUpdExpo        S              1A                                                    AR656363
      D CobMode         S              1A                                                   MD021423E
- 
+
       ** File information data structure for LTRIX
      D FLDTX           DS
      D   TXSTS           *STATUS
- 
+
       ** Switchable feature details                                                           CRE020
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE020
      D  SCLCD        E                     EXTFLD(LCD)                                        CRE020
                                                                                               CRE020
       ** Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Midas API message header format definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** SD data area                                                                        BUG3760
       *                                                                                      BUG3760
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                    BUG3760
@@ -463,7 +478,7 @@
      D AUSRC         E                     EXTFLD(AUSR)
      D XUSRC         E                     EXTFLD(XUSR)
      D CLASA         E                     EXTFLD(CLAS)                                       CLE042
- 
+
       ***  Loan details 'B' format
      D LoanDetsB     E DS                  EXTNAME(CLOAN:CLOANCKF)
      D                                     PREFIX(LO_)
@@ -501,18 +516,18 @@
      D FB_AFRT       E                     EXTFLD(AFRT)
      D FB_REPA       E                     EXTFLD(REPA)
      D FB_STMP       E                     EXTFLD(STMP)
- 
+
       ** Error indicators
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
- 
+
       ** New loan amendment in file format
      D ValidLoam     E DS                  EXTNAME(LEVLOAMPD)
- 
+
       ** External data structures for update of PRONO, MEMOS etc.
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
- 
+
       ***  before image1 of update to LE position files                                       CLE055
      D                 DS                                                                     CLE055
      D Z#ZADTB                      256                                                       CLE055
@@ -563,18 +578,18 @@
      D   SHPEXR             1101   1107P 8                                                    CLE031
      D   SHPEXI             1108   1108                                                       CLE031
      D   SHSTAL             1109   1109                                                       CLE034
- 
+
      D Z#ADTH          DS                                                                     CLE134
      D  SHXRFI                        3A                                                      CLE134
      D  SHXRFN                       10S 0                                                    CLE134
- 
+
      D FCLKEY          DS
      D***WFCNM**               1      6  0                                                    CSD027
      D   WFCNM                 1      6                                                       CSD027
      D   WFACT                 7      9  0
      D   WFNUM                10     11  0
      D   WFRTP                12     12
- 
+
       ** Dates for Facility Exposure Array
      D                 DS
      D  FB_RUN0                1      3P 0
@@ -588,7 +603,7 @@
      D  FB_RUN8               25     27P 0
      D  FB_RUN9               28     30P 0
      D  FB_RUN                 1     30P 0 DIM(10) ASCEND
- 
+
       ** Facility Exposure Array
      D                 DS
      D  FB_OAM1                1      7P 0
@@ -608,7 +623,7 @@
      D  WREHRS                12     13                                                       CLE030
      D  WREMIN                15     16                                                       CLE030
      D  WRESEC                18     19                                                       CLE030
- 
+
       ** Data Structure for MPHAS Dataarea                                                  MD021423
                                                                                             MD021423
      D MPHAS           DS             1                                                     MD021423
@@ -617,20 +632,20 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Message file for ZAMSGTOOPR
      D DummyMsgF       S             10    INZ('LERMSGF')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Currency conversion
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
- 
+
       ** Currencies and telex notice days
      D CYA             S              3    DIM(150)
      D TND             S              1  0 DIM(150)
- 
+
       ** Parameter for APLOGTRAN
      D TransDtl        S           5800A
                                                                                               CLE025
@@ -673,7 +688,7 @@
      D @ACCD           S             10A                                                      CGL029
      D PDealNo         S             24A                                                      CGL029
      D PADealNo        S             24A                                                      CGL029
- 
+
      D CAS016          S              1                                                       CAS019
      D CAS009          S              1                                                       CAS011
      D CSC011          S              1                                                      BUG3760
@@ -741,6 +756,15 @@
      D PRI1            S              1S 0                                                  AR322732
      D CLE134          S              1A                                                   AR1021983
      D W#FRNT          S              8A                                                   AR1021983
+     D WkPIAC          S              1A                                                    MD050018
+     D PLoanType       S              2A                                                    MD050018
+     D PLSubType       S              2A                                                    MD050018
+     D PLClass         S              4A                                                    MD050018
+     D WkCPAM          S             15  0                                                  MD050018
+     D WkDINT          S             15  0                                                  MD050018
+     D WkLASN          S              3  0                                                  MD050018
+     D WkRECI          S              1A                                                    MD050018
+     D WkPDCT          S              1A                                                    MD050018
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
@@ -752,7 +776,7 @@
       **   Start of I-specs                      
       **   ================                      
       ** +--------------------------------------+
- 
+
       ** Loan transactions index file - Header record
      I*LTRIX**** NS        1 CH                                                             AR322732
      I**********                        1    1  RECI                                        AR322732
@@ -866,7 +890,7 @@
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -874,7 +898,7 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUSER = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
       ***Processing*init***********************************************                       CLE106
      C**********         EXSR      SRINIT                                                     CLE106
       *
@@ -956,55 +980,55 @@
      C                   MOVEL     LoamFilFmt    LoamFilXFmt                                  CRE073
       ** Call to the retrieve module
      C                   CALLB     'LELOAMRTV'
- 
+
       ** Return code
      C                   PARM      *Blanks       RetCodeIn
- 
+
       * Mode = '*FRONT' (Front office transaction interface)
       * Mode = '      ' (Not front office transaction interface)
      C                   PARM                    ModeofOp          6
- 
+
       ** Response mode
      C                   PARM      *Blank        RespMode          1
- 
+
       ** Action Code
      C                   PARM                    DDACTN            1
- 
+
       ** Front Office Transaction ID
      C                   PARM      LAFRNT        FOTRID           20
- 
+
       * Loan number / value date / sequence / type
      C                   PARM                    DDLOAN            6
      C                   PARM                    DDVDAT            6
      C                   PARM                    DDSEQN            3
      C                   PARM                    DDATYP            2
- 
+
       * Where called from
      C                   PARM      'UPD'         CallModCod        3
- 
+
       ** Features
      C                   PARM                    CEU020
      C                   PARM                    CLE030                                       CLE030
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
- 
+
       * Current loan amendment in file format, plus loan/facility details
      C                   PARM                    LoamFilFmt
      C                   PARM                    LoanDetsA
      C                   PARM                    LoanDetsB
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
- 
+
       ** Error Indicators
      C                   PARM                    LOAM_OK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx               3 0
      C                   PARM                    LoamFilXFmt                                  CRE073
@@ -1120,6 +1144,10 @@
      C                             (%SUBST(LTYPA:1:1) = 'X' or                              MD023787
      C                              %SUBST(LTYPA:1:1) =  'Y' or                             MD023787
      C                              %SUBST(LTYPA:1:1) =  'Z')                               MD023787
+      *                                                                                     MD050018
+      ** When PDCLPAMVPIAC is 'Y', use loan pay details                                     MD050018
+     C                   IF        W#FRNT = 'LE000473' or                                   MD050018
+     C                             WkPIAC = 'N'                                             MD050018
      C                   MOVE      LALNRF        WKLNR                                      MD023787
      C                   MOVE      'A'           WRCDT                                      MD023787
      C     KLKEY         CHAIN     CLOAN                              99                    MD023787
@@ -1127,6 +1155,10 @@
      C     *IN99         ANDEQ     '0'                                                      MD023787
      C                   EXSR      GETLON                                                   MD023787
      C                   ENDIF                                                              MD023787
+      *                                                                                     MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      PDCLI = 'P'                                              MD050018
+     C                   ENDIF                                                              MD050018
      C                   ENDIF                                                              MD023787
       *                                                                                     MD023787
      C     WSOLD         IFEQ      'Y'                                                       BUG3054
@@ -1268,6 +1300,17 @@
      C**********         UPDATE    LEMQLGPF                                         CLE134 MD022807I
      C**********         ENDIF                                                      CLE134 MD022807I
      C                   ENDIF                                                             AR1021983
+      *                                                                                     MD050018
+      ** Update the PDP link files LEPDUEPD and LEPDUFPD                                    MD050018
+      *                                                                                     MD050018
+     C                   IF        CLE134 = 'Y' AND CobMode <> 'Y' AND                      MD050018
+     C                             W#FRNT <> 'LE000473' AND WkPIAC = 'Y' AND                MD050018
+     C                             LAAMTP = 'PI' AND                                        MD050018
+     C                             (%SUBST(LTYPA:1:1) = 'X' OR                              MD050018
+     C                              %SUBST(LTYPA:1:1) = 'Y' OR                              MD050018
+     C                              %SUBST(LTYPA:1:1) =  'Z')                               MD050018
+     C                   EXSR      SrUpdPDCL                                                MD050018
+     C                   ENDIF                                                              MD050018
       *
       ** Update the other files
      C                   EXSR      UpdOthFil
@@ -1299,7 +1342,7 @@
       *
       ** Save the current principal amount of the record
      C                   Z-ADD     PRAM          WPRAM            13 0
-     C                   Z-ADD     PRAM          OPRAM                                      MD047554     
+     C                   Z-ADD     PRAM          OPRAM                                      MD047554
       *
       ** Update on shadow files should only be done if not a Risk loan
      C     PTYP          IFNE      70
@@ -1368,6 +1411,10 @@
      C                             (%SUBST(LTYPA:1:1) = 'X' or                              MD023787
      C                              %SUBST(LTYPA:1:1) =  'Y' or                             MD023787
      C                              %SUBST(LTYPA:1:1) =  'Z')                               MD023787
+      *                                                                                     MD050018
+      ** When PDCLPAMVPIAC is 'Y', use loan pay details                                     MD050018
+     C                   IF        W#FRNT = 'LE000473' or                                   MD050018
+     C                             WkPIAC = 'N'                                             MD050018
      C                   MOVE      LALNRF        WKLNR                                      MD023787
      C                   MOVE      'A'           WRCDT                                      MD023787
      C     KLKEY         CHAIN     CLOAN                              99                    MD023787
@@ -1375,6 +1422,10 @@
      C     *IN99         ANDEQ     '0'                                                      MD023787
      C                   EXSR      GETLON                                                   MD023787
      C                   ENDIF                                                              MD023787
+      *                                                                                     MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      PDCLI = 'P'                                              MD050018
+     C                   ENDIF                                                              MD050018
      C                   ENDIF                                                              MD023787
       *
      C     WSOLD         IFEQ      'Y'                                                       BUG3054
@@ -1732,7 +1783,7 @@
       *
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01191
- 
+
       ** If support system active, write transaction to 24x7 log
      C     System        IFEQ      'S'
      C                   EXSR      APLGTR
@@ -2371,7 +2422,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -2452,7 +2503,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -2515,7 +2566,7 @@
      C                   PARM      WMDINF        ZMDI2             1
      C                   PARM                    ZRATEX           13 8
      C                   PARM                    ZMDIX             1
- 
+
      C                   MOVE      WCCYL         ZCCYI
      C                   MOVE      WCCYF         ZCCYO
      C                   MOVE      WCDPL         ZCDPI
@@ -2523,7 +2574,7 @@
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C     LAPRAM        MULT(H)   OFCXRT        ILAAMF           13 0
       *
@@ -2591,7 +2642,7 @@
      C     PRAM          MULT(H)   WNFCE         ILAAMF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -2646,7 +2697,7 @@
      C                   Eval      FB_RUN7 =  FA_RUN7
      C                   Eval      FB_RUN8 =  FA_RUN8
      C                   Eval      FB_RUN9 =  FA_RUN9
- 
+
      C                   IF        CLE025 = 'N'                                               CLE025
      C                   Eval      FB_OAM1 =  FA_OAM1
      C                   Eval      FB_OAM2 =  FA_OAM2
@@ -3080,7 +3131,7 @@
      C                   Z-ADD     A6SPRT        ZRATE2
      C                   MOVE      A6MDIN        ZMDI2
      C                   MOVE      A6NBDP        ZCDPO
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -3150,7 +3201,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -3498,7 +3549,7 @@
      C                   EVAL      OLNRF = LALNRF                                           MD047554
      C                   EVAL      OVDAT = SHVDAT                                           MD047554
      C                   EVAL      OLASN = SHLASN                                           MD047554
-     C                   EVAL      OMPRAM = PRAM                                            MD047554     
+     C                   EVAL      OMPRAM = PRAM                                            MD047554
       *
      C     LAAMTP        IFEQ      'PI'
       *
@@ -3567,7 +3618,7 @@
      C                   ENDIF                                                              MD047554
       *                                                                                     MD047554
      C                   EVAL      OPRAM = *ZERO                                            MD047554
-      *                                                                                     MD047554     
+      *                                                                                     MD047554
      C                   CALL      'LE2041  '                                                 264065
      C**********         PARM                    OLNRF             6 0               264065 MD047554
      C                   PARM                    OLNRF             6                        MD047554
@@ -3576,7 +3627,7 @@
      C                   PARM                    OMPRAM           13 0                        264065
      C                   PARM                    AMTP                                         264065
      C                   PARM                    DDACTN                                       264065
-     C                   PARM                    OPRAM                                      MD047554     
+     C                   PARM                    OPRAM                                      MD047554
      C                   PARM      *BLANKS       @RTCD                                      AR868380
                                                                                               264065
      C     @RTCD         IFEQ      '*RECLCK'                                                AR868380
@@ -3604,7 +3655,7 @@
      C                   PARM      *BLANKS       RetCodeIn
      C                   PARM                    DDACTN
      C                   PARM                    ValidLoam
- 
+
       * Date format indicator
      C                   PARM                    BJDFIN
      C                   PARM                    TransDtl
@@ -4698,6 +4749,269 @@
      C                   ENDSR                                                              MD023787
       *                                                                                     MD023787
       *****************************************************************                     MD023787
+      /EJECT                                                                                MD050018
+      *****************************************************************                     MD050018
+      *  SrUpdPDCL - Update of PDP link files LEPDUEPD/LEPDUFPD on ic *                     MD050018
+      *  Called by: INSERT  and AMEND                                 *                     MD050018
+      *  Calls    : SrLEPDUEIns, SrLEPDUFIns, SrLEPDUEDelAmd          *                     MD050018
+      *             SrLEPDUFDelAmd                                    *                     MD050018
+      *****************************************************************                     MD050018
+     C     SrUpdPDCL     BEGSR                                                              MD050018
+      *                                                                                     MD050018
+      ** Check PDCL loan details                                                            MD050018
+     C                   EVAL      WkLNR = LALNRF                                           MD050018
+     C                   EVAL      WRCDT = 'A'                                              MD050018
+     C     KLKEY         CHAIN(N)  CLOAN                              99                    MD050018
+     C     *IN99         IFEQ      '1'                                                      MD050018
+     C                   MOVEL     'CLOAN   '    DBFILE                                     MD050018
+     C                   Z-ADD     33            DBASE                                      MD050018
+     C                   MOVEL     WKLNR         DBKEY                                      MD050018
+     C                   EXSR      *PSSR                                                    MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+      ** For insert action, add new 'P' record                                              MD050018
+      ** Also update 'D' record                                                             MD050018
+     C                   IF        DDACTN = 'I'                                             MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X' OR                               MD050018
+     C                             %SUBST(LTYPA:1:1) = 'Y'                                  MD050018
+     C                   EXSR      SrLEPDUEIns                                              MD050018
+     C                   ELSE                                                               MD050018
+     C                   EXSR      SrLEPDUFIns                                              MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   ELSE                                                               MD050018
+      ** For Amend/Delete action, update amount of the existing 'P' record                  MD050018
+      ** Also update 'D' record                                                             MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X' OR                               MD050018
+     C                             %SUBST(LTYPA:1:1) = 'Y'                                  MD050018
+     C                   EXSR      SrLEPDUEDelAmd                                           MD050018
+     C                   ELSE                                                               MD050018
+     C                   EXSR      SrLEPDUFDelAmd                                           MD050018
+     C                   ENDIF                                                              MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   ENDSR                                                              MD050018
+      *****************************************************************                     MD050018
+      /EJECT                                                                                MD050018
+      *****************************************************************                     MD050018
+      * SrLEPDUEIns - Update of LEPDUEPD on ic for insert             *                     MD050018
+      * Called by: SrUpdPDCL                                          *                     MD050018
+      * Calls    : None                                               *                     MD050018
+      *****************************************************************                     MD050018
+     C     SrLEPDUEIns   BEGSR                                                              MD050018
+      *                                                                                     MD050018
+     C                   CLEAR                   LEPDUED0                                   MD050018
+      *                                                                                     MD050018
+      ** Update the corresponding 'D' record to increase YPCPAM/YPDINT                      MD050018
+     C                   EVAL      WkReci = 'D'                                             MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X'                                  MD050018
+     C                   EVAL      WkPDCT = 'P'                                             MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      WkPDCT = 'I'                                             MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C     KLEPDUE2      CHAIN     LEPDUEL6                                                 MD050018
+     C                   IF        %FOUND(LEPDUEL6)                                         MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X'                                  MD050018
+     C                   EVAL      YPCPAM = YPCPAM + LAPRAM                                 MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      YPDINT = YPDINT + LAPRAM                                 MD050018
+     C                   ENDIF                                                              MD050018
+     C                   UPDATE    LEPDUED6                                                 MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+      ** Populate 'P' fields                                                                MD050018
+     C                   EVAL      YRECI = 'P'                                              MD050018
+     C                   EVAL      YPLON = LALNRF                                           MD050018
+     C                   Z-ADD     LO_VDAT       YVDAT                                      MD050018
+     C                   EVAL      YPORG = LO_ORLN                                          MD050018
+     C                   EVAL      YBRCA = LO_BRCA                                          MD050018
+     C                   EVAL      YTKPACL = *BLANKS                                        MD050018
+     C                   EVAL      YTKPABR = *BLANKS                                        MD050018
+     C                   Z-ADD     0             YTKPAAC                                    MD050018
+     C                   Z-ADD     0             YTKPASE                                    MD050018
+     C                   EVAL      YTKPACY = *BLANKS                                        MD050018
+     C                   EVAL      YTKIACL = *BLANKS                                        MD050018
+     C                   EVAL      YTKIABR = *BLANKS                                        MD050018
+     C                   Z-ADD     0             YTKIAAC                                    MD050018
+     C                   Z-ADD     0             YTKIASE                                    MD050018
+     C                   EVAL      YTKIACY = *BLANKS                                        MD050018
+     C                   EVAL      YDECRE = 'N'                                             MD050018
+     C                   Z-ADD     LAVDAT        YPDVDT                                     MD050018
+     C                   Z-ADD     WRNDAY        YLCD                                       MD050018
+     C                   EVAL      YTYLC = 'I'                                              MD050018
+     C                   EVAL      YPIUSE = LAIUSR                                          MD050018
+     C                   EVAL      YPCBIC = 'I'                                             MD050018
+     C                   Z-ADD     LALASN        YPOSEQ                                     MD050018
+     C                   EVAL      YPFRNT = LAFRNT                                          MD050018
+      *                                                                                     MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X'                                  MD050018
+     C                   EVAL      YPDCT = 'P'                                              MD050018
+     C                   EVAL      WkPDCT = 'P'                                             MD050018
+     C                   Z-ADD     LAPRAM        YPCPAM                                     MD050018
+     C                   Z-ADD     LAPRAM        YPOREP                                     MD050018
+     C                   Z-ADD     0             YPDINT                                     MD050018
+     C                   Z-ADD     0             YPOREI                                     MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      YPDCT = 'I'                                              MD050018
+     C                   EVAL      WkPDCT = 'I'                                             MD050018
+     C                   Z-ADD     LAPRAM        YPDINT                                     MD050018
+     C                   Z-ADD     LAPRAM        YPOREI                                     MD050018
+     C                   Z-ADD     0             YPCPAM                                     MD050018
+     C                   Z-ADD     0             YPOREP                                     MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   CALLB     'ZAGENTMSTM'                                             MD050018
+     C                   PARM                    YPTMST                                     MD050018
+     C                   WRITE     LEPDUED0                                                 MD050018
+      *                                                                                     MD050018
+     C                   ENDSR                                                              MD050018
+      *****************************************************************                     MD050018
+      /EJECT                                                                                MD050018
+      *****************************************************************                     MD050018
+      * SrLEPDUEDelAmd - Update of LEPDUEPD on ic for amend and delete*                     MD050018
+      * Called by: SrUpdPDCL                                          *                     MD050018
+      * Calls    : None                                               *                     MD050018
+      *****************************************************************                     MD050018
+     C     SrLEPDUEDelAmdBEGSR                                                              MD050018
+      *                                                                                     MD050018
+      ** Update 'P record                                                                   MD050018
+     C                   Z-ADD     0             WkDINT                                     MD050018
+     C                   Z-ADD     0             WkCPAM                                     MD050018
+     C                   Z-ADD     LALASN        WkLASN                                     MD050018
+     C     KLEPDUE1      CHAIN     LEPDUELE                                                 MD050018
+     C                   IF        %FOUND(LEPDUELE)                                         MD050018
+      *                                                                                     MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X'                                  MD050018
+     C                   EVAL      WkPDCT = 'P'                                             MD050018
+     C                   Z-ADD     YPCPAM        WkCPAM                                     MD050018
+     C                   Z-ADD     LAPRAM        YPCPAM                                     MD050018
+     C                   Z-ADD     LAPRAM        YPOREP                                     MD050018
+     C                   Z-ADD     0             YPDINT                                     MD050018
+     C                   Z-ADD     0             YPOREI                                     MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      WkPDCT = 'I'                                             MD050018
+     C                   Z-ADD     YPDINT        WkDINT                                     MD050018
+     C                   Z-ADD     LAPRAM        YPDINT                                     MD050018
+     C                   Z-ADD     LAPRAM        YPOREI                                     MD050018
+     C                   Z-ADD     0             YPCPAM                                     MD050018
+     C                   Z-ADD     0             YPOREP                                     MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   IF        DDACTN = 'R'                                             MD050018
+     C                   DELETE    LEPDUED0                                                 MD050018
+     C                   ELSE                                                               MD050018
+     C                   CALLB     'ZAGENTMSTM'                                             MD050018
+     C                   PARM                    YPTMST                                     MD050018
+     C                   UPDATE    LEPDUED0                                                 MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+      ** Update 'D' record to increase/decrease YPCPAM/YPDINT                               MD050018
+     C                   EVAL      WkReci = 'D'                                             MD050018
+     C     KLEPDUE2      CHAIN     LEPDUEL6                                                 MD050018
+     C                   IF        %FOUND(LEPDUEL6)                                         MD050018
+      *                                                                                     MD050018
+     C                   IF        DDACTN = 'R'                                             MD050018
+     C                   EVAL      YPCPAM = YPCPAM - WkCPAM                                 MD050018
+     C                   EVAL      YPDINT = YPDINT - WkDINT                                 MD050018
+     C                   ELSE                                                               MD050018
+     C                   IF        %SUBST(LTYPA:1:1) = 'X'                                  MD050018
+     C                   EVAL      YPCPAM = YPCPAM + LAPRAM - WkCPAM                        MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      YPDINT = YPDINT + LAPRAM - WkDINT                        MD050018
+     C                   ENDIF                                                              MD050018
+     C                   ENDIF                                                              MD050018
+     C                   CALLB     'ZAGENTMSTM'                                             MD050018
+     C                   PARM                    YPTMST                                     MD050018
+     C                   UPDATE    LEPDUED6                                                 MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+     C                   ENDSR                                                              MD050018
+      *****************************************************************                     MD050018
+      /EJECT                                                                                MD050018
+      *****************************************************************                     MD050018
+      * SrLEPDUFIns - Update of LEPDUFPD on ic for insert             *                     MD050018
+      * Called by: SrUpdPDCL                                          *                     MD050018
+      * Calls    : None                                               *                     MD050018
+      *****************************************************************                     MD050018
+     C     SrLEPDUFIns   BEGSR                                                              MD050018
+      *                                                                                     MD050018
+     C                   CLEAR                   LEPDUFD0                                   MD050018
+      *                                                                                     MD050018
+     C                   EVAL      WkReci = 'D'                                             MD050018
+     C     KLEPDUF1      CHAIN     LEPDUFLA                                                 MD050018
+     C                   IF        %FOUND(LEPDUFLA)                                         MD050018
+      ** Update 'D' record                                                                  MD050018
+     C                   EVAL      YPCPAM = YPCPAM + LAPRAM                                 MD050018
+     C                   UPDATE    LEPDUFD0                                                 MD050018
+      *                                                                                     MD050018
+      ** Insert 'P' record                                                                  MD050018
+     C                   EVAL      YRECI = 'P'                                              MD050018
+     C                   EVAL      YPLON = LALNRF                                           MD050018
+     C                   Z-ADD     LO_VDAT       YVDAT                                      MD050018
+     C                   Z-ADD     LAPRAM        YPCPAM                                     MD050018
+     C                   EVAL      YTKPACL = *BLANKS                                        MD050018
+     C                   EVAL      YTKPABR = *BLANKS                                        MD050018
+     C                   Z-ADD     0             YTKPAAC                                    MD050018
+     C                   Z-ADD     0             YTKPASE                                    MD050018
+     C                   EVAL      YTKPACY = *BLANKS                                        MD050018
+     C                   EVAL      YDECRE = 'N'                                             MD050018
+     C                   Z-ADD     LAVDAT        YPDVDT                                     MD050018
+     C                   Z-ADD     WRNDAY        YLCD                                       MD050018
+     C                   EVAL      YTYLC = 'I'                                              MD050018
+     C                   EVAL      YPIUSE = LAIUSR                                          MD050018
+     C                   EVAL      YPCBIC = 'I'                                             MD050018
+     C                   Z-ADD     LAPRAM        YPOREP                                     MD050018
+     C                   EVAL      YPFRNT = LAFRNT                                          MD050018
+     C                   CALLB     'ZAGENTMSTM'                                             MD050018
+     C                   PARM                    YPTMST                                     MD050018
+     C                   WRITE     LEPDUFD0                                                 MD050018
+                                                                                            MD050018
+     C                   ENDIF                                                              MD050018
+     C                   ENDSR                                                              MD050018
+      *****************************************************************                     MD050018
+      /EJECT                                                                                MD050018
+      *****************************************************************                     MD050018
+      * SrLEPDUFDelAmd - Update of LEPDUFPD on ic for amend and delete*                     MD050018
+      * Called by: SrUpdPDCL                                          *                     MD050018
+      * Calls    : None                                               *                     MD050018
+      *****************************************************************                     MD050018
+     C     SrLEPDUFDelAmdBEGSR                                                              MD050018
+      *                                                                                     MD050018
+      ** Update amount of 'P' record'                                                       MD050018
+     C                   Z-ADD     0             WkCPAM                                     MD050018
+     C     KLEPDUF2      SETLL     LEPDUFLE                                                 MD050018
+     C     KLEPDUF2      READE     LEPDUFLE                               70                MD050018
+     C                   DOW       *IN70 = *OFF                                             MD050018
+     C                   IF        YPCPAM = WPRAM                                           MD050018
+     C                   Z-ADD     YPCPAM        WkCPAM                                     MD050018
+     C                   IF        DDACTN = 'R'                                             MD050018
+     C                   DELETE    LEPDUFDE                                                 MD050018
+     C                   ELSE                                                               MD050018
+     C                   Z-ADD     LAPRAM        YPCPAM                                     MD050018
+     C                   Z-ADD     LAPRAM        YPOREP                                     MD050018
+     C                   UPDATE    LEPDUFDE                                                 MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
+      ** Update amount of 'D' record                                                        MD050018
+     C                   EVAL      WkReci = 'D'                                             MD050018
+     C     KLEPDUF1      CHAIN     LEPDUFLA                                                 MD050018
+     C                   IF        %FOUND(LEPDUFLA)                                         MD050018
+     C                   IF        DDACTN = 'R'                                             MD050018
+     C                   EVAL      YPCPAM = YPCPAM - WkCPAM                                 MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      YPCPAM = YPCPAM + LAPRAM - WkCPAM                        MD050018
+     C                   ENDIF                                                              MD050018
+     C                   UPDATE    LEPDUFD0                                                 MD050018
+     C                   ENDIF                                                              MD050018
+     C                   LEAVE                                                              MD050018
+     C                   ENDIF                                                              MD050018
+     C     KLEPDUF2      READE     LEPDUFLE                               70                MD050018
+     C                   ENDDO                                                              MD050018
+     C                   ENDSR                                                              MD050018
+      *****************************************************************                     MD050018
       /EJECT                                                                                  CAS011
       *****************************************************************                      BUG3760
       * *INZSR - Program Initialisation routine                       *
@@ -4706,22 +5020,22 @@
       *
       ** Program parameters
      C     *ENTRY        PLIST
- 
+
       ** Return code
      C                   PARM                    @@RTCD            7
- 
+
       ** Action requested
      C                   PARM                    DDACTN            1
- 
+
       ** Externally described DS for valid loan amendment
      C                   PARM                    ValidLoam
- 
+
       * Calling module code
      C                   PARM                    CallModCod        3
- 
+
       ** Reservation ID (input from VU only)
      C                   PARM                    ReservId         10
- 
+
       * Features
      C                   PARM                    CDE001            1
      C                   PARM                    CDE005            1
@@ -4733,20 +5047,20 @@
      C                   PARM                    CLE014            1
      C                   PARM                    CLE023            1
      C                   PARM                    CLE030            1                          CLE030
- 
+
       * Authorise amends / authorise principal tfr / consolidated conf.
      C                   PARM                    BPLMAU            1
      C                   PARM                    BPTPAU            1
      C                   PARM                    BPCONR            1
- 
+
       ** Date format indicator, local currency & run day number
      C                   PARM                    BJDFIN            1
      C                   PARM                    BJLCCY            3
      C                   PARM                    WRNDAY            5 0
- 
+
       ** Multi-branching
      C                   PARM                    BGMBIN            1
- 
+
       * Which system is active (24x7)
      C                   PARM                    System            1
       *
@@ -4802,6 +5116,21 @@
      C                   KFLD                    WFuncType                                   BUG3760
      C                   KFLD                    WIdntifier                                  BUG3760
      C                   KFLD                    WBranch                                     BUG3760
+      *                                                                                     MD050018
+     C     KLEPDUE1      KLIST                                                              MD050018
+     C                   KFLD                    LALNRF                                     MD050018
+     C                   KFLD                    LAVDAT                                     MD050018
+     C                   KFLD                    WkLASN                                     MD050018
+     C     KLEPDUE2      KLIST                                                              MD050018
+     C                   KFLD                    WkReci                                     MD050018
+     C                   KFLD                    LALNRF                                     MD050018
+     C                   KFLD                    WkPDCT                                     MD050018
+     C     KLEPDUF1      KLIST                                                              MD050018
+     C                   KFLD                    WkReci                                     MD050018
+     C                   KFLD                    LALNRF                                     MD050018
+     C     KLEPDUF2      KLIST                                                              MD050018
+     C                   KFLD                    LALNRF                                     MD050018
+     C                   KFLD                    LAVDAT                                     MD050018
       **********                                                                   MD024342 MD025467
      C*****KAPILST       KLIST                                                     MD024342 MD025467
      C**********         KFLD                    WAPIC             4               MD024342 MD025467
@@ -5005,9 +5334,9 @@
      C                   ENDDO
       *
      C                   ENDIF
- 
+
      C                   EVAL      @RTCD = *BLANKS
- 
+
       ** Check if CRE020 is enabled.                                                          CRE020
                                                                                               CRE020
      C                   CALLB     'AOSARDR0'                                                 CRE020
@@ -5256,6 +5585,40 @@
                                                                                               CLE134
      C                   IF        PRtCd = *BLANKS                                            CLE134
      C                   EVAL      CLE134 = 'Y'                                               CLE134
+      *                                                                                     MD050018
+      ** Access system values to check PDCL Projected acct movements on ic                  MD050018
+     C                   CALL      'AOSVALR0'                                               MD050018
+     C                   PARM      *BLANKS       PRetCode                                   MD050018
+     C                   PARM      PSysValPIAC   PSysVal01                                  MD050018
+     C                   PARM      *BLANKS       PCurSet01                                  MD050018
+     C                   PARM      *BLANKS       PSysVal02                                  MD050018
+     C                   PARM      *BLANKS       PCurSet02                                  MD050018
+     C                   PARM      *BLANKS       PSysVal03                                  MD050018
+     C                   PARM      *BLANKS       PCurSet03                                  MD050018
+     C                   PARM      *BLANKS       PSysVal04                                  MD050018
+     C                   PARM      *BLANKS       PCurSet04                                  MD050018
+     C                   PARM      *BLANKS       PSysVal05                                  MD050018
+     C                   PARM      *BLANKS       PCurSet05                                  MD050018
+     C                   PARM      *BLANKS       PSysVal06                                  MD050018
+     C                   PARM      *BLANKS       PCurSet06                                  MD050018
+     C                   PARM      *BLANKS       PSysVal07                                  MD050018
+     C                   PARM      *BLANKS       PCurSet07                                  MD050018
+     C                   PARM      *BLANKS       PSysVal08                                  MD050018
+     C                   PARM      *BLANKS       PCurSet08                                  MD050018
+     C                   PARM      *BLANKS       PSysVal09                                  MD050018
+     C                   PARM      *BLANKS       PCurSet09                                  MD050018
+     C                   PARM      *BLANKS       PSysVal10                                  MD050018
+     C                   PARM      *BLANKS       PCurSet10                                  MD050018
+                                                                                            MD050018
+     C                   IF        PRetCode  <> *BLANKS                                     MD050018
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD050018
+     C                   EVAL      DBKEy = '*KEY   '                                        MD050018
+     C                   EVAL      DBase = 40                                               MD050018
+     C                   EXSR      *PSSR                                                    MD050018
+     C                   ELSE                                                               MD050018
+     C                   EVAL      WKPIAC = PCurSet01                                       MD050018
+     C                   ENDIF                                                              MD050018
+      *                                                                                     MD050018
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
       *
@@ -5359,7 +5722,7 @@
       ********************************************************************
       /EJECT
       ********************************************************************
- 
+
       ** Output LTRIX header record
      O*LTRIX**** E            LTRIXH                                                        AR322732
      O**********             NORE                11P                                        Bug03936

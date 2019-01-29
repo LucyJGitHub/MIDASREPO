@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044506           Date 28Mar17               *
+      *  Last Amend No. MD051249           Date 17Jul18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044506           Date 28Mar17               *
       *                 CSD095CC1          Date 13Sep16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD031775           Date 09Jan15               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051249 - Set APIRetc to '0' after PSSR.                    *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -6577,6 +6579,7 @@ RGC                                                                             
       ** subroutine, excluding a bound call to the DBERRCTL module.
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILENE
+     C                   EVAL      APIRetc = '0'                                            MD051249
      C                   RETURN
  
      C                   ENDSR

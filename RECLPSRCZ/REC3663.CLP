@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD043389           Date 10Jan17              */
+/*       Last Amend No. MD052255           Date 21Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD043389           Date 10Jan17              */
 /*                      AR1096378          Date 20Mar13              */
 /*                      CRE083AH           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052255 - Redundant reorganization of Retail historic files*/
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD043389 - Component failed with parameter mismatch. Re-    */
 /*                  introduced entry parameters removed by AR1096378.*/
@@ -332,19 +334,19 @@ STEP15:
 /**/
 /**********  RGZPFM     FILE(REHPOSPP)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM('REHPOSPP' '*FIRST')                          /*228542*/
+/**********  CALL       PGM(SCC000060) PARM('REHPOSPP' '*FIRST')    */       /*228542*/ /*MD052255*/
 /**********  RGZPFM     FILE(REHPOSPM)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM('REHPOSPM' '*FIRST')                          /*228542*/
+/**********  CALL       PGM(SCC000060) PARM('REHPOSPM' '*FIRST')    */       /*228542*/ /*MD052255*/
 /**********  RGZPFM     FILE(REHPOSR1)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM('REHPOSR1' '*FIRST')                          /*228542*/
+/**********  CALL       PGM(SCC000060) PARM('REHPOSR1' '*FIRST')    */       /*228542*/ /*MD052255*/
 /**********  RGZPFM     FILE(REHPOSR2)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM('REHPOSR2' '*FIRST')                          /*228542*/
+/**********  CALL       PGM(SCC000060) PARM('REHPOSR2' '*FIRST')    */       /*228542*/ /*MD052255*/
 /**********  RGZPFM     FILE(REHPOSR3)                                                    /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM('REHPOSR3' '*FIRST')                          /*228542*/
+/**********  CALL       PGM(SCC000060) PARM('REHPOSR3' '*FIRST')    */       /*228542*/ /*MD052255*/
 /**/                                                                                      /*241159*/
 /* DELETE XRE* FILES IN XXDPLIB NOW */                                                    /*241159*/
 /* If system value DelCpyOfREHst = 'Y' */                                                 /*241159*/

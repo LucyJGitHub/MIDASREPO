@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050018           Date 05Nov18               *
-      *  Prev Amend No. MD050007           Date 05Nov18               *
+      *  Last Amend No. MD047693           Date 30Jan18               *
+      *  Prev Amend No. MD050018           Date 05Nov18               *
+      *                 MD050007           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD052549           Date 07Jan19               *
       *                 MD049309           Date 14Feb18               *
@@ -401,6 +402,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047693 - Rollover Dates are not 'modified' to be the       *
+      *             Previous Working Day, if the Month End falls on a *
+      *             holiday                                           *      
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
@@ -13832,7 +13836,8 @@ L118 I                             P   72   77 7RTSPL
      C                   PARM                    ZDAYNO                                       CLE141
      C                   PARM                    PCURR                                        CLE141
      C                   PARM                    PLOCN                                        CLE141
-     C                   PARM      *BLANKS       PPAYC                                        CLE141
+     C**********         PARM      *BLANKS       PPAYC                               CLE141 MD047693
+     C                   PARM      WPDDI         PPAYC                                      MD047693
      C                   PARM      BJDFIN        PDFIN                                        CLE141
      C                   PARM                    PCCY                                        CLE141A
      C                   PARM                    PLOC                                        CLE141A

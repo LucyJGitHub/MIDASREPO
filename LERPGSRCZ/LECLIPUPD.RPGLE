@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050007           Date 05Nov18               *
-      *  Prev Amend No. MD051922           Date 15OCt18               *
+      *  Last Amend No. MD052589           Date 22Jan19               *
+      *  Prev Amend No. MD050007           Date 05Nov18               *
+      *                 MD051922           Date 15OCt18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD040789           Date 24Jan18               *
       *                 MD046370           Date 07Nov17               *
@@ -154,6 +155,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052589 - Projections are shown with PDCLPAMPayAC set to N  *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
       *             Accnt Movement for Payment Accnt (Retail/Nostro)  *
       *  MD051922 - PDCL Y with same ccy settlement defaulted exchange*
@@ -7565,6 +7567,31 @@
      C                   ENDIF                                                             AR317473A
      C                   ENDIF                                                             AR317473A
      C                   ENDIF                                                             AR317473A
+                                                                                            MD052589
+      ** If PDCLPAMVPayAC is N, manual input PDCL should not generate                       MD052589
+      ** projected account movements for Pay Settlement Details                             MD052589
+                                                                                            MD052589
+     C                   IF        CLE134 = 'Y' and                                         MD052589
+     C                             (%SUBST(LTYP: 1: 1) = 'Y' or                             MD052589
+     C                              %SUBST(LTYP: 1: 1) = 'X' or                             MD052589
+     C                              %SUBST(LTYP: 1: 1) = 'Z')                               MD052589
+     C                   CLEAR                   Z#ZBSTS                                    MD052589
+     C                   CLEAR                   Z#ZASTS                                    MD052589
+     C                   EVAL      Z#ZBSTS = Z#BSTS                                         MD052589
+     C                   EVAL      Z#ZASTS = Z#ASTS                                         MD052589
+     C                   CLEAR                   ZB_PSTM                                    MD052589
+     C                   CLEAR                   ZB_PONS                                    MD052589
+     C                   CLEAR                   ZB_SDST                                    MD052589
+     C                   CLEAR                   ZB_OSDA                                    MD052589
+     C                   CLEAR                   ZB_OSDB                                    MD052589
+     C                   CLEAR                   ZA_PSTM                                    MD052589
+     C                   CLEAR                   ZA_PONS                                    MD052589
+     C                   CLEAR                   ZA_SDST                                    MD052589
+     C                   CLEAR                   ZA_OSDA                                    MD052589
+     C                   CLEAR                   ZA_OSDB                                    MD052589
+     C                   EVAL      Z#BSTS = Z#ZBSTS                                         MD052589
+     C                   EVAL      Z#ASTS = Z#ZASTS                                         MD052589
+     C                   ENDIF                                                              MD052589
                                                                                             MD050007
      C                   ENDIF                                                              MD050007
       *

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD052402           Date 23Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052402 - Issue with WIP for Facility Events                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,LEH00226                                 *
@@ -42,20 +44,20 @@
       *  CAP084 - API wrapper project                                 *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       **---------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** SCREEN FORMATS
       **---------------------------------------------------------------
- 
+
       ** Facility Amendment Details in screen format
      DFAMDScrFmt     E DS                  EXTNAME(LEFAMDPD)
      D                                     PREFIX(S2:2)
@@ -63,34 +65,38 @@
       ** Facility Amendment Details 2 in screen format                                        CLE106
       *                                                                                       CLE106
      DFAM2ScrFmt     E DS                  EXTNAME(LEFAM2PD)                                  CLE106
- 
+
       **---------------------------------------------------------------
       ** FILE FORMATS
       **---------------------------------------------------------------
- 
+
       ** Facility Amendment Details in file format
      DFAMDFilFmt     E DS                  EXTNAME(LEFCAMPD)
- 
+
       **---------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      DIdx              S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      DWIdx             S              3P 0
       *                                                                                       CLE106
       ** Work Variable for Facility Event UTN                                                 CLE106
       *                                                                                       CLE106
      D CLE106          S              1A                                                      CLE106
- 
+      *                                                                                       CLE106
+      ** Work variable for auto-authorise field                                             MD052402
+      *                                                                                     MD052402
+     D AUTOFLD         S              1A                                                    MD052402
+
      DOutCustShtNm     S                   LIKE(S#CSSN)
      DOutFacility      S                   LIKE(S#FACT)
      DOutFctyNumb      S                   LIKE(S#FCNO)
      DOutFctyType      S                   LIKE(S#FATP)
      DOutValueDte      S                   LIKE(S#VLDT)
      DOutSeqNumb       S                   LIKE(S#SQNO)
- 
- 
+
+
       * Facility run dates
      D  @RUNA          DS
      D  FC_RUN0                1      5  0
@@ -105,7 +111,7 @@
      D  FC_RUN9               46     50  0
      D  @FC_RUN                1     50  0
      D                                     DIM(10)
- 
+
       * Facility drawn amounts
      D  @OAMA          DS
      D  FC_OAM1                1     13  0
@@ -120,9 +126,9 @@
      D  FC_OA10              118    130  0
      D  @FC_OAM                1    130  0
      D                                     DIM(10)
- 
+
       **-----------------------------------------------------------------------
- 
+
      C                   CLEAR                   FAMDFilFmt
      C     S#ACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
@@ -131,7 +137,7 @@
      C                   MOVEL     'E'           S#ACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -144,7 +150,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LEFAMDRED
@@ -185,21 +191,22 @@
      C     Idx           IFEQ      0
      C                   EXSR      LEFAMDCVT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'S#FACT'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
      C                   EVAL                    Buffer = FAMDScrFmt
      C                                           + FAM2ScrFmt                                 CLE106
+     C                                           + AUTOFLD                                  MD052402
      C                                           + S#CNUM + S#CSNM + S#CRNM
      C                                           + S#CRTN + S#FATN + S#STAT
      C                                           + S#VLDA
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -230,7 +237,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF '
@@ -249,14 +256,14 @@
      C                   ELSE                                                                 CLE106
      C                   MOVE      'N'           CLE106                                       CLE106
      C                   ENDIF                                                                CLE106
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,LEFAMDM01
      C                   ENDSR
- 
+
       **********************************************************************
      C     LEFAMDRED     BEGSR
- 
+
      C                   CALLB     'LEFAMDRED'
       *
       * INPUT PARAMETERS
@@ -309,12 +316,12 @@
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response Code
      C                   PARM      'S'           RESPMODE          1
- 
+
       * Action, customer, facility type, facility number, facility
       * amendment type, value date and sequence number
      C                   PARM                    S#ACTN            1
@@ -324,13 +331,13 @@
      C                   PARM                    S#FATP            2
      C                   PARM                    S#VLDT            6
      C                   PARM                    S#SQNO            3
- 
+
       *
       * OUTPUTS
- 
+
       * Facility Amendment Details in file format
      C                   PARM                    FAMDFilFmt
- 
+
       * Action, customer, facility type, facility number, facility
       * amendment type, value date and sequence number OK indicators
      C                   PARM                    S#ACTNok          1
@@ -340,13 +347,13 @@
      C                   PARM                    S#FATPok          1
      C                   PARM                    S#VLDTok          1
      C                   PARM                    S#SQNOok          1
- 
+
       * Customer number
      C                   PARM                    S#CNUM           10
- 
+
       * Value date of amendment
      C                   PARM                    W#VLDT            5 0
- 
+
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -371,7 +378,7 @@
      C                   PARM                    FcDTEX            5 0
      C                   PARM                    FcCDTE            5 0
      C/COPY WNCPYSRC,LEH00226
- 
+
       * Facility run dates
       * Facility drawn amounts
      C                   PARM                    @RUNA
@@ -397,7 +404,7 @@
      C                   ENDSR
       **********************************************************************
      C     LEFAMDCVT     BEGSR
- 
+
      C                   CALLB     'LEFAMDCVT'
       *
       * INPUTS
@@ -407,7 +414,7 @@
       *
       * Facility Amendment details in file format
      C                   PARM                    FAMDFilFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY
@@ -417,13 +424,13 @@
       *
       * Facility Amendment Details in screen format
      C                   PARM                    FAMDScrFmt
- 
+
       * Customer details
      C                   PARM                    S#CNUM
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#CRNM           20
      C                   PARM                    S#CRTN           10
- 
+
       * Facility amendment type narrative
       * Record status
       * Value date in alpha format

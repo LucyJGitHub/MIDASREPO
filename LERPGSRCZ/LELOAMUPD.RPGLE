@@ -1627,6 +1627,17 @@
                                                                                        CLE055 243415
       *                                                                                     BUG26668
      C                   MOVEL     LoamFilFmt    Z#ASTS                                     BUG26668
+      *                                                                                     MD050018
+      ** Update the PDP link files LEPDUEPD and LEPDUFPD                                    MD050018
+      *                                                                                     MD050018
+     C                   IF        CLE134 = 'Y' AND CobMode <> 'Y' AND                      MD050018
+     C                             W#FRNT <> 'LE000473' AND WkPIAC = 'Y' AND                MD050018
+     C                             LAAMTP = 'PI' AND                                        MD050018
+     C                             (%SUBST(LTYPA:1:1) = 'X' OR                              MD050018
+     C                              %SUBST(LTYPA:1:1) = 'Y' OR                              MD050018
+     C                              %SUBST(LTYPA:1:1) =  'Z')                               MD050018
+     C                   EXSR      SrUpdPDCL                                                MD050018
+     C                   ENDIF                                                              MD050018
       *
       ** Update the other files
      C                   EXSR      UpdOthFil

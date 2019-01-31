@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050296           Date 19Apr18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD050228           Date 31May18               *
+      *  Prev Amend No. MD050026           Date 06Apr18               *
+      *                 MD050296           Date 19Apr18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD047999           Date 27Sep18               *
       *                 MD051788           Date 30Aug18               *
       *                 MD049572           Date 18Feb18               *
@@ -103,6 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050228 - Manual on-line PDCL and CoB generated PDCL:       *
+      *             Margin of PDCL is not defaulted to zero           *
+      *  MD050026 - CLIP Manual Input PDCL doesn't default the Profit *
+      *             Centre from the orig. loan to the new PDCL loans  *
       *  MD050296 - PDCL Loan Reference incorrect.                    *
       *           - Add the missing line MD022807I                    *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -4729,17 +4735,17 @@
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
       ** Margin
-     C                   SELECT
-     C                   WHEN      RecordType = Loan
-     C     C_MARG        IFLT      *ZEROS
-     C                   MOVEL     'Y'           DDNEGV            1
-     C                   Z-SUB     C_MARG        C_MARG
-     C                   ELSE
-     C                   MOVEL     *BLANKS       DDNEGV
-     C                   ENDIF
+     C**********         SELECT                                                             MD050228
+     C**********         WHEN      RecordType = Loan                                        MD050228
+     C*****C_MARG        IFLT      *ZEROS                                                   MD050228
+     C**********         MOVEL     'Y'           DDNEGV            1                        MD050228
+     C**********         Z-SUB     C_MARG        C_MARG                                     MD050228
+     C**********         ELSE                                                               MD050228
+     C**********         MOVEL     *BLANKS       DDNEGV                                     MD050228
+     C**********         ENDIF                                                              MD050228
       *
      C                   MOVE      *BLANKS       ZFIELD           16
-     C                   MOVE      C_MARG        ZFIELD
+     C**********         MOVE      C_MARG        ZFIELD                                     MD050228
      C                   Z-ADD     5             ZDEC              1 0
      C                   CALL      'ZEDIT'
      C                   PARM                    ZFIELD
@@ -4752,12 +4758,13 @@
      C                   EXSR      SRFmtWMsg
       *
       ** NEGV
+     C                   MOVEL     *BLANKS       DDNEGV            1                        MD050228
      C                   MOVEL     DDNEGV        PFldData
      C                   EVAL      PFldTag  = 'DDNEGV'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-     C                   ENDSL
+     C**********         ENDSL                                                              MD050228
       *
       ** Interest captilisation indicator
      C                   MOVEL     'N'           PFldData

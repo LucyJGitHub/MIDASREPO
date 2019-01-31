@@ -29,7 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052402 - Issue with WIP for Facility Events                *
+      *  MD052402 - Issue with WIP for Facility Events.               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,LEH00226                                 *
@@ -74,6 +74,10 @@
      DFAMDFilFmt     E DS                  EXTNAME(LEFCAMPD)
 
       **---------------------------------------------------------------
+                                                                                            MD052402
+      ** Interface Data Format Definition File format                                       MD052402
+     D InfData       E DS                  EXTNAME(LELEIFPD)                                MD052402
+     D                                     PREFIX(IF_)                                      MD052402
 
       ** Index for arrays of of error message ids etc
      DIdx              S              3P 0
@@ -85,9 +89,6 @@
       *                                                                                       CLE106
      D CLE106          S              1A                                                      CLE106
       *                                                                                       CLE106
-      ** Work variable for auto-authorise field                                             MD052402
-      *                                                                                     MD052402
-     D AUTOFLD         S              1A                                                    MD052402
 
      DOutCustShtNm     S                   LIKE(S#CSSN)
      DOutFacility      S                   LIKE(S#FACT)
@@ -200,12 +201,16 @@
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
 
+     C                   EVAL      IF_FILLER =   S#CNUM + S#CSNM + S#CRNM                   MD052402
+     C                                         + S#CRTN + S#FATN + S#STAT                   MD052402
+     C                                         + S#VLDA                                     MD052402
+                                                                                            MD052402
      C                   EVAL                    Buffer = FAMDScrFmt
      C                                           + FAM2ScrFmt                                 CLE106
-     C                                           + AUTOFLD                                  MD052402
-     C                                           + S#CNUM + S#CSNM + S#CRNM
-     C                                           + S#CRTN + S#FATN + S#STAT
-     C                                           + S#VLDA
+     C                                           + InfData                                  MD052402
+     C**********                                 + S#CNUM + S#CSNM + S#CRNM                 MD052402
+     C**********                                 + S#CRTN + S#FATN + S#STAT                 MD052402
+     C**********                                 + S#VLDA                                   MD052402
 
      C                   SETON                                        LR
      C                   RETURN

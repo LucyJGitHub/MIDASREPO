@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050296           Date 19Apr18               *      
+      *  Last Amend No. MD050296           Date 19Apr18               *
       *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD047999           Date 27Sep18               *
       *                 MD051788           Date 30Aug18               *
@@ -104,7 +104,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD050296 - PDCL Loan Reference incorrect.                    *
-      *           - Add the missing line MD022807I                    *      
+      *           - Add the missing line MD022807I                    *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD047999 - PDCL loans goes in repair due to incorrect        *
       *             Settlement (Recompile)                            *
@@ -565,6 +565,8 @@
      D  O#CRNM                13     22
      D  O#ACOF                23     24
 
+      ***  Profit centre accounting ICD                                                     MD050026
+     D SDPCAC        E DS                  EXTNAME(SDPCACPD)                                MD050026
       ** Data structure for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
@@ -1068,6 +1070,9 @@
      ** Storage for Currency Details (Full Cache)                                           MD022465
       *                                                                                    MD022807B
      D @@PDCL          S              6A   INZ(*BLANKS)                                    MD022807B
+                                                                                            MD050026
+     D wPC             S              4                                                     MD050026
+     D wDftPCfromOL    S              1                                                     MD050026
 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -3671,6 +3676,7 @@
      C                   EVAL      POP05 = 'GlobalSystemPrefix'
      C                   EVAL      POP06 = 'PDCLAccSeqNo'
      C                   EVAL      POP07 = 'PDCLRunAsIdentity'
+     C                   EVAL      POP08 = 'PDCLDefPrfcOrLn'                                MD050026
       *
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       WRETCD
@@ -3689,7 +3695,8 @@
      C                   PARM                    POP07
      C                   PARM      *BLANKS       PVL07
      C                   PARM      *BLANKS       POP08
-     C                   PARM      *BLANKS       PVL08
+     C**********         PARM      *BLANKS       PVL08                                      MD050026
+     C                   PARM                    POP08                                      MD050026
      C                   PARM      *BLANKS       POP09
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
@@ -3709,6 +3716,7 @@
      C                   EVAL      SysPrefix = PVL05
      C                   MOVEL     PVL06         SeqFlg
      C                   MOVEL     PVL07         RunAsIdentity
+     C                   MOVEL     PVL08         wDftPCfromOL                               MD050026
       *
       * If not Run As Identity no need to supply username and password
      C                   IF        RunAsIdentity = 'N'
@@ -5228,6 +5236,38 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
+      *                                                                                     MD050026
+      ** Profit Centre Code                                                                 MD050026
+     C                   EVAL      wPC = *BLANKS                                            MD050026
+     C                   IF        BKOBRU = 'Y'                                             MD050026
+     C                   CALL      'AOPRFMR0'                                               MD050026
+     C                   PARM      *BLANKS       PRTNC                                      MD050026
+     C                   PARM      C_BOKC        PBOOK                                      MD050026
+     C                   PARM                    PTRTP                                      MD050026
+     C                   PARM                    PSUTP                                      MD050026
+     C                   PARM                    PBRAN                                      MD050026
+     C                   PARM      *BLANKS       PDEPT                                      MD050026
+     C                   PARM                    PUSER                                      MD050026
+     C                   PARM                    PACOF                                      MD050026
+     C                   PARM                    PCNUM                                      MD050026
+     C                   PARM      *BLANKS       PPRFC                                      MD050026
+     C                   MOVE      PPRFC         wPC                                        MD050026
+     C                   ENDIF                                                              MD050026
+     C                   EXSR      srPCFromICD                                              MD050026
+     C                   IF        wDftPCfromOL = 'Y' AND CHKSVAL = 'Y'                     MD050026
+     C                   SELECT                                                             MD050026
+     C                   WHEN      RecordType = Loan                                        MD050026
+     C                   MOVEL     C_PRFC        wPC                                        MD050026
+     C                   OTHER                                                              MD050026
+     C                   MOVEL     E_FEPRFC      wPC                                        MD050026
+     C                   ENDSL                                                              MD050026
+     C                   ENDIF                                                              MD050026
+                                                                                            MD050026
+     C                   MOVEL     wPC           PFldData                                   MD050026
+     C                   EVAL      PFldTag  = 'DDPRFC'                                      MD050026
+     C                   EVAL      PFldType = *BLANK                                        MD050026
+     C                   EVAL      PFldAttr = *BLANK                                        MD050026
+     C                   EXSR      SRFmtWMsg                                                MD050026
 
      C                   SELECT
      C                   WHEN      RecordType = Loan
@@ -6329,6 +6369,38 @@
       *****************************************************************                    MD049745A
       /EJECT                                                                               MD049745A
       *****************************************************************                    MD049745A
+      *                                                               *                     MD050026
+      * SrPCfromICD - Get Profit Center from ICD                      *                     MD050026
+      *                                                               *                     MD050026
+      * Called by: SRDeftCLIP                                         *                     MD050026
+      *                                                               *                     MD050026
+      * Calls: None                                                   *                     MD050026
+      *                                                               *                     MD050026
+      *****************************************************************                     MD050026
+     C     SrPCfromICD   BEGSR                                                              MD050026
+     C                   MOVEL     'N'           CHKSVAL           1                        MD050026
+     C     BGN0ST        IFEQ      'Y'                                                      MD050026
+     C                   CALLB     'AOPCACR0'                                               MD050026
+     C                   PARM      *BLANKS       @RTCD                                      MD050026
+     C                   PARM      '*FIRST '     @OPTN                                      MD050026
+     C     SDPCAC        PARM      SDPCAC        DSFDY                                      MD050026
+     C     @RTCD         IFNE      *BLANKS                                                  MD050026
+     C     *LOCK         IN        LDA                                                      MD050026
+     C                   EVAL      WRETCD = '*ERROR'                                        MD050026
+     C                   MOVE      '01'          DBKEY                                      MD050026
+     C                   EVAL      DBFILE = 'SDPCACPD'                                      MD050026
+     C                   EVAL      DBASE = 020                                              MD050026
+     C                   EXSR      *PSSR                                                    MD050026
+     C                   ENDIF                                                              MD050026
+     C                   ENDIF                                                              MD050026
+     C                   IF        (wPC = FTUAPC) or (wPC = *BLANKS)                        MD050026
+     C                   EVAL      wPC = FTUAPC                                             MD050026
+     C                   MOVEL     'Y'           CHKSVAL                                    MD050026
+     C                   ENDIF                                                              MD050026
+     C                   ENDSR                                                              MD050026
+      *****************************************************************                     MD050026
+      /EJECT                                                                                MD050026
+      *****************************************************************                     MD050026
 **  CPY@
 (c) Finastra International Limited 2013
 **  POWR -- USED IN CURRENCY CONVERSION(FACILITY)

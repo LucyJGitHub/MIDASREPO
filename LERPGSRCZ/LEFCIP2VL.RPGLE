@@ -72,7 +72,7 @@
       *                                                               *
       *  MD050282 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
-      *             syndicated facilities (if DDSYIN = ‘Y’) thus DTEX *
+      *             syndicated facilities thus DTEX                   *
       *             will also not be validated.                       *
       *           - Applied for AR896408                              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

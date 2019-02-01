@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL148             Date 13Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 249405             Date 09Mar18               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
       *                 MD046910           Date 25Jul17               *
@@ -79,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249405 - Validate Batch In Use Flag field.                   *
+      *         - Applied for MD-49830.                               *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246                               *
       *  MD046248 - Finastra Rebranding                               *
@@ -933,7 +936,11 @@
      C                   ENDIF                                                                CAP084
      C**********         MOVE      'Y'           BRBIUF                                     BUG13083
      C**********         MOVE      'N'           BRBIUF                           BUG13083 BUG13083A
+     C                   IF        B1AUTH = 'Y'                                               249405
+     C                   MOVE      ' '           BRBIUF                                       249405
+     C                   ELSE                                                                 249405
      C                   MOVE      'Y'           BRBIUF                                    BUG13083A
+     C                   ENDIF                                                                249405
       *                                                                                       CAP084
       ** If coming from JAVA front end then set up front office ID as 'APCTRANVU'             CAP084
       ** suffixed with the batch header number                                                CAP084

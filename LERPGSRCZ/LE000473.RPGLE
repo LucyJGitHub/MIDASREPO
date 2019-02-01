@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD050228           Date 31May18               *
-      *  Prev Amend No. MD050026           Date 06Apr18               *
+      *  Last Amend No. MD048443           Date 08Dec17               *
+      *  Prev Amend No. MD050228           Date 31May18               *
+      *                 MD050026           Date 06Apr18               *
       *                 MD050296           Date 19Apr18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD047999           Date 27Sep18               *
@@ -105,6 +106,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048443 - Past due loan generated without loan type subtype *
+      *             and also without interest rate                    *      
       *  MD050228 - Manual on-line PDCL and CoB generated PDCL:       *
       *             Margin of PDCL is not defaulted to zero           *
       *  MD050026 - CLIP Manual Input PDCL doesn't default the Profit *
@@ -4291,6 +4294,7 @@
      C                   WHEN      RecordType = Loan
       *
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   EVAL      PFldData = AYPPLT
      C                   ELSE
      C                   EVAL      PFldData = AYIPLT
@@ -4313,6 +4317,7 @@
      C                   WHEN      RecordType = Loan
       *
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   EVAL      PFldData = AYPPLS
      C                   ELSE
      C                   EVAL      PFldData = AYIPLS
@@ -4333,6 +4338,7 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   EVAL      PFldData = AYPPLC
      C                   ELSE
      C                   EVAL      PFldData = AYIPLC
@@ -4563,6 +4569,7 @@
      C                   MOVE      *BLANKS       PFldData                                   MD031851
      C                   EXSR      SRGetRates
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPBSR <> 0
      C                   MOVEL     wPBSR         PBSR              2
      C                   EVAL      PFldData  = PBSR
@@ -4620,6 +4627,7 @@
      C                   SELECT                                                             MD031225
      C                   WHEN      RecordType = Loan                                        MD031225
      C                   IF        WPIIN = 'P'                                              MD031225
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPBRT <> 0                                               MD031225
      C                   MOVE      'N'           RATESPFL                                   MD031225
      C                   ENDIF                                                              MD031225
@@ -4639,6 +4647,7 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPRSP <> 0
      C                   MOVEL     *BLANKS       ZFIELD           16
      C                   MOVE      wPRSP         ZFIELD           16
@@ -4690,6 +4699,7 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPRSI <> *BLANKS
      C                   MOVEL     wPRSI         PFldData
      C                   ENDIF
@@ -4711,6 +4721,7 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPICB <> *BLANKS
      C                   MOVEL     wPICB         PFldData
      C                   ENDIF
@@ -4879,6 +4890,7 @@
      C                   SELECT
      C                   WHEN      RecordType = Loan
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
      C                   IF        wPBRT <> 0
      C                   MOVE      'N'           RATESPFL                                   MD031225
      C                   MOVEL     *BLANKS       ZFIELD           16
@@ -6001,6 +6013,7 @@
      C                   WHEN      RecordType = Loan
      C                   IF        ExistLEPRAT = *ON
      C                   IF        WPIIN = 'P'
+     C                             OR WPIIN ='T'                                            MD048443
       *
      C                   IF        B2PCSP <> 0
      C                   EVAL      wPCSP = B2PCSP

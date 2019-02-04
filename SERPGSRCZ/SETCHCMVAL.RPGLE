@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD040983           Date 07Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR941082           Date 27Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040983 - Negative Commission Amount (Broker and Customer). *
+      *             Limit input amount to 12 numbers.                 *
+      *           - Applied for MD-49671                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR941082 - Allow Charge Code 7 defaulted value when Stamp    *
@@ -358,7 +362,8 @@
      C     DDTBCA        IFNE      *BLANKS
      C                   MOVE      *BLANKS       ZFLD17
      C                   MOVEL     DDTBCA        ZFLD17
-     C                   EXSR      ZASIGN
+     C**********         EXSR      ZASIGN                                                   MD040983
+     C                   EXSR      ZASIGN1                                                  MD040983
      C     ZAsignOK      IFEQ      'N'
      C                   ADD       1             Idx
      C                   MOVEL     'DDTBCA'      FldNamXAr(Idx)
@@ -444,7 +449,8 @@
      C     DDTCCA        IFNE      *BLANKS
      C                   MOVE      *BLANKS       ZFLD17
      C                   MOVEL     DDTCCA        ZFLD17
-     C                   EXSR      ZASIGN
+     C**********         EXSR      ZASIGN                                                   MD040983
+     C                   EXSR      ZASIGN1                                                  MD040983
      C     ZAsignOK      IFEQ      'N'
      C                   ADD       1             Idx
      C                   MOVEL     'DDTCCA'      FldNamXAr(Idx)
@@ -1257,6 +1263,28 @@
      C                   ENDSR
       ********************************************************************
       /EJECT
+      *****************************************************************                     MD040983
+      *                                                               *                     MD040983
+      * ZASIGN1 - Validate & Right Align a Signed Numeric Field (12)  *                     MD040983
+      *                                                               *                     MD040983
+      *****************************************************************                     MD040983
+     C     ZASIGN1       BEGSR                                                              MD040983
+                                                                                            MD040983
+     C     12            SUB       NomCcyDec     ZSDIG                                      MD040983
+     C                   Z-ADD     NomCcyDec     ZSDEC                                      MD040983
+                                                                                            MD040983
+     C                   CALLB     'ZASIGN'                                                 MD040983
+     C                   PARM                    ZASIGNok                                   MD040983
+     C                   PARM                    ZFLD17                                     MD040983
+     C                   PARM                    ZSDIG                                      MD040983
+     C                   PARM                    ZSDEC                                      MD040983
+     C                   PARM                    ZSDCSP                                     MD040983
+     C                   PARM                    ZOUT15                                     MD040983
+     C                   PARM                    ZFSIGN                                     MD040983
+                                                                                            MD040983
+     C                   ENDSR                                                              MD040983
+      *****************************************************************                     MD040983
+      /EJECT                                                                                MD040983
       *****************************************************************
       *                                                               *
       * *INZSR - Program Initialisation routine                       *

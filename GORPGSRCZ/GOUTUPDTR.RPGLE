@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051197           Date 05Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052663           Date 04Feb19               *
+      *  Prev Amend No. MD051197           Date 05Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 AR1082904          Date 09Feb14               *
       *                 AR1082904          Date 09Feb14               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052663 - Database error: Not authorized to object CREABCQ  *
       *  MD051197 - Facility Drawn Amounts in FCLTYFN are overwritten *
       *             on Next Day COB Setup. Add missing line of        *
       *             AR1082904.                                        *
@@ -271,6 +273,7 @@
      C*******************ENDIF                                                                CLE024
                                                                                               CLE024
      C                   ENDIF                                                                CLE024
+     C                   IF        I#ZONE = T_ZONE                                          MD052663
                                                                                               CAP205
      C                   IF        CAP205 = 'Y'                                               CAP205
      C                             AND  COB_Generated <> 'Y'                              AR1082904A
@@ -280,6 +283,7 @@
      C                   EXSR      SndABCData                                                 CAP205
      C                   ENDIF                                                             AR1082904
      C                   ENDIF                                                                CAP205
+     C                   ENDIF                                                              MD052663
                                                                                            AR1082904
      C                   COMMIT                                                            AR1082904
                                                                                            AR1082904

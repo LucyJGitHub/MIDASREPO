@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MG000484      Date 20Mar18                    *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP084             Date 27Feb03               *
+      *                 CAP084             Date 27Feb03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 E19243             Date 19Jun90               *
@@ -24,6 +25,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MG000484 - Rate Change should not be generated if New Base   *
+      *             Rate has the same vaule as the previous history   *
+      *             record.                                           *
+      *           - Applied for MD-49833.                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  CAP084 - Wrapper project - convert to ILE                    *
       *  E19243 - SET ON RCIN FOR NEW RATES.                          *
@@ -74,6 +79,7 @@
      C                   PARM                    WBSRS             5            BASE S'NAME    S0125
      C                   PARM                    WTYLC             1            LAST CHANGE TYPS0125
      C                   PARM                    WLCD              5 0          LAST CHANGE DAT
+     C                   PARM                    WACRC             1                        MG000484
      C     *LIKE         DEFINE    CCY           KCCY                           KEY TO FILE
      C     *LIKE         DEFINE    BRTT          KBRTT                          KEY TO FILE
      C*
@@ -183,6 +189,9 @@
      C                   MOVE      WTYLC         CHTP                                          S0125
      C                   Z-ADD     WLCD          LCD
      C                   BITON     '01234567'    RCIN                           BASE RATE IND  E1507
+     C     WACRC         IFEQ      'N'                                                      MG000484
+     C                   BITOFF    '3'           RCIN                                       MG000484
+     C                   ENDIF                                                              MG000484
      C                   UPDATE    TABLETKF                             30      ERROR
      C                   END
      C*

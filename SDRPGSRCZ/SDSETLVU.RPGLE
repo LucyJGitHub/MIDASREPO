@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046115           Date 28Jul17               *
+      *  Last Amend No. MD052610           Date 04Feb19
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046115           Date 28Jul17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD-52610 - when ddactn=action/enquire stop doung CovertSt    *
+      *             querying of cust details is already done on java  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046115 - The settlements were blanks out when there is no  *
       *             record in LESTALPD.                               *
@@ -65,7 +68,7 @@
       *           ment Details.                                       *
       *                                                               *
       *****************************************************************
- 
+
      FLESTALLD  IF   E           K DISK    INFSR(*PSSR)                                      CSF011A
                                                                                              CSF011A
       *****************************************************************
@@ -86,57 +89,57 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
      D Trans1        E DS                  EXTNAME(SDESSXPD)
       * First Incoming Transaction
      D Trans2        E DS                  EXTNAME(SDESSRPD)
@@ -153,21 +156,21 @@
      D                                     PREFIX(C_)
       * Third Incoming Transaction
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
- 
+
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS Settlement Instructions - Input
      D ##FRIF        E DS                  EXTNAME(SDESSFPD)
      D                                     PREFIX(C_)
       * FRA/IRS Settlement Instructions - Input
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
                                                                                              CSF011A
@@ -181,26 +184,26 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Field (500A) to receive the incoming transaction
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Flags to indicate whether transaction fields are valid
- 
+
       ** Flags to indicate whether Pay Settlement instruction fields
       **  are valid
      D OKPayInsDS      DS
@@ -231,7 +234,7 @@
      D  DDBtb4OK                      1A   INZ('Y')
      D  DDBtb5OK                      1A   INZ('Y')
      D  DDBtb6OK                      1A   INZ('Y')
- 
+
       ** Flags to indicate whether Receive Settlement instruction fields
       **  are valid
      D OKRecInsDS      DS
@@ -242,7 +245,7 @@
      D  DDRobnOK                      1A   INZ('Y')
      D  DDRibnOK                      1A   INZ('Y')
      D  DDRibaOK                      1A   INZ('Y')
- 
+
       ** Flags to indicate whether FRA/IRS instruction fields are valid
      D OKFRAInsDS      DS
      D  DDDsr1OK                      1A   INZ('Y')
@@ -267,19 +270,19 @@
      D  DDAgtyOK                      1A   INZ('Y')
      D  DDAgdtOK                      1A   INZ('Y')
      D  DDAgvvOK                      1A   INZ('Y')
- 
+
       ** A code to indicate the calling function to the lower level modules
      D LEND            S              4A   INZ('LEND')
- 
+
       ** Payment & Receipt dates, passed to Settlements Validation routine.
       ** spaces in parameter list not used by this function
      D PayDat          S              5P 0 INZ(99999)
      D RecDat          S              5P 0 INZ(99999)
- 
+
       ** Value Date as a Midas Day Number to be placed in either Payment
       **  or Receipt Date
      D ValDateMDN      S              5P 0
- 
+
       ** Error Flag for call to Standard routines (equates to *IN99)
      D ErrorFlag       S              1A   INZ('N')
      ** Additional parameters for Settlement defaulting module
@@ -296,30 +299,30 @@
      D #TPCCY          S              3A                                                     CSF011A
      D ##REXR          S                   LIKE(FLREXR)                                      CSF011A
      D ##PEXR          S                   LIKE(FLPEXR)                                      CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C                   MOVEL     Trans1        TranIn1
      C                   MOVEL     Trans2        TranIn2
      C                   MOVEL     Trans3        TranIn3
- 
+
       * Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
      C                   IF        DDPSTM = *BLANKS
      C                   EVAL      C_DDPSTM = '00'
      C                   ENDIF
@@ -337,11 +340,11 @@
      C                   EVAL      ##PPAY = *BLANKS
      C                   EVAL      ##PREC = *BLANKS
      C                   ENDSL
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN      DDACTN = 'I'
       *                                                                                       244915
       ** Set payment and receipt settlement method to blanks instead                          244915
@@ -361,44 +364,44 @@
      C                   Eval      DDRSTM = C_DDRSTM                                          244915
      C                   Eval      DDPSTM = C_DDPSTM                                          244915
      C                   EXSR      ValidateSt
- 
+
      C                   WHEN      DDACTN = 'A'
       *  Processing for Amends
      C                   EXSR      ValidateSt
-                                                                                             CSF011A
-     C                   WHEN      DDACTN = ' '                                              CSF011A
-                                                                                             CSF011A
-      ** Processing for Action and Enquire                                                   CSF011A
-                                                                                             CSF011A
-     C                   EXSR      ConvertSt                                                 CSF011A
-                                                                                             CSF011A
+      **********                                                                    CSF011A MD052610
+     C**********         WHEN      DDACTN = ' '                                     CSF011A MD052610
+      **********                                                                    CSF011A MD052610
+      ***Processing*for*Action*and*Enquire*****************************             CSF011A MD052610
+      **********                                                                    CSF011A MD052610
+     C**********         EXSR      ConvertSt                                        CSF011A MD052610
+      **********                                                                    CSF011A MD052610
      C                   ENDSL
       *
      C     INVALID       TAG
      C                   SETON                                        LR
- 
+
       ** Move back the value of settlement method
      C                   EVAL      C_DDPSTM = DDPSTM
      C                   EVAL      C_DDRSTM = DDRSTM
- 
+
      C                   EVAL      Buffer = TranIn1 + TranIn2 + TranIn3
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       * DftSettmts - Routine to apply default settlement instructions *
       *    if none have been supplied                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     DftSettmts    BEGSR
- 
+
      C                   IF            (TranIn2 = *blank)
      C                             AND (TranIn3 = *blank)
- 
+
      C                   CALLB     'ZASETINDFT'
- 
+
       ** Output
       ** Calling function type
      C                   PARM                    LEND
@@ -438,26 +441,26 @@
      C                   PARM                    DBRecSttmt
       ** Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    ##FRIF
- 
+
       *  The defaulted instructions are in file format, but the
       *   Settlements validation requires that they are in the input format.
       *  Therefore run them through a conversion module.
- 
+
      C                   CALLB     'ZASETINCVT'
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM                    ##FRIF
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    TranIn3
      C                   PARM                    TranIn2
      C                   PARM                    ##FRIS
      C                   PARM      C_DDTCUR      #TRCCY                                      CSF011A
      C                   PARM      C_DDTCUR      #TPCCY                                      CSF011A
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       *****************************************************************
@@ -467,15 +470,15 @@
       * ValidateSt - Routine to validate the settlemnt instructions   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateSt    BEGSR
- 
+
      C                   EVAL      DDRCDT = 99999
      C                   EVAL      DDPYDT = 99999
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Following parameters are output to called module
@@ -502,14 +505,14 @@
      C                   PARM                    TranIn3
      C                   PARM                    TranIn2
      C                   PARM                    ##FRIS
- 
+
       * Action Code
      C                   PARM                    DDACTN
       * Protect Payment Field
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       ** Following parameters are returned by called module
       ** Payment Instruction OK flag
      C                   PARM                    OKPayInsDS
@@ -536,10 +539,10 @@
      C                   PARM      DDACTN        ##ACTN            1
       ** Validation Iteration
      C                   PARM      '1ST'         ##ValIter         3
- 
+
      C                   EVAL      DDPEXI = FLPEXI
      C     ValSetExit    TAG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -612,34 +615,34 @@
       *    updated during each run of this program                    *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
- 
+
+
      C                   RESET                   OKPayInsDS
      C                   RESET                   OKRecInsDS
      C                   RESET                   OKFRAInsDS
- 
+
      C                   RESET                   PayDat
      C                   RESET                   RecDat
- 
+
       ** Have to clear the settlement data structure, or the packed numeric
       ** fields are not initialised correctly.
      C                   CLEAR                   DBPaySttmt
      C                   CLEAR                   DBRecSttmt
      C                   CLEAR                   ##FRIF
      C                   CLEAR                   DsStal                                      CSF011A
- 
+
      C                   EVAL      ##PPAY = ' '                                              CSF011A
      C                   EVAL      ##PREC = ' '                                              CSF011A
                                                                                              CSF011A
@@ -659,9 +662,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -681,14 +684,14 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       * Hook to enable non-core message files to be included
- 
- 
+
+
      C                   ENDSR
       /EJECT
      C/COPY ZACPYSRC,PSSR_ILENE

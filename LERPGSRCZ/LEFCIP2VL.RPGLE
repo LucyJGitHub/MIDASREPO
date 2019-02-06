@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050282           Date 31Jan19               *
+      *  Last Amend No. AR896408           Date 31Jan19               *
       *  Prev Amend No. CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031311           Date 13Jun16               *
@@ -70,11 +70,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD050282 - Validation in subroutine VCDTE                    *
+      *  AR896408 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
       *             syndicated facilities thus DTEX                   *
       *             will also not be validated.                       *
-      *           - Applied for AR896408                              *
+      *           - Applied for MD050282                              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031311 - Error message required if total of tranches       *
@@ -1504,10 +1504,10 @@
       ** Validate Closing date if CLE006 is on
       ** and CLE106 is *ON                                                                   BUG9459
      C     CLE006        IFEQ      'Y'
-     C     DDSYIN        ANDEQ     'Y'                                                      MD050282
+     C     DDSYIN        ANDEQ     'Y'                                                      AR896408
      C*****CLE106        ANDEQ     'Y'                                                       BUG9459
      C     CLE106        OREQ      'Y'                                                        249841
-     C     DDSYIN        ANDEQ     'Y'                                                      MD050282
+     C     DDSYIN        ANDEQ     'Y'                                                      AR896408
       *
      C     DDCDTE        IFEQ      *BLANKS
       * Default to start date

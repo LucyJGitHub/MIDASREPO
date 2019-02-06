@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050539           Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050647           Date 20Sep18               *
+      *  Prev Amend No. MD050539           Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050647 - Only set the message status of PAPER network to   *
+      *             PRTD when AllowPaperSendToMMM is set to 'N'       *
       *  MD050539 - Dump in LEC0213 job due to blank destination      *
       *             record in MGOREFPD                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -116,6 +119,10 @@
       **  First data structure for access program, Short data structure
      IDSSDY     E DSDSSDY                                                 176443
       **  Second DS for access programs, Long Data Structure              176443
+      *                                                                                     MD050647
+      ** Declaration of Constant Fields                                                     MD050647
+      *                                                                                     MD050647
+     I              'AllowPaperSendToMMM 'C         PSVAL1                                  MD050647
       *
      C/EJECT
       *
@@ -232,6 +239,41 @@
      C                     Z-ADD0         X       40
      C                     MOVE BRCA      BCHWK3  3
       *
+     C                     CALL 'AOSVALR0'                                                  MD050647
+     C                     PARM *BLANKS   RTNCDE  7                                         MD050647
+     C                     PARM PSVAL1    SVALK1 20                                         MD050647
+     C                     PARM *BLANKS   SVAL1 200                                         MD050647
+     C                     PARM           SVALK2 20                                         MD050647
+     C                     PARM *BLANKS   SVAL2 200                                         MD050647
+     C                     PARM           SVALK3 20                                         MD050647
+     C                     PARM *BLANKS   SVAL3 200                                         MD050647
+     C                     PARM           SVALK4 20                                         MD050647
+     C                     PARM *BLANKS   SVAL4 200                                         MD050647
+     C                     PARM           SVALK5 20                                         MD050647
+     C                     PARM *BLANKS   SVAL5 200                                         MD050647
+     C                     PARM           SVALK6 20                                         MD050647
+     C                     PARM *BLANKS   SVAL6 200                                         MD050647
+     C                     PARM           SVALK7 20                                         MD050647
+     C                     PARM *BLANKS   SVAL7 200                                         MD050647
+     C                     PARM           SVALK8 20                                         MD050647
+     C                     PARM *BLANKS   SVAL8 200                                         MD050647
+     C                     PARM           SVALK9 20                                         MD050647
+     C                     PARM *BLANKS   SVAL9 200                                         MD050647
+     C                     PARM           SVALK0 20                                         MD050647
+     C                     PARM *BLANKS   SVAL10200                                         MD050647
+      *                                                                                     MD050647
+     C           RTNCDE    IFNE *BLANKS                                                     MD050647
+     C           *LOCK     IN   LDA                                                         MD050647
+     C                     MOVE 'ME0865  'DBPGM                                             MD050647
+     C                     MOVE '05'      DBASE                                             MD050647
+     C                     MOVE 'SDSVALPD'DBFILE                                            MD050647
+     C                     MOVE PSVAL1    DBKEY                                             MD050647
+     C                     OUT  LDA                                                         MD050647
+     C                     EXSR *PSSR                                                       MD050647
+     C                     ELSE                                                             MD050647
+     C                     MOVELSVAL1     MMMPPR  1                                         MD050647
+     C                     END                                                              MD050647
+      *                                                                                     MD050647
      C                     ENDSR
      C/EJECT
       *******************************************************************
@@ -298,9 +340,11 @@
      C                     EXSR PRTM
       *
       **  Update message status to ('PRTD') - 'Printed'
+     C           MMMPPR    IFEQ 'N'                                                         MD050647
      C                     MOVE '3'       MGSG
      C                     MOVE 'PRTD'    MGST
      C                     UPDATMGOREFD0
+     C                     ENDIF                                                            MD050647
       *
       **  Read next record from LF/MGOREFLR
      C                     READ MGOREFD0                 98

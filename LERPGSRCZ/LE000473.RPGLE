@@ -107,7 +107,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD048443 - Past due loan generated without loan type subtype *
-      *             and also without interest rate                    *      
+      *             and also without interest rate                    *
       *  MD050228 - Manual on-line PDCL and CoB generated PDCL:       *
       *             Margin of PDCL is not defaulted to zero           *
       *  MD050026 - CLIP Manual Input PDCL doesn't default the Profit *
@@ -3703,9 +3703,9 @@
      C                   PARM      *BLANKS       PVL06
      C                   PARM                    POP07
      C                   PARM      *BLANKS       PVL07
-     C                   PARM      *BLANKS       POP08
-     C**********         PARM      *BLANKS       PVL08                                      MD050026
+     C**********         PARM      *BLANKS       POP08                                      MD050026
      C                   PARM                    POP08                                      MD050026
+     C                   PARM      *BLANKS       PVL08
      C                   PARM      *BLANKS       POP09
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *  Last Amend No. MD040370           Date 20Jun18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD030956           Date 09Oct14               *
       *                 CTI006             Date 31Mar14               *
       *                 MD027804           Date 30Jun14               *
       *                 MD027093           Date 30May14               *
@@ -76,6 +77,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD040370 - MIDAS Country Codes maintenance function does     *
+      *             not work correctly.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *             (Recompile)                                       *
@@ -937,9 +940,9 @@
       ** If CGP001 is enabled, check country                                                  CGP001
       ** code in ISO country code file                                                        CGP001
       *                                                                                       CGP001
-     C           CGP001    IFEQ 'Y'                                                           CGP001
-     C                     EXSR SRVICT                                                        CGP001
-     C                     ENDIF                                                              CGP001
+     C********** CGP001    IFEQ 'Y'                                                  CGP001 MD040370
+     C**********           EXSR SRVICT                                               CGP001 MD040370
+     C**********           ENDIF                                                     CGP001 MD040370
       *                                                                                       CGP001
       *================================================================
      CSR         BFEXIT    ENDSR
@@ -1003,13 +1006,16 @@
       *****************************************************************                       CGP001
      C           SRVICT    BEGSR                                                              CGP001
       *                                                                                       CGP001
-     C                     MOVE #1CNCD    KCNCD   2                                           CGP001
+     C**********           MOVE #1CNCD    KCNCD   2                                  CGP001 MD040370
+     C                     MOVE #1ISOC    KCNCD   2                                         MD040370
       *                                                                                       CGP001
      C           KCNCD     CHAINGPICTYL0            N46                                       CGP001
       *                                                                                       CGP001
      C           *IN46     IFEQ *ON                                                           CGP001
-     C                     SETON                     9931                                     CGP001
-     C                     MOVEL'USR9784' ZAMSID                                              CGP001
+     C**********           SETON                     9931                            CGP001 MD040370
+     C**********           MOVEL'USR9784' ZAMSID                                     CGP001 MD040370
+     C                     SETON                     9932                                   MD040370
+     C                     MOVEL'SDM9000' ZAMSID                                            MD040370
      C                     MOVEL'SDUSRMSG'ZAMSGF                                              CGP001
      C                     EXSR ZASNMS                                                        CGP001
      C                     ENDIF                                                              CGP001
@@ -1042,6 +1048,13 @@
      C           YSETCS    IFEQ 'Y'
      C                     EXSR Y1SET
      C                     END
+      *                                                                                     MD040370
+      ** Default ISO Country Code to Country if blank.                                      MD040370
+      *                                                                                     MD040370
+     C           #1ISOC    IFEQ *BLANKS                                                     MD040370
+     C                     MOVEL#1CNCD    #1ISOC                                            MD040370
+     C                     ENDIF                                                            MD040370
+      *                                                                                     MD040370
      C                     WRITE#MSGCTL
      C                     WRITE#CMDTXT2
      C                     EXFMT#RCDDTL1
@@ -4475,7 +4488,13 @@
       *================================================================                       CSW213
       * Check ISO                                                                             CSW213
       *================================================================                       CSW213
+      *                                                                                     MD040370
+     C           #1ISOC    IFEQ *BLANKS                                                     MD040370
      C                     MOVEL#1CNCD    #1ISOC                                            MD022332
+     C                     ENDIF                                                            MD040370
+      *                                                                                     MD040370
+     C                     EXSR SRVICT                                                      MD040370
+      *                                                                                     MD040370
      C           ISOFND    IFEQ ' '                                                         MD023056
       *                                                                                     MD023056
      C           #1ISOC    CHAINMEISOCL1             90                                       CSW213

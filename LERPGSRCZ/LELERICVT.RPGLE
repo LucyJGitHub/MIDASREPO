@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No  MD044083           Date 06Feb19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD028338           Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD028338           Date 25Nov14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -49,11 +48,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD044083 - Loan interest rate become blank after insert a    *
-      *             rollover and spread rate showing incorrect value  *
-      *             on rollover enquiry. First issue was fixed in     *
-      *             MD034840, second issue fixed with adding condition*
-      *             to check if NRTS is negative and if not, use MOVE.*
       *  MD046248 - Finastra Rebranding                               *
       *  MD028338 - Interest calculation has rounding difference for  *
       *             Rollover of Facility Exchange Rate only. Add new  *
@@ -164,7 +158,7 @@
       *
      D RollScnFmt    E DS                  EXTNAME(LELERIPD)
       ***  Rollover Instructions in Screen Format
-
+ 
      D RollScnWrk2   E DS                  EXTNAME(LELERI2PD)
       *** Rollover Instructions Work fields
       *
@@ -173,17 +167,17 @@
       *
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External DS for currency details
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** External DS for Midas Module Details
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for SAR details
      D                                     PREFIX(S_)
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** External DS for General Ledger Details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  First DS for access programs, short data structure
       *
@@ -267,7 +261,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       DDNROD
      C                   END
-
+ 
       *
       ***  if Rollover rate fixing day enhancement - CLE011 is on
       *
@@ -348,11 +342,7 @@
      C                   MOVEL     ZFIELD        DDNRTF                                       CRE073
      C                   ELSE                                                                BUG9737
      C**********         MOVE      ZFIELD        DDNRTS                               BUG9737 CRE073
-     C                   IF        NRTS < *ZERO                                             MD044083
      C                   MOVEL     ZFIELD        DDNRTS                                       CRE073
-     C                   ELSE                                                               MD044083
-     C                   MOVE      ZFIELD        DDNRTS                                     MD044083
-     C                   ENDIF                                                              MD044083
      C**********         ELSE                                                         CLE106 BUG9507
      C**********         MOVE      ZFIELD        DDNRTS                                      BUG9507
      C                   ENDIF                                                                CLE106
@@ -635,7 +625,7 @@
       *                                                               *
       *****************************************************************
      C     SrCurrDet     BEGSR
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -649,7 +639,7 @@
      C                   MOVEL     'SDCURRPD'    DBFILE
      C                   EXSR      *PSSR
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -659,13 +649,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
-
+ 
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
-
+ 
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -675,7 +665,7 @@
       *                                                               *
       *****************************************************************
      C     ZFREQB        BEGSR
-
+ 
      C                   CallB     'ZFREQB'
      C                   Parm      *blanks       RetCodeIn
      C                   Parm                    ZFREQ             1
@@ -685,7 +675,7 @@
      C                   Parm                    ZMDAY             2 0
      C                   Parm                    BJDFIN
      C                   Parm      SDGELR        SDGELR
-
+ 
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -714,11 +704,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
-
+ 
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
-
+ 
      C                   ENDSR
       *****************************************************************
       *****************************************************************
@@ -838,9 +828,9 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
-
+ 
       ** Access SAR details file to determine if CDE002 is switched on
-
+ 
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       PRTCD             7
      C                   Parm      '*VERIFY'     POPTN             7
@@ -933,7 +923,7 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CRE073
      C                   MOVE      'Y'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
-
+ 
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *

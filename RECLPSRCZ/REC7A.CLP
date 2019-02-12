@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
+/*       Last Amend No. LUC110             Date 24Jan19              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CAP187             Date 21Aug09              */
+/*       Prev Amend No. CAP187             Date 21Aug09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK024             Date 12Apr06              */
+/*                      CPK024             Date 12Apr06              */
 /*                      209995 (BUG9115)   Date 31Oct05              */
 /*                    CRE013             Date 28Aug03               */
 /*                    CPK016             Date 04Jun03                */
@@ -34,6 +35,13 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC110  -  Extended Narratives (Upgrade NUC002 to FBM 2.1)  */
+/*                  Use of core hook REC7A002                       */
+/*                  Use of core hook REC7A009                       */
+/*                  Use of core hook REC7A010                       */
+/*                  Use of core hook REC7A011                       */
+/*                  Use of core hook REC7A012                       */
+/*                  Use of core hook REC7A013                       */
 /*       CAP187  -  Document Linkage (Recompile)                     */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
 /*                UTC0012.                                           */

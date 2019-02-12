@@ -14,8 +14,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. LUC108             DATE 19Apr16               *
-      *  Prev Amend No. LUC107             Date 21Dec15               *
+      *  Last Amend No. LUC110             Date 23Jan19               *
+      *  Prev Amend No. LUC108             DATE 19Apr16               *
+      *                 LUC107             Date 21Dec15               *
       *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
       *                 AR1014455          Date 23Jan14               *
@@ -157,6 +158,15 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade to FBM 2.1)            *
+      *           Use of core hook GL0420CCP5                         *
+      *           Use of core hook GL0420CCP7                         *
+      *           Use of core hook GL0420CP15                         *
+      *           Use of core hook GL0420CP35                         *
+      *           Use of core hook GL0420CP59                         *
+      *           Use of core hook GL0420FFPG                         *
+      *           Use of core hook GL0420I002                         *
+      *           Use of core hook GL0420I017                         *
       *  LUC108 - Statement of Accounts                               *
       *         - Upgrade of LUC108 from Dba3.04 to FusionMidas       *
       *         - Carried Forward balance overprinting                *

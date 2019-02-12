@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. MD031966           Date 27Jul15              */
-/*       Prev Amend No. MD026439           Date 24Apr14              */
+/*       Last Amend No. LUC110             Date 21Jan19              */
+/*       Prev Amend No. MD031966           Date 27Jul15              */
+/*                      MD026439           Date 24Apr14              */
 /*                      AR1096788          Date 18Mar13              */
 /*                      AR1005423          Date 09Aug12              */
 /*                      AR1018468          Date 20Oct12              */
@@ -46,6 +47,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)   */
+/*                Use of core hook GLC01MPS                         */
 /*       MD031966 - BFM GL3572P1 issue                              */
 /*       MD026439 - Field tag 61 Posting Date of the generated      */
 /*                  MT940 for Subsidiary Account is incorrect       */
@@ -194,7 +197,7 @@
 /************CLRPFM GLBRREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBSREP*/                              /*S01229*/ /*S01154*/
 /************CLRPFM GLBTREP*/                              /*S01229*/ /*S01154*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,GLC01001                                     */      /*S01408*/
                                                                                           /*CER001*/

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037383           Date 25May16               *
-      *  Prev Amend No. CGL049             Date 17Feb15               *
+      *  Last Amend No. LUC110             Date 23Jan19               *
+      *  Prev Amend No. MD037383           Date 25May16               *
+      *                 CGL049             Date 17Feb15               *
       *                 CGL160             Date 11Nov14               *
       *                 MD024553           Date 30Jan14               *
       *                 CGL120             Date 06Aug12               *
@@ -75,6 +76,39 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *           Use of core hook GL0340CCP1                         *
+      *           Use of core hook GL0340I001                         *
+      *           Use of core hook GL0340IIP1                         *
+      *           Use of core hook GL0340IIPG                         *
+      *           Use of core hook GL0340O004                         *
+      *           Use of core hook GL0340O009                         *
+      *           Use of core hook GL0340O012                         *
+      *           Use of core hook GL0340OOP5                         *
+      *           Use of core hook GL0340OOP7                         *
+      *           Use of core hook GL0340OOP9                         *
+      *           Addition of hook LUC110_053                         *
+      *           Addition of hook LUC110_054                         *
+      *           Addition of hook LUC110_055                         *
+      *           Addition of hook LUC110_056                         *
+      *           Addition of hook LUC110_057                         *
+      *           Addition of hook LUC110_058                         *
+      *           Addition of hook LUC110_059                         *
+      *           Addition of hook LUC110_060                         *
+      *           Addition of hook LUC110_061                         *
+      *           Addition of hook LUC110_062                         *
+      *           Addition of hook LUC110_063                         *
+      *           Addition of hook LUC110_064                         *
+      *           Addition of hook LUC110_065                         *
+      *           Addition of hook LUC110_066                         *
+      *           Addition of hook LUC110_067                         *
+      *           Addition of hook LUC110_068                         *
+      *           Addition of hook LUC110_069                         *
+      *           Addition of hook LUC110_070                         *
+      *           Addition of hook LUC110_071                         *
+      *           Addition of hook LUC110_072                         *
+      *           Addition of hook LUC110_073                         *
+      *           Addition of hook LUC110_074                         *
       *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
       *             Stamp Tax (CER049) processing.                    *
       *             Rework that component to make it 'Task Split'     *
@@ -317,6 +351,7 @@
      F                                     OFLIND(*INOA)
 0096 F*
 0097 F*
+     F/COPY WNCPYSRC,LUC110_053                                                               LUC110
       *                                                                                       CGL030
      D ARL1            S             29    DIM(2) CTDATA PERRCD(1)                            CGL030
      D ARG1            S              1    DIM(2) CTDATA PERRCD(2)                            CGL030
@@ -1684,6 +1719,7 @@
 0550 C***  PROCESS DETAILS - NON-RETAIL A/C'S
 0551 C*
 0552 C*
+     C/COPY WNCPYSRC,LUC110_054                                                               LUC110
 0553 C                   Z-ADD     VALD          ZDAYNO
 0554 C                   EXSR      ZDATE2
 0555 C                   Z-ADD     ZDATE         VALDO             6 0
@@ -2847,11 +2883,13 @@
      O**********       73      A5NARR    56                                            CSD005 CGL029
      O              N73      A5ACCN              41                                           CGL029
      O               73      A5NARR              62                                           CGL029
+     O/COPY WNCPYSRC,LUC110_055                                                               LUC110
 1217 O                                          106 'O/B'                       S01290
 1218 O               30      LDBL               128 '   ,   ,   ,   , 0 CR'
 1219 O               31      LDBL               128 '  ,   ,   ,   , 0 . CR'
 1220 O               32      LDBL               128 ' ,   ,   ,   , 0 .  CR'
 1221 O               33      LDBL               128 '   ,   ,   , 0 .   CR'
+     O/COPY WNCPYSRC,LUC110_056                                                               LUC110
 1222 O********D**1     81                                                 S01117
 1222 O**********D    81 25                  1                                          S01117 CGL120
      O          EF           EXACOB         1                                                 CGL120
@@ -2883,11 +2921,13 @@
 1232 O                       ACSQJ               14
 1233 O***********              CRNM      35                               S01194
 1233 O                       BBCRNM              35                             S01194
+     O/COPY WNCPYSRC,LUC110_057                                                               LUC110
 1234 O                                          106 'O/B'
 1235 O               30      LDBE               128 '   ,   ,   ,   , 0 CR'
 1236 O               31      LDBE               128 '  ,   ,   ,   , 0 . CR'
 1237 O               32      LDBE               128 ' ,   ,   ,   , 0 .  CR'
 1238 O               33      LDBE               128 '   ,   ,   , 0 .   CR'
+     O/COPY WNCPYSRC,LUC110_058                                                               LUC110
 1239 O**
 1240 O/SPACE 3
 1241 O***  A/C SEQ. O/B
@@ -2902,11 +2942,13 @@
 1245 O                                           12 '-'
 1246 O                       ACSQJ               14
      O                       BBCRNM              35                                           209478
+     O/COPY WNCPYSRC,LUC110_059                                                               LUC110
 1247 O                                          106 'O/B'
 1248 O               30      LDBE               128 '   ,   ,   ,   , 0 CR'
 1249 O               31      LDBE               128 '  ,   ,   ,   , 0 . CR'
 1250 O               32      LDBE               128 ' ,   ,   ,   , 0 .  CR'
 1251 O               33      LDBE               128 '   ,   ,   , 0 .   CR'
+     O/COPY WNCPYSRC,LUC110_060                                                               LUC110
 1252 O/SPACE 3
 1253 O***  POSTING DETAILS
 1254 O*
@@ -2928,6 +2970,7 @@
 1258 O                       DPMT                55
 1259 O                    N37ASOC                64
 1260 O                       ZADATE              75
+     O/COPY WNCPYSRC,LUC110_061                                                               LUC110
 1261 O                       PNAR               106
 1262 O               30      PSTAS              128 ' ,   ,   ,   , 0 CR'
 1263 O               31      PSTAS              128 '   ,   ,   , 0 . CR'
@@ -2962,21 +3005,25 @@
      O***  A/C SEQ. DEBIT BALANCE                                         S01290
      O*                                                                   S01290
      O          E    85 25N17               1                                   S01290
+     O/COPY WNCPYSRC,LUC110_062                                                               LUC110
      O                                          106 'TOTAL OF ACCOUNT  DEBITS'  S01290
      O               30      PSTADR             128 '   ,   ,   ,   , 0 CR'     S01290
      O               31      PSTADR             128 '  ,   ,   ,   , 0 . CR'    S01290
      O               32      PSTADR             128 ' ,   ,   ,   , 0 .  CR'    S01290
      O               33      PSTADR             128 '   ,   ,   , 0 .   CR'     S01290
+     O/COPY WNCPYSRC,LUC110_063                                                               LUC110
      O*                                                                   S01290
      O/SPACE 2                                                            S01290
      O***  A/C SEQ. CREDIT BALANCE                                        S01290
      O*                                                                   S01290
      O          E    85 25N16               1                                   S01290
+     O/COPY WNCPYSRC,LUC110_064                                                               LUC110
      O                                          106 'TOTAL OF ACCOUNT CREDITS'  S01290
      O               30      PSTACR             128 '   ,   ,   ,   , 0 CR'     S01290
      O               31      PSTACR             128 '  ,   ,   ,   , 0 . CR'    S01290
      O               32      PSTACR             128 ' ,   ,   ,   , 0 .  CR'    S01290
      O               33      PSTACR             128 '   ,   ,   , 0 .   CR'     S01290
+     O/COPY WNCPYSRC,LUC110_065                                                               LUC110
 1266 O*
 1267 O/SPACE 2
 1268 O***  A/C SEQ. C/B
@@ -2984,6 +3031,7 @@
 1270 O********E**1     85                                                 S01117
 1270 O**********E    85 25                  1                                          S01117 CGL120
      O          EF   85 25                  1                                                 CGL120
+     O/COPY WNCPYSRC,LUC110_066                                                               LUC110
 1271 O                                          106 'C/B'
 1272 O               30      TACSQ              128 '   ,   ,   ,   , 0 CR'
 1273 O               31      TACSQ              128 '  ,   ,   ,   , 0 . CR'
@@ -3010,12 +3058,14 @@
      O********E**1     86 25                                        S01117S01290
      O          EF   86 25                  1                                   S01290
 1281 O***********                       106 'RETAIL ACCOUNT O/B'          S01290
+     O/COPY WNCPYSRC,LUC110_067                                                               LUC110
      O                                           16 'RETAIL ACCOUNTS'           S01290
      O                                          106 'O/B'                       S01290
 1282 O               30      REBAL              128 '   ,   ,   ,   , 0 CR'
 1283 O               31      REBAL              128 '  ,   ,   ,   , 0 . CR'
 1284 O               32      REBAL              128 ' ,   ,   ,   , 0 .  CR'
 1285 O               33      REBAL              128 '   ,   ,   , 0 .   CR'
+     O/COPY WNCPYSRC,LUC110_068                                                               LUC110
 1286 O*
 1287 O**SUMMARY*OF*RETAIL*A/C'S                                           S01290
 1288 O***********                                                         S01290
@@ -3030,20 +3080,24 @@
      O***  SUMMARY OF RETAIL ACCOUNTS (DEBIT BALANCES)                    S01290
      O*                                                                   S01290
      O          E    86 25N19               1                                   S01290
+     O/COPY WNCPYSRC,LUC110_069                                                               LUC110
      O                                          106 'RETAIL ACCOUNT  DEBITS'    S01290
      O               30      TPSTDR             128 '   ,   ,   ,   , 0 CR'     S01290
      O               31      TPSTDR             128 '  ,   ,   ,   , 0 . CR'    S01290
      O               32      TPSTDR             128 ' ,   ,   ,   , 0 .  CR'    S01290
      O               33      TPSTDR             128 '   ,   ,   , 0 .   CR'     S01290
+     O/COPY WNCPYSRC,LUC110_070                                                               LUC110
      O*                                                                   S01290
      O***  SUMMARY OF RETAIL ACCOUNTS (CREDIT BALANCES)                   S01290
      O*                                                                   S01290
      O          E    86 25N18               1                                   S01290
+     O/COPY WNCPYSRC,LUC110_071                                                               LUC110
      O                                          106 'RETAIL ACCOUNT CREDITS'    S01290
      O               30      TPSTCR             128 '   ,   ,   ,   , 0 CR'     S01290
      O               31      TPSTCR             128 '  ,   ,   ,   , 0 . CR'    S01290
      O               32      TPSTCR             128 ' ,   ,   ,   , 0 .  CR'    S01290
      O               33      TPSTCR             128 '   ,   ,   , 0 .   CR'     S01290
+     O/COPY WNCPYSRC,LUC110_072                                                               LUC110
      O*                                                                   120830
      O          E    86 25                  1                                   120830
      O                                            6 '(NET)'                     120830
@@ -3073,6 +3127,7 @@
 1297 O********E**1     86                                                 S01117
 1297 O**********E    86 25                  1                                          S01117 CGL120
      O          EF   86 25                  1                                                 CGL120
+     O/COPY WNCPYSRC,LUC110_073                                                               LUC110
 1298 O                                          106 'C/B'
 1299 O               30      TACOD              128 '   ,   ,   ,   , 0 CR'
 1300 O               31      TACOD              128 '  ,   ,   ,   , 0 . CR'
@@ -3101,6 +3156,7 @@
 1308 O          EF   87 25               1  2                                   S01290
 1309 O***********                       106 'ACCOUNT CODE C/B'            S01290
      O***********              A5ACCN   102                         S01290CSD005
+     O/COPY WNCPYSRC,LUC110_074                                                               LUC110
      O              N73      A5ACCN             102                             CSD005
      O               73      A5NARR             102                             CSD005
      O                                          106 'C/B'                       S01290

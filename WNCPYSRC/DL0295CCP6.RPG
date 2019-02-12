@@ -1,0 +1,800 @@
+      *****************************************************************
+      *  Start of /COPY DL0295CCP6                                    *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. LUC110  *Create    Date 18Jan19               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  PH0001 - Adjust formatting of Extended Narratives for        *
+      *           Accounts Movements Enquiry.                         *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *                                                               *
+      *****************************************************************
+     C**   SR. Determine if Extended Narratives should be formatted.      LUC110
+     C**                                                                  LUC110
+     C           EXNARR    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      *                                                                   LUC110
+     C                     MOVEL*BLANK    W@UNQK                          LUC110
+     C                     MOVELAKEY      KDTYP   2      91               LUC110
+     C*********            MOVE AKEY      W@DTYP  2                       LUC110
+     C*********            MOVELW@DTYP    KKTYP   1                       LUC110
+     C                     MOVE AKPOS9    KKTYP   1                       LUC110
+      *                                                                   LUC110
+      ** SAVE INDICATORS 07, 08, 16, 59, 80, 87                           LUC110
+     C                     MOVE *IN07     W@IN07  1                       LUC110
+     C                     MOVE *IN08     W@IN08  1                       LUC110
+     C                     MOVE *IN16     W@IN16  1                       LUC110
+     C                     MOVE *IN59     W@IN59  1                       LUC110
+     C                     MOVE *IN80     W@IN80  1                       LUC110
+     C                     MOVE *IN87     W@IN87  1                       LUC110
+      *                                                                   LUC110
+     C                     MOVE *OFF      Y@IN07  1                       LUC110
+     C                     MOVE *OFF      Y@IN08  1                       LUC110
+     C                     MOVE *OFF      Y@IN16  1                       LUC110
+     C                     MOVE *OFF      Y@IN59  1                       LUC110
+     C                     MOVE *OFF      Y@IN80  1                       LUC110
+     C                     MOVE *OFF      Y@IN87  1                       LUC110
+      *                                                                   LUC110
+      **  CLEAR RETAIL NARRATIVE TYPE INDICATORS                          LUC110
+     C                     SETOF                     070809               LUC110
+     C                     SETOF                     141659               LUC110
+     C                     SETOF                     808790               LUC110
+      **  IF POSTING TO A RETAIL ACCOUNT, SET UP EXTENDED NARRATIVES      LUC110
+     C                     Z-ADD1         T       10                      LUC110
+     C           KDTYP     LOKUPRDT,T                    91               LUC110
+     C           REVI      IFEQ 1                          B001           LUC110
+     C                     SETOF                     91       1           LUC110
+     C                     END                             E001           LUC110
+     C           ATYPA     IFEQ 'R'                        B001           LUC110
+     C           *IN91     ANDEQ'1'                           1           LUC110
+     C                     EXSR PNL123                        1           LUC110
+      **  IF KEY DOESN'T MATCH AN EXTENDED NARRATIVE CASE, SETOF *IN91    LUC110
+     C  N07N08N09                                             1           LUC110
+     CANN14N16N59                                             1           LUC110
+     CANN80N87N90          MOVE '0'       *IN91               1           LUC110
+      *                                                       1           LUC110
+     C                     ELSE                            X001           LUC110
+     C                     MOVE '0'       *IN91               1           LUC110
+     C                     END                             E001           LUC110
+      *                                                                   LUC110
+      *                                                                   LUC110
+      * RESTORE SAVED INDICATORS                                          LUC110
+     C                     MOVE W@IN07    *IN07                           LUC110
+     C                     MOVE W@IN08    *IN08                           LUC110
+     C                     MOVE W@IN16    *IN16                           LUC110
+     C                     MOVE W@IN59    *IN59                           LUC110
+     C                     MOVE W@IN80    *IN80                           LUC110
+     C                     MOVE W@IN87    *IN87                           LUC110
+     C                     MOVE *IN91     W@IN91  1                       LUC110
+      *                                                                   LUC110
+     C                     ENDSR                                          LUC110
+      *                                                                   LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. Format Extended Narratives according to deal type.         LUC110
+     C**                                                                  LUC110
+     C           PNL123    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+     C           ATYPA     IFEQ 'R'                                       LUC110
+      **                                                                  LUC110
+     C           UNQK      IFEQ *BLANK                                    LUC110
+      **                                                                  LUC110
+     C           *INU3     IFEQ '0'                                       LUC110
+     C                     Z-ADD2000000   UNQK#   90                      LUC110
+     C                     ELSE                                           LUC110
+     C                     Z-ADD5000000   UNQK#   90                      LUC110
+     C                     END                                            LUC110
+     C                     ELSE                                           LUC110
+     C                     ADD  1         UNQK#                           LUC110
+     C                     END                                            LUC110
+      **                                                                  LUC110
+     C                     MOVELUNQK#     UNQK    9                       LUC110
+     C                     MOVELUNQK#     W@UNQK  9                       LUC110
+      *                                                                   LUC110
+      *                                                                   LUC110
+     C           DLNO      CHAINXXDEALL0             30                   LUC110
+     C           *IN30     IFEQ '1'                        B001           LUC110
+     C                     SETON                     37       1           LUC110
+     C                     MOVELDLNO      DBKEY               1           LUC110
+     C                     MOVEL'XXDEALL0'DBFILE              1           LUC110
+     C                     MOVEL'930'     DBASE             **DBERR930*   LUC110
+     C                     GOTO PNLEND                        1           LUC110
+     C                     END                             E001           LUC110
+      *                                                                   LUC110
+     C           DTYPD     IFEQ 'SW'                       B001           LUC110
+      **  IF ORIGINAL DEAL TYPE WAS NOT SW, REPLACE DTYPD WITH ORDT       LUC110
+     C           ORDT      IFNE DTYPD                      B002           LUC110
+     C           ORDT      ANDNE*BLANKS                    B002           LUC110
+     C                     MOVE ORDT      DTYPD               2           LUC110
+      **  OTHERWISE, ASSEMBLE SWAP NARRATIVES                 2           LUC110
+     C                     ELSE                            X002           LUC110
+     C                     SETON                     09       2           LUC110
+     C                     MOVE PN1,7     PNL1A  35           2           LUC110
+     C                     Z-ADDSODND     PNSODN  60          2           LUC110
+     C                     MOVE SLCYD     PNCCY1  3           2           LUC110
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS      LUC110
+     C                     EXSR PNDPIS                        2           LUC110
+      **                                                      2           LUC110
+     C                     EXSR PNL2BS                        2           LUC110
+     C                     Z-ADDDDATD     ZDAYNO              2           LUC110
+     C                     EXSR ZDATE2                        2           LUC110
+     C                     MOVE ZADATE    PNDAT1  7           2           LUC110
+     C                     END                             E002           LUC110
+     C                     END                             E001           LUC110
+      **  DEAL TYPE FP                                                    LUC110
+     C           DTYPD     IFEQ 'FP'                       B001           LUC110
+     C                     SETON                     07       1           LUC110
+     C                     MOVE *ON       Y@IN07              1           LUC110
+     C                     EXSR PNFWD                         1           LUC110
+     C                     MOVE PUCYD     PNCCY1              1           LUC110
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS      LUC110
+     C                     EXSR PNDPIS                        1           LUC110
+      **                                                      1           LUC110
+     C                     EXSR PNL2BS                        1           LUC110
+     C                     Z-ADDDDATD     ZDAYNO              1           LUC110
+     C                     EXSR ZDATE2                        1           LUC110
+     C                     MOVE ZADATE    PNDAT1              1           LUC110
+     C                     END                             E001           LUC110
+      **  DEAL TYPE FS                                                    LUC110
+     C           DTYPD     IFEQ 'FS'                       B001           LUC110
+     C                     SETON                     07       1           LUC110
+     C                     MOVE *ON       Y@IN07              1           LUC110
+     C                     EXSR PNFWD                         1           LUC110
+     C                     MOVE SLCYD     PNCCY1              1           LUC110
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS      LUC110
+     C                     EXSR PNDPIS                        1           LUC110
+      **                                                      1           LUC110
+     C                     EXSR PNL2BS                        1           LUC110
+     C                     Z-ADDDDATD     ZDAYNO              1           LUC110
+     C                     EXSR ZDATE2                        1           LUC110
+     C                     MOVE ZADATE    PNDAT1              1           LUC110
+     C                     END                             E001           LUC110
+      **  DEAL TYPE CX                                                    LUC110
+     C           DTYPD     IFEQ 'CX'                       B001           LUC110
+     C                     SETON                     08       1           LUC110
+     C                     MOVE *ON       Y@IN08              1           LUC110
+     C                     EXSR PNFWD                         1           LUC110
+     C                     MOVE SLCYD     PNCCY1              1           LUC110
+     C                     MOVE PUCYD     PNCCY2  3           1           LUC110
+      **  CALL SUBR TO SET UP NARR. AMT AND DECIMAL PLACE INDICATORS      LUC110
+     C                     EXSR PNDPIS                        1           LUC110
+      **                                                      1           LUC110
+     C                     EXSR PNL2BS                        1           LUC110
+     C                     Z-ADDDDATD     ZDAYNO              1           LUC110
+     C                     EXSR ZDATE2                        1           LUC110
+     C                     MOVE ZADATE    PNDAT1              1           LUC110
+     C                     END                             E001           LUC110
+      **  DEAL TYPES IT,TD,IP,CI                                          LUC110
+     C           DTYPD     IFEQ 'IT'                       B001           LUC110
+     C           DTYPD     OREQ 'TD'                          1           LUC110
+     C           DTYPD     OREQ 'IP'                          1           LUC110
+     C           DTYPD     OREQ 'CI'                          1           LUC110
+      **  DEAL/VALUE DATE KEYS                                1           LUC110
+     C           EVCOD     IFEQ 'D'                        B002           LUC110
+     C           EVCOD     OREQ 'V'                           2           LUC110
+      ***                  SETON                     54       2           LUC110
+     C                     SETON                     14       2           LUC110
+      **  ASSEMBLE NARRATIVE LINE 1                           2           LUC110
+     C           DTYPD     IFEQ 'CI'                       B003           LUC110
+     C                     MOVE PN1,10    PNL1A               3           LUC110
+     C                     ELSE                            X003           LUC110
+     C           DTYPD     IFEQ 'IP'                       B004           LUC110
+     C                     MOVE PN1,9     PNL1A               4           LUC110
+     C                     ELSE                            X004           LUC110
+      **  OTHERWISE, MUST BE 'IT' OR 'TD'                     4           LUC110
+     C                     MOVE PN1,8     PNL1A               4           LUC110
+     C                     END                             E004           LUC110
+     C                     END                             E003           LUC110
+      **  ASSEMBLE NARRATIVE LINE 2                           2           LUC110
+     C                     EXSR PNL2CS                        2           LUC110
+      **  ASSEMBLE NARRATIVE LINE 3                           2           LUC110
+      **  CHECK WHETHER FIRST TWO DIGITS OF TOTAL INTEREST ARE ZERO.      LUC110
+     C                     Z-ADDTOTID     PNAML               2           LUC110
+     C           PNAF2     COMP 0                    9292     2           LUC110
+     C                     ELSE                            X002           LUC110
+      **  MATURITY DATE KEYS                                  2           LUC110
+     C           EVCOD     IFEQ 'M'                        B003           LUC110
+     C                     SETON                     16       3           LUC110
+     C                     MOVE *ON       Y@IN16              1           LUC110
+     C           DTYPD     IFEQ 'CI'                       B004           LUC110
+     C                     MOVE PN1,14    PNL1A               4           LUC110
+     C                     ELSE                            X004           LUC110
+     C                     MOVE PN1,11    PNL1A               4           LUC110
+     C                     END                             E004           LUC110
+     C                     Z-ADDVDAT      ZDAYNO              3           LUC110
+     C                     EXSR ZDATE2                        3           LUC110
+     C                     MOVE ZADATE    PNDAT1              3           LUC110
+     C           PNL1A     CAT  PNDAT1:1  PNL1A                           LUC110
+     C           EVSUB     IFEQ 'A'                        B004           LUC110
+     C                     MOVE PN2,1     PNL2A  35           4           LUC110
+     C                     ELSE                            X004           LUC110
+     C           EVSUB     IFEQ 'B'                        B005           LUC110
+     C                     MOVE PN2,7     PNL2A               5           LUC110
+     C                     ELSE                            X005           LUC110
+     C                     MOVE PN2,2     PNL2A               4           LUC110
+     C                     ENDIF                           E005           LUC110
+     C                     END                             E004           LUC110
+      **                                                      3           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+     C                     END                             E001           LUC110
+      **  DEAL TYPE CD                                                    LUC110
+     C           DTYPD     IFEQ 'CD'                       B001           LUC110
+      **  DEAL/VALUE DATE KEYS                                1           LUC110
+     C           EVCOD     IFEQ 'D'                        B002           LUC110
+     C                     GOTO PNTAG1                        2           LUC110
+     C                     END                             E002           LUC110
+     C           EVCOD     IFNE 'V'                        B002           LUC110
+     C           KKTYP     ORNE ' '                           2           LUC110
+     C                     GOTO PNTAG2                        2           LUC110
+     C                     END                             E002           LUC110
+     C           PNTAG1    TAG                                1           LUC110
+     C                     SETON                     59       1           LUC110
+     C                     MOVE *ON       Y@IN59              1           LUC110
+     C                     MOVE PN1,12    PNL1A               1           LUC110
+     C                     MOVE PN2,6     PNL2A               1           LUC110
+      **  MOVE EFFECTIVE INTEREST RATE INTO DATA STRUCTURE    1           LUC110
+      **  AND CALL SUBROUTINE TO DETECT TRAILING ZEROES       1           LUC110
+     C           INTRD     MULT 10000000  PNRATE              1           LUC110
+     C                     SETOF                     93       1           LUC110
+     C                     EXSR PNRATS                        1           LUC110
+      **                                                      1           LUC110
+     C           PNTAG2    TAG                                1           LUC110
+      **  BALANCE CHANGE AMENDMENT KEYS                       1           LUC110
+     C           EVCOD     IFEQ 'V'                        B002           LUC110
+     C           KKTYP     ANDEQ'I'                           2           LUC110
+     C                     MOVE PN2,3     PNL2A               2           LUC110
+     C                     GOTO PNTAG3                        2           LUC110
+     C                     END                             E002           LUC110
+     C           EVCOD     IFNE 'M'                        B002           LUC110
+     C           KKTYP     ORNE 'D'                           2           LUC110
+     C                     GOTO PNTAG4                        2           LUC110
+     C                     END                             E002           LUC110
+     C                     MOVE PN2,4     PNL2A               1           LUC110
+     C           PNTAG3    TAG                                1           LUC110
+     C***                  SETON                     66       1           LUC110
+     C                     SETON                     80       1           LUC110
+     C                     MOVE *ON       Y@IN80              1           LUC110
+     C                     MOVE PN1,13    PNL1A               1           LUC110
+     C           PNTAG4    TAG                                1           LUC110
+      **  INTEREST PAYMENT DATE KEYS                          1           LUC110
+     C           EVCOD     IFEQ 'I'                        B002           LUC110
+     C           EVSUB     IFEQ 'I'                        B003           LUC110
+     C           EVSUB     OREQ 'C'                           3           LUC110
+     C***                  SETON                     71       3           LUC110
+     C                     SETON                     87       3           LUC110
+     C                     MOVE *ON       Y@IN87              1           LUC110
+     C                     MOVE PN1,13    PNL1A               3           LUC110
+     C                     MOVE PN2,5     PNL2A               3           LUC110
+     C                     Z-ADDSLID      ZDAYNO              3           LUC110
+     C                     EXSR ZDATE2                        3           LUC110
+     C                     MOVE ZADATE    PNDAT2  7           3           LUC110
+     C                     Z-ADDSLIDD     ZDAYNO              3           LUC110
+     C                     EXSR ZDATE2                        3           LUC110
+     C                     MOVE ZADATE    PNDAT3  7           3           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+      **  MATURITY DATE KEYS                                  1           LUC110
+     C           EVCOD     IFEQ 'M'                        B002           LUC110
+      **  PRINCIPAL AT MATURITY                               2           LUC110
+     C           EVSUB     IFEQ 'A'                        B003           LUC110
+     C           KKTYP     ANDEQ' '                           3           LUC110
+     C                     SETON                     90       3           LUC110
+     C                     MOVE PN1,13    PNL1A               3           LUC110
+     C                     MOVE PN2,1     PNL2A               3           LUC110
+     C                     ELSE                            X003           LUC110
+      **  INTEREST AT MATURITY                                3           LUC110
+     C           EVSUB     IFEQ 'I'                        B004           LUC110
+     C                     SETON                     87       4           LUC110
+     C                     MOVE *ON       Y@IN87              4           LUC110
+     C                     MOVE PN1,13    PNL1A               4           LUC110
+     C                     MOVE PN2,5     PNL2A               4           LUC110
+     C                     Z-ADDSLID      ZDAYNO              4           LUC110
+     C                     EXSR ZDATE2                        4           LUC110
+     C                     MOVE ZADATE    PNDAT2              4           LUC110
+     C                     Z-ADDMDAT      ZDAYNO              4           LUC110
+     C                     EXSR ZDATE2                        4           LUC110
+     C                     MOVE ZADATE    PNDAT3              4           LUC110
+     C                     END                             E004           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+     C                     END                             E001           LUC110
+      **                                                                  LUC110
+      **                                                                  LUC110
+     C                     END                             E001           LUC110
+      **                                                                  LUC110
+     C           PNLEND    ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO DETERMINE WHETHER FX DEAL IS SPOT OR FORWARD            LUC110
+     C**                                                   **PNFWD**      LUC110
+     C           PNFWD     BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+      **  CLEAR FORWARD DEAL INDICATOR                                    LUC110
+     C                     SETOF                     72                   LUC110
+      **  CALCULATE TWO WORKING DAYS FORWARD FROM DEAL DATE               LUC110
+     C                     Z-ADDDDATD     ZDAYNO                          LUC110
+     C                     MOVE A8LCCD    ZLOC                            LUC110
+     C                     MOVE BJLCCY    ZCCY                            LUC110
+     C                     Z-ADD2         ZNRDYS                          LUC110
+     C                     EXSR ZFWDTA                                    LUC110
+      **  APPLY APPROPRIATE NARRATIVE                                     LUC110
+     C           VDATD     IFLE ZDYNBR                     B001           LUC110
+      **  FP SPOT                                             1           LUC110
+     C           DTYPD     IFEQ 'FP'                       B002           LUC110
+     C                     MOVE PN1,1     PNL1A               2           LUC110
+     C                     ELSE                            X002           LUC110
+      **  FS SPOT                                             2           LUC110
+     C           DTYPD     IFEQ 'FS'                       B003           LUC110
+     C                     MOVE PN1,3     PNL1A               3           LUC110
+     C                     ELSE                            X003           LUC110
+      **  CX SPOT                                             3           LUC110
+     C                     MOVE PN1,5     PNL1A               3           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+     C                     ELSE                            X001           LUC110
+      **  FORWARD DEAL - SET ON INDICATOR                     1           LUC110
+     C                     SETON                     72       1           LUC110
+      **  FP FORWARD                                          1           LUC110
+     C           DTYPD     IFEQ 'FP'                       B002           LUC110
+     C                     MOVE PN1,2     PNL1A               2           LUC110
+     C                     ELSE                            X002           LUC110
+      **  FS FORWARD                                          2           LUC110
+     C           DTYPD     IFEQ 'FS'                       B003           LUC110
+     C                     MOVE PN1,4     PNL1A               3           LUC110
+     C                     ELSE                            X003           LUC110
+      **  CX FORWARD                                          3           LUC110
+     C                     MOVE PN1,6     PNL1A               3           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+     C                     END                             E001           LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO SET UP PNL2 FOR FX DEAL RETAIL ENTRIES                  LUC110
+     C**                                                   **PNL2BS**     LUC110
+     C           PNL2BS    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+     C                     SETOF                     9293                 LUC110
+      **                                                                  LUC110
+      **  CHECK WHETHER FIRST TWO DIGITS OF AMOUNT ARE ZERO               LUC110
+     C           PNAF2     IFNE 0                          B001           LUC110
+     C                     SETON                     92       1           LUC110
+     C                     END                             E001           LUC110
+      **  MOVE EXCHANGE RATE INTO DATA STRUCTURE- TRUNCATE IF NECESSARY   LUC110
+     C                     MOVELEXRT      PNFST2  20                      LUC110
+     C           PNFST2    IFGT 0                          B001           LUC110
+     C           *IN92     ANDEQ'1'                           1           LUC110
+     C           EXRT      MULT 100000    PNRAT9    H         1           LUC110
+     C                     SETON                     93       1           LUC110
+     C                     Z-ADD0         PNRL2D              1           LUC110
+     C                     ELSE                            X001           LUC110
+     C           EXRT      MULT 10000000  PNRATE    H         1           LUC110
+     C                     END                             E001           LUC110
+      **  CALL SUBROUTINE TO IDENTIFY TRAILING ZEROES IN RATE             LUC110
+     C                     EXSR PNRATS                                    LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO SET UP PNL2 FOR IT,TD,IP,CI DEAL/VALUE DATE ENTRIES     LUC110
+     C**                                                   **PNL2CS**     LUC110
+     C           PNL2CS    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+      **  CHECK FOR LEADING ZEROES IN INTEREST RATE                       LUC110
+      **  IF FIRST 2 INT POSITIONS NOT BOTH 0, DROP LAST 2 DEC POSITIONS  LUC110
+     C                     MOVELINTRD     PNFST2     93                   LUC110
+     C           *IN93     IFEQ '1'                        B001           LUC110
+     C           INTRD     MULT 100000    PNRAT9    H         1           LUC110
+     C                     Z-ADD0         PNRL2D              1           LUC110
+     C                     ELSE                            X001           LUC110
+      **  OTHERWISE, READ FULL RATE INTO DATA STRUCTURE       1           LUC110
+     C           INTRD     MULT 10000000  PNRATE    H         1           LUC110
+     C                     END                             E001           LUC110
+      **  CALL SUBROUTINE TO IDENTIFY TRAILING ZEROES IN RATE             LUC110
+     C                     EXSR PNRATS                                    LUC110
+      **  SET UP FROM AND TO DATES                                        LUC110
+     C                     Z-ADDVDAT      ZDAYNO                          LUC110
+     C                     EXSR ZDATE2                                    LUC110
+     C                     MOVE ZADATE    PNDAT1                          LUC110
+     C                     Z-ADDMDAT      ZDAYNO                          LUC110
+     C                     EXSR ZDATE2                                    LUC110
+     C                     MOVE ZADATE    PNDAT3                          LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO IDENTIFY TRAILING ZEROS IN RATES                        LUC110
+     C**                                                   **PNRATS*      LUC110
+     C           PNRATS    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+     C                     MOVE '0'       IND58   1                       LUC110
+     C                     MOVE '0'       IND66   1                       LUC110
+     C                     MOVE '0'       IND67   1                       LUC110
+     C                     MOVE '0'       IND68   1                       LUC110
+     C                     MOVE '0'       IND69   1                       LUC110
+      **                                                                  LUC110
+      **  EDIT THIRD DEC PLACE ONLY ON EXCH RATES, NOT INTEREST RATES     LUC110
+     C***        *IN54     IFEQ '0'                        B001           LUC110
+     C           *IN14     IFEQ '0'                        B001           LUC110
+     C           *IN59     ANDEQ'0'                           1           LUC110
+     C           PNRL5D    ANDEQ0                             1           LUC110
+     C           *IN93     IFEQ '0'                        B002           LUC110
+     C                     MOVE '1'       IND58               2           LUC110
+     C                     ELSE                            X002           LUC110
+     C                     MOVE '1'       IND67               2           LUC110
+     C                     END                             E002           LUC110
+     C                     ELSE                            X001           LUC110
+      **  EDIT FOURTH DECIMAL PLACE                           1           LUC110
+     C           PNRL4D    IFEQ 0                          B002           LUC110
+     C           *IN93     IFEQ '0'                        B003           LUC110
+     C                     MOVE '1'       IND66               3           LUC110
+     C                     ELSE                            X003           LUC110
+     C                     MOVE '1'       IND68               3           LUC110
+     C                     END                             E003           LUC110
+     C                     ELSE                            X002           LUC110
+      **  EDIT THIRD DECIMAL PLACE                            2           LUC110
+     C           PNRL3D    IFEQ 0                          B003           LUC110
+     C           *IN93     IFEQ '0'                        B004           LUC110
+     C                     MOVE '1'       IND67               4           LUC110
+     C                     ELSE                            X004           LUC110
+     C                     MOVE '1'       IND69               4           LUC110
+     C                     END                             E004           LUC110
+     C                     ELSE                            X003           LUC110
+     C           PNRL2D    IFEQ 0                          B004           LUC110
+     C           *IN93     ANDEQ'0'                           4           LUC110
+     C                     MOVE '1'       IND68               4           LUC110
+     C                     ELSE                            X004           LUC110
+     C           PNRL1D    IFEQ 0                          B005           LUC110
+     C           *IN93     ANDEQ'0'                           5           LUC110
+     C                     MOVE '1'       IND69               5           LUC110
+     C                     END                             E005           LUC110
+     C                     END                             E004           LUC110
+     C                     END                             E003           LUC110
+     C                     END                             E002           LUC110
+     C                     END                             E001           LUC110
+      *                                                                   LUC110
+      ** TO REMOVE TRAILING ZEROS FOR PRINTING PURPOSES.                  LUC110
+     C                     MOVE *BLANKS   GDS01                           LUC110
+     C                     MOVELPNR7D     GDS01                           LUC110
+     C           IND58     IFEQ '1'                        B001           LUC110
+     C                     MOVE '     '   PNR7DA              1           LUC110
+     C                     ENDIF                           E001           LUC110
+     C           IND66     IFEQ '1'                        B001           LUC110
+     C   14                                                   1           LUC110
+     COR 59                MOVE '%   '    PNR7DA              1           LUC110
+     C   07                                                   1           LUC110
+     COR 08                                                   1           LUC110
+     COR 09                MOVE '    '    PNR7DA              1           LUC110
+     C                     ENDIF                           E001           LUC110
+     C           IND67     IFEQ '1'                        B001           LUC110
+     C   14                                                   1           LUC110
+     COR 59                MOVE '%  '     PNR7DA              1           LUC110
+     C   07                                                   1           LUC110
+     COR 08                                                   1           LUC110
+     COR 09                MOVE '   '     PNR7DA              1           LUC110
+     C                     ENDIF                           E001           LUC110
+     C           IND68     IFEQ '1'                        B001           LUC110
+     C   14                                                   1           LUC110
+     COR 59                MOVE '% '      PNR7DA              1           LUC110
+     C   07                                                   1           LUC110
+     COR 08                                                   1           LUC110
+     COR 09                MOVE '  '      PNR7DA              1           LUC110
+     C                     ENDIF                           E001           LUC110
+     C           IND69     IFEQ '1'                        B001           LUC110
+     C   14                                                   1           LUC110
+     COR 59                MOVE '%'       PNR7DA              1           LUC110
+     C   07                                                   1           LUC110
+     COR 08                                                   1           LUC110
+     COR 09                MOVE ' '       PNR7DA              1           LUC110
+     C                     ENDIF                           E001           LUC110
+     C                     MOVELPNR7DA    GPNR7D  7                       LUC110
+     C                     MOVELPNR7DA    GPNR8D  8                       LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO SET UP AMT. AND DEC. PLACE INDICS FOR RETAIL NARRS      LUC110
+     C**                                                   **PNDPIS**     LUC110
+     C           PNDPIS    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+      **  SET UP NARRATIVE AMOUNT                                         LUC110
+     C           OTHC      IFEQ PNCCY1                     B001           LUC110
+     C                     Z-ADDOTHA      PNAML               1           LUC110
+     C                     ELSE                            X001           LUC110
+     C                     Z-ADDEAMT      PNAML               1           LUC110
+     C                     END                             E001           LUC110
+      **  GET NUMBER OF DECIMAL PLACES FOR NARRATIVE CURRENCY:1           LUC110
+     C                     Z-ADD1         X                               LUC110
+     C           PNCCY1    LOKUPCCYA,X                   40               LUC110
+     C           DPA,X     COMP 1                      9596               LUC110
+     C           DPA,X     COMP 2                    97  94               LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      **                                                                  LUC110
+     C****************************************************************    LUC110
+      /EJECT                                                              LUC110
+     C****************************************************************    LUC110
+     C**   SR. TO SET UP CONSTANTS FOR RETAIL NARRATIVES                  LUC110
+     C**                                                   **PNCNST**     LUC110
+     C           PNCNST    BEGSR                                          LUC110
+     C****************************************************************    LUC110
+      **                                                                  LUC110
+     C                     MOVE 'AT'      ATX     2                       LUC110
+     C                     MOVE 'FROM'    FROMX   4                       LUC110
+     C                     MOVE 'ON'      ONX     2                       LUC110
+     C                     MOVE 'TO'      TOX     2                       LUC110
+     C                     MOVE 'REF'     REFX    3                       LUC110
+     C                     MOVE 'INT'     MTYX3   3                       LUC110
+     C                     MOVE 'IT'      MTYX2   2                       LUC110
+     C                     MOVE '/'       SLASHX  1                       LUC110
+      **                                                                  LUC110
+     C                     ENDSR                                          LUC110
+      *****************************************************************   LUC110
+      /EJECT                                                              LUC110
+      *****************************************************************   LUC110
+      *                                                               *   LUC110
+      *  ZFWDTA - Calculate Working Days Forward.                     *   LUC110
+      *                                                               *   LUC110
+      *****************************************************************   LUC110
+     C           ZFWDTA    BEGSR                                          LUC110
+      *                                                                   LUC110
+      ** Standard sub-routine to calculate up to 99 working days forward  LUC110
+      ** from a given start date.                                         LUC110
+      ** NB. Must be used in conjunction with ZACCH.                      LUC110
+      **                                                                  LUC110
+      ** NB: If required no. of working days forward is zero, then:-      LUC110
+      **       if input date is a working day, then result is input date  LUC110
+      **       else result is first working day after input date.         LUC110
+      **                                                                  LUC110
+      **     If required no. of working days forward is one, then:-       LUC110
+      **       if input date is a working day, then result is next        LUC110
+      **       working day                                                LUC110
+      **       else result is first working day after input date.         LUC110
+      **                                                                  LUC110
+      ** Thus, if input date is a holiday, then zero and one working day  LUC110
+      ** forward will return the same result.                             LUC110
+      *                                                                   LUC110
+      *                                                                   LUC110
+      ** Define input parameters                                          LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDAYNO    ZDAYNO  50                      LUC110
+     C                     MOVE ZCCY      ZCCY    3                       LUC110
+     C                     MOVE ZLOC      ZLOC    3                       LUC110
+     C                     Z-ADDZNRDYS    ZNRDYS  30                      LUC110
+      *                                                                   LUC110
+      ** Define Output parameters                                         LUC110
+      *                                                                   LUC110
+     C                     Z-ADD0         ZDYNBR  50                      LUC110
+      *                                                                   LUC110
+      ** Move input date to output date                                   LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDAYNO    ZDYNBR                          LUC110
+      *                                                                   LUC110
+      ** Save original value of ZDAYNO                                    LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDAYNO    ZDAYNT  50                      LUC110
+      *                                                                   LUC110
+      ** Access holiday record                                            LUC110
+      *                                                                   LUC110
+     C                     MOVE '*SETGT ' ZOPTN                           LUC110
+     C                     EXSR ZACCH                                     LUC110
+      *                                                                   LUC110
+      ** If no record was found, then just add no. of days forward        LUC110
+      ** required to input date to give output.                           LUC110
+      *                                                                   LUC110
+     C           RTNCD     IFEQ '*NRF   '                  IF 1           LUC110
+      *                                                                   LUC110
+     C           ZDAYNO    ADD  ZNRDYS    ZDYNBR                          LUC110
+      *                                                                   LUC110
+     C                     ELSE                            ELSE 1         LUC110
+      *                                                                   LUC110
+      ** Otherwise, a holiday record was found and so need to count days  LUC110
+      ** forward to get required result.                                  LUC110
+      **                                                                  LUC110
+      ** Subtract 1st. Jan date from given date and add 1 to give the     LUC110
+      ** nth day in the year (ZINDX).                                     LUC110
+      *                                                                   LUC110
+     C           ZDAYNO    SUB  DGJDNB    ZINDX                           LUC110
+     C                     ADD  1         ZINDX                           LUC110
+      *                                                                   LUC110
+      ** If no. of working days forward wanted is zero, then check first  LUC110
+      ** that given date is not a holiday. If it is, then change no. of   LUC110
+      ** days forward wanted to one to get next working day.              LUC110
+      *                                                                   LUC110
+     C           ZNRDYS    IFEQ 0                           IF 2          LUC110
+     C           ZHL,ZINDX ANDEQ'X'                                       LUC110
+     C                     ADD  1         ZNRDYS                          LUC110
+     C                     END                              FI 2          LUC110
+      *                                                                   LUC110
+      ** While no. of working days left to find is greater than zero      LUC110
+      *                                                                   LUC110
+     C           ZNRDYS    DOWGT0                           DOW 1         LUC110
+      *                                                                   LUC110
+      ** Add one to day in year index and to output date                  LUC110
+      *                                                                   LUC110
+     C                     ADD  1         ZINDX                           LUC110
+     C                     ADD  1         ZDYNBR                          LUC110
+      *                                                                   LUC110
+      ** If output date is beyond stored 31st. Dec date, then need to     LUC110
+      ** get next holiday record with new parameters: output date is new  LUC110
+      ** input date; no. of days forward is current no. of days left to   LUC110
+      ** find.                                                            LUC110
+      *                                                                   LUC110
+     C           ZDYNBR    IFGT DGDDNB                       IF 1         LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDYNBR    ZDAYNO                          LUC110
+      *                                                                   LUC110
+     C                     MOVE '*SETGT ' ZOPTN                           LUC110
+     C                     EXSR ZACCH                                     LUC110
+      *                                                                   LUC110
+      ** If no record was found, then add no. of days left to find to     LUC110
+      ** output date and subtract 1 to give required result and change    LUC110
+      ** no. left to find to zero to terminate loop.                      LUC110
+      *                                                                   LUC110
+     C           RTNCD     IFEQ '*NRF   '                     IF 2        LUC110
+      *                                                                   LUC110
+     C                     ADD  ZNRDYS    ZDYNBR                          LUC110
+     C                     SUB  1         ZDYNBR                          LUC110
+     C                     Z-ADD0         ZNRDYS                          LUC110
+      *                                                                   LUC110
+     C                     ELSE                               ELSE 2      LUC110
+      *                                                                   LUC110
+      ** Otherwise, reset day in year value to one.                       LUC110
+      *                                                                   LUC110
+     C                     Z-ADD1         ZINDX                           LUC110
+      *                                                                   LUC110
+     C                     END                                FI 2        LUC110
+      *                                                                   LUC110
+     C                     END                               FI 1         LUC110
+      *                                                                   LUC110
+      ** If working day then no. left to find is one less                 LUC110
+      *                                                                   LUC110
+     C           ZNRDYS    IFNE 0                            IF 1         LUC110
+     C           ZHL,ZINDX ANDEQ' '                          AND1         LUC110
+     C                     SUB  1         ZNRDYS                          LUC110
+     C                     END                               FI 1         LUC110
+      *                                                                   LUC110
+     C                     END                              ENW 1         LUC110
+      *                                                                   LUC110
+      ** Move back original value of ZDAYNO                               LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDAYNT    ZDAYNO                          LUC110
+      *                                                                   LUC110
+     C                     END                             FI 1           LUC110
+      *                                                                   LUC110
+     C                     ENDSR                                          LUC110
+      *****************************************************************   LUC110
+      /EJECT                                                              LUC110
+      ****************************************************************    LUC110
+      /EJECT                                                              LUC110
+      *****************************************************************   LUC110
+     C           ZACCH     BEGSR                                          LUC110
+      *                                                                   LUC110
+      * This standard sub-routine is to be used in conjunction with       LUC110
+      * the holiday standard sub-routines. Its function is to             LUC110
+      * determine if the access program AOHOLS0 needs to be called and    LUC110
+      * sets up the holiday record appropriately. It is common to all     LUC110
+      * the new holiday sub-routines, but should only be included in      LUC110
+      * a program once, using /COPY.                                      LUC110
+      *                                                                   LUC110
+      *                                                                   LUC110
+      * If stored parameters from last call are not within the same       LUC110
+      * bounds - ie. same ccy/location and date is within 1st. Jan &      LUC110
+      * 31st. Dec of current holiday record - continue processing.        LUC110
+      *                                                                   LUC110
+      **                                                                  LUC110
+      *Define input parameters                                            LUC110
+      **                                                                  LUC110
+     C                     Z-ADDZDAYNO    ZDAYNO  50                      LUC110
+     C                     MOVE ZCCY      ZCCY    3                       LUC110
+     C                     MOVE ZLOC      ZLOC    3                       LUC110
+     C                     MOVE ZOPTN     ZOPTN   7                       LUC110
+      *                                                                   LUC110
+     C           ZOPTN     IFEQ '*FREE  '                    IF 2         LUC110
+      *                                                                   LUC110
+     C                     CALL 'AOHOLS0'                                 LUC110
+     C                     PARM *BLANK    RTNCD                           LUC110
+     C                     PARM           ZOPTN                           LUC110
+     C                     PARM ZCCY      ZZCCY                           LUC110
+     C                     PARM ZLOC      ZZLOC                           LUC110
+     C                     PARM ZDAYNO    ZZDYNO                          LUC110
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B  LUC110
+      *                                                                   LUC110
+     C                     ELSE                                           LUC110
+      *                                                                   LUC110
+     C           ZCCY      IFNE ZSCCY                      IF 1           LUC110
+     C           ZLOC      ORNE ZSLOC                       OR            LUC110
+     C           ZDAYNO    ORLT ZSJAN                       OR            LUC110
+     C           ZDAYNO    ORGT ZSDCM                       OR            LUC110
+      *                                                                   LUC110
+      * Get appropriate holiday record                                    LUC110
+      *                                                                   LUC110
+     C                     CALL 'AOHOLS0'                                 LUC110
+     C                     PARM *BLANK    RTNCD                           LUC110
+     C                     PARM           ZOPTN                           LUC110
+     C                     PARM ZCCY      ZZCCY                           LUC110
+     C                     PARM ZLOC      ZZLOC                           LUC110
+     C                     PARM ZDAYNO    ZZDYNO  50                      LUC110
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B  LUC110
+      *                                                                   LUC110
+      * If no record was found, assume all days in year are working       LUC110
+      * days.                                                             LUC110
+      *                                                                   LUC110
+     C           RTNCD     IFEQ '*NRF   '                    IF 2         LUC110
+      *                                                                   LUC110
+     C                     MOVE *ALL' '   ZHL                             LUC110
+      *                                                                   LUC110
+      * Save 1st. Jan/31st. Dec dates as input date as we cannot say      LUC110
+      * anything about this year in future calls.                         LUC110
+      *                                                                   LUC110
+     C                     Z-ADDZDAYNO    ZSJAN                           LUC110
+     C                     Z-ADDZDAYNO    ZSDCM                           LUC110
+      *                                                                   LUC110
+     C                     ELSE                              ELSE 2       LUC110
+      *                                                                   LUC110
+      * Save 1st. Jan/31st. Dec for future calls                          LUC110
+      *                                                                   LUC110
+     C                     Z-ADDDGJDNB    ZSJAN                           LUC110
+     C                     Z-ADDDGDDNB    ZSDCM                           LUC110
+      *                                                                   LUC110
+      * Left adjust the holiday array over FEB 29th if the                LUC110
+      * holiday record is not for a leap year.                            LUC110
+      *                                                                   LUC110
+     C                     MOVE DGYRNB    Z@YR    40                      LUC110
+     C           Z@YR      DIV  4         Z@WK1   40                      LUC110
+     C                     MVR            Z@WK2   40                      LUC110
+      *                                                                   LUC110
+     C           Z@WK2     IFNE 0                                         LUC110
+      *                                                                   LUC110
+     C                     MOVEAZHL       ZHL1                            LUC110
+     C                     MOVEAZHL1,61   ZHL,60                          LUC110
+      *                                                                   LUC110
+     C                     END                                            LUC110
+      *                                                                   LUC110
+     C                     END                               FI 2         LUC110
+      *                                                                   LUC110
+      * Save currency and location for future calls. Need to save         LUC110
+      * return code as well.                                              LUC110
+      *                                                                   LUC110
+     C                     MOVE ZCCY      ZSCCY                           LUC110
+     C                     MOVE ZLOC      ZSLOC                           LUC110
+     C                     MOVE RTNCD     ZSRTN                           LUC110
+      *                                                                   LUC110
+     C                     ELSE                            ELSE 1         LUC110
+      *                                                                   LUC110
+      * Move saved return code back again as there may have been no       LUC110
+      * record found last time.                                           LUC110
+      *                                                                   LUC110
+     C                     MOVE ZSRTN     RTNCD                           LUC110
+      *                                                                   LUC110
+     C                     END                             FI 1           LUC110
+      *                                                                   LUC110
+     C                     END                                            LUC110
+      *                                                                   LUC110
+     C                     ENDSR                                          LUC110
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  End of /COPY DL0295CCP6                                      *
+      *****************************************************************

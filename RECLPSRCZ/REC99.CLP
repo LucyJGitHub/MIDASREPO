@@ -9,14 +9,15 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*     Last Amend No. CER049             Date 06Dec10                */
+/*     Last Amend No. LUC110             Date 24Jan19                */
+/*     Prev Amend No. CER049             Date 06Dec10                */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     Prev Amend No. 089310             DATE 27FRB98               */
+/*                    089310             DATE 27FRB98               */
 /*                    BHF982             DATE 19FEB91               */
 /*                    S01189             DATE 13MAR90               */
 /*                    S01179             DATE 21/10/88              *  *S01098*/
@@ -25,6 +26,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     LUC110  -  Extended Narratives (Upgrade NUC002 to FBM 2.1)   */
+/*                Use of core hook REC99001                         */
+/*                Use of core hook REC99003                         */
 /*     CER049  -  Stamp Tax                                         */
 /*     089310  -  Do not do RMVM/ADDLFM on SACPO as it may take     */
 /*                longer, and prevents other programs using SACPO   */

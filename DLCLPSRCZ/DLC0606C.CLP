@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23276           Date 10Mar09              */
+/*       Last Amend No. LUC110             Date 17Jan19              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23276           Date 10Mar09              */
 /*                      CER044             Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -39,6 +40,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to BFM 2.1)    */
+/*                Use core hook DLC0606C02                          */
+/*                Use core hook DLC0606C05                          */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23276 - Items with Customers set up as Banks not shown   */
 /*       CER044 - German Features LF035-00 AWV Reporting             */
@@ -77,7 +81,7 @@
 /*********   PGM PARM(&POST)                                          /*LN0465*/
              PGM PARM(&POST &NAM &SEQ)                                /*LN0465*/
 /*/COPY WNCPYSRC,DLC0606C06                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
@@ -167,14 +171,14 @@
              CHGVAR     VAR(&STAT) VALUE('Y')                         /*CDL008*/
              CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)             /*CDL008*/
                                                                       /*CDL008*/
- 
+
 /*/COPY WNCPYSRC,DLC0606C01                                        */ /*S01408*/
- 
- 
+
+
 /* THESE ARE MANDATORY REPORTS SO PARMS ARE PASSED HARD CODED HERE */
              CHGVAR     VAR(&RENT) VALUE('ALL')                       /*S01117*/
              CHGVAR     VAR(&RSEQ) VALUE('     ')                     /*S01117*/
- 
+
 /*   CLEAR GEDL PFS                                             */
              CHGJOB     SWS(10000000)
              IF         COND(&POST *EQ '1') THEN(DO)
@@ -211,9 +215,9 @@
                         Postings') TOMSGQ(MRUNQ) MSGTYPE(*INFO)
 /************CALL       PGM(DL0295)                                   /*S01117*/
 /************CALL       PGM(DL0295) PARM(&RSEQ &RENT)         /*E18     S01117*/
- 
+
 /*/COPY WNCPYSRC,DLC0606C02                                        */ /*S01408*/
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CER044*/
              CHGVAR     VAR(&SAR) VALUE('CER044')                                         /*CER044*/
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                      /*CER044*/
@@ -247,9 +251,9 @@
              CALL       PGM(DL0296) PARM('Y')                         /*186804*/
              ENDDO                                                    /*CDL008*/
              ENDDO                                                    /*CDL008*/
- 
+
 /*/COPY WNCPYSRC,DLC0606C03                                        */ /*S01408*/
- 
+
              IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
                 IF         COND(&POST *EQ '1') THEN(DO)
                    CLRPFM     FILE(GEDLHH)

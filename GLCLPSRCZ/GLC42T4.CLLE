@@ -9,15 +9,19 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL120   *CREATE   Date 06Aug12              */
+/*       Last Amend No. LUC110             Date 28Jan19              */
+/*       Prev Amend No. CGL120   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)    */
+/*                Addition of hook LUC110_100                        */
+/*                Addition of hook LUC110_101                        */
 /*       CGL120 - GL COB Components Task Split                       */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
                           VALUE('GLEODPPD')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
@@ -26,67 +30,69 @@
              DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
- 
+/*/COPY WNCPYSRC,LUC110_100                                        */ /*LUC110*/
+
              COPYRIGHT  TEXT('(c) Misys International Banking +
                           Systems Ltd. 2012')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Send message to MRUNQ */
- 
+
              SNDPGMMSG  MSG('GLC42T4 - GL EOD Postings Merge - End +
                           Task Split') TOMSGQ(MRUNQ)
- 
+
              RTVMBRD    FILE(EODPOPD) NBRCURRCD(&CURRCD)
              IF         COND(&CURRCD = 0) THEN(DO)
              GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Determine full DTAQLIB library name */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
- 
+
 /* Retrieve first member description */
- 
+
              RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
- 
+
 /* Delete sub-task data queue */
- 
+
  LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
              MONMSG     MSGID(CPF2105 CPF9801)
- 
+
 /* Retrieve next member description */
- 
+
              RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
                           RTNMBR(&MEMBER)
              MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
- 
+
 /* Loop for all members in driving file */
- 
+
              GOTO       CMDLBL(LOOP)
- 
+
  REMOVE:
- 
+
 /* Remove all members from driving file */
- 
+
              RMVM       FILE(&DRIVER) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
- 
+
              CPYF       FROMFILE(EODPORA) TOFILE(APOSTRA) MBROPT(*ADD)
              CPYF       FROMFILE(EODPOPPD) TOFILE(GLAPSTPD) +
                           MBROPT(*ADD)
- 
+/*/COPY WNCPYSRC,LUC110_101                                        */ /*LUC110*/
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              SNDPGMMSG  MSG('Program GLC42T4 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
              ENDPGM

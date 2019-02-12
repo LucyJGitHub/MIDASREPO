@@ -6,10 +6,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. LUC108   *CREATE   Date 19Apr16               *
+      *  Last Amend No. LUC110             Date 29Jan19               *
+      *  Prev Amend No. LUC108   *CREATE   Date 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
       *  LUC108 - Statement of Accounts                               *
       *                                                               *
       *****************************************************************
@@ -30,6 +32,18 @@
      C                   MOVE      *ON           *IN79
      C                   ENDIF
       *
+     C                   CALL      'AOSARDR0'                                            LUC110
+     C                   PARM      '       '     @RTCD                                   LUC110
+     C                   PARM      '*VERIFY'     @OPTN                                   LUC110
+     C                   PARM      'LUC110'      @SARD             6                     LUC110
+     C     SCSARD        PARM      SCSARD        DSFDY                                   LUC110
+     C*                                                                                  LUC110
+     C     @RTCD         Ifeq      *BLANKS                                               LUC110
+     C                   Move      'Y'           LUC110            1                     LUC110
+     C                   else                                                            LUC110
+     C                   Move      'N'           LUC110            1                     LUC110
+     C                   Endif                                                           LUC110
+      *                                                                                  LUC110
       *****************************************************************
       * End of /COPY GL0420CP35                                       *
       *****************************************************************

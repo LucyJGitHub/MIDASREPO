@@ -9,15 +9,20 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL120   *CREATE   Date 06Aug12              */
+/*       Last Amend No. LUC110             Date 21Jan19              */
+/*       Prev Amend No. CGL120   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)    */
+/*                Add hook LUC110_039                                */
+/*                Add hook LUC110_040                                */
+/*                Add hook LUC110_041                                */
 /*       CGL120 - GL COB Components Task Split                       */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
                           VALUE('GLC41')
              DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
@@ -40,19 +45,20 @@
              DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
              DCL        VAR(&CEU024) TYPE(*CHAR) LEN(1)
- 
+/*/COPY WNCPYSRC,LUC110_039                                        */ /*LUC110*/
+
              DCLF       FILE(CBCMPNLC)
- 
+
              COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
                           2012')
- 
+
 /* Global monitor message. */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Check if Retail Teller Support Enhancement is installed */
- 
+
              CHGVAR     VAR(&RTCD) VALUE('       ')
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&SAR) VALUE('CEU024')
@@ -60,32 +66,33 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CEU024) VALUE('Y'))
- 
+/*/COPY WNCPYSRC,LUC110_040                                        */ /*LUC110*/
+
 /* Send message to MRUNQ. */
- 
+
              SNDPGMMSG  MSG('GLC41T1 - Account Posting merge - Start +
                           Task Split') TOMSGQ(MRUNQ)
- 
+
 /* Determine full DTAQLIB library name. */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
- 
+
 /* Clear index file. */
- 
+
              CLRPFM     FILE(&INDEXFL)
- 
+
 /* Remove all members from driving file. */
- 
+
              RMVM       FILE(&DRIVER) MBR(*ALL)
              MONMSG     MSGID(CPF7301 CPF7303)
- 
+
 /* Clear main data queue. */
- 
+
              CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
- 
+
 /* Retrieve number of sub-tasks. */
- 
+
  CHAIN:
              RCVF
              CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
@@ -93,71 +100,72 @@
                           &CSEQ)) THEN(DO)
                 GOTO       CMDLBL(CHAIN)
              ENDDO
- 
+
 /* Add all members and create data queues. */
- 
+
              CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
  LOOP:
              IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
                 GOTO       CMDLBL(START)
              ENDDO
- 
+
              CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
              ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
- 
+
 /* Create data queue if it doesn't already exist and set authorities. */
- 
+
              CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
              ENDDO
              CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
- 
+
              IF         COND(&LOOP *EQ 1) THEN(DO)
                    CHGVAR     VAR(&NAME2_N) VALUE(01000)
                    CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
              ENDDO
- 
+
              CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
              CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
              CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
              GOTO       CMDLBL(LOOP)
- 
+
  START:
- 
+
 /* Clear files ready for pocessing */
- 
+
              CLRPFM     FILE(EODPOHH)
              CLRPFM     FILE(EODPOPD)
              CLRPFM     FILE(EODPORA)
              CLRPFM     FILE(EODPOZZ)
              CLRPFM     FILE(EODPOPPD)
- 
+/*/COPY WNCPYSRC,LUC110_041                                        */ /*LUC110*/
+
              IF         COND(&CEU024 *EQ 'Y') THEN(CPYF +
                           FROMFILE(GETT1APD) TOFILE(EODPOPPD) +
                           MBROPT(*ADD) FMTOPT(*MAP))
- 
+
              DSPFD      FILE(ACPO1) TYPE(*MBR) OUTPUT(*OUTFILE) +
                           OUTFILE(QTEMP/GLC41001F)
              CPYF       FROMFILE(GLC41001F) TOFILE(GLACPDPD) +
                           MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
- 
+
              DSPFD      FILE(GLACPOL0) TYPE(*MBR) OUTPUT(*OUTFILE) +
                           OUTFILE(QTEMP/GLC41001F2)
              CPYF       FROMFILE(GLC41001F2) TOFILE(GLACPDPD) +
                           MBROPT(*ADD) FMTOPT(*MAP *DROP)
- 
+
 /* Create Header and Trailer record */
- 
+
              CALL       PGM(GL41T1)
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
              SNDPGMMSG  MSG('Program GLC41T1 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              CHGJOB     SWS(XXXXXX11)
- 
+
  END:
              ENDPGM

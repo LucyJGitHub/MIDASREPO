@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD030956           Date 09Oct14               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. LUC110             Date 07Feb18               *
+      *  Prev Amend No. MD030956           Date 09Oct14               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
       *                 AR990243           Date 14Jun12               *
       *                 CSW212             Date 03May12               *
@@ -66,6 +67,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *           Use of core hook FXFXDLDF01                         *
+      *           Use of core hook FXH00004                           *
+      *           Addition of hook LUC110_102                         *
+      *           Addition of hook LUC110_103                         *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *  MD025244 - Added parameter in calling ZADLTRLRUD.            *
@@ -167,7 +173,7 @@
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
      F/COPY WNCPYSRC,FXFXDLDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -186,41 +192,41 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID FX DEAL
      D FXVFXD        E DS                  EXTNAME(FXVFXDLPD)
      D  @FXREC               400    468
      D  @FXPAY               469   1027
      D  @FXISDA             1394   2043                                                       CSW212
      D/COPY WNCPYSRC,FXFXDLDD02
- 
+
       **  DEALS FILE - FX DEALS
      D DEALS         E DS                  EXTNAME(DEALSDB)
      D  @DLREC               409    477
      D  @DLPAY               478   1036
      D  @DLISDA             1376   2025                                                       CSW212
      D/COPY WNCPYSRC,FXFXDLDD03
- 
+
       **  Time data structure for DTRIX.
      D                 DS
      D  @XTIME                 1      6  0
@@ -254,25 +260,25 @@
      D WSysVal01       S              1A                                                      CRE020
      D WEvent          S              8A                                                      CRE020
      D WNew            S              1A                                                      CRE020
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY Details
                                                                                 CDL008
       ** Externally described DS for switchable feature                         CDL008
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CDL008
      D  SLCD         E                     EXTFLD(LCD)                          CDL008
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CTI004
@@ -288,7 +294,7 @@
      D PRTCD           S              7A                                                      CAS001
      D POPTN           S              7A                                                      CAS001
      D PSARD           S              6A                                                      CAS001
- 
+
      D CSW025          S              1A                                                     BUG6479
      D CSW050          S              1A                                                      246801
      D CER043          S              1A                                                      CER043
@@ -299,71 +305,71 @@
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
      C/COPY WNCPYSRC,FXFXDLDC03
       * EXIT IF NOT INSERTION, AMENDMENT OR REVERSAL
- 
+
      C     F3CHTP        IFNE      'I'
      C     F3CHTP        ANDNE     'A'
      C     F3CHTP        ANDNE     'R'
      C                   RETURN
      C                   END
- 
+
       * INITIALIZE: DEAL MISSING INDICATOR
       *             SWAP OTHER LEG VALUE DATE
- 
+
      C                   MOVEL     *BLANK        ##DEAL_MIS
      C                   Z-ADD     *ZERO         ##SOL_VDAT
- 
+
       * INSERT, AMEND, OR REVERSE THE DEAL
- 
+
      C     F3CHTP        CASEQ     'I'           FXINS
      C     F3CHTP        CASEQ     'A'           FXAMD
      C     F3CHTP        CASEQ     'R'           FXDEL
      C                   END
- 
+
      C/COPY WNCPYSRC,FXFXDLDC04
       * IF DEAL NOT MISSING (THIS MAY HAPPEN ON REVERSAL OF SWAPS)
- 
+
      C     ##DEAL_MIS    IFNE      'Y'
      C     @@CNRQ        IFEQ      'Y'                                                        246801
- 
+
       * SET PAY/RECEIVE INDICATORS TO BE WRITTEN TO DTRIX
- 
+
      C                   EXSR      PYRCIN
      C                   ELSE                                                                 246801
      C                   Z-ADD     *ZERO         @@PRI1                                       246801
      C                   Z-ADD     *ZERO         @@PRI2                                       246801
      C                   Z-ADD     *ZERO         @@PRI3                                       246801
      C                   ENDIF                                                                246801
- 
+
       * WRITE A DTRIX RECORD
- 
+
      C                   EXSR      WRTDTX
- 
+
      C                   END
- 
+
       * IF SWAP OTHER LEG REVERSAL HAS BEEN DONE
- 
+
      C     ##SOL_VDAT    IFNE      *ZERO
- 
+
       * WITH SWAP OTHER LEG DETAILS
       * SET PAY/RECEIVE INDICATORS TO BE WRITTEN TO DTRIX
       * AND WRITE A DTRIX RECORD
- 
+
      C                   EXSR      SOL_PYRCIN
      C                   EXSR      SOL_WRTDTX
- 
+
      C                   END
- 
+
       * UPDATE THE DTRIX HEADER RECORD
- 
+
      C                   EXSR      UPDDTH
- 
+
      C/COPY WNCPYSRC,FXFXDLDC05
       * UPDATE THE DEALS FILE TRAILER
       * ON INSERTS AND REVERSALS (THE LATTER IF THE DEAL IS NOT MISSING)
- 
+
      C     F3CHTP        IFEQ      'I'
      C     F3CHTP        OREQ      'R'
      C     ##DEAL_MIS    ANDNE     'Y'
@@ -376,13 +382,13 @@
      C                   ELSE
      C                   Z-ADD     *ZERO         @@AMNP
      C                   END
- 
+
      C                   EXSR      UPDTRL
      C                   END
- 
+
       * IF SWAP OTHER LEG REVERSAL HAS BEEN DONE
       * UPDATE THE DEALS FILE TRAILER FOR THIS UPDATE
- 
+
      C     ##SOL_VDAT    IFNE      *ZERO
       *
       ** The value of the update is the other leg purchase currency amount
@@ -438,6 +444,7 @@
       *
       ** UPDATE THE ASSOCIATED DEAL
       *
+     C/COPY WNCPYSRC,LUC110_102                                                              LUC110
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     BJRDNB        LCD
      C                   UPDATE    DEALSDBF
@@ -459,14 +466,14 @@
      C                   END
       *
      C                   END
- 
+
       * SET CONFIRMATION REQUIRED INDICATOR
       * TO BE WRITTEN TO DTRIX
- 
+
      C                   EXSR      CNFINS
- 
+
       * INITIALIZE DEAL
- 
+
      C                   CLEAR                   DEALS
       *
       **  Record I.D./Deal Number/Record Type
@@ -809,6 +816,7 @@
       *
       *  WRITE DEAL
       *
+     C/COPY WNCPYSRC,LUC110_103                                                              LUC110
      C                   WRITE     DEALSDBF
                                                                                               CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 256758             Date 21Jun16               *
-      *  Prev Amend No. MD038510           Date 20Jun16               *
+      *  Last Amend No. LUC110             Date 24Jan19               *
+      *  Prev Amend No. 256758             Date 21Jun16               *
+      *                 MD038510           Date 20Jun16               *
       *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
@@ -178,6 +179,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC110 - Extended Narratives (Upgrade NUC002 to FBM 2.1)     *
+      *           Use of core hook GL0600CCP3                         *
+      *           Use of core hook GL0600CP22                         *
+      *           Use of core hook GL0600FFP1                         *
+      *           Use of core hook GL0600IIP2                         *
+      *           Use of core hook GL0600OOP5                         *
+      *           Addition of hook LUC110_082                         *
+      *           Addition of hook LUC110_083                         *
       *  256758 - Bit 0 of PRIN should not be checked when updating   *
       *           Last Activity Date. Applied fix 232450.             *
       *         - Applied for MD-38413.                               *
@@ -1223,6 +1232,7 @@
      I                                 81   81 0DRCR
      I                                 96  102  SPOS
      I                                103  105  BRCDP             05
+     I/COPY WNCPYSRC,LUC110_082                                                     LUC110
      I                                124  124  ATYPP
      I                                128  128  PRIN
      I                                129  129  GETP
@@ -1373,6 +1383,7 @@
       ** Catchall
      I          NS
      I                                  1    1  RECI
+     I/COPY WNCPYSRC,LUC110_083                                                          LUC110
 
      IGLSYSOXF
      I              NORE1                       NORESY

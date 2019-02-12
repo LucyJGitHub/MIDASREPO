@@ -1,0 +1,157 @@
+      *****************************************************************
+      *  Start of /COPY GL1300C085                                    *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. LUC111             Date 24Jan19               *
+      *  Prev Amend No. A67971             Date 29Jan14               *
+      *                 NUC003 (S25019)    Date 16Jun05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LUC111 - Upgrade R4/NUC003 & fix/es as FB 2.1 LUC111         *
+      *  A67971 - Omit extended narrative 1 because it is the         *
+      *            same as posting narrative in fld 61 subfld 9.      *
+      *  NUC003 - Output EXTENDED NARRATIVES for GL, DL and RE        *
+      *           Modules to SWIFT MT940 statements field 86.         *
+      *                                                               *
+      *****************************************************************
+      *------------------------------------------------------------------
+      *                                                                                       NUC003
+      *  SR/F86SR - Format GL, DL and RE Extended Narratives for                              NUC003
+      *             MT940, field 86                                                           NUC003
+      *                                                                                       NUC003
+      *  Called from:  SR/F61SR                                                               NUC003
+      *                                                                                       NUC003
+      *------------------------------------------------------------------                     NUC003
+      *                                                                                       NUC003
+     C           F86SR     BEGSR                                                              NUC003
+      *                                                                                       NUC003
+      * For DL, GL or RE postings only:                                                       NUC003
+      *                                                                                       NUC003
+     C           MOD86     IFEQ 'DL'                       B1                                 NUC003
+     C           MODID     OREQ 'GL'                                                          NUC003
+     C           MODID     OREQ 'RE'                                                          NUC003
+      *                                                                                       NUC003
+      * Read the extention file and pick up extended narratives                               NUC003
+      * required for F86 processing.                                                          NUC003
+      *                                                                                       NUC003
+     C                     MOVE *IN15     SAV15   1                                           NUC003
+     C                     MOVE *BLANKS   GNAR1                                               NUC003
+     C                     MOVE *BLANKS   GNAR2                                               NUC003
+     C                     MOVE *BLANKS   GNAR3                                               NUC003
+      *                                                                                       NUC003
+     C                     MOVE ZZ009     UNQK                                                NUC003
+     C********** APTKEY    CHAINEODPOY1              15                                NUC003 LUC111
+     C           APTKEY    CHAINXXEODPY1             15                                       LUC111
+     C           *IN15     IFEQ *ON                        B2                                 NUC003
+     C********** APTKEY    CHAINSWPOSY0              15                                NUC003 LUC111
+     C           APTKEY    CHAINXXSWPSY0             15                                       LUC111
+     C                     ENDIF                           E2                                 NUC003
+      *                                                                                       NUC003
+     C                     MOVE CRLF      @CTRC                                               NUC003
+     C                     MOVE *BLANKS   FELD86                                              NUC003
+      *                                                                                       NUC003
+      **  If Posting Extension record for Extended Narratives                                 NUC003
+      **  is found for DL, GL or RE postings:                                                 NUC003
+      *                                                                                       NUC003
+     C           *IN15     IFEQ *OFF                       B2  *IN15                          NUC003
+      *                                                                                       NUC003
+     C           MODID     IFEQ 'GL'                                                          A67971
+     C                     MOVELGNAR2     FLD861                                              A67971
+     C                     MOVELGNAR3     FLD862                                              A67971
+     C                     ELSE                                                               A67971
+     C                     MOVELGNAR1     FLD861                                              NUC003
+     C                     MOVELGNAR2     FLD862                                              NUC003
+     C                     MOVELGNAR3     FLD863                                              NUC003
+     C                     ENDIF                                                              A67971
+      *                                                                                       NUC003
+     C           FELD86    IFNE *BLANKS                    B3  FELD86                         NUC003
+     C                     MOVE ':86: '   @MTAG                                               NUC003
+      *                                                                                       NUC003
+     C                     MOVEAFELD86    ARAY86                                              NUC003
+      *                                                                                       NUC003
+     C                     Z-ADD1         L       20                                          NUC003
+     C           L         DOWLE3                          B4 - DO                            NUC003
+      *                                                                                       NUC003
+     C           ARAY86,L  IFNE *BLANKS                    B5  ARAY86                         NUC003
+     C                     MOVE *BLANKS   WRK86                                               NUC003
+     C                     MOVELARAY86,L  WRK86                                               NUC003
+     C                     MOVELWRK50X    @MFLD                                               NUC003
+     C                     ADD  1         MCNT                                                NUC003
+      *                                                                                       NUC003
+     C           WRK36     IFEQ *BLANKS                    B6                                 NUC003
+     C                     MOVE CRLF      @CTRC                                               NUC003
+     C                     ELSE                            X6                                 NUC003
+     C                     MOVE *BLANKS   @CTRC                                               NUC003
+     C                     ENDIF                           E6                                 NUC003
+      *                                                                                       NUC003
+     C                     ADD  1         M                                                   NUC003
+     C           M         OCUR MULT                                                          NUC003
+      *                                                                                       NUC003
+     C           WRK36     IFNE *BLANKS                    B6                                 NUC003
+     C                     MOVE CRLF      @CTRC                                               NUC003
+     C                     MOVELWRK36     @MFLD                                               NUC003
+     C                     ADD  1         M                                                   NUC003
+     C           M         OCUR MULT                                                          NUC003
+     C                     ENDIF                           E6                                 NUC003
+      *                                                                                       NUC003
+     C                     MOVE *BLANKS   @MTAG                                               NUC003
+     C                     ENDIF                           E5  ARAY86                         NUC003
+     C                     ADD  1         L                                                   NUC003
+     C                     ENDDO                           E4 - DO                            NUC003
+     C                     ENDIF                           E3  FELD86                         NUC003
+      *                                                                                       NUC003
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                      NUC003
+      **  If Posting Extension record for Extended Narratives                                 NUC003
+      **  is NOT found for DL, GL or RE postings, output the                                  NUC003
+      **  core 30 character posting narrative.                                                NUC003
+     C                     ELSE                            X2  *IN15 ON                       NUC003
+      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                      NUC003
+      *                                                                                       NUC003
+     C                     MOVELMPNAR     FLD861                                              NUC003
+      *                                                                                       NUC003
+     C           FELD86    IFNE *BLANKS                    B3  FELD86                         NUC003
+     C                     MOVE ':86: '   @MTAG                                               NUC003
+      *                                                                                       NUC003
+     C                     MOVEAFELD86    ARAY86                                              NUC003
+      *                                                                                       NUC003
+     C                     Z-ADD1         L       20                                          NUC003
+      *                                                                                       NUC003
+     C           ARAY86,L  IFNE *BLANKS                    B4  ARAY86                         NUC003
+     C                     MOVE *BLANKS   WRK86                                               NUC003
+     C                     MOVELARAY86,L  WRK86                                               NUC003
+     C                     MOVELWRK50X    @MFLD                                               NUC003
+     C                     ADD  1         MCNT                                                NUC003
+      *                                                                                       NUC003
+     C           WRK36     IFEQ *BLANKS                    B5                                 NUC003
+     C                     MOVE CRLF      @CTRC                                               NUC003
+     C                     ELSE                            X5                                 NUC003
+     C                     MOVE *BLANKS   @CTRC                                               NUC003
+     C                     ENDIF                           E5                                 NUC003
+      *                                                                                       NUC003
+     C                     ADD  1         M                                                   NUC003
+     C           M         OCUR MULT                                                          NUC003
+      *                                                                                       NUC003
+     C           WRK36     IFNE *BLANKS                    B5                                 NUC003
+     C                     MOVE CRLF      @CTRC                                               NUC003
+     C                     MOVELWRK36     @MFLD                                               NUC003
+     C                     ADD  1         M                                                   NUC003
+     C           M         OCUR MULT                                                          NUC003
+     C                     ENDIF                           E5                                 NUC003
+      *                                                                                       NUC003
+     C                     MOVE *BLANKS   @MTAG                                               NUC003
+      *                                                                                       NUC003
+     C                     ENDIF                           E4  ARAY86                         NUC003
+     C                     ENDIF                           E3  FELD86                         NUC003
+      *                                                                                       NUC003
+     C                     ENDIF                           E2  *IN15                          NUC003
+      *                                                                                       NUC003
+     C                     MOVE SAV15     *IN15                                               NUC003
+      *                                                                                       NUC003
+     C                     ENDIF                           E1                                 NUC003
+      *                                                                                       NUC003
+     C           F86END    ENDSR                                                              NUC003
+      *                                                                                       NUC003
+      *****************************************************************
+      *  End of /COPY GL1300C085                                      *
+      *****************************************************************

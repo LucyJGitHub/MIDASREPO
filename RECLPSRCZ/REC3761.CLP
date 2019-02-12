@@ -9,6 +9,7 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Ament No. LUC114             DATE 24Jan19              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC114 - Change Layout of Interest Capitalization Report    */
+/*                Amend CORE hook:  REC3761001 REC3761002            */
+/*                Add New hook   :  LUC114_001                       */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
 /*********************************************************************/
@@ -37,6 +41,7 @@
 /* declare &BJLANG as a program field as this hasn't been incorp to */
 /*    SDBANKPD yet */
              DCL        VAR(&BJLANG) TYPE(*CHAR) LEN(2) VALUE('GB')
+/*/COPY WNCPYSRC,LUC114_001                                          */
 /**/
              DCLF       FILE(SDBANKPD)
 /**/

@@ -9,6 +9,7 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Ament No. LUC114             DATE 24Jan19              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC114 - Change Layout of Interest Capitalization Report    */
+/*                Amend CORE hook:  REC3762001 REC3762MPE            */
+/*                Add New hook   :  LUC114_002                       */
 /*       S01408 -  Addition of core hook REC3762MPE                  */
 /*       S01408  - Addition of core hook REC3762INT                  */
 /*                 Addition of core hook REC3762MPS                  */
@@ -66,6 +70,7 @@
              OVRMSGF    MSGF(QUSERMSG) TOMSGF(&MSGF)
              OVRDBF     FILE(ACCRACJ) TOFILE(EACCRACJ)
              OVRDBF     FILE(ACCNT) TOFILE(EACCNT)
+/*/COPY WNCPYSRC,LUC114_002                                          */
              CALL       PGM(RE3762) PARM(&BJLANG)
 /*                                                                   /*S01408*/
 /*/COPY WNCPYSRC,REC3762MPE                                          /*S01408*/

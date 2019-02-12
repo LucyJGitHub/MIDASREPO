@@ -9,6 +9,7 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Ament No. LUC114             DATE 24Jan19              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC114 - Change Layout of Interest Capitalization Report    */
+/*                Amend CORE hook:  REC3763001                       */
+/*                Amend CORE hook:  REC3763003                       */
+/*                Add New Hook   :  LUC114_003                       */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
 /*********************************************************************/
@@ -58,6 +63,7 @@
              OVRDBF     FILE(ACCNT) TOFILE(EACCNT)
 /*/COPY WNCPYSRC,REC3763003                                          */
              CALL       PGM(RE3763) PARM(&BJLANG)
+/*/COPY WNCPYSRC,LUC114_003                                          */
              DLTOVR     FILE(*ALL)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +

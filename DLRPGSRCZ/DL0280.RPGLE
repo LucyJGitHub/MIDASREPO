@@ -1854,6 +1854,9 @@
      C     *LIKE         DEFINE    KYOSTL        WYOSTL
      C     *LIKE         DEFINE    KYSTBR        WYSTBR
      C     *LIKE         DEFINE    RECI          FSROLI
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_008                                                               LUC113
+      *                                                                                       LUC113
      C     PMPOKY        KLIST                                                                 S0148
      C                   KFLD                    ##CNUM                                        CPM00
      C                   KFLD                    PTFR                                          S0148
@@ -2055,6 +2058,9 @@
      C                   ELSE
      C                   MOVE      'N'           WBCPL
      C                   ENDIF
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_009                                                               LUC113
+      *                                                                                       LUC113
      C***/COPY*WNCPYSRC,DL0280C655***                                                         CFC006
      C/COPY WNCPYSRC,DL0280C655                                                             MD020563
       *****************************************************************           AR1097176 MD020563
@@ -2505,6 +2511,9 @@
      C                   ELSE
      C                   MOVE      'N'           CAS006
      C                   ENDIF
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_010                                                               LUC113
+      *                                                                                       LUC113
       ** Check if Interest Statement for Call/Time Deposit feature is ON                      CDL012
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
@@ -3336,6 +3345,9 @@
 0678 C*             PROCESSING.
 0679 C*
 0680 C     BEGIN         TAG                                                    ** BEGIN TAG **LN071
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_011                                                               LUC113
+      *                                                                                       LUC113
      C                   EVAL      PSTXA = 0                                                MD037285
      C                   MOVE      TAXI          WTAXI             1                          CER069
      C                   IF        *IN03 = *ON AND TAXI = 'A'                                 CER069
@@ -3822,6 +3834,9 @@
 0804 C*
 0805 C*    DETERMINE IF TAX PAYABLE
 0806 C   03TAXI          COMP      'Y'                                    23
+      *                                                                                       LUC113
+     C/COPY WNCPYSRC,LUC113_012                                                               LUC113
+      *                                                                                       LUC113
      C***03*****                                                                  BUG26576 BUG26576A
      C*ANN23TAXI         COMP      'T'                                    23      BUG26576 BUG26576A
      C     CDL013        IFEQ      '1'                                                        CDL013
@@ -28176,7 +28191,7 @@
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSAC                                                           CPK024
      C/COPY DLCPYSRC,DL0280RSAC
-
+ 
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSIN                                                           CPK021
      C/COPY DLCPYSRC,DL0280RSIN
@@ -30907,7 +30922,7 @@
      C                                                                                        CRE105
      C                   ENDSR                                                                CRE105
       ****************************************************************                        CRE105
-
+ 
      C/COPY DLCPYSRC,DL0280MMCF                                                               CAS009
      C/COPY DLCPYSRC,DL0280HIST                                                               232928
      C/COPY DLCPYSRC,DL0280HSTQ                                                               232928

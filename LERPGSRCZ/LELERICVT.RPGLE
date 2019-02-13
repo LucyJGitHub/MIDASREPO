@@ -51,7 +51,7 @@
       *                                                               *
       *  MD044083 - Issue 2: Spread rate showing incorrect value on   *
       *             rollover enquiry. Issue fixed with by replacing   *
-      *             EVAL with EVALR and MOVEL to MOVE.(Recompile)     *
+      *             EVAL with EVALR and MOVEL to MOVE.                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD028338 - Interest calculation has rounding difference for  *
       *             Rollover of Facility Exchange Rate only. Add new  *
@@ -328,7 +328,7 @@
       *
      C     NRTS          IFNE      *ZERO
      C                   IF        NRTS < *ZERO                                               CRE073
-     C**********         EVAL      ZFIELD = %CHAR(NRTS)                              MD044083 CRE073
+     C**********         EVAL      ZFIELD = %CHAR(NRTS)                              CRE073 MD044083
      C                   EVALR     ZFIELD = %CHAR(NRTS)                                     MD044083
      C                   ELSE                                                                 CRE073
      C                   MOVE      *BLANKS       ZFIELD
@@ -344,11 +344,11 @@
      C                   IF        NBRA = *Zeros And NBSR = *Zeros                            CLE106
      C                             AND CLE036 = 'Y'                                          BUG9737
      C**********         MOVE      ZFIELD        DDNRTF                                CLE106 CRE073
-     C**********         MOVEL     ZFIELD        DDNRTF                              MD044083 CRE073
+     C**********         MOVEL     ZFIELD        DDNRTF                              CRE073 MD044083
      C                   MOVE      ZFIELD        DDNRTF                                     MD044083
      C                   ELSE                                                                BUG9737
      C**********         MOVE      ZFIELD        DDNRTS                               BUG9737 CRE073
-     C**********         MOVEL     ZFIELD        DDNRTS                              MD044083 CRE073
+     C**********         MOVEL     ZFIELD        DDNRTS                              CRE073 MD044083
      C                   MOVE      ZFIELD        DDNRTS                                     MD044083
      C**********         ELSE                                                         CLE106 BUG9507
      C**********         MOVE      ZFIELD        DDNRTS                                      BUG9507

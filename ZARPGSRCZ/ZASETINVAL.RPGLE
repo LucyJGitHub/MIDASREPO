@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend no. MD051877A          Date 02Oct18               *
-      *  Prev Amend no. MD051877           Date 22Sep18               *
+      *  Last Amend No. MD022945           Date 18Oct13               *
+      *  Prev Amend No. MD051877A          Date 02Oct18               *
+      *                 MD051877           Date 22Sep18               *
       *                 MD051932           Date 22Sep18               *      
       *                 MD052228           Date 30Oct18               *
       *                 MD034521A          Date 14Sep15               *
@@ -140,6 +141,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
       *  MD051877A - Highlighted field not correct                    *
       *  MD051877 - Incorrect mapping on error field                  *
       *  MD051932 - No validation when invalid rate is entered on     *
@@ -7261,7 +7263,12 @@
      C     1             DO        E#INDX        Q#                                           CSW212
      C                   ADD       1             Idx                                          CSW212
      C                   EVAL      FldNameArr(Idx) = 'DDCND1'                                 CSW212
+     C     O#E(Q#)       IFEQ      '143'                                                    MD022945
+     C     O#E(Q#)       OREQ      '144'                                                    MD022945
+     C                   MOVEL     '5046'        WMessageID                                 MD022945
+     C                   ELSE                                                               MD022945
      C                   MOVEL     '5045'        WMessageID                                   CSW212
+     C                   ENDIF                                                              MD022945
      C                   MOVE      O#E(Q#)       WMessageID                                   CSW212
      C                   EVAL      MsgIDArr(Idx) = WMessageID                                 CSW212
      C     O#E(Q#)       IFEQ      'X03'                                                      CSW212

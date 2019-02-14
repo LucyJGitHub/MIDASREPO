@@ -12,7 +12,7 @@
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD048216           Date 30Oct17               *
-      *  Prev Amend No. MD036674           Date 26Nov15               *      
+      *  Prev Amend No. MD036674           Date 26Nov15               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 MD032020           Date 23Jan15               *
@@ -37,7 +37,7 @@
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
- 
+
      FACCNTL0   IF   E           K DISK    INFSR(*PSSR)
       ** Midas GL Account details - full a/c number
       *
@@ -369,6 +369,35 @@
      C/END-EXEC                                                                             MD027718
      C                   EVAL      P@BLAF += ADJUST                                         MD027718
      C                   EVAL      P@CLBL += ADJUST                                         MD027718
+     C                   EVAL      ADJUST = 0                                               MD048216
+     C/EXEC SQL                                                                             MD048216
+     C+  SELECT COALESCE(SUM(LKEAMT),0) INTO :ADJUST                                        MD048216
+     C+  FROM LEPK2DPD WHERE                                                                MD048216
+     C+  SECNUM = :P@CNUM AND                                                               MD048216
+     C+  SEACCY = :P@SCCY AND                                                               MD048216
+     C+  SEACOD = :P@ACOD AND                                                               MD048216
+     C+  SEACSQ = :P@ACSQ AND                                                               MD048216
+     C+  SEBRCA = :P@BRCA AND                                                               MD048216
+     C+  LKREVI   = 0 AND                                                                   MD048216
+     C+  LKEAMT < 0                                                                         MD048216
+     C/END-EXEC                                                                             MD048216
+     C                   EVAL      P@BLAF += ADJUST                                         MD048216
+     C                   EVAL      P@CLBL += ADJUST                                         MD048216
+     C                   EVAL      ADJUST = 0                                               MD048216
+     C/EXEC SQL                                                                             MD048216
+     C+  SELECT COALESCE(SUM(LKEAMT),0) INTO :ADJUST                                        MD048216
+     C+  FROM LEPK3DPD WHERE                                                                MD048216
+     C+  SECNUM = :P@CNUM AND                                                               MD048216
+     C+  SEACCY = :P@SCCY AND                                                               MD048216
+     C+  SEACOD = :P@ACOD AND                                                               MD048216
+     C+  SEACSQ = :P@ACSQ AND                                                               MD048216
+     C+  SEBRCA = :P@BRCA AND                                                               MD048216
+     C+  LKREVI   = 0 AND                                                                   MD048216
+     C+  LKEAMT < 0                                                                         MD048216
+     C/END-EXEC                                                                             MD048216
+     C                   EVAL      P@BLAF += ADJUST                                         MD048216
+     C                   EVAL      P@CLBL += ADJUST                                         MD048216
+
      C                   ENDSR                                                              MD027718
       *****************************************************************
       /EJECT
@@ -394,12 +423,12 @@
       ** Retrieve Account Balance
       *
      C     KGLACBTL0     CHAIN(E)  GLACBTL0
- 
+
      C                   IF        %ERROR
      C                   EVAL      P@RTCE = '8'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   IF        %FOUND(GLACBTL0)
      C                   EVAL      P@BLBF = CLBL
      C                   EVAL      P@BLAF = CLBL
@@ -550,13 +579,13 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurrD    BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      KCCY          PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -565,7 +594,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -579,20 +608,20 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
- 
+
+
       ** Retrieve Midas Status
- 
+
      C                   IN(E)     MPHAS
- 
- 
+
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = '*FIRST'
@@ -676,7 +705,7 @@
      C                   PARM                    SVAL10          200
       *
      C     @RTCD         IFNE      *BLANKS
- 
+
      C     SVAL10        IFEQ      '*NRF'
      C                   MOVE      SVALK0        DBKEY
      C                   ENDIF
@@ -707,7 +736,7 @@
      C     SVAL1         IFEQ      '*NRF'
      C                   MOVE      SVALK1        DBKEY
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     '004'         DBASE
      C                   MOVE      'SDSVALPD'    DBFILE
@@ -717,7 +746,7 @@
      C                   ENDIF
      C                   MOVEL     SVAL1         BlockDebit        1
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE
@@ -736,7 +765,7 @@
      C                   PARM                    P@ACSQ
      C                   PARM                    P@BRCA
      C                   PARM                    P@ACNO
- 
+
      C                   PARM                    P@CLBL
      C                   PARM                    P@BLBF
      C                   PARM                    P@BLAF
@@ -769,9 +798,9 @@
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCA
       *
- 
+
      C                   EVAL      SEFACT = 0
- 
+
      C     PSETTLE       PLIST
       ** Input parameters
      C                   PARM                    P@CNUM
@@ -785,18 +814,18 @@
      C                   PARM                    P@HELD
      C                   PARM                    P@COLL
      C                   PARM                    P@ACNO
- 
+
      C     KGLACNL3      KLIST
      C                   KFLD                    KCNUM
      C                   KFLD                    KCCY
      C                   KFLD                    KACOD
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCA
- 
+
       ** Dataareas
- 
+
      C     *DTAARA       DEFINE                  MPHAS
- 
+
      C                   ENDSR
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE

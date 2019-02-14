@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050928           Date 15May18               *      
+      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD044395           Date 08Mar17               *
       *                 AR1090283          Date 10Aug16               *
@@ -98,6 +99,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050928 - SP15_MQ: Unclear error message - Error validating *
+      *              'Stamp Tax Amount' : Invalid Numeric Value       *
+      *           - Correction to CFT157. Move fields to end of Buffer*
+      *           - Patterned after fix MD039094                      *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
@@ -414,6 +419,7 @@
       ** Extra data in file format
      D ExtData       E DS                  EXTNAME(FTIPEXPD)
      D RegData       E DS                  EXTNAME(FTIPRXPD)                                  CER001
+     D StopFTDta     E DS                  EXTNAME(FTIPY10APD)                              MD050928
  
       ** Error indicators
      D OKTrIPY1      E DS                  EXTNAME(FTEIPY1PD)
@@ -1180,7 +1186,9 @@
      C                                      BtnPressed +                                   AR1090283
      C                                      ExtData +                                       MD042042
      C                                      InputUser +                                     MD042042
-     C                                      RegData                                         MD042042
+     C                                      RegData +                                       MD050928
+     C                                      StopFTDta                                       MD050928
+     C**********                            RegData                                MD042042 MD050928
      C**********                            RegData +                                CER001 MD042042
      C**********                            ExtData                                         MD042042
  
@@ -7048,6 +7056,7 @@
       ** Extra Data
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData500
+     C                   PARM                    StopFTDta                                  MD050928
  
       ** Error fields/message IDs/message data (arrays) from/to caller
  

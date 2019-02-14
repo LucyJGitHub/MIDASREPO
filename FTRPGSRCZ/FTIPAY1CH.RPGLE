@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD039094           Date 15May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *               . CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
+      *           - Recompile due to changes in INPAYDD               *
+      *           - Applied fix for MD050928                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *

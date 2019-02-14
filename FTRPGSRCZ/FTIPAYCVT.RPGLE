@@ -56,6 +56,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
+      *             DDSUSR is taken out of FTIPY5PD, hence no need to *
+      *             populate this field.                              *
+      *           - Applied fix for MD050928                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  MD024011 - Pb when job name is QZDASSINIT                    *
@@ -1056,11 +1060,11 @@
      C                   MOVEL     INCDRC        DDCDRC                                       CFT120
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT157
-      ** Set up Stop User                                                                     CFT157
-      *                                                                                       CFT157
-     C                   IF        CFT157 = 'Y'                                               CFT157
-     C                   MOVEL     SUSR          DDSUSR                                       CFT157
-     C                   ENDIF                                                                CFT157
+      ***Set*up*Stop*User**********************************************              CFT157 MD039094
+      *****************************************************************              CFT157 MD039094
+     C**********         IF        CFT157 = 'Y'                                      CFT157 MD039094
+     C**********         MOVEL     SUSR          DDSUSR                              CFT157 MD039094
+     C**********         ENDIF                                                       CFT157 MD039094
       *
       ** LEVEL 2/2
       *  =========

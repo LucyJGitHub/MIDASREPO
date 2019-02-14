@@ -32,8 +32,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. MD050928A          Date 28Jun18               *
+      *  Prev Amend No. MD050928           Date 15May18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 MD044395           Date 08Mar17               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD041641           Date 04Oct16               *
@@ -104,6 +106,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050928A -OPAY inserted as unauthorised even AutoAUTH = 'Y' *
+      *             Re-instate codes reversed by MD033098.  CFT157    *
+      *             codes were reversed on APTRANVU and on FTOP* files*
+      *  MD050928 - SP15_MQ: Unclear error message - Error validating *
+      *              'Stamp Tax Amount' : Invalid Numeric Value       *
+      *           - Correction to CFT157. Move fields to end of Buffer*
+      *           - Patterned after fix MD039094                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -467,6 +476,7 @@
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
      D/COPY OFCPYSRCZ,CFT148_007                                                              CFT148
      D RegData       E DS                  EXTNAME(FTOPRXPD)                                  CER001
+     D StopFTDta     E DS                  EXTNAME(FTOPY10APD)                              MD050928
       * FT Outgoing Payments Extra Data - File (D/B) format
       *
       * Validation Work Fields
@@ -952,8 +962,10 @@
      C                   MOVE      RegData       RegData2         18                          CSF011
      C**********         MOVEL     TranInExtn    TranInExtn1      19                 CFT120 MD033098
      C**********         MOVE      TranInExtn    TranInExtn2       1                 CFT120 MD033098
-     C                   MOVEL     TranInExtn    TranInExtn1       9                        MD033098
-     C                   MOVE      TranInExtn    TranInExtn2      11                        MD033098
+     C**********         MOVEL     TranInExtn    TranInExtn1       9              MD033098 MD050928A
+     C**********         MOVE      TranInExtn    TranInExtn2      11              MD033098 MD050928A
+     C                   MOVEL     TranInExtn    TranInExtn1      19                       MD050928A
+     C                   MOVE      TranInExtn    TranInExtn2       1                       MD050928A
      C                   EVAL                    Buffer =
      C                                             TranInPrim + TranInPrmB
      C                                           + TranInSecA + TranInSecB
@@ -985,6 +997,7 @@
      C                                        + ExtData                                     MD042042
      C                                        + InputUser                                   MD042042
      C                                        + RegData                                     MD042042
+     C                                        + StopFTDta                                   MD050928
                                                                                               CSF011
      C                   RETURN
  
@@ -2898,6 +2911,7 @@
  
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData
+     C                   PARM                    StopFTDta                                  MD050928
  
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr

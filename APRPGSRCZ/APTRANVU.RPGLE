@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050345           Date 04Apr18               *
-      *  Pret Amend No. MD050342           Date 04Apr18               *
+      *  Last Amend No. MD050928A          Date 28Jun18               *
+      *  Prev Amend No. MD050928           Date 15May18               *
+      *                 MD050345           Date 04Apr18               *
+      *                 MD050342           Date 04Apr18               *
       *                 CGL157             Date 17Aug15               *
       *                 CFT163             Date 04May18               *
       *                 MD044880           Date 15Jan18               *
@@ -214,6 +216,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050928A - Reinstate codes by CFT157 as codes on FTOP* files*
+      *              were reversed.                                   *
+      *  MD050928 - SP15_MQ: Unclear error message - Error validating *
+      *             'Stamp Tax Amount' : Invalid Numeric Value        *
+      *           - Patterned after fix MD039094                      *
       *  MD050345 - Data under CRS Country Details are not aligned to *
       *             their corresponding columns                       *
       *  MD050342 - Mailing Country details is not displayed during   *
@@ -934,6 +941,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D GLFullAcct      S             24A                                                    MD026979
      D TempData7       S              1A                                                      CLE164
      D InputUser       S             10A                                                    MD042042
+     D StopFTDta       S             10A                                                    MD050928
 
      D*WCFSC1OLn       S              4P 0                                                   BUG4646
      D*WCFSC2OLn       S              4P 0                                                   BUG4646
@@ -1503,6 +1511,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER:Bfp    AAuth                            BUG22140 AR1002463
      C**********         ADD       1             Bfp                              BUG22140 AR1002463
      C/COPY WNCPYSRC,APH00060
+     C     StopIPLen     SUBST     BUFFER:Bfp    StopFTDta                                  MD050928
+     C                   ADD       StopIPLen     Bfp                                        MD050928
 
      C                   CALL      'FTIPAYVU'
       * Common header information (DS) from source system
@@ -1526,6 +1536,7 @@ RGC  D RPIF4LN         S              4  0                                      
       ** Extra Data
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
+     C                   PARM                    StopFTDta                                  MD050928
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -1603,15 +1614,19 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       OPY12Ln       Bfp                                   CER049 CFT120
      C*****19            SUBST     BUFFER:Bfp    #TempData        19                   CFT120 CFT157
      C*****              ADD       19            Bfp                                   CFT120 CFT157
-     C     9             SUBST     BUFFER:Bfp    #TempData         9                          CFT157
-     C                   ADD       9             Bfp                                          CFT157
+     C*****9             SUBST     BUFFER:Bfp    #TempData         9                CFT157 MD050928A
+     C******             ADD       9             Bfp                                CFT157 MD050928A
+     C     19            SUBST     BUFFER:Bfp    #TempData        19                       MD050928A
+     C                   ADD       19            Bfp                                       MD050928A
       *                                                                                    AR1002463
      C*****1****         SUBST     BUFFER:Bfp    AAuth                              AR1002463 CFT120
      C**********         ADD       1             Bfp                                AR1002463 CFT120
      C*****1             SUBST     BUFFER2:Bfp2  #TempData2        1                   CFT120 CFT157
      C*****              ADD       1             Bfp2                                  CFT120 CFT157
-     C     11            SUBST     BUFFER2:Bfp2  #TempData2       11                          CFT157
-     C                   ADD       11            Bfp2                                         CFT157
+     C*****11            SUBST     BUFFER2:Bfp2  #TempData2       11                CFT157 MD050928A
+     C*****              ADD       11            Bfp2                               CFT157 MD050928A
+     C     1             SUBST     BUFFER2:Bfp2  #TempData2        1                       MD050928A
+     C                   ADD       1             Bfp2                                      MD050928A
      C                   MOVEL     #TempData     #TempTrans12     20                          CFT120
      C                   MOVE      #TempData2    #TempTrans12                                 CFT120
      C                   EVAL      TRANS12 = #TempTrans12                                     CFT120
@@ -1651,6 +1666,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER2:Bfp2  AAuth                              CSF011 AR1002463
      C**********         ADD       1             Bfp2                               CSF011 AR1002463
      C/COPY WNCPYSRC,APH00063
+     C                   EVAL      StopFTDta = %SUBST(BUFFER2:Bfp2:StopOPLen)               MD050928
+     C                   ADD       StopOPLen     Bfp2                                       MD050928
 
      C                   CALL      'FTOPAYVU'
       * Common header information (DS) from source system
@@ -1680,6 +1697,7 @@ RGC  D RPIF4LN         S              4  0                                      
 
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
+     C                   PARM                    StopFTDta                                  MD050928
 
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -5417,6 +5435,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CER049
      C                   Z-ADD     RecordLen     OPY12Ln           4 0                        CER049
 
+     C                   MOVEL     'FTOPY10APD'  FileName                                   MD050928
+     C                   EXSR      GETRCDLN                                                 MD050928
+     C                   Z-ADD     RecordLen     StopOPlen         4 0                      MD050928
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5488,6 +5509,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPEXLn            4 0
 
+     C                   MOVEL     'FTIPY10APD'  FileName                                   MD050928
+     C                   EXSR      GETRCDLN                                                 MD050928
+     C                   Z-ADD     RecordLen     StopIPlen         4 0                      MD050928
      C                   ENDSR
       *****************************************************************
       /SPACE 5

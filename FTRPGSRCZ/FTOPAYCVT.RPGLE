@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *  Last Amend No. MD039094           Date 15May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039986           Date 10Aug16               *
       *                 MD024011           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
@@ -72,6 +73,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
+      *             SSUSR is taken out of FTOPY6PD, hence no need to  *
+      *             populate this field.                              *
+      *           - Applied fix for MD050928                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  MD024011 - Pb when job name is QZDASSINIT                    *
@@ -823,11 +828,11 @@
      C                   MOVEL     OPCDRC        SCDRC                                        CFT120
      C                   ENDIF                                                                CFT120
       *                                                                                       CFT157
-      ** Stop User                                                                            CFT157
-      *                                                                                       CFT157
-     C                   IF        CFT157 = 'Y'                                               CFT157
-     C                   MOVEL     SUSR          SSUSR                                        CFT157
-     C                   ENDIF                                                                CFT157
+      ***Stop*User****************************************************               CFT157 MD039094
+      ****************************************************************               CFT157 MD039094
+     C**********         IF        CFT157 = 'Y'                                      CFT157 MD039094
+     C**********         MOVEL     SUSR          SSUSR                               CFT157 MD039094
+     C**********         ENDIF                                                       CFT157 MD039094
      C*
       **  Receivers Correspondent
      C                   MOVEL     RCO1          SRCO1

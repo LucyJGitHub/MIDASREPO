@@ -368,13 +368,14 @@
      C                   WHEN      DDACTN = 'A'
       *  Processing for Amends
      C                   EXSR      ValidateSt
-      **********                                                                    CSF011A MD052610
-     C**********         WHEN      DDACTN = ' '                                     CSF011A MD052610
-      **********                                                                    CSF011A MD052610
-      ***Processing*for*Action*and*Enquire*****************************             CSF011A MD052610
-      **********                                                                    CSF011A MD052610
+      *                                                                                      CSF011A
+     C                   WHEN      DDACTN = ' '                                              CSF011A
+      *                                                                                      CSF011A
+      *  Processing for Action and Enquire                                                   CSF011A
+      *                                                                                      CSF011A
      C**********         EXSR      ConvertSt                                        CSF011A MD052610
-      **********                                                                    CSF011A MD052610
+      *                                                                                      CSF011A
+     C                   EXSR      ValidateSt                                               MD052610
      C                   ENDSL
       *
      C     INVALID       TAG

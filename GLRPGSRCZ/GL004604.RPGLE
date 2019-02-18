@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1075388          Date 21Nov13               *
       *                 AR845655           Date 06Oct11               *
       *                 CRE067             Date 05Oct10               *
       *                 BUG28072A          Date 29Aug10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
@@ -185,6 +187,7 @@
      D ZDECS           S              1  0
      D ZECODE          S              1
      D ZOUT21          S             21
+     D WkVarChar       S              1A                                                    MD052296
  
       *****************************************************************
       /EJECT
@@ -290,7 +293,9 @@
      C                   EXSR      SRFmtWMsg
  
      C                   EVAL      PMode    = '*ENTER'
-     C                   EVAL      PAPIName = 'SHADOWPOSTWRITE!MIDAS.RATM'
+     C**********         EVAL      PAPIName = 'SHADOWPOSTWRITE!MIDAS.RATM'                  MD052296
+     C                   EVAL      PAPIName = 'SHADOWPOSTWRITE' + WkVarChar                 MD052296
+     C                                          + 'MIDAS.RATM'                              MD052296
      C                   EVAL      PFormat  = 'RATM'
  
      C                   EVAL      PFldTag  = 'APTGTTYPE'
@@ -1163,6 +1168,8 @@
      C**********         EVAL      P@OP03 = 'MQUsername'                                   BUG28072A
      C**********         EVAL      P@OP04 = 'MQUserPassword'                               BUG28072A
      C**********         EVAL      P@OP05 = 'MQQueueMgr'                         BUG27831B BUG28072A
+     C                   EVAL      P@OP06 = 'ExclamationPointChar'                          MD052296
+      *                                                                                     MD052296
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    P@OP01
@@ -1176,7 +1183,8 @@
      C**********         PARM      *BLANKS       P@OP05                                    BUG27831B
      C                   PARM                    P@OP05                                    BUG27831B
      C                   PARM      *BLANKS       P@VL05
-     C                   PARM      *BLANKS       P@OP06
+     C**********         PARM      *BLANKS       P@OP06                                     MD052296
+     C                   PARM                    P@OP06                                     MD052296
      C                   PARM      *BLANKS       P@VL06
      C                   PARM      *BLANKS       P@OP07
      C                   PARM      *BLANKS       P@VL07
@@ -1200,6 +1208,7 @@
      C**********         EVAL      WkMQUsr   = P@VL03                                      BUG28072A
      C**********         EVAL      WkMQUsrP  = P@VL04                                      BUG28072A
      C**********         EVAL      WkMQMgr   = P@VL05                            BUG27831B BUG28072A
+     C                   EVAL      WkVarChar = %TRIM(P@VL06)                                MD052296
  
      C     KyAcctDB      KLIST
      C                   KFLD                    R1DBCU

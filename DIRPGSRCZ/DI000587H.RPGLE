@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035656           Date 25May16               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035656           Date 25May16               *
       *                 MD027107           Date 11Dec14               *
       *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD033895           Date 03Feb14               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035656 - Batch with wrong account configured in the        *
       *             accounting rules do not appears in the repair     *
@@ -93,9 +95,11 @@
      D BFWBCONF      E DS                  EXTNAME(BFWBCONF) DTAARA
       *
      D WkBITHType      S              4A   INZ('BITH')                          Message Type
-     D WkBITHAction    S             20A   INZ('WRITE!MIDAS.BITH')              Action
+     D***WkBITHAction    S             20A   INZ('WRITE!MIDAS.BITH')            Action      MD052296
+     D WkBITHAction    S             20A                                                    MD052296
      D WkBITPType      S              4A   INZ('BITP')                          Message Type
-     D WkBITPAction    S             20A   INZ('WRITE!MIDAS.BITP')              Action
+     D***WkBITPAction    S             20A   INZ('WRITE!MIDAS.BITP')                        MD052296
+     D WkBITPAction    S             20A                                                    MD052296
       *
       * Entry's parameters
      D P_RtrnCode      S              7A                                        Return Code
@@ -177,6 +181,7 @@
      D Tmp3            S            100A   varying                                         MD024681A
       *                                                                                     MD024772
      D BDTSTYTMP       S              5                                                     MD024772
+     D WkVarChar       S              1A                                                    MD052296
       *---------------------------------------------------------------------------------------
       ** PROTOTYPE
       *---------------------------------------------------------------------------------------
@@ -1453,6 +1458,7 @@
      C                   EVAL      P@OP02 = 'ZoneSystemName'
      C                   EVAL      P@OP03 = 'AcctRulesUser'
      C                   EVAL      P@OP04 = 'AcctRulesAutoAuth'                             MD024534
+     C                   EVAL      P@OP05 = 'ExclamationPointChar'                          MD052296
       *
      C                   CALL      'AOSVALR0'
      C                   PARM      *Blanks       P@RTCD
@@ -1488,6 +1494,11 @@
      C                   EVAL      WKAutoAuth = 'N'                                         MD024534
      C                   ENDIF                                                              MD024534
       *
+     C                   EVAL      WkVarChar = %TRIM(P@VL05)                                MD052296
+     C                   EVAL      WkBITHAction = 'WRITE' + WkVarChar                       MD052296
+     C                                             + 'MIDAS.BITH'                           MD052296
+     C                   EVAL      WkBITPAction = 'WRITE' + WkVarChar                       MD052296
+     C                                             + 'MIDAS.BITP'                           MD052296
      C                   ENDIF
       *
       ** Retrieve password

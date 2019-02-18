@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD048443           Date 08Dec17               *
-      *  Prev Amend No. MD050228           Date 31May18               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD048443           Date 08Dec17               *
+      *                 MD050228           Date 31May18               *
       *                 MD050026           Date 06Apr18               *
       *                 MD050296           Date 19Apr18               *
       *                 CLE071             Date 18Jul18               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD048443 - Past due loan generated without loan type subtype *
       *             and also without interest rate                    *
       *  MD050228 - Manual on-line PDCL and CoB generated PDCL:       *
@@ -1066,6 +1068,7 @@
      D WOUTAMT         S             15  0                                                 MD049745A
      D WIND1           S              1A                                                   MD049745A
      D WREV            S              1A                                                   MD049745A
+     D WkVarChar       S              1A                                                    MD052296
                                                                                             MD022465
      D CurrKey         S                   LIKE (A6CYCD)                                    MD022465
      D CurrIdx         S              3  0 INZ(1)                                           MD022465
@@ -2236,7 +2239,8 @@
      C                   EXSR      SRFmtWMsg
       *
      C                   EVAL      PMode    = '*ENTER'
-     C                   EVAL      PAPIName = 'WRITE!MIDAS.LOAM'
+     C**********         EVAL      PAPIName = 'WRITE!MIDAS.LOAM'                            MD052296
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.LOAM'            MD052296
      C                   EVAL      PFormat  = 'LOAM'
       *
      C                   EVAL      PFldTag  = 'APTGTTYPE'
@@ -3128,7 +3132,8 @@
      C                   EXSR      SRFmtWMsg                                               MD021423E
       *                                                                                    MD021423E
      C                   EVAL      PMode    = '*ENTER'                                     MD021423E
-     C                   EVAL      PAPIName = 'WRITE!MIDAS.LOAM'                           MD021423E
+     C**********         EVAL      PAPIName = 'WRITE!MIDAS.LOAM'                  MD021423E MD052296
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.LOAM'            MD052296
      C                   EVAL      PFormat  = 'LOAM'                                       MD021423E
       *                                                                                    MD021423E
      C                   EVAL      PFldTag  = 'APTGTTYPE'                                  MD021423E
@@ -3686,6 +3691,7 @@
      C                   EVAL      POP06 = 'PDCLAccSeqNo'
      C                   EVAL      POP07 = 'PDCLRunAsIdentity'
      C                   EVAL      POP08 = 'PDCLDefPrfcOrLn'                                MD050026
+     C                   EVAL      POP09 = 'ExclamationPointChar'                           MD052296
       *
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       WRETCD
@@ -3705,8 +3711,9 @@
      C                   PARM      *BLANKS       PVL07
      C**********         PARM      *BLANKS       POP08                                      MD050026
      C                   PARM                    POP08                                      MD050026
-     C                   PARM      *BLANKS       PVL08
-     C                   PARM      *BLANKS       POP09
+     C**********         PARM      *BLANKS       PVL08
+     C                   PARM      *BLANKS       POP09                                      MD052296
+     C                   PARM                    POP09                                      MD052296
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
      C                   PARM      *BLANKS       PVL10
@@ -3726,6 +3733,7 @@
      C                   MOVEL     PVL06         SeqFlg
      C                   MOVEL     PVL07         RunAsIdentity
      C                   MOVEL     PVL08         wDftPCfromOL                               MD050026
+     C                   EVAL      WkVarChar = %TRIM(PVL09)                                 MD052296
       *
       * If not Run As Identity no need to supply username and password
      C                   IF        RunAsIdentity = 'N'
@@ -4107,7 +4115,8 @@
       ** XML Header  (Start)
       *
      C                   EVAL      PMode    = '*ENTER'
-     C                   EVAL      PAPIName = 'WRITE!MIDAS.CLIP'
+     C**********         EVAL      PAPIName = 'WRITE!MIDAS.CLIP'
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.CLIP'   MD050296 MD052296
      C                   EVAL      PFormat  = 'CLIP'
       *
      C                   EVAL      PFldTag  = 'APTGTTYPE'

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD048216           Date 30Oct17               *
-      *  Prev Amend No. MD036674           Date 26Nov15               *
+      *  Last Amend No. MD052296           Date 19nOV18               *
+      *  Prev Amend No. MD048216           Date 30Oct17               *
+      *                 MD036674           Date 26Nov15               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039450           Date 04Aug16               *
@@ -22,6 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD048216 - Fee- system in COB did not see the Credit account *
       *              at the time of processing and created PDCL ZZ    * 
       *  MD036674 - CLE164 Downgrade Performance issues               *
@@ -647,10 +649,16 @@
                    aValName(29) = 'SEPAMT';
                    aValName(30) = '*ZEROS';
                    aValName(31) = QUO + 'N' + QUO;
-                   aValName(32) = 'secnum || seaccy ||' +
-                                  'substr(digits(seacod),1,10) || '+
-                                  'substr(digits(seacsq),1,2) ||' +
+       //**********aValName(32) = 'secnum || seaccy ||' +                                 //MD052296
+       //**********               'substr(digits(seacod),1,10) || '+                      //MD052296
+       //**********               'substr(digits(seacsq),1,2) ||' +                       //MD052296
+       //**********               'sebrca';                                               //MD052296
+       //MD052296
+                    aValName(32) = 'secnum CONCAT seaccy CONCAT ' +
+                                  'substr(digits(seacod),1,10) CONCAT '+
+                                  'substr(digits(seacsq),1,2) CONCAT ' +
                                   'sebrca';
+       //MD052296
                    aValName(33) = '*ZEROS';
                    aValName(34) = '*ZEROS';
 

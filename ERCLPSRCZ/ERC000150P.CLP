@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD052296           Date 26Nov18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      CER047  *CREATE    Date 19May08              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD052296 - Problems caused by use of special characters     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       CER047 - German Features LF037-00 Reporting §24c KWG        */
@@ -142,8 +144,10 @@ ERROR:       SNDF       RCDFMT(ER000150C0)
              GOTO       CMDLBL(ERROR)
              ENDDO
  
-             CHGVAR     VAR(&PPARM) VALUE(&WFRFNR || &WTOFNR || +
-                          &WFRDAT || &WTODAT)
+/**********  CHGVAR     VAR(&PPARM) VALUE(&WFRFNR || &WTOFNR || +    */                 /*MD052296*/
+/**********               &WFRDAT || &WTODAT)                        */                 /*MD052296*/
+             CHGVAR     VAR(&PPARM) VALUE(&WFRFNR *CAT &WTOFNR *CAT +
+                          &WFRDAT *CAT &WTODAT)                                         /*MD052296*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Limited')

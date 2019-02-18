@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL135B  *CREATE   Date 11Oct13               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL135B  *CREATE   Date 11Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135B - Accounting Rules Process                           *
       *                                                               *
@@ -139,6 +141,7 @@
      D WkUserId        S             10A                                        User Id
      D WkPassWord      S             10A                                        Password
      D WkTimeStamp     S               Z                                        TimeStamp
+     D WkVarChar       S              1A                                                    MD052296
       *
       *
      D Recursive       S              1
@@ -271,7 +274,8 @@
       ** - Action
       *
      C                   EVAL      PMode    = '*ENTER'
-     C                   EVAL      PAPIName = 'WRITE!MIDAS.AMAD'
+     C**********         EVAL      PAPIName = 'WRITE!MIDAS.AMAD'                            MD052296
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.AMAD'            MD052296
      C                   EVAL      PFormat  = 'AMAD'
       *
       ** - Target System
@@ -570,6 +574,7 @@
      C                   EVAL      P@OP01 = 'MQTransSdrQueue'
      C                   EVAL      P@OP02 = 'MQJMSResponseQueue'
      C                   EVAL      P@OP03 = 'MQQueueMgr'
+     C                   EVAL      P@OP04 = 'ExclamationPointChar'                          MD052296
       *
      C                   CALLB     'AOSVALR0'
      C                   PARM      *Blanks       P@RTCD
@@ -599,6 +604,7 @@
      C                   EVAL      WkTransQueue = P@VL01
      C                   EVAL      WkRespQ      = P@VL02
      C                   EVAL      WkMQMgr      = P@VL03
+     C                   EVAL      WkVarChar = %TRIM(P@VL04)                                MD052296
       *
      C                   ENDIF
       *

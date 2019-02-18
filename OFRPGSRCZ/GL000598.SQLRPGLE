@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034487           Date 02Jul15               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034487           Date 02Jul15               *
       *                 CGL153   *CREATE   Date 13Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034487 - Avoid overflow when footer has to be printed at   *
       *             the very bottom of page.                          *
@@ -556,8 +558,10 @@
 
      C/EXEC SQL
      C+ DELETE from SDEXRTTD
-     C+ where ERCUST||ERCCY||ERNOSC||ERTCCY not in
-     C+ (SELECT ERCUST||ERCCY||ERNOSC||ERTCCY from SDEERTTD)
+     C***+*where*ERCUST||ERCCY||ERNOSC||ERTCCY not in                                       MD052296
+     C***+*(SELECT*ERCUST||ERCCY||ERNOSC||ERTCCY from SDEERTTD)                             MD052296
+     C+ where ERCUST CONCAT ERCCY CONCAT ERNOSC CONCAT ERTCCY not in                        MD052296
+     C+ (SELECT ERCUST CONCAT ERCCY CONCAT ERNOSC CONCAT ERTCCY from SDEERTTD)              MD052296
      C/END-EXEC
 
      C                   ENDIF

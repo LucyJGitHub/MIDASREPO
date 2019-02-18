@@ -8,10 +8,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052296           Date 26Nov18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 02Jun08              */
+/*                      BG18886            Date 02Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CGL029             Date 01Sep03              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052296 - Problems caused by use of special characters     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CGL029 - Increase Account Code to 10 digits                 */
@@ -59,7 +61,8 @@
                           &CUST_BRCA &MSGDTA &TXT1)                   /*089745*/
  
 /*******     CHGVAR     VAR(&CGMSDT) VALUE(&TXT1)                       *184382*/
-             CHGVAR     VAR(&CGMSDT) VALUE(&MSGID || ' ' || &TXT1)     /*184382*/
+/**********  CHGVAR     VAR(&CGMSDT) VALUE(&MSGID || ' ' || &TXT1)  */       /*184382*/ /*MD052296*/
+             CHGVAR     VAR(&CGMSDT) VALUE(&MSGID *CAT ' ' *CAT &TXT1)                  /*MD052296*/
              CALL       PGM(AOCREPT) PARM(CPF9898 &CGMSGF &CGMSFL +
                           &CGMSDT &CGPGRL &CGPGMQ &CGMSGQ &CGMSGT)
              IF         COND(&RTN_CODE *NE ' ') THEN(DO)

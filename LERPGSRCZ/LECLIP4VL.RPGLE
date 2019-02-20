@@ -11,9 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052135           Date 23Nov18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 AR567846           Date 01Aug12               *
       *                 AR317161           Date 01Aug12               *
@@ -48,9 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052433 - FAMU of PDCL 'Y' is not properly set.             *
-      *  MD052135 - LE: Inconsistency in 'Reporting Past Due Initial  *
-      *             Date' and 'Basel II Initial Date                  *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -101,10 +97,6 @@
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)  PREFIX(pd_)                          CLE134
      FCLOANL4   IF   E           K DISK    INFSR(*PSSR)  PREFIX(pd_)                          CLE134
      F                                     RENAME(CLOANCLF:CLOANL4F)                          CLE134
-     FCLOAN     UF   E           K DISK    INFSR(*PSSR)  PREFIX(OL_)                        MD052433
-     F                                     IGNORE(CLOANHHF:CLOANCKF)                        MD052433
-     F                                     IGNORE(CLOANZ1F)                                 MD052433
-     F                                     RENAME(CLOANCLF:CLOANF)                          MD052433
       *****************************************************************
       *
       ***  FILES
@@ -1435,25 +1427,9 @@
       ** Retrieve Lending ICD                                                                 CLE134
                                                                                               CLE134
      C                   IF        CLE134      = 'Y'                                          CLE134
-      *                                                                                     MD052433
-      ***  Key list for CLOAN                                                               MD052433
-      *                                                                                     MD052433
-     C     WKLON         KLIST                                                              MD052433
-     C                   KFLD                    WALON             6                        MD052433
-     C                   KFLD                    WEPAR             1                        MD052433
-      *                                                                                     MD052433
-     C                   MOVE      DDORLN        WALON                                      MD052433
-     C                   MOVE      'A'           WEPAR                                      MD052433
-     C     WKLON         CHAIN (N) CLOAN                              89                    MD052433
-      *                                                                                     MD052433
-     C                   IF        *IN89       = *OFF                                       MD052433
-     C                   EVAL      @LNTY       = OL_LTYP                                    MD052433
-     C                   EVAL      @LNST       = OL_SUTP                                    MD052433
-     C                   EVAL      @LNCL       = OL_CLAS                                    MD052433
-      *                                                                                     MD052433
-     C**********         EVAL      @LNTY       = CCLLTYP                             CLE134 MD052433
-     C**********         EVAL      @LNST       = CCLSUTP                             CLE134 MD052433
-     C**********         EVAL      @LNCL       = CCLCLAS                             CLE134 MD052433
+     C                   EVAL      @LNTY       = CCLLTYP                                      CLE134
+     C                   EVAL      @LNST       = CCLSUTP                                      CLE134
+     C                   EVAL      @LNCL       = CCLCLAS                                      CLE134
                                                                                               CLE134
      C                   CALL      'AOLOANR0'                                                 CLE134
      C                   PARM      *BLANKS       @RTCD                                        CLE134
@@ -1469,7 +1445,6 @@
      C                   EVAL      DBKEY       = @OPTN                                        CLE134
      C                   EXSR      *PSSR                                                      CLE134
      C                   ENDIF                                                                CLE134
-     C                   ENDIF                                                              MD052433
                                                                                               CLE134
      C                   CALL      'AOCLNDR0'                                                 CLE134
      C                   PARM      *BLANKS       @RTCD                                        CLE134

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041643           Date 27Sep16               *
+      *  Last Amend No. MD051508           Date 12Jul18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041643           Date 27Sep16               *
       *                 MD036567           Date 26Apr16               *
       *                 MD036189           Date 08Oct15               *
       *                 MD033105           Date 07Aug15               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051508 - Correct field name in order to return proper      *
+      *             error description.                                *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD041643 - Array index error because error array is used     *
       *             instead of warning array.                         *
@@ -952,7 +955,8 @@
      C                   IF        %SUBST(WDORC1:1:1) <> '/' AND                              CFT032
      C                             WDORC5 <> *BLANKS                                          CFT032
      C                   EVAL      IDX = IDX + 1                                              CFT032
-     C                   EVAL      FldNamXAR(IDX) = 'WDORC5'                                  CFT032
+     C**********         EVAL      FldNamXAR(IDX) = 'WDORC5'                        CFT032  MD051508
+     C                   EVAL      FldNamXAR(IDX) = 'DDORC5'                                MD051508
      C**********         EVAL      MsgDtaXAr(IDX) = WDORC5                           CFT032 MD000091
      C                   EVAL      BLen = %Len(%Trim(WDORC5))                               MD000091
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(WDORC5)                   MD000091
@@ -1239,7 +1243,8 @@
      C                             %SUBST(DDORC5:1:2) <> '8/'                               BUG15065
      C                   EVAL      OKORC1 = 'N'                                             BUG15192
      C                   EVAL      IDX = IDX + 1                                              250600
-     C                   EVAL      FldNamXAR(IDX) = 'WDORC5'                                  250600
+     C**********         EVAL      FldNamXAR(IDX) = 'WDORC5'                         250600 MD051508
+     C                   EVAL      FldNamXAR(IDX) = 'DDORC5'                                MD051508
      C**********         EVAL      MsgDtaXAr(IDX) = WDORC5                           250600 MD000091
      C                   EVAL      BLen = %Len(%Trim(WDORC5))                               MD000091
      C                   EVAL      MsgDtaXAr(IDX) = LenStr +%TRIM(WDORC5)                   MD000091

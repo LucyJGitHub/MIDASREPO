@@ -61,7 +61,7 @@
      D   FOTransId             6     25A
       *
      D WKMsgType       S              4A   INZ('AMAD')                          Message Type
-     D*WKAction*       S             20A   INZ('WRITE!MIDAS.AMAD')              Action      MD052296
+     D***WKAction      S             20A   INZ('WRITE!MIDAS.AMAD')              Action      MD052296
      D WKAction        S             20A                                                    MD052296
       *
       * Entry's parameters

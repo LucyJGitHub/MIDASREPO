@@ -3711,8 +3711,8 @@
      C                   PARM      *BLANKS       PVL07
      C**********         PARM      *BLANKS       POP08                                      MD050026
      C                   PARM                    POP08                                      MD050026
-     C**********         PARM      *BLANKS       PVL08
-     C                   PARM      *BLANKS       POP09                                      MD052296
+     C                   PARM      *BLANKS       PVL08
+     C**********         PARM      *BLANKS       POP09                                      MD052296
      C                   PARM                    POP09                                      MD052296
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
@@ -4116,7 +4116,7 @@
       *
      C                   EVAL      PMode    = '*ENTER'
      C**********         EVAL      PAPIName = 'WRITE!MIDAS.CLIP'
-     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.CLIP'   MD050296 MD052296
+     C                   EVAL      PAPIName = 'WRITE' + WkVarChar + 'MIDAS.CLIP'            MD052296
      C                   EVAL      PFormat  = 'CLIP'
       *
      C                   EVAL      PFldTag  = 'APTGTTYPE'

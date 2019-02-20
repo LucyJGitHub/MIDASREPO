@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD052296           Date 19nOV18               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
       *  Prev Amend No. MD048216           Date 30Oct17               *
       *                 MD036674           Date 26Nov15               *
       *                 CLE168             Date 26Feb18               *
@@ -25,9 +25,9 @@
       *                                                               *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD048216 - Fee- system in COB did not see the Credit account *
-      *              at the time of processing and created PDCL ZZ    * 
+      *              at the time of processing and created PDCL ZZ    *
       *  MD036674 - CLE164 Downgrade Performance issues               *
-      *           - Applied for MD-48954                              *           
+      *           - Applied for MD-48954                              *
       *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039450 - Improve COB component LEC000495 performance       *
@@ -744,7 +744,7 @@
        //*************************************************************
        /EJECT
        //*************************************************************
-       //                                                            * 
+       //                                                            *
        // processCustomerBalances - This subroutine will extract a   *
        // =======================   subset of LETMPLTD wherein it    *
        // will only retrieve the first occurence of a settlement     *

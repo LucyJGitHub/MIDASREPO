@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *  Last Amend No. MD052296           Date 26Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033895           Date 16Apr15               *
       *                 MD023674           Date 29Nov13               *
       *                 MD023747           Date 23Nov13               *
       *                 CGL135A  *CREATE   Date 11Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - MD033895 - Correct parameters for UT000033.       *
       *  MD023674 - Invalid date                                      *
@@ -59,7 +61,8 @@
      D   FOTransId             6     25A
       *
      D WKMsgType       S              4A   INZ('AMAD')                          Message Type
-     D WKAction        S             20A   INZ('WRITE!MIDAS.AMAD')              Action
+     D*WKAction*       S             20A   INZ('WRITE!MIDAS.AMAD')              Action      MD052296
+     D WKAction        S             20A                                                    MD052296
       *
       * Entry's parameters
      D P_RtrnCode      S              7A                                        Return Code
@@ -143,6 +146,7 @@
       *
      D WkProcRtrn      S                   like(WEB_INT)                        Procedure Return Cod
      D WkSoap          S                   like(WEB_STRVAR)
+     D WkVarChar       S              1A                                                    MD052296
       *
       *  Collection of all Midas Error Messages
       *
@@ -658,6 +662,7 @@
      C                   EVAL      P@OP01 = 'GlobalSystemPrefix'
      C                   EVAL      P@OP02 = 'ZoneSystemName'
      C                   EVAL      P@OP03 = 'AcctRulesIntUserAMAD'
+     C                   EVAL      P@OP04 = 'ExclamationPointChar'                          MD052296
       *
      C                   CALLB     'AOSVALR0'
      C                   PARM      *Blanks       P@RTCD
@@ -687,6 +692,8 @@
      C                   EVAL      WkValLstLoc = %TRIM(P@VL01) + 'GMLIB'        Value List Location
      C                   EVAL      WkZone      = P@VL02                         Zone
      C                   EVAL      WkUserId    = P@VL03                         User Id
+     C                   EVAL      WkVarChar = %TRIM(P@VL04)                                MD052296
+     C                   EVAL      WKAction = 'WRITE' + WkVarChar + 'MIDAS.AMAD'            MD052296
       *
      C                   ENDIF
       *

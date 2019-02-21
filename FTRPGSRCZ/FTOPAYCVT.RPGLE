@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039094           Date 15May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052529           Date 12Feb19               *
+      *  Prev Amend No. MD039094           Date 15May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 MD024011           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052529 - If Ordering Customer line 1 = 'MT202', Ordering   *
+      *             Customer lines 2 - 5 should be blank.             *
       *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
       *             SSUSR is taken out of FTOPY6PD, hence no need to  *
       *             populate this field.                              *
@@ -550,10 +553,10 @@
      C                   END
      C*
      C     SORC1         IFEQ      ORCFLD
-     C                   MOVE      OPORB1        SORC2
-     C                   MOVE      OPORB2        SORC3
-     C                   MOVE      OPORB3        SORC4
-     C                   MOVE      OPORB4        SORC5                                        CFT032
+     C**********         MOVE      OPORB1        SORC2                                      MD052529
+     C**********         MOVE      OPORB2        SORC3                                      MD052529
+     C**********         MOVE      OPORB3        SORC4                                      MD052529
+     C**********         MOVE      OPORB4        SORC5                               CFT032 MD052529
      C                   ELSE
      C                   MOVE      ORC2          SORC2
      C                   MOVE      ORC3          SORC3

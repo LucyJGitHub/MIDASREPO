@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD049309           Date 14Feb18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052820           Date 21Feb19              */
+/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD046161           Date 09Aug17              */
 /*                      AR786878           Date 05Jun13              */
 /*                      CCB022B            Date 06Aug12              */
@@ -47,7 +48,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD049309 - LE: Records disappeared in CLOANZTD file         */
+/*       MD052820 - LEC06A fails due to commitment definition not   */
+/*                  found.                                          */
+/*       MD049309 - LE: Records disappeared in CLOANZTD file        */
 /*       MD046248 - Finastra Rebranding                             */
 /*       MD046161 - Database error on COB component LEC60A.         */
 /*       AR786878 - New processing for manual repayment and         */
@@ -565,5 +568,6 @@
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /***ENDPGM:**ENDPGM                                                  */                 /*MD049309*/
- ENDPGM:     ENDCMTCTL                                                                  /*MD049309*/
+/***ENDPGM:*****ENDCMTCTL                                                  /*MD049309*/ /*MD052820*/
+ ENDPGM:                                                                                /*MD052820*/
              ENDPGM                                                                     /*MD049309*/

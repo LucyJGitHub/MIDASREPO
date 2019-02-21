@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD049309           Date 14Feb18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052820           Date 21Feb19              */
+/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD048608           Date 20Nov17              */
 /*                      MD031676           Date 17Dec14              */
 /*                      MD023527           Date 18Nov13              */
@@ -64,6 +65,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     MD052820 - LEC06A fails due to commitment definition not     */
+/*                found.                                            */
 /*     MD049309 - LE: Records disappeared in CLOANZTD file          */
 /*     MD046248 - Finastra Rebranding                               */
 /*     MD048608 - Component LEC0609B seq 01001 failed               */
@@ -497,7 +500,7 @@
                           FILE(PMLOANPD))                             /*093379*/
 /**/
 /*  TAKE TEMPORARY COPY OF CLOANCL FOR P'TY EXTRACTS         */
- 
+
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                              /*MD022290*/
                 DLTF       FILE(&DPLIB/XPETEMPLN)                                       /*MD022290*/
                 MONMSG     MSGID(CPF2105)                                               /*MD022290*/
@@ -509,7 +512,7 @@
              CPYF       FROMFILE(CLOAN) TOFILE(PETEMPLN) +
                           MBROPT(*REPLACE) RCDFMT(CLOANCLF)
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(PETEMPLN))
- 
+
              CPYF       FROMFILE(CLOAN) TOFILE(LETEMPPD) +
                           MBROPT(*REPLACE) RCDFMT(CLOANCKF)
     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(LETEMPPD)) /*128044*/
@@ -538,7 +541,7 @@
 /**/
 /**********        OVRDBF     FILE(TABLE)  TOFILE(TABLEEI)  */        /*S01194*/
 /**********      OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO)*/ /*S01194*/
- 
+
 /***Keep*a*copy*of MCLONCL and MCLONCK before the run of next   *099147 119350*/
 /*********** CPYF       FROMFILE(MCLONCL) TOFILE(XMCLONCL) +          /*119350*/
 /***************          MBROPT(*ADD)                      */ /*099147 119350*/
@@ -549,7 +552,7 @@
                    OVRDBF     FILE(MCLONCL) TOFILE(XMCLONCL)          /*106892*/
                    OVRDBF     FILE(MCLONCK) TOFILE(XMCLONCK)          /*106892*/
 /**/                                                                  /*106892*/
- 
+
 /**********        CALL       PGM(LE0450) */                                              /*CLE134*/
                    CALL       PGM(LE0450) PARM(&RERUN)                                    /*CLE134*/
 /**/                                                                  /*106892*/
@@ -977,5 +980,6 @@ ABNOR:       SNDPGMMSG  MSG('LEC0605 ended abnormally') TOPGMQ(*EXT) +
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /***ENDPGM:  ENDPGM                                                  */                 /*MD049309*/
- ENDPGM:     ENDCMTCTL                                                                  /*MD049309*/
+/***ENDPGM:*****ENDCMTCTL                                                  /*MD049309*/ /*MD052820*/
+ ENDPGM:                                                                                /*MD052820*/ 
              ENDPGM                                                                     /*MD049309*/

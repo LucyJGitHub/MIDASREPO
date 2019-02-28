@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044395           Date 08Mar17               *
+      *  Last Amend No. MD052870           Date 27Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044395           Date 08Mar17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT157             Date 29Aug14               *
@@ -48,6 +49,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052870 - Recompiled due to changes made by MD-50928 in     *
+      *             FTOPY6PD.                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044395 - Incorrect Customer Name on Inputs details for     *
       *             valid BIC entry                                   *
@@ -95,11 +98,11 @@
       *  CAP084 - Creation of wrappers for use with front end.        *
       *                                                               *
       *****************************************************************
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
@@ -107,11 +110,11 @@
       **---------------------------------------------------------------                       CER001
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------                       CER001
- 
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D NewPmtScn1    E DS                  EXTNAME(FTOPY1PD)
       * New Payment in Screen Format (Primary screen)
      D NewPmtSc1b    E DS                  EXTNAME(FTOPY1APD)
@@ -134,27 +137,27 @@
       ** New Payment in Screen 1 Format (Cover Message)                                       CSW209
      D NewPmtScnC    E DS                  EXTNAME(FTOPYCPD)                                  CSW209
       ** New Payment in Screen 2 Format (Cover Message)                                       CSW209
- 
+
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D CrPtFilFmt    E DS                  EXTNAME(OTPAYDD)
       * Current Payment in File Format
- 
+
      D CrPtFilFmX    E DS                  EXTNAME(OTPAYXPD)
       ** Current Payment in File Format (Extension)
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
      D @NotDelAmt    E                     EXTFLD(@SNDAM)
@@ -169,13 +172,13 @@
       ** New DS for Extended Narrative Credit                                                 CER030
       *                                                                                       CER030
      D NewPmtScn5B   E DS                  EXTNAME(FTOPY7BPD)                                 CER030
- 
+
       * Msg Unique Reference
      D SHMSGR          S              8  0
      D
       * Part Number
      D SHPART          S              3  0
- 
+
      D PRetCodeIn      S             10                                                       CER001
      D PActn           S              1                                                       CER001
      D PFrontID        S             20                                                       CER001
@@ -192,7 +195,7 @@
       * Data structure to retrieve multi branch indicator
      DRUNDAT           DS
      D WMBIN                  13     13
- 
+
      D POPAYExFilFmt E DS                  EXTNAME(FTOPX1PD)                                  CER001
      D                                     PREFIX(EX)                                         CER001
      D RegData       E DS                  EXTNAME(FTOPRXPD)                                  CER001
@@ -201,13 +204,13 @@
                                                                                             MD039986
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
       * External DS for Funds Transfer details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(#)
       * Switchable Features File
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       ** Second DS for Access Programs, Long Data Structure                                   CSF011
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CSF011
@@ -244,19 +247,19 @@
      D AAuth           S              1                                                     MD039986
      D/COPY WNCPYSRC,FTOPAYZD01
       **--------------------------------------------------------------------------------------------
- 
+
      C                   CLEAR                   CrPtFilFmt
      C                   CLEAR                   CrPtFilFmX
      C                   Clear                   Val@Fields
- 
+
       * Get RUNDAT to access Multi Branch Indicator
      C     *DTAARA       Define                  RUNDAT
      C                   In        RUNDAT
      C                   Unlock    RUNDAT
- 
+
      C                   Eval      @MBIN = WMBIN
- 
- 
+
+
       * Access SAR details file to determine if CEU006 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -264,27 +267,27 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CEU006           1
      C                   Else
      C                   Movel     'N'           @CEU006
      C                   End
- 
+
       ** Access SAR details file to see if CFT014 is installed.
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT014'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT014
      C                   Else
      C                   Movel     'N'           @CFT014
      C                   EndIf
- 
+
       * Access SAR details file to determine if CFT009 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -292,13 +295,13 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT009'      @SARD             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT009           1
      C                   Else
      C                   Movel     'N'           @CFT009
      C                   End
- 
+
       * Access SAR details file to determine if CFT010 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -306,13 +309,13 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT010'      @SARD             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT010           1
      C                   Else
      C                   Movel     'N'           @CFT010
      C                   End
- 
+
       * Access SAR details file to determine if CFT003 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -320,7 +323,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT003'      @SARD             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT003           1
      C                   Else
@@ -351,14 +354,14 @@
      C                   Else                                                                 CER001
      C                   Movel     'N'           ULX043                                       CER001
      C                   End                                                                  CER001
- 
+
       ** Get the action code from MidasPlus interface
      C                   EVAL      SACTION = DDACTN_In
- 
+
      C     SACTION       IFEQ      *BLANK
      C                   MOVEL     'E'           SACTION
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -371,9 +374,9 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      '1'           @Level            1
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      FTOPAYRED
@@ -396,9 +399,9 @@
       * Convert to screeen format
       *
      C                   EXSR      FTOPAYCVT
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   ENDIF
@@ -406,7 +409,7 @@
       ** Populate Customer Name on Input fields                                               CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
- 
+
      C                   MOVE      TMST          @TimeStamp       26                         BUG4196
      C                   MOVE      OPMSGR        PMSGR             8                          CSD083
      C                   MOVEL     RegData       RegData1          2                          CSF011
@@ -433,7 +436,7 @@
      C**********                                 + RegData                             CER001 CSF011
      C**********                                 + RegData1                          CSF011 MD039986
      C                                           + NewPmtScn6A                              MD039986
- 
+
      C**********         EVAL      Buffer2 =  RegData2                               CSF011 MD039986
      C                   EVAL      Buffer2 = NewPmtScn6B + AAuth                            MD039986
      C                                       + BtnPressed                                   MD039986
@@ -815,7 +818,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    FwdBck            1
      C                   PARM                    SPREF_In         15
@@ -828,13 +831,13 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
      C                   PARM                    BtnPressed       10                       AR1090283
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C/COPY WNCPYSRC,FTH00481
- 
+
       ** Access Bank details via access program                                               CSF011
                                                                                               CSF011
      C                   CALL      'AOBANKR0'                                                 CSF011
@@ -848,9 +851,9 @@
      C                   Parm      '*DBERR'      @RTCD             7
      C                   Parm      '*FIRST'      @OPTN             7
      C     SDFTFR        Parm      SDFTFR        DSFDY
- 
+
      C/COPY WNCPYSRC,FTOPAYZC02
- 
+
       * Access SAR details file to determine if CEU006 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -858,21 +861,21 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD             6
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CEU006           1
      C                   Else
      C                   Movel     'N'           @CEU006
      C                   End
- 
+
       ** Access SAR details file to see if CFT014 is installed.
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT014'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT014
      C                   Else
@@ -880,7 +883,7 @@
      C                   EndIf
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTOPAYM01
- 
+
       ** Access SAR file to determine if CFT120 is switched on                                CFT120
       *                                                                                       CFT120
      C                   MOVEL     'N'           CFT120            1                          CFT120
@@ -906,10 +909,10 @@
      C                   ENDIF                                                                CFT120
                                                                                               CFT120
      C                   ENDSR
- 
+
       **********************************************************************
      C     FTOPAYRED     BEGSR
- 
+
      C                   CALLB     'FTOPAYRED'
       *
       * INPUT PARAMETERS
@@ -936,11 +939,11 @@
       *
       * Payment REF. READ
      C                   PARM      *BLANK        @PRRED           15
- 
+
      C                   ENDSR
       **********************************************************************
      C     FTOPAYRTV     BEGSR
- 
+
      C                   CALLB     'FTOPAYRTV'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
@@ -963,7 +966,7 @@
      C                   PARM                    @Level            1
       * @CFT014 workfield
      C                   PARM                    Val@Fields
- 
+
       * OUTPUTS :
       * (Current) Payment in file format
      C                   PARM                    CrPtFilFmt
@@ -992,11 +995,11 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C/COPY WNCPYSRC,FTOPAYZC01
- 
+
      C                   ENDSR
       **********************************************************************
      C     FTOPAYCVT     BEGSR
- 
+
      C                   CALLB     'FTOPAYCVT'
       *
       * INPUTS :
@@ -1005,7 +1008,7 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    CrPtFilFmt
      C                   PARM                    CrPtFilFmX
- 
+
       * OUTPUTS
       * Payment - screen formats
      C                   PARM                    NewPmtScn1
@@ -1021,10 +1024,10 @@
      C                   PARM                    NewPmtScn5A                                  CER030
      C                   PARM                    NewPmtScn5B                                  CER030
      C                   PARM                    SDFTFR
- 
+
       *  Validation Work Fields
      C                   PARM                    Val@Fields
- 
+
       * Payment Status
      C                   PARM                    DDSTAT           24
       *
@@ -1041,7 +1044,7 @@
      C                   PARM                    RegData                                      CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
- 
+
      C                   ENDSR
       /EJECT                                                                                  CER001
       *****************************************************************                       CER001

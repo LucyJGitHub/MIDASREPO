@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD022945           Date 18Oct13               *
-      *  Prev Amend No. MD051877A          Date 02Oct18               *
+      *  Last Amend No. MD052922           Date 03Mar19               *
+      *  Prev Amend No. MD022945           Date 18Oct13               *
+      *                 MD051877A          Date 02Oct18               *
       *                 MD051877           Date 22Sep18               *
-      *                 MD051932           Date 22Sep18               *      
+      *                 MD051932           Date 22Sep18               *
       *                 MD052228           Date 30Oct18               *
       *                 MD034521A          Date 14Sep15               *
       *                 MD041649           Date 06Oct16               *
@@ -141,11 +142,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052922 - Settlement Payment Customer details blank on WIP  *
+      *             during dummy amend and reverse (SETL API).        *
       *  MD022945 - Incorrect message shown for /SRCE/ validation.    *
       *  MD051877A - Highlighted field not correct                    *
       *  MD051877 - Incorrect mapping on error field                  *
       *  MD051932 - No validation when invalid rate is entered on     *
-      *             exhange rate field of settlement tabs             *      
+      *             exhange rate field of settlement tabs             *
       *  MD052228 - Overridable message Settlement account is         *
       *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *
@@ -967,6 +970,7 @@
      C**********                   AND ##PPAY = 'N'                                   BUG6010 244636
      C**********         IF        (##ACTN <> 'R'                                    244636 BUG14913
      C                   IF        (##ACTN = 'I' OR ##ACTN = 'A'                            BUG14913
+     C                             OR (##ACTN = ' ' AND ##CALP = 'LEND')                    MD052922
      C                             OR (##ACTN = 'R' AND ##CALP = 'LEND'))                     244636
      C                             AND ##PPAY <> 'Y'                                          244636
      C                             OR ##ACTN = 'X' AND ##PPAY = 'Y'                         BUG14913

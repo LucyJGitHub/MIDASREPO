@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047719           Date 24Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050209           Date 27Feb19               *
+      *  Prev Amend No. MD047719           Date 24Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD037869A          Date 28Mar16               *
       *                 MD037869           Date 11Mar16               *
@@ -153,6 +154,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050209 - Removed Interest Payment Frequency Validation     *
       *  MD047719 - Pass 'Action Code' as parameter to MMVTOIT for    *
       *             validation purposes. Apply fix for MD-51582.      *
       *  MD046248 - Finastra Rebranding                               *
@@ -2483,18 +2485,18 @@
       ** If the interest frequency is not M,Q,X,Y,N,Z or blank,                               CDL033
       ** it is an error.                                                                      CDL033
       *                                                                                       CDL033
-     C     DDIPFQ        IFNE      *BLANK                                                     CDL033
-     C     DDIPFQ        ANDNE     'M'                                                        CDL033
-     C     DDIPFQ        ANDNE     'Q'                                                        CDL033
-     C     DDIPFQ        ANDNE     'X'                                                        CDL033
-     C     DDIPFQ        ANDNE     'Y'                                                        CDL033
-     C     DDIPFQ        ANDNE     'N'                                                        CDL033
-     C     DDIPFQ        ANDNE     'Z'                                                        CDL033
-     C                   EVAL      RETURNCODE = 'Error'                                       CDL033
-     C                   ADD       1             Idx                                          CDL033
-     C                   EVAL      FldNameArr(Idx) = 'DDIPFQ'                                 CDL033
-     C                   EVAL      MsgIDArr(Idx) = 'MMN9003'                                  CDL033
-     C                   ENDIF                                                                CDL033
+     C*****DDIPFQ        IFNE      *BLANK                                            CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'M'                                               CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'Q'                                               CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'X'                                               CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'Y'                                               CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'N'                                               CDL033 MD050209
+     C*****DDIPFQ        ANDNE     'Z'                                               CDL033 MD050209
+     C**********         EVAL      RETURNCODE = 'Error'                              CDL033 MD050209
+     C**********         ADD       1             Idx                                 CDL033 MD050209
+     C**********         EVAL      FldNameArr(Idx) = 'DDIPFQ'                        CDL033 MD050209
+     C**********         EVAL      MsgIDArr(Idx) = 'MMN9003'                         CDL033 MD050209
+     C**********         ENDIF                                                       CDL033 MD050209
       *                                                                                       CDL033
       ** Frequency must not be 'N' if date has been entered.                                  CDL033
       *                                                                                       CDL033

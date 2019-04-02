@@ -16,13 +16,16 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD042142           Date 08May18               *
-      *  Prev Amend No. MD038440A          Date 08May18               *
+      *  Last Amend No. MD042142A          Date 13Jan19               *
+      *  Prev Amend No. MD042142           Date 08May18               *
+      *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042142A - Cannot close Nostro Account.                     *
+      *            - Applied for MD052616.                            *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
       *  MD038440A - No validation for amendable side of a dead txn   *
@@ -684,7 +687,9 @@
      C+ declare DLLIST6 cursor for
      C+ select AMNETR from FXNETMPD
      C+ where AMCCYD = :YyCcy and
-     C+       AMOURN = :XxNost
+     C********AMOURN = :XxNost                                                             MD042142A
+     C+       AMOURN = :XxNost  and                                                        MD042142A
+     C+       AMRECI = 'C'                                                                 MD042142A
      C+ order by
      C+       AMNETR
      C/end-exec

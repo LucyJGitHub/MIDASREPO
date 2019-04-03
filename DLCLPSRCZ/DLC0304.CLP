@@ -8,15 +8,16 @@
 /*       DLC0304 - FOREIGN CURRENCY POSITION ENQUIRY                */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*
+/*       Last Amend No. MD051146           Date 26Feb19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Prev Amend No. 180788             Date 30Aug00              */
+/*                      180788             Date 30Aug00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CEU012             Date 16Feb98              */
 /*                      DT0174             Date 17May91              */
@@ -25,6 +26,8 @@
 /*                                                                  */
 /*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /*                                                                  */
+/*       MD051146 - Screen crashes for foreign currency position     */
+/*                  enquiry                                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       180788 - Allow more than two users to access the Foreign    */
 /*                Currency Positions Enquiry screen at the same time.*/
@@ -99,6 +102,8 @@
              ENDDO                                                    /*CEU012*/
 /*                                                                            */
              CALL       PGM(DL0150)
+             CLOF       OLPOS4 /*MD051146*/
+
 /**/
 /** reset status messages to user profile's default:                 */
              CHGJOB     STSMSG(*USRPRF)

@@ -11,11 +11,12 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD039095           Date 03Apr19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 244680             Date 12Jan07              */
+/*                      244680             Date 12Jan07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -23,7 +24,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
+/*  MD039095 - Correct the position of fields 'Page' and include the */
+/*             year in the condition for dates.                      */
+/*  MD046248 - Finastra Rebranding                                   */
 /*  244680 - Correct the position of all the affected fields due to  */
 /*           OS Version V5R1.                                        */
 /*         - Correct variable setting to properly remove old spool   */
@@ -36,15 +39,17 @@
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*********************************************************************/
              PGM        PARM(&EAAOTQ &SDATE &STIME)
- 
+
              DCL        VAR(&EAAOTQ) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
-             DCL        VAR(&SDATF) TYPE(*CHAR) LEN(4)
+/**********  DCL        VAR(&SDATF) TYPE(*CHAR) LEN(4)                                  /*MD039095*/
+             DCL        VAR(&SDATF) TYPE(*CHAR) LEN(6)                                  /*MD039095*/
              DCL        VAR(&SFILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SPFNM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SPUSR) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&SPSNO) TYPE(*DEC)  LEN(3 0)
+/**********  DCL        VAR(&SPSNO) TYPE(*DEC)  LEN(3 0)                                /*MD039095*/
+             DCL        VAR(&SPSNO) TYPE(*DEC)  LEN(5 0)                                /*MD039095*/
              DCL        VAR(&SPJNM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SPJNO) TYPE(*CHAR) LEN(6)
              DCL        VAR(&SPDAY) TYPE(*CHAR) LEN(2)
@@ -52,30 +57,37 @@
              DCL        VAR(&SPHR) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SPMIN) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SPSEC) TYPE(*CHAR) LEN(2)
-             DCL        VAR(&SPDAT) TYPE(*CHAR) LEN(4)
+/**********  DCL        VAR(&SPDAT) TYPE(*CHAR) LEN(4)                                  /*MD039095*/
+             DCL        VAR(&SPDAT) TYPE(*CHAR) LEN(6)                                  /*MD039095*/
              DCL        VAR(&SPAGE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&SPTIM) TYPE(*CHAR) LEN(6)
-             DCL        VAR(&SPDTM) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&SDTTM) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&SPDTM) TYPE(*CHAR) LEN(10)                                 /*MD039095*/
+/**********  DCL        VAR(&SDTTM) TYPE(*CHAR) LEN(10)                                 /*MD039095*/
+             DCL        VAR(&SPDTM) TYPE(*CHAR) LEN(12)                                 /*MD039095*/
+             DCL        VAR(&SDTTM) TYPE(*CHAR) LEN(12)                                 /*MD039095*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SPYEA) TYPE(*CHAR) LEN(2)                                  /*MD039095*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCLF       FILE(QTEMP/OUTQF)
- 
+
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
                           CMDLBL(END))
- 
+
              CHGJOB     SWS(XXXXXX00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /**/
 /**   CONVERT SDATE TO SDATF FOR COMPARISON                                **/
 /**/
-             CHGVAR     VAR(&SDATF) VALUE(%SST(&SDATE 3 2) *TCAT +
-                          %SST(&SDATE 1 2))
- 
+/**********  CHGVAR     VAR(&SDATF) VALUE(%SST(&SDATE 3 2) *TCAT +  */                  /*MD039095*/
+/**********              %SST(&SDATE 1 2))                          */                  /*MD039095*/
+
+             CHGVAR     VAR(&SDATF) VALUE(%SST(&SDATE 5 2) *TCAT +
+                          %SST(&SDATE 3 2) *TCAT %SST(&SDATE 1 2))                      /*MD039095*/
+
 /**/
 /*  SECURE TEMPORARY PHYSICAL FILE FOR SPOOL FILE ENTRIES           */
              DLTF       FILE(QTEMP/OUTQF)
@@ -101,7 +113,8 @@ READ1:       RCVF
 READ2:       RCVF
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
              CHGVAR     VAR(&SFILE) VALUE(%SST(&OUTQF 2 10))
-             CHGVAR     VAR(&SPAGE) VALUE(%SST(&OUTQF 119 4))
+/**********  CHGVAR     VAR(&SPAGE) VALUE(%SST(&OUTQF 119 4))                           /*MD039095*/
+             CHGVAR     VAR(&SPAGE) VALUE(%SST(&OUTQF 122 4))                           /*MD039095*/
 /**/
 /*  IF NO DATA OR NEXT PAGE, SKIP AND LOOK FOR NEXT HEADING        */
              IF         COND((&SFILE *EQ '          ') *OR (&SFILE +
@@ -131,7 +144,9 @@ READ2:       RCVF
              CHGVAR     VAR(&SPMIN) VALUE(%SST(&OUTQF 114 2))                             /*244680*/
 /**********  CHGVAR     VAR(&SPSEC) VALUE(%SST(&OUTQF 115 2)) */                          /*244680*/
              CHGVAR     VAR(&SPSEC) VALUE(%SST(&OUTQF 117 2))                             /*244680*/
-             CHGVAR     VAR(&SPDAT) VALUE(&SPMTH *TCAT &SPDAY)
+             CHGVAR     VAR(&SPYEA) VALUE(%SST(&OUTQF 108 2))                           /*MD039095*/
+/**********  CHGVAR     VAR(&SPDAT) VALUE(&SPMTH *TCAT &SPDAY)                          /*MD039095*/
+             CHGVAR     VAR(&SPDAT) VALUE(&SPYEA *TCAT &SPMTH *TCAT &SPDAY)             /*MD039095*/
              CHGVAR     VAR(&SPTIM) VALUE(&SPHR *TCAT &SPMIN *TCAT &SPSEC)
 /**/
 /**   CHECK IF SPOOL FILE ENTRY CAN BE DELETED                               **/

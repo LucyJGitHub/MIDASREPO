@@ -8,7 +8,7 @@
 /*       DLC0304 - FOREIGN CURRENCY POSITION ENQUIRY                */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
-/*
+/*                                                                   */
 /*       Last Amend No. MD051146           Date 26Feb19              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/

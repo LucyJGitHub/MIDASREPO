@@ -13,14 +13,18 @@
       *                                                               *
       *    (c) Finastra International Limited 2014                    *    
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031980           Date 26Jan15               *
+      *  Last Amend No. MD052680           Date 06Mar19               *
+      *  Prev Amend No. MD052679           Date 05Mar19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD031980           Date 26Jan15               *
       *                 MD032064           Date 23Jan15               *
       *                 MD031644           Date 15Dec14               *
       *                 CFT158  *CREATE    Date 10Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052680 - Authority Failure Report - QZDASOINIT             *
+      *  MD052679 - Authority Failure Report - GOC000110              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031980 - Retrieval of FRNT from GZINPAYDD fails due        *
       *             to blank WKBRCA.                                  *
@@ -152,6 +156,11 @@
      D Pos             S              5S 0                                                //MD031644
      D P_MSWDATA       S          32000    Varying                                        //MD031644
      D WkRprRej        S              1A                                                  //MD031644
+                                                                                          //MD052679
+      *  Action Mode for Trigger Event                                                    //MD052679
+     D INSERTMODE      S                   LIKE(TRGEVENT) INZ('1')                        //MD052679
+     D DELETEMODE      S                   LIKE(TRGEVENT) INZ('2')                        //MD052679
+     D AMENDMODE       S                   LIKE(TRGEVENT) INZ('3')                        //MD052679
 
       *  Entry Parameters
      C     *ENTRY        PLIST
@@ -175,7 +184,14 @@
        Select;
 
        When PFLNAME = 'T_MSWIP';
+                                                                                          //MD052679
+        If (TRGEVENT = INSERTMODE) or (TRGEVENT = AMENDMODE);                             //MD052679
           T_MSWIP_AFT = %SUBST(PARM1:AOFF+1:ALEN) ;
+                                                                                          //MD052679
+        Else;                                                                             //MD052679
+          T_MSWIP_AFT = %SUBST(PARM1:BOFF+1:BLEN);                                        //MD052679
+                                                                                          //MD052679
+        Endif;                                                                            //MD052679
 
           // Retrieve zone                                                                //MD031644
           WkZone = %TRIM(WP_MSWZONE);                                                     //MD031644
@@ -194,7 +210,10 @@
                                                                                          // MD031980
           // Only OPAY has the Front Office ID at pos 17-19, get the                     // MD031980
           // branch code from T_MSWIP Back Office Field Name 1 instead.                  // MD031980
+                                                                                          //MD052679
+             If WP_MSWBOFLD1 <> *blanks;                                                  //MD052679
                 WKBRCA = %SUBST(WP_MSWBOFLD1:1:3);                                       // MD031980
+             EndIf;                                                                       //MD052679
                                                                                           //MD031644
                 If WP_MSWAPI = 'OPAY';
                 // Exec SQL select frnt into :wFrontOffID from OTPAYDD                      MD031644
@@ -233,7 +252,14 @@
        When PFLNAME = 'T_MSRPRQ';
 
         //T_MSRPQ_AFT = %SUBST(PARM1:BOFF+1:ALEN);                                          MD031644
+                                                                                          //MD052680
+        If TRGEVENT = DELETEMODE;                                                         //MD052680
           T_MSRPQ_AFT = %SUBST(PARM1:BOFF+1:BLEN);                                        //MD031644
+                                                                                          //MD052680
+        Else;                                                                             //MD052680
+          T_MSRPQ_AFT = %SUBST(PARM1:AOFF+1:ALEN);                                        //MD052680
+                                                                                          //MD052680
+        Endif;                                                                            //MD052680
 
           // Retrieve zone                                                                  MD031644
           WkZone = %TRIM(RP_MSWZONE);                                                     //MD031644

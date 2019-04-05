@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 245692             Date 09Dec13               *
+      *  Last Amend No. MD038929           Date 19Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 245692             Date 09Dec13               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038929 - Recompile for DL1912DF changes                    *
       *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *

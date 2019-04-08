@@ -13,8 +13,9 @@
       *                                                               *
       *    (c) Finastra International Limited 2014                    *
       *                                                               *
-      *  Last Amend No. MD052679           Date 05Mar19               *
-      *  Prev AMend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052680           Date 06Mar19               *
+      *  Prev Amend No. MD052679           Date 05Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD031980           Date 26Jan15               *
       *                 MD032064           Date 23Jan15               *
       *                 MD031644           Date 15Dec14               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052680 - Authority Failure Report - QZDASOINIT             *
       *  MD052679 - Authority Failure Report - GOC000110              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031980 - Retrieval of FRNT from GZINPAYDD fails due        *
@@ -250,7 +252,14 @@
        When PFLNAME = 'T_MSRPRQ';
 
         //T_MSRPQ_AFT = %SUBST(PARM1:BOFF+1:ALEN);                                          MD031644
+                                                                                          //MD052680
+        If TRGEVENT = DELETEMODE;                                                         //MD052680
           T_MSRPQ_AFT = %SUBST(PARM1:BOFF+1:BLEN);                                        //MD031644
+                                                                                          //MD052680
+        Else;                                                                             //MD052680
+          T_MSRPQ_AFT = %SUBST(PARM1:AOFF+1:ALEN);                                        //MD052680
+                                                                                          //MD052680
+        Endif;                                                                            //MD052680
 
           // Retrieve zone                                                                  MD031644
           WkZone = %TRIM(RP_MSWZONE);                                                     //MD031644

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL185             Date 13Mar17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052783           Date 09Mar19               *
+      *  Prev Amend No. CGL185             Date 13Mar17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD044377           Date 28Feb17               *
       *                 MD043973           Date 03Feb17               *
@@ -22,6 +23,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052783 - CRS - GLCSBAPD: no record was output for each     *
+      *             customer’s real linked A/C Holder                 *
       *  CGL185 - FATCA XML 2.0                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -125,6 +128,8 @@
       ** Midas SD Nostro Details
      FSDNOSTLB  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(NO_)
+      ** Midas SD Additional customer details                                               MD052783
+     FSDCUAHL1  IF   E           K DISK    INFSR(*PSSR)                                     MD052783
 
       *****************************************************************
       /EJECT
@@ -158,6 +163,9 @@
       ** Midas Book Codes File                                                              MD044377
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)                                MD044377
 
+      ** External DS Based On SDNAHOPD                                                      MD052783
+     D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                MD052783
+                                                                                            MD052783
      ** File Status Data Structure
      D FSDS            DS
      D  FMBR                 129    138
@@ -1081,6 +1089,7 @@
      C                   EVAL      CBACSQ = 0
      C                   ENDIF
      C                   EVAL      JCJANO = CBCUST
+     C                   EVAL      CACUST = CBCUST                                          MD052783
      C     JCJANO        SETLL     SDJACCL0
      C     JCJANO        READE     SDJACCL0
 
@@ -1100,6 +1109,42 @@
 
      C     JCJANO        READE     SDJACCL0
      C                   ENDDO
+      *                                                                                     MD052783
+      ** Customers Linked to Authority Holders                                              MD052783
+      *                                                                                     MD052783
+     C     CACUST        SETLL     SDCUAHL1                                                 MD052783
+     C     CACUST        READE     SDCUAHL1                                                 MD052783
+                                                                                            MD052783
+     C                   DOW       NOT %EOF(SDCUAHL1)                                       MD052783
+     C                   EVAL      CBJANO = CACUST                                          MD052783
+     C                   EVAL      CBCUST = CAAUTH                                          MD052783
+     C                   EXSR      SrCust                                                   MD052783
+     C                   IF        PRTCD = *BLANKS                                          MD052783
+     C                   EVAL      CBCUST = CAAUTH                                          MD052783
+     C                   EVAL      CBACHL = CAAUTH                                          MD052783
+     C                   EVAL      CBACTY = 'CUST'                                          MD052783
+     C                   ELSE                                                               MD052783
+     C                   EVAL      PCUST  = CAAUTH                                          MD052783
+     C                   EXSR      SrNaho                                                   MD052783
+     C                   IF        PRTCD  = *BLANKS                                         MD052783
+     C                   EVAL      CBCUST = *BLANKS                                         MD052783
+     C                   EVAL      CBACHL = CAAUTH                                          MD052783
+     C                   EVAL      CBACTY = 'NAHO'                                          MD052783
+     C                   ELSE                                                               MD052783
+     C     *LOCK         IN        LDA                                                      MD052783
+      ** Invalid Customer or Non-Account Holder                                             MD052783
+     C                   EVAL      DBFILE = 'SDCUSTNAHO'                                    MD052783
+     C                   EVAL      DBASE  = 005                                             MD052783
+     C                   EVAL      DBKEY  = CACUST                                          MD052783
+     C                   OUT       LDA                                                      MD052783
+     C                   EXSR      *PSSR                                                    MD052783
+     C                   ENDIF                                                              MD052783
+     C                   ENDIF                                                              MD052783
+     C                   EVAL      CBJATP = 'M'                                             MD052783
+     C                   WRITE     GLCSBAD0                                                 MD052783
+                                                                                            MD052783
+     C     CACUST        READE     SDCUAHL1                                                 MD052783
+     C                   ENDDO                                                              MD052783
 
      C                   ENDSR
       *****************************************************************
@@ -1153,6 +1198,22 @@
      C                   ENDDO
 
      C                   ENDSR
+      *****************************************************************                     MD052783
+      /EJECT                                                                                MD052783
+      *****************************************************************                     MD052783
+      *                                                               *                     MD052783
+      *  SrNaho - Extract details of Non-Account Holder               *                     MD052783
+      *                                                               *                     MD052783
+      *****************************************************************                     MD052783
+     C     SrNaho        BEGSR                                                              MD052783
+                                                                                            MD052783
+     C                   CALL      'AONAHOR0'                                               MD052783
+     C                   PARM      *BLANKS       PRTCD                                      MD052783
+     C                   PARM      '*KEY   '     POPTN                                      MD052783
+     C                   PARM                    PCust                                      MD052783
+     C     SDNAHO        PARM      SDNAHO        DSSDY                                      MD052783
+                                                                                            MD052783
+     C                   ENDSR                                                              MD052783
       *****************************************************************
       /EJECT
       *****************************************************************

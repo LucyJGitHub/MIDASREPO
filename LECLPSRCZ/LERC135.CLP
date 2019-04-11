@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD049309           Date 14Feb18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052961           Date 18Mar19              */
+/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD027396           Date 19Aug14              */
 /*                      AR996830           Date 25Nov12              */
 /*                      AR1055539          Date 12Nov12              */
@@ -35,6 +36,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052961 - CoB component LERC135 generates hundreds of      */
+/*                  spooled files for LER135Pn reports               */
 /*       MD049309 - LE: Records disappeared in CLOANZTD file         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027396 - XPSTTOM not being cleared before component starts*/
@@ -362,7 +365,11 @@
              CLRPFM     LEFEAM                                                           /*243496B*/
   /* Call Fee Accruals & account Key Generation Program */
  
-             OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC)                          /*CLE134*/
+/**********  OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC) */              /*CLE134 MD052961*/
+
+             OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLC) +
+                          KEYFLD(FEBRCA FECNUM FEFACL FELOAN FEFSEQ)                    /*MD052961*/
+
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(OVRDBF +
                           FILE(LKEYFED) TOFILE(LEPK2DPD))                                 /*CLE134*/
 /*/COPY WNCPYSRC,LEH01138                                            */

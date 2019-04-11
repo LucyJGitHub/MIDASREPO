@@ -9,7 +9,8 @@
 /*                                                                  */
 /*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No.  MD051728         Date 28Feb19              */
+/*       Prev Amend No.  MD046248         Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*         MD051728 - Midas ME Outgoing Message Status (ME0840P1)   */
+/*                    report is still reporting/capturing messages  */
+/*                    from the previous days                        */
 /*       MD046248 - Finastra Rebranding                             */
 /********************************************************************/
  
@@ -30,6 +34,11 @@
              DCL VAR(&DATFMT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PARM)  TYPE(*CHAR) LEN(100)
              DCL        VAR(&MBIN)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DATE1) TYPE(*DEC)  LEN(6 0)                                /*MD051728*/
+             DCL        VAR(&DATEX) TYPE(*CHAR) LEN(6)                                  /*MD051728*/
+             DCL        VAR(&DATE2) TYPE(*CHAR) LEN(7)                                  /*MD051728*/
+             DCL        VAR(&VDAT)  TYPE(*DEC)  LEN(5 0)                                /*MD051728*/
+             DCLF       FILE(SDSBNKTD)                                                  /*MD051728*/
 /* Copyright in object */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
@@ -54,9 +63,21 @@
 /* Access data area rundat for the Run date */
  
  
-/* Convert rundat DDMMMYY to yymmdd */
-             CALL PGM(ZM0080) PARM(&RUNDAT &DATFMT)
- 
+/**Convert*rundat*DDMMMYY*to*yymmdd***********************************/                 /*MD051728*/
+/**********  CALL PGM(ZM0080) PARM(&RUNDAT &DATFMT)                  */                 /*MD051728*/
+             RCVF       RCDFMT(SDBANKD0)                                                /*MD051728*/
+             CALL       PGM(ZDATE2) PARM(&BJRDNB &BJDFIN &DATE1 &DATE2)                 /*MD051728*/
+             CHGVAR     VAR(&DATEX) VALUE(&DATE1)                                       /*MD051728*/
+             IF         COND(&BJDFIN *EQ 'D') THEN(DO)                                  /*MD051728*/
+                CHGVAR     VAR(%SST(&RUNDAT 1 2)) VALUE(%SST(&DATEX 5 2))               /*MD051728*/
+                CHGVAR     VAR(%SST(&RUNDAT 3 2)) VALUE(%SST(&DATEX 3 2))               /*MD051728*/
+                CHGVAR     VAR(%SST(&RUNDAT 5 2)) VALUE(%SST(&DATEX 1 2))               /*MD051728*/
+             ENDDO                                                                      /*MD051728*/
+                ELSE       CMD(DO)                                                      /*MD051728*/
+                   CHGVAR     VAR(%SST(&RUNDAT 1 2)) VALUE(%SST(&DATEX 5 2))            /*MD051728*/
+                   CHGVAR     VAR(%SST(&RUNDAT 3 2)) VALUE(%SST(&DATEX 1 2))            /*MD051728*/
+                   CHGVAR     VAR(%SST(&RUNDAT 5 2)) VALUE(%SST(&DATEX 3 2))            /*MD051728*/
+                ENDDO                                                                   /*MD051728*/ 
 /*/COPY WNCPYSRC,MEC0840A02                                          */
 /* Set up the FROM date & the TO date parameter */
              CHGVAR     VAR(%SST(&PARM  1 6)) VALUE('ALL   ')

@@ -101,6 +101,9 @@
                          CVTDAT   DATE(&SDATE) TOVAR(&SDATF) +
                           FROMFMT(&FROMFMT) TOFMT(*YMD) TOSEP(*NONE)                    /*MD039095*/
              ENDDO                                                                      /*MD039095*/
+             ELSE       CMD(DO)                                                         /*MD039095*/
+                        CHGVAR     VAR(&SDATF) VALUE(&SDATE)                            /*MD039095*/
+             ENDDO                                                                      /*MD039095*/
 
 
 /**/

@@ -10,14 +10,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD039095           Date 16Apr19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. 190517             Date 28Feb01              */
+/*                      190517             Date 28Feb01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      089639             Date 08Jan97              */
 /*                 089636               DATE 19OCT95                 */
@@ -26,6 +27,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD039095 - CLROUTQ automatically if auto clear in optical   */
+/*                  ICD is Y else prompt operator.                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*  190517 - CLROUTQ job is looping. MAC0607 is looking for a value  */
 /*           of either 'Z' or 'C' in dtaara MACHK. Amendment 090061  */
@@ -50,7 +53,7 @@
 /***PGM    parm(&eflg)                                                /*S01382*/
 /*********** PGM                                               /*S01382*089639*/
              PGM        PARM(&SDATE &STIME)                           /*089639*/
- 
+
 /***DCL        &eflg    *char   1                                     /*S01382*/
  DCL        &machk   *char   1
              DCL        VAR(&ANS) TYPE(*CHAR) LEN(1)                  /*LN1079*/
@@ -65,13 +68,13 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST +
                           ')                                          /*089636*/
              DCL        VAR(&CLEAR) TYPE(*CHAR) LEN(1)                /*089636*/
- 
+
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*089639*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*089639*/
  DCLF       file(MAARCHL3)
- 
+
  monmsg     (RPG0000 CPF0000 MCH0000) exec(goto abnor)
- 
+
  chgjob     sws(xxxxxx00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
@@ -86,12 +89,12 @@
                             SDOPTCPD') TOMSGQ(MOPERQ)                 /*089636*/
                GOTO       CMDLBL(ABNOR)                               /*089636*/
              ENDDO                                                    /*089636*/
- 
+
 /* Retrieve Archiving Status                                       */
- 
+
 /****rtvdtaara  machk   rtnvar(&machk)                            */ /*S01382*/
  LOOP:       RTVDTAARA  DTAARA(MACHK) RTNVAR(&MACHK)                 /*S01382*/
- 
+
 /**If*Archiving*Status*(&MACHK)*is*not*set to 'C'or 'Z',           + /*190517*/
 /**wait*for*5*minutes*before*receiving*data area again    /*S01382*/ /*190517*/
 /* If Archiving Status (&MACHK) is not set to 'C'or 'N',           + /*190517*/
@@ -104,29 +107,32 @@
                 DLYJOB     DLY(300)                                  /*S01382*/
                 GOTO       CMDLBL(LOOP)                              /*S01382*/
              ENDDO                                                   /*S01382*/
- 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /**If*Archiving*Status*(&machk)*is*set to to 'C' or 'Z'            + /*190517*/
 /**clear*all*output*queues*defined*in MAARCHL3                     + /*190517*/
 /* If Archiving Status (&machk) is set to to 'C' or 'N'            + /*190517*/
 /* clear all output queues defined in MAARCHL3                     + /*190517*/
 /**and*re-set*Archiving*Status*dta*area*to*'F'                    */ /*S01382*/
- 
+
 /*IF****(&machk *eq 'C') then+                                        /*S01382*/
 /******(DO) **/                                                       /*S01382*/
- 
+
 /**********  IF         COND((&MACHK *EQ 'C') *OR (&MACHK *EQ 'Z')) + /*190517*/
 /**********               THEN(DO)                         /*S01382*/ /*190517*/
              IF         COND((&MACHK *EQ 'C') *OR (&MACHK *EQ 'N')) +
                           THEN(DO)                                    /*190517*/
                                                                       /*S01382*/
 /* clear all output queues                                         */
- 
+
 READ:  rcvf    rcdfmt(MAARCHD0)
        monmsg  (CPF0864) exec(goto NEXT)
- 
+
        CHGVAR     VAR(&CLEAR) VALUE('N')                              /*089636*/
        IF         COND(%SST(&FMT 12 1) *EQ 'Y') THEN(DO)              /*089636*/
+       CHGVAR     VAR(&CLEAR) VALUE('Y')                                                /*MD039095*/
+       ENDDO                                                                            /*MD039095*/
+       ELSE  (DO)                                                                       /*MD039095*/
 /*/COPY WNCPYSRC,MAC0607001                                          */
              CHGVAR     VAR(%SUBSTRING(&MSG 18 10)) VALUE(&EAAOTQ)    /*LN1079*/
              SNDUSRMSG  MSG(&MSG) VALUES('Y' 'N') +
@@ -143,18 +149,18 @@ READ:  rcvf    rcdfmt(MAARCHD0)
        monmsg  (CPF0000 MCH0000)
        ENDDO                                                          /*LN1079*/
        goto READ
- 
+
 /**change*Archiving*Status*data*area*MACHK*to*'F'******************/ /*S01382*/
- 
+
 /******NEXT:  chgdtaara  MACHK  ('F')                             */ /*S01382*/
 NEXT:                                                                /*S01382*/
- 
+
        ENDDO
- 
+
  goto   END
- 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
+
 ABNOR:  CHGJOB    sws(xxxxxx11)
         monmsg    (RPG0000 CPF0000 MCH0000)
 /**********CHGVAR    &eflg   ('Y')                                   /*S01382*/
@@ -162,5 +168,5 @@ ABNOR:  CHGJOB    sws(xxxxxx11)
               SNDMSG    MSG('Clear Archive Output Queues program +
                         ended abnormally')  TOMSGQ(MOPERQ)
               monmsg    (RPG0000 CPF0000 MCH0000)
- 
+
 END:    ENDPGM

@@ -11,7 +11,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD039095           Date 03Apr19              */
+/*       Last Amend No. MD039095           Date 16Apr19              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -67,6 +67,8 @@
              DCL        VAR(&SDTTM) TYPE(*CHAR) LEN(12)                                 /*MD039095*/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(100)
              DCL        VAR(&SPYEA) TYPE(*CHAR) LEN(2)                                  /*MD039095*/
+             DCL        VAR(&DATFMT) TYPE(*CHAR) LEN(3)                                 /*MD039095*/
+             DCL        VAR(&FROMFMT) TYPE(*CHAR) LEN(4)                                /*MD039095*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -79,14 +81,27 @@
              CHGJOB     SWS(XXXXXX00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
+/**/                                                                                    /*MD039095*/
+/** Retrieve the system date format */                                                  /*MD039095*/
+/**/                                                                                    /*MD039095*/
+             RTVSYSVAL  SYSVAL(QDATFMT) RTNVAR(&DATFMT)                                 /*MD039095*/
 /**/
 /**   CONVERT SDATE TO SDATF FOR COMPARISON                                **/
 /**/
 /**********  CHGVAR     VAR(&SDATF) VALUE(%SST(&SDATE 3 2) *TCAT +  */                  /*MD039095*/
 /**********              %SST(&SDATE 1 2))                          */                  /*MD039095*/
+/**/                                                                                    /*MD039095*/
+/* Handle each type of date format provided by IBM */                                   /*MD039095*/
+/* Convert to 'YMD' for program purposes           */                                   /*MD039095*/
+/**/                                                                                    /*MD039095*/
+                                                                                        /*MD039095*/
+             IF         COND((&DATFMT *EQ 'DMY') *OR (&DATFMT *EQ +
+                          'MDY') *OR (&DATFMT *EQ 'JUL')) THEN(DO)                      /*MD039095*/
+                         CHGVAR     VAR(&FROMFMT) VALUE('*' *CAT &DATFMT)               /*MD039095*/
+                         CVTDAT   DATE(&SDATE) TOVAR(&SDATF) +
+                          FROMFMT(&FROMFMT) TOFMT(*YMD) TOSEP(*NONE)                    /*MD039095*/
+             ENDDO                                                                      /*MD039095*/
 
-             CHGVAR     VAR(&SDATF) VALUE(%SST(&SDATE 5 2) *TCAT +
-                          %SST(&SDATE 3 2) *TCAT %SST(&SDATE 1 2))                      /*MD039095*/
 
 /**/
 /*  SECURE TEMPORARY PHYSICAL FILE FOR SPOOL FILE ENTRIES           */
@@ -146,7 +161,14 @@ READ2:       RCVF
              CHGVAR     VAR(&SPSEC) VALUE(%SST(&OUTQF 117 2))                             /*244680*/
              CHGVAR     VAR(&SPYEA) VALUE(%SST(&OUTQF 108 2))                           /*MD039095*/
 /**********  CHGVAR     VAR(&SPDAT) VALUE(&SPMTH *TCAT &SPDAY)                          /*MD039095*/
-             CHGVAR     VAR(&SPDAT) VALUE(&SPYEA *TCAT &SPMTH *TCAT &SPDAY)             /*MD039095*/
+             CHGVAR     VAR(&SPDAT) VALUE(&SPDAY *TCAT &SPMTH *TCAT &SPYEA)             /*MD039095*/
+                                                                                        /*MD039095*/
+             IF         COND((&DATFMT *EQ 'DMY') *OR (&DATFMT *EQ +
+                          'MDY') *OR (&DATFMT *EQ 'JUL')) THEN(DO)                      /*MD039095*/
+                         CVTDAT   DATE(&SPDAT) TOVAR(&SPDAT) +
+                          FROMFMT(&FROMFMT) TOFMT(*YMD) TOSEP(*NONE)                    /*MD039095*/
+             ENDDO                                                                      /*MD039095*/
+                                                                                        /*MD039095*/
              CHGVAR     VAR(&SPTIM) VALUE(&SPHR *TCAT &SPMIN *TCAT &SPSEC)
 /**/
 /**   CHECK IF SPOOL FILE ENTRY CAN BE DELETED                               **/

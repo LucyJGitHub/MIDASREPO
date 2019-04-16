@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052280           Date 04Feb19               *      
-      *  Prev Amend No. AR731878           Date 24Jun13               *      
+      *  Last Amend No. MD052130           Date 27Mar19               *
+      *  Prev Amend No. MD052280           Date 04Feb19               *      
+      *                 AR731878           Date 24Jun13               *      
       *                 MD050842           Date 25May18               *
       *                 MD050972           Date 17May18               *
       *                 MD050936           Date 16May18               *
@@ -107,6 +108,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD052130 - Condition display of customer number in last line *
+      *             of field 50K.                                     *
+      *           - Reinstated fix 220913.
       *  MD052280 - Added MGBENA as input parameter in SRFM59         *      
       *  AR731878 - Customer number should not appear on tag 50K.     *
       *             Reverse fix 220913. (Child: AR731879).            *      
@@ -443,6 +447,8 @@
       *                                                                                     MD050842
      I              'CustNoFirstLineFld50'C         AOCAB                                   MD026727
       *                                                                                     MD026727
+     I              'CustNoLastLineFld50K'C         LL50K                                   MD052130
+      *                                                                                     MD052130
      I              'ACOUNTLINE'          C         CACNT1                                    250600
       *                                                                                       CSW218
      I              'MGC001802'           C         UIDPGM                                    CSW218
@@ -3299,6 +3305,9 @@
      C*****************************************************************              220913 AR731878
      C**Insert*Customer*Number*****************************************              220913 AR731878
      C**********           EXSR SRICAR                                               220913 AR731878
+     C           PLL50K    IFEQ 'Y'                                                         MD052130
+     C                     EXSR SRICAR                                                      MD052130
+     C                     ENDIF                                                            MD052130
       *                                                                                     MD026727
      C                     ENDIF                                                            MD026727
      C*                                                                                       220913
@@ -3362,6 +3371,10 @@
      C**Insert*Customer*Number*****************************************              220913 AR731878
      C**********           EXSR SRICAR                                               220913 AR731878
      C*****************************************************************              220913 AR731878
+     C           PLL50K    IFEQ 'Y'                                                         MD052130
+     C                     EXSR SRICAR                                                      MD052130
+     C                     ENDIF                                                            MD052130 
+      *                                                                                     MD052130    
      C                     ENDIF                                                              204225
      C                     ENDIF                                                              204225
      C                     ENDIF                                                              204225
@@ -5176,6 +5189,37 @@
      C                     MOVELP@VL01    PAOCAB                                            MD026727
      C                     ENDIF                                                            MD026727
       *                                                                                     MD026727
+      ** Access system value for CustNoLastLineFld50K                                       MD052130
+      *                                                                                     MD052130
+     C                     CALL 'AOSVALR0'                                                  MD052130
+     C                     PARM *BLANKS   @RTCD                                             MD052130
+     C                     PARM LL50K     P@OP01 20                                         MD052130
+     C                     PARM *BLANKS   P@VL01200                                         MD052130
+     C                     PARM *BLANKS   P@OP02 20                                         MD052130
+     C                     PARM *BLANKS   P@VL02200                                         MD052130
+     C                     PARM *BLANKS   P@OP03 20                                         MD052130
+     C                     PARM *BLANKS   P@VL03200                                         MD052130
+     C                     PARM *BLANKS   P@OP04 20                                         MD052130
+     C                     PARM *BLANKS   P@VL04200                                         MD052130
+     C                     PARM *BLANKS   P@OP05 20                                         MD052130
+     C                     PARM *BLANKS   P@VL05200                                         MD052130
+     C                     PARM *BLANKS   P@OP06 20                                         MD052130
+     C                     PARM *BLANKS   P@VL06200                                         MD052130
+     C                     PARM *BLANKS   P@OP07 20                                         MD052130
+     C                     PARM *BLANKS   P@VL07200                                         MD052130
+     C                     PARM *BLANKS   P@OP08 20                                         MD052130
+     C                     PARM *BLANKS   P@VL08200                                         MD052130
+     C                     PARM *BLANKS   P@OP09 20                                         MD052130
+     C                     PARM *BLANKS   P@VL09200                                         MD052130
+     C                     PARM *BLANKS   P@OP10 20                                         MD052130
+     C                     PARM *BLANKS   P@VL10200                                         MD052130
+      *                                                                                     MD052130
+     C                     MOVEL'N'       PLL50K  1                                         MD052130
+      *                                                                                     MD052130
+     C           @RTCD     IFEQ *BLANK                                                      MD052130
+     C                     MOVELP@VL01    PLL50K                                            MD052130
+     C                     ENDIF                                                            MD052130
+      *                                                                                     MD052130
       ** Access system value for Supprs33B36inFXMT103                                       MD050842
       *                                                                                     MD050842
      C                     CALL 'AOSVALR0'                                                  MD050842
@@ -5384,6 +5428,56 @@
       *****************************************************************              220913 AR731878
      C**********           ENDSR                                                     220913 AR731878
       *****************************************************************              220913 AR731878
+      *****************************************************************                     MD052130
+      *                                                               *                     MD052130
+      *  SRICAR - Insert Customer number                              *                     MD052130
+      *                                                               *                     MD052130
+      *****************************************************************                     MD052130
+      *                                                                                     MD052130
+     C           SRICAR    BEGSR                                                            MD052130
+      *                                                                                     MD052130
+      * Insert customer number before storing data to MULT (last line)                      MD052130
+      * overrding last address line if necessary                                            MD052130
+     C           MTAG      IFEQ ':50K:'                                                     MD052130
+     C                     SELEC                                                            MD052130
+     C           ZSADD2    WHEQ *BLANK                                                      MD052130
+     C           ZSADD3    ANDEQ*BLANK                                                      MD052130
+     C           ZSADD4    ANDEQ*BLANK                                                      MD052130
+     C                     MOVELMGPOCN    ZSADD2                                            MD052130
+     C           ZSADD2    WHEQ *BLANK                                                      MD052130
+     C           ZSADD3    ANDEQ*BLANK                                                      MD052130
+     C           ZSADD4    ANDNE*BLANK                                                      MD052130
+     C                     MOVELZSADD4    ZSADD2                                            MD052130
+     C                     MOVELMGPOCN    ZSADD3                                            MD052130
+     C                     MOVEL*BLANK    ZSADD4                                            MD052130
+     C           ZSADD2    WHEQ *BLANK                                                      MD052130
+     C           ZSADD3    ANDNE*BLANK                                                      MD052130
+     C           ZSADD4    ANDEQ*BLANK                                                      MD052130
+     C                     MOVELZSADD3    ZSADD2                                            MD052130
+     C                     MOVELMGPOCN    ZSADD3    P                                       MD052130
+     C                     MOVEL*BLANK    ZSADD4                                            MD052130
+     C           ZSADD2    WHEQ *BLANK                                                      MD052130
+     C           ZSADD3    ANDNE*BLANK                                                      MD052130
+     C           ZSADD4    ANDNE*BLANK                                                      MD052130
+     C                     MOVELZSADD3    ZSADD2                                            MD052130
+     C                     MOVELZSADD4    ZSADD3                                            MD052130
+     C                     MOVELMGPOCN    ZSADD4    P                                       MD052130
+     C           ZSADD2    WHNE *BLANK                                                      MD052130
+     C           ZSADD3    ANDEQ*BLANK                                                      MD052130
+     C           ZSADD4    ANDEQ*BLANK                                                      MD052130
+     C                     MOVELMGPOCN    ZSADD3                                            MD052130
+     C           ZSADD2    WHNE *BLANK                                                      MD052130
+     C           ZSADD3    ANDEQ*BLANK                                                      MD052130
+     C           ZSADD4    ANDNE*BLANK                                                      MD052130
+     C                     MOVELZSADD4    ZSADD3                                            MD052130
+     C                     MOVELMGPOCN    ZSADD4    P                                       MD052130
+     C                     OTHER                                                            MD052130
+     C                     MOVELMGPOCN    ZSADD4    P                                       MD052130
+     C                     ENDSL                                                            MD052130
+     C                     ENDIF                                                            MD052130
+      *                                                                                     MD052130
+     C                     ENDSR                                                            MD052130
+      *                                                                                     MD052130
       *****************************************************************                     MD026727
       *                                                               *                     MD026727
       *  SRICNA - Insert Customer number on first line (:50A:)        *                     MD026727

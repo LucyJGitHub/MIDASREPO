@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD023137           Date 14Jun18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052277           Date 29Mar19               *
+      *  Prev Amend No. MD023137           Date 14Jun18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034644           Date 25Jun15               *
       *                 CSW216             Date 14Mar16               *
@@ -98,6 +99,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052277 - Make MD039569 switchable - not all banks wants    *
+      *             Field 58 to show when Cparty = Beneficiary        *
+      *             Introduce System Value = 'SupF58onMT3CustEqBen'   *
       *  MD023137 - TAG 57A contains beneficiary account line. Ensure *
       *             it contains bank account line.                    *
       *           - Applied for MD-51200.                             *
@@ -436,6 +440,7 @@
       *                                                                                      255986B
      I**********    'PopBTBConf          'C         APOPB                           255986B AR994044
      I              'PopSTRConf          'C         APOPB                                   AR994044
+     I              'SupF58onMT3CustEqBen'C         SUP58                                   MD052277
       *                                                                                       190127
       **  Data structure for related reference                                                190127
      I@HREF       DS                         16                                               190127
@@ -1172,8 +1177,10 @@
      C                     PARM *BLANKS   @RTCD                                              255986B
      C                     PARM APOPB     P@OP01 20                                          255986B
      C                     PARM *BLANKS   P@VL01200                                          255986B
-     C                     PARM *BLANKS   P@OP02 20                                          255986B
-     C                     PARM *BLANKS   P@VL02200                                          255986B
+     C**********           PARM *BLANKS   P@OP02 20                                 255986B MD052277
+     C**********           PARM *BLANKS   P@VL02200                                 255986B MD052277
+     C                     PARM SUP58     P@OP02 20                                         MD052277
+     C                     PARM *BLANKS   P@VL02200                                         MD052277
      C                     PARM *BLANKS   P@OP03 20                                          255986B
      C                     PARM *BLANKS   P@VL03200                                          255986B
      C                     PARM *BLANKS   P@OP04 20                                          255986B
@@ -1195,6 +1202,11 @@
      C           @RTCD     IFEQ *BLANK                                                       255986B
      C                     MOVELP@VL01    PAPOPB                                             255986B
      C                     ENDIF                                                             255986B
+      *                                                                                     MD052277
+     C                     MOVEL'N'       WSUP58  1                                         MD052277
+     C           @RTCD     IFEQ *BLANK                                                      MD052277
+     C                     MOVELP@VL02    WSUP58                                            MD052277
+     C                     ENDIF                                                            MD052277
       *                                                                                     MD022981
       ** Setup Key Field for DLRPIFPD                                                       MD022981
       *                                                                                     MD022981
@@ -2572,6 +2584,7 @@
      C           WBCUST    ANDNE*BLANKS                                                       CSD027
      C           WBCUST    OREQ MGCNUM                                                      MD039569
      C           WBCUST    ANDNE*BLANKS                                                     MD039569
+     C           WSUP58    ANDNE'Y'                                                         MD052277
      C                     ADD  1         X
      C           X         OCUR MULT
      C                     MOVE *BLANKS   ZDEST

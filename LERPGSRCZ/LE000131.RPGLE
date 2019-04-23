@@ -669,7 +669,7 @@
      C                   ELSE                                                               MD051242
      C                   EVAL      WMINUS = ' '                                             MD051242
      C                   ENDIF                                                              MD051242
-     C**********         ENDIF                                                     MD051242 MD051940
+     C**********         ENDIF                                                     MD046080 MD051940
                                                                                             MD046080
      C                   EVAL      LKAAMT = 0
      C                   MOVEL     LKAKEY        Wf10

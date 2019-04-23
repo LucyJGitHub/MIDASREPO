@@ -82,6 +82,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050134 - A serious midas error encountered when exchange   *
+      *             rate exceeds tolerance level                      *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045094 - Credit and Debit amount are incorrect             *
       *  MD030406 - Cross Currency Outgoing Payment, pay amount not   *
       *             automatically calculated & show 0 in confirmation *

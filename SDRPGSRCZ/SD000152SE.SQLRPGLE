@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152OM - Nostro Account Activity - SE.                     *
+      *  SD000152SE - Nostro Account Activity - SE.                   *
       *                                                               *
       *  Function:  This program checks if a Nostro is used by        *
       *             a Other transactions.                             *

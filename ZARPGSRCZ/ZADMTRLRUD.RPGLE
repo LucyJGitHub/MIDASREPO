@@ -30,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051683 - Amend core fix AR856140 to include the checking   *
+      *             of decimal number together with the whole         *
+      *             number                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037057 - Comment out subroutine HASHTO on top of applied   *
       *             fix for AR856140; subroutine not used anymore     *

@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152LE - Nostro Account Activity - LE.                     *
+      *  SD000152LE - Nostro Account Activity - LE.                   *
       *                                                               *
       *  Function:  This program checks if a Nostro is used by        *
       *             a GL/Retail transactions.                         *

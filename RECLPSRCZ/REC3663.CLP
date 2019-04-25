@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052255           Date 21Jan19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD052530           Date 18Mar19              */
+/*       Prev Amend No. MD052255           Date 21Jan19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD043389           Date 10Jan17              */
 /*                      AR1096378          Date 20Mar13              */
 /*                      CRE083AH           Date 06Aug12              */
@@ -29,6 +30,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD052530 - CoB run takes too long due to the resequencing of*/
+/*                  the REHISPD file on REC660001                    */
+/*                  Use LF for copying back records to REHISPD       */
+/*                  to resequence and remove REC660001.              */
 /*       MD052255 - Redundant reorganization of Retail historic files*/
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD043389 - Component failed with parameter mismatch. Re-    */
@@ -249,7 +254,8 @@ STEP8:
 /**********  ENDDO */                                                                   /*CRE083AH*/
              CHGJOB     SWS(XXXXXX00)
 /**/
-             DLTF       FILE(REHIOPD)
+/**********  DLTF       FILE(REHIOPD) */                                                /*MD052530*/
+             CLRPFM     FILE(REHIOPD)                                                   /*MD052530*/
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(REHIOPS)
              MONMSG     MSGID(CPF0000)
@@ -258,17 +264,18 @@ STEP8:
 /*/COPY WNCPYSRC,REC3663005                                          */
 /**/
 STEP13:
-/*********** CRTDUPOBJ  OBJ(REHISPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
-/***********              NEWOBJ(REHIOPD) DATA(*NO)                    *087455*/
-             CRTDUPOBJ  OBJ(REHISPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
-                          TOLIB(&DLIB) NEWOBJ(REHIOPD) DATA(*NO)      /*087455*/
-             MONMSG     MSGID(CPF0678 CPF2109 CPF2110 CPF2113 CPF2116 +
-                          CPF2122 CPF2151 CPF2162 CPF2176 CPF2182) +
-                          EXEC(DO)
-             SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPD by +
-                          PGM : REC3663 (STEP13)') TOMSGQ(MRUNQ)
-             GOTO       CMDLBL(ENDPGM)
-             ENDDO
+/**********  CRTDUPOBJ  OBJ(REHISPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+/**********               NEWOBJ(REHIOPD) DATA(*NO)                    *087455*/
+/**********                                                                             /*MD052530*/
+/**********  CRTDUPOBJ  OBJ(REHISPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) + */                /*MD052530*/
+/**********               TOLIB(&DLIB) NEWOBJ(REHIOPD) DATA(*NO) */              /*087455 MD052530*/
+/**********  MONMSG     MSGID(CPF0678 CPF2109 CPF2110 CPF2113 CPF2116 + */              /*MD052530*/
+/**********               CPF2122 CPF2151 CPF2162 CPF2176 CPF2182) + */                 /*MD052530*/
+/**********               EXEC(DO) */                                                   /*MD052530*/
+/**********  SNDPGMMSG  MSG('Error in CRTDUPOBJ of file : REHIOPD by + */               /*MD052530*/
+/**********               PGM : REC3663 (STEP13)') TOMSGQ(MRUNQ) */                     /*MD052530*/
+/**********  GOTO       CMDLBL(ENDPGM) */                                               /*MD052530*/
+/**********  ENDDO */                                                                   /*MD052530*/
 /*/COPY WNCPYSRC,REC3663003                                          */
 STEP14:
 /*********** CRTDUPOBJ  OBJ(REHISPS) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
@@ -304,11 +311,16 @@ STEP15:
              CLRPFM FILE(REHISPM)
 /*/COPY WNCPYSRC,REC3663006                                          */
 /**/
-             CPYF       FROMFILE(REHIOPD) TOFILE(REHISPD) +
-                          MBROPT(*ADD) FMTOPT(*NOCHK)
-             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
-             SNDPGMMSG  MSG('File REHIOPD not found. +
-                          PGM : REC3663') TOMSGQ(MRUNQ)
+/*********** CPYF       FROMFILE(REHIOPD) TOFILE(REHISPD) + */                          /*MD052530*/
+/***********              MBROPT(*ADD) FMTOPT(*NOCHK) */                                /*MD052530*/
+/*********** MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO) */                      /*MD052530*/
+/*********** SNDPGMMSG  MSG('File REHIOPD not found. + */                               /*MD052530*/
+/***********              PGM : REC3663') TOMSGQ(MRUNQ) */                              /*MD052530*/
+             CPYF       FROMFILE(REHIOL0) TOFILE(REHISPD) +
+                          MBROPT(*ADD) FMTOPT(*NOCHK)                                   /*MD052530*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)                         /*MD052530*/
+             SNDPGMMSG  MSG('File REHIOL0 not found. +
+                          PGM : REC3663') TOMSGQ(MRUNQ)                                 /*MD052530*/
              GOTO       CMDLBL(EXIT7)
              ENDDO
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)

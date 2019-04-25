@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036257           Date 12Nov15               *
+      *  Last Amend No. MD052530           Date 18Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036257           Date 12Nov15               *
       *                 CGL001             Date 06Aug12               *
       *                 259541             Date 22Jan13               *
       *                 AR1073026          Date 20Dec12               *
@@ -59,6 +60,13 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD052530 - Component runs too long due to unnecessary pro-   *
+      *             cessing of records.                               *
+      *             Move to next account if ACHV = 'N' as no more     *
+      *             records will be dropped.                          *
+      *             Remove check against BKELAP, APOST not used for   *
+      *             RE Activity Report.                               *
+      *             Remove condition of access of REIACD on *IN10.    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036257 - Very long run of GLC2550 before first NWD of a    *
       *             month. Purge postings for current month (194300)  *
@@ -320,6 +328,13 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL2550CCP4                                           S01408
      C*                                                                   S01408
+     C           APSKEY    KLIST                                                            MD052530
+     C                     KFLD           BRCA                                              MD052530
+     C                     KFLD           CNUM                                              MD052530
+     C                     KFLD           CCY                                               MD052530
+     C                     KFLD           ACOD                                              MD052530
+     C                     KFLD           ACSQ                                              MD052530
+      *                                                                                     MD052530
       **  Access run date and report title.
       *
      C                     CALL 'AOBANKR0'
@@ -651,16 +666,17 @@
      C/COPY WNCPYSRC,GL2550CBDU                                           S01408
      C*                                                                   S01408
       *
-     C*  If it has appeared on a Statement check if it is needed
-     C*  for the RETAIL Activity Report.
+     C***If*it*has*appeared*on*a*Statement*check*if*it*is*needed****************            MD052530
+     C***for*the*RETAIL*Activity*Report.****************************************            MD052530
       *
-     C           ACHV      IFEQ 'Y'
-     C           ATYP      ANDEQ'R'
-     C           PSTD      IFGT BKELAP
-     C           VALD      ORGT BKELAP
-     C                     MOVE 'N'       ACHV
-     C                     END
-     C                     END
+      ** APOST not used for Retail Activity....                                             MD052530
+     C********** ACHV      IFEQ 'Y'                                                         MD052530
+     C********** ATYP      ANDEQ'R'                                                         MD052530
+     C********** PSTD      IFGT BKELAP                                                      MD052530
+     C********** VALD      ORGT BKELAP                                                      MD052530
+     C**********           MOVE 'N'       ACHV                                              MD052530
+     C**********           END                                                              MD052530
+     C**********           END                                                              MD052530
       *
      C                     END                                            114060
       *                                                                   114060
@@ -679,6 +695,14 @@
      C                     EXSR DROP
      C/COPY WNCPYSRC,GL2550C004
      C                     END
+      *                                                                                     MD052530
+      * Conditioning of ACHV is dependent on PSTD plus account/system level criteria        MD052530
+      * so once a record becomes eligible for dropping, so too will all subsequent          MD052530
+      * postings for the same account (PSTD is key field in APOST). So no need to           MD052530
+      * read remaining postings, can skip to next account.                                  MD052530
+     C           ACHV      IFEQ 'N'                                                         MD052530
+     C           APSKEY    SETGTAPOST                                                       MD052530
+     C                     END                                                              MD052530
       *
       **  Read ahead.
      C                     MOVE '0'       *IN10
@@ -820,7 +844,7 @@
      C           CRT001    IFEQ 'Y'                                                        AR1073026
      C           ATYPAC    ANDEQ'R'                                                        AR1073026
      C           STYPAC    ANDEQ'S'                                                        AR1073026
-     C           *IN10     ANDEQ'1'                                                        AR1073026
+     C********** *IN10     ANDEQ'1'                                               AR1073026 MD052530
       *                                                                                    AR1073026
      C           ACCKEY    CHAINREIAC                14                                    AR1073026
       *                                                                                    AR1073026

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD051679           Date 09Nov18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW213             Date 03Jun13               *
       *                 MD000091           Date 15May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -70,6 +71,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051679 - Added clear before reading SDNOSTPD to ensure that*
+      *             no values are carried out when reading again. Also*
+      *             added a validation to not set ODMTT to 'F' if     *
+      *             account was not found.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  MD000091 - Event Codes Substitution                          *
@@ -814,6 +819,7 @@ E2    *                                                                         
       ************************************************************                            CFT032
                                                                                               CFT032
      C     VNOSTRO       BEGSR                                                                CFT032
+     C                   Clear                   SDNOST                                     MD051679
                                                                                               CFT032
      C                   Call      'AONOSTR0'                                                 CFT032
      C                   Parm      *Blanks       @RtCd                                        CFT032
@@ -863,8 +869,10 @@ E2    *                                                                         
      C                   EndIf                                                                CFT032
                                                                                               CFT032
      C                   ELSE                                                               BUG12829
+     C                   If        @RtCd <> '*NRF   '                                       MD051679
      C                   Eval      @ODMTT = 'F'                                             BUG12829
      C                   Eval      CCY = A7CYCD                                             BUG12829
+     C                   EndIf                                                              MD051679
                                                                                             BUG12829
      C                   EndIf                                                                CFT032
                                                                                               CFT032

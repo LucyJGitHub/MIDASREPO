@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD037229           Date 03Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD037941           Date 25May16               *
       *                 MD036262           Date 28Oct15               *
       *                 MD034516           Date 26May15               *
@@ -119,6 +120,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037229 - Remove the validation of town after ISO code in   *
+      *             first occurrence of 3/                            *
+      *           - Applied for MD-51750                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD037941 - Invalid ISO country code used in code 3           *
@@ -3511,8 +3515,9 @@
       *                                                                                       CSW215
       ** Check if number code is 3 with valid ISO country code                                CSW215
       *                                                                                       CSW215
-     C                   IF        WPrevNCode = '1' AND                                       CSW215
-     C                             %Subst(WInpParm:5:30) = *BLANKS                            CSW215
+     C**********         IF        WPrevNCode = '1' AND                              CSW215 MD037229
+     C**********                   %Subst(WInpParm:5:30) = *BLANKS                   CSW215 MD037229
+     C                   IF        WPrevNCode <> '3'                                        MD037229
      C                   EVAL      WISOCode = %SUBST(WInpParm:3:2)                            CSW215
      C     WISOCode      CHAIN     MEISOCL0                                                   CSW215
      C                   IF        NOT %FOUND(MEISOCL0)                                       CSW215
@@ -3528,14 +3533,14 @@
       *                                                                                       CSW215
       ** Check if additional details is required                                              CSW215
       *                                                                                       CSW215
-     C                   IF        WPrevNCode = '3' AND                                       CSW215
-     C                             %SUBST(WSaveInp:5:1) <> '/' AND                            CSW215
+     C**********         IF        WPrevNCode = '3' AND                              CSW215 MD037229
+     C**********                   %SUBST(WSaveInp:5:1) <> '/' AND                   CSW215 MD037229
      C**********                   CtrN3 = 2                                         CSW215 MD034516
-     C                             CtrN3 = 2 AND WISOChk <> 'Y'                             MD034516
-     C                   EVAL      PMMsgID = 'FTS0082'                                        CSW215
-     C                   EXSR      SetError                                                   CSW215
-     C                   EVAL      PMErrType = 'E'                                            CSW215
-     C                   ENDIF                                                                CSW215
+     C**********                   CtrN3 = 2 AND WISOChk <> 'Y'                    MD034516 MD037229
+     C**********         EVAL      PMMsgID = 'FTS0082'                               CSW215 MD037229
+     C**********         EXSR      SetError                                          CSW215 MD037229
+     C**********         EVAL      PMErrType = 'E'                                   CSW215 MD037229
+     C**********         ENDIF                                                       CSW215 MD037229
       *                                                                                       CSW215
      C                   ENDIF                                                                CSW215
       *                                                                                       CSW215
@@ -3552,11 +3557,11 @@
  
      C**********         Eval      PMMsgID = 'FTS0029'                                       CSW207A
      C**********         Exsr      SetError                                                  CSW207A
-     C                   IF        CSW215 = 'Y' AND WNCode = '3'                              CSW215
-     C                   EVAL      PMMsgID = 'FTS0082'                                        CSW215
-     C                   ELSE                                                                 CSW215
+     C**********         IF        CSW215 = 'Y' AND WNCode = '3'                     CSW215 MD037229
+     C**********         EVAL      PMMsgID = 'FTS0082'                               CSW215 MD037229
+     C**********         ELSE                                                        CSW215 MD037229
      C                   Eval      PMMsgID = 'FTS0029'                                       CSW207A
-     C                   ENDIF                                                                CSW215
+     C**********         ENDIF                                                       CSW215 MD037229
      C                   Exsr      SetError                                                  CSW207A
      C                   Eval      PMErrType = 'E'                                          BUG15045
  

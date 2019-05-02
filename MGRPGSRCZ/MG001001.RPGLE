@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035038           Date 14Jul15               *
+      *  Last Amend No. MD037229           Date 03Sep18               *
+      *  Prev Amend No. MD038302           Date 03Sep18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD035038           Date 14Jul15               *
       *                 MD034605           Date 04Jun15               *
       *                 MD034543           Date 03Jun15               *
       *                 MD034511           Date 26May15               *
@@ -20,6 +22,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037229 - Remove the validation of town after ISO code in   *
+      *             first occurrence of 3/                            *
+      *           - Applied for MD-51750                              *
+      *  MD038302 - Wrong validation in beneficiary. Perform the 59F  *
+      *             validation only if the entry into the field is a  *
+      *             free-format name and address and the first non-   *
+      *             line begins with "1/".                            *
+      *           - Applied for MD-51750                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035038 - Error in ACOUNTIBAN validation                    *
       *  MD034605 - Valid account is validated against 59F if starts  *
@@ -836,20 +846,20 @@
      C                   EVAL      WISOC = WISO2
      C     WISOC         CHAIN     MEISOCL0
  
-      ** First occurrence of number 3
-      ** Format should be 3/XX/yyyyyy
- 
-     C                   IF        %SUBST(WInpArr(X-1):1:1) = '2'
- 
-     C                   IF        NOT %FOUND(MEISOCL0)
-     C                             OR WSlash2 <> '/'
-     C                             OR WInfoA2 = *BLANKS
-     C                   EVAL      PRetCode = '*ERROR'
-     C                   EVAL      PMsgID = 'ME00317'
-     C                   LEAVESR
-     C                   ENDIF
- 
-     C                   ELSE
+      ***First*occurrence*of*number*3**********************************                     MD037229
+      ***Format*should*be*3/XX/yyyyyy**********************************                     MD037229
+      **********                                                                            MD037229
+     C**********         IF        %SUBST(WInpArr(X-1):1:1) = '2'                           MD037229
+      **********                                                                            MD037229
+     C**********         IF        NOT %FOUND(MEISOCL0)                                     MD037229
+     C**********                   OR WSlash2 <> '/'                                        MD037229
+     C**********                   OR WInfoA2 = *BLANKS                                     MD037229
+     C**********         EVAL      PRetCode = '*ERROR'                                      MD037229
+     C**********         EVAL      PMsgID = 'ME00317'                                       MD037229
+     C**********         LEAVESR                                                            MD037229
+     C**********         ENDIF                                                              MD037229
+      **********                                                                            MD037229
+     C**********         ELSE                                                               MD037229
  
       ** Format should be 3/XX or 3/XX/yyyyyy
  
@@ -865,7 +875,7 @@
      C                   LEAVESR
      C                   ENDIF
  
-     C                   ENDIF
+     C**********         ENDIF                                                              MD037229
  
      C                   ELSE
  
@@ -1382,13 +1392,18 @@
  
      C                   EXSR      SrSaveSeq
  
-      ** Check if code 1 to 3 is inserted to continue
-      ** with 59F validation
+      ***Check*if*code*1*to*3*is*inserted*to*continue*******************                    MD038302
+      ***with*59F*validation********************************************                    MD038302
  
-     C                   IF        %CHECK(NumCode:WCode) = 0
-     C                             AND WSlash1 = '/'                                        MD034605
-     C                   EVAL      NumCExist = 'Y'
-     C                   ENDIF
+     C**********         IF        %CHECK(NumCode:WCode) = 0                                MD038302
+     C**********                   AND WSlash1 = '/'                               MD034605 MD038302
+     C**********         EVAL      NumCExist = 'Y'                                          MD038302
+     C**********         ENDIF                                                              MD038302
+      ** Check if first non-account line begins with '1/'                                   MD038302
+     C                   IF        X < 3 AND                                                MD038302
+     C                             WCodeN = '1/'                                            MD038302
+     C                   EVAL      NumCExist = 'Y'                                          MD038302
+     C                   ENDIF                                                              MD038302
      C                   ENDFOR
  
      C                   ENDSR

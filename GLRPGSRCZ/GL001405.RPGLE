@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051723           Date 17Sep18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051746           Date 03May19
+      *  Prev Amend No. AR589183           Date 03May19               *
+      *                 AR740400           Date 03May19               *
+      *                 MD051723           Date 17Sep18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024640           Date 29Jan14               *
       *                 MD024452           Date 21Jan14               *
       *                 CGL146A            Date 10Jul13               *
@@ -29,6 +32,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051746 - Added COB Start Date in validating MT941/MT942    *
+      *             requests                                          *                             
+      *  AR589183 - Wrong status of scheduled MT941/MT942. Process    *
+      *             records in GLMR94L5 with request date less than   *
+      *             or equal to run date.                             *
+      *           - Applied for MD-51746                              *
+      *  AR740400 - MT94x Message Generation schedules expire due to  *
+      *             incorrect COB Start Time retrieved. Use CBStart   *
+      *             *DTAARA and retrieve CSTI as COB Start Time.      *
+      *             (Child: AR740401)                                 *
+      *           - Applied for MD-51746                              *
       *  MD051723 - After submitting a batch header and requesting    *
       *             the MT940 in Message Management menu, the MT940   *
       *             of the batch was not generated in MGOMSGPD.       *
@@ -88,8 +102,8 @@
      FGLPRMOPD  IF   E             DISK    INFSR(*PSSR)
       ** Midas GL Production Monitor File.
 
-     FCBTRACPD  IF   E             DISK    INFSR(*PSSR)                                       217556
-      ** Midas CB COB trace.                                                                  217556
+     F***CBTRACPD  IF   E             DISK    INFSR(*PSSR)                           217556 AR740400
+      ***Midas*CB*COB*trace.*******************************************              217556 AR740400
 
       *****************************************************************
       /EJECT
@@ -153,6 +167,11 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for access programs: Short Data Structure
 
+     D CBStartTime   E DS                  EXTNAME(CBStart)                                 AR740400
+     D  CobStartDate          33     37                                                     MD051746
+     D  CobStartTime          38     43                                                     AR740400
+      ** Data Area containing COB Start Time                                                AR740400
+
      C/COPY OFCPYSRCZ,CGL146_139                                                            MD024640
                                                                                             MD024640
       ** +--------------------------------------+
@@ -170,7 +189,9 @@
 
      D WkExpTime       S              4A                                        Expiring time
      D WkCurTimAlp     S              4A                                        Current  time
+     D WkStartDate     S              5S 0                                                  MD051746
      D WkStartTime     S              4A                                        Start time
+
 
      D WkCurTime       S               T                                        Current  time
      D WkTime          S               T                                        Working Time
@@ -251,34 +272,56 @@
       ** Retrieve the status of MT941/MT942 request.
 
      C                   IN        GLM94XDA
+      *                                                                                     AR740400
+      ** Retrieve the Cob Start Time from CBSTAT Data Area.                                 AR740400
+      *                                                                                     AR740400
+     C     *DTAARA       DEFINE    CBStart       CBStartTime                                AR740400
+     C                   IN        CBStartTime                                              AR740400
       *                                                                                       217556
       ** Read PF/CBTRACPD to get the start time of the previous COB .                         217556
       *                                                                                       217556
      C                   MOVEL     '0000'        WkStartTime                                  217556
       *                                                                                       217556
-     C     1             CHAIN     CBTRACPD                                                   217556
+     C****1****         CHAIN     CBTRACPD                                           217556 AR740400
       *                                                                                       217556
-     C                   IF        NOT %EOF(CBTRACPD)                                         217556
-     C                   MOVEL     TRTIME        WkStartTime                                  217556
+     C**********         IF        NOT %EOF(CBTRACPD)                                217556 AR740400
+     C**********         MOVEL     TRTIME        WkStartTime                         217556 AR740400
+     C                   MOVEL     CobStartTime  WkStartTime                                AR740400
+     C                   MOVEL     CobStartDate  WkStartDate                                MD051746
      C                   IF        WkStartTime > WkCurTimAlp                                  217556
      C                   MOVEL     '0000'        WkStartTime                                  217556
      C                   ENDIF                                                                217556
-     C                   ENDIF                                                                217556
+     C**********         ENDIF                                                       217556 AR740400
 
       ** Read the today's waiting requests with a request time less than or equal
       ** to current time.
 
-     C     BJRDNB        SETLL     GLMR94L5
-     C     BJRDNB        READE     GLMR94L5
+     C*****BJRDNB        SETLL     GLMR94L5                                                 AR589183
+     C*****BJRDNB        READE     GLMR94L5                                                 AR589183
+     C     *LOVAL        SETLL     GLMR94L5                                                 AR589183
+     C                   READ      GLMR94L5                                                 AR589183
 
      C                   DOW       NOT %EOF(GLMR94L5)
-     C                             AND MRSRTIM <= WkCurTimAlp                   Request time issued
+     C**********                   AND MRSRTIM <= WkCurTimAlp           Request time issued AR589183
+
+      *
+      ** Requests expired.
+      *
+     C     MRRDTE        IFLT      WkStartDate                                              MD051746
+     C                   EVAL      MRSTAT = 'EXPIRED'                                       MD051746
+     C                   UPDATE    GLMR94D0                                                 MD051746
+     C                   ENDIF                                                              MD051746
+      *****
+
+     C     MRRDTE        IFLE      BJRDNB                                                   AR589183
+     C     MRSRTIM       ANDLE     WkCurTimAlp                                              AR589183
 
       ** If the current processing time is between start of COB and mid-night, process only  217556
       ** requests with expected time greater than the start of COB.                          217556
       *                                                                                      217556
      C                   IF            MRSRTIM <   WkStartTime                               217556
      C                             AND MRSRTIM <> 'IMED'                        Request time 217556
+     C                             AND MRRDTE >=  BJRDNB                                    MD051746
      C     KeySelReq     SETLL     GLMR94L5                                                  217556
      C                   ELSE                                                                217556
       *                                                                                      217556
@@ -291,10 +334,11 @@
 
       ** Requests expired.
 
+     C
+     C     MRRDTE        IFLE      WkStartDate                                              MD051746
      C                   IF        MRSRTIM <= WkExpTime                         Request Expired
      C                             AND MRSRTIM <> 'IMED'                        Not Immediate Req.
      C                   EVAL      MRSTAT = 'EXPIRED'
-
      C                   ELSE
 
       ** Requests to submit.
@@ -346,14 +390,17 @@
      C                   ENDSL
 
      C                   ENDIF
+     C                   ENDIF                                                              MD051746
 
      C                   ENDIF
 
      C                   UPDATE    GLMR94D0
 
      C                   ENDIF                                                               217556
+     C                   ENDIF                                                              AR589183
 
-     C     BJRDNB        READE     GLMR94L5
+     C*****BJRDNB        READE     GLMR94L5                                                 AR589183
+     C                   READ      GLMR94L5                                                 AR589183
 
      C                   ENDDO
 
@@ -365,8 +412,10 @@
       ** If end of file, position the file at the beginnig to retrieve the next request       217556
       *                                                                                       217556
      C                   IF        %EOF(GLMR94L5)                                             217556
-     C     BJRDNB        SETLL     GLMR94L5                                                   217556
-     C     BJRDNB        READE     GLMR94L5                                                   217556
+     C*****BJRDNB        SETLL     GLMR94L5                                          217556 AR589183
+     C*****BJRDNB        READE     GLMR94L5                                          217556 AR589183
+     C     *LOVAL        SETLL     GLMR94L5                                                 AR589183
+     C                   READ      GLMR94L5                                                 AR589183
      C                   ENDIF                                                                217556
 
      C                   IF        NOT %EOF(GLMR94L5)
@@ -428,6 +477,7 @@
      C                   KFLD                    WkStartTime                                 217556
 
      C                   ENDSR
+
 
       *****************************************************************
       /EJECT

@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260909             Date 04Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE075             Date 17Nov05               *
+      *                 CSE075             Date 17Nov05               *
       *                 233881             Date 02Jun05               *
       * Midas Release 4.01.03 ----------------------------------------*
       *                 214694             Date 10Feb03               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260909 - Security Trade calculates wrong consideration on MBS*
+      *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
       *           (Recompile)                                         *
@@ -244,7 +247,10 @@
      C                   PARM      NomCcyDec     ZCDP              1 0
      C                   PARM      *ZERO         ZCONS            15 0
      C                   PARM      *ZERO         ZCTRVL           15 0
- 
+
+     C     PROT          IFEQ      '8'                                                        260909
+     C     ZCONS         MULT(H)   CFCT          ZCONS                                        260909
+     C                   ENDIF                                                                260909
      C                   Z-ADD     ZCONS         TCSR
       *                                                                         CSE023
       ** If enhancement 'Treaty withholding tax' is switched on.                CSE023

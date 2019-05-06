@@ -30,7 +30,8 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260909             Date 04Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *  Prev Amend No. 246535             Date 20Mar07               *
@@ -192,7 +193,7 @@
      C*
      C     PROT          IFEQ      '8'
      C     ZCONS         MULT(H)   CFCT          ZCTRVL                                        05542
-     C     ZCONS         MULT(H)   CFCT          ZCONS                                        246535
+     C*****ZCONS*****    MULT(H)   CFCT          ZCONS                                 246535 260909
      C                   ELSE
      C                   Z-ADD     ZCONS         ZCTRVL
      C                   END

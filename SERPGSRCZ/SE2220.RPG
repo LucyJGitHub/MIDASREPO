@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045514           Date 07Jun17               *
+      *  Last Amend No. 260909             Date 04Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045514           Date 07Jun17               *
       *                 229720             Date 29Nov05               *
       *                 215959             Date 21Mar16               *
       *                 MD036550           Date 25May16               *
@@ -290,6 +291,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260909 - Security Trade calculates wrong consideration on MBS*
+      *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045514 - SE2220 produces two CO (consideration) keys       *
       *             resulting in difference with R4. Caused by        *
@@ -8694,6 +8697,13 @@
      C                     ELSE                                                               246619
      C                     MOVE 'N'       WZPRIC  1                                           246619
      C                     ENDIF                                                              246619
+      *                                                                                       260909
+      ** Calculate consideration 'CO' using trade price.                                      260909
+      *                                                                                       260909
+     C                     Z-ADDBCNL      ZNOML                                               260909
+     C                     Z-ADDBCTD      ZPRC                                                260909
+     C                     EXSR ZCNSD                                                         260909
+     C                     Z-ADDZCONS     YCONS  150                                          260909
       *                                                                   E20086
       ***  Calculate Position Consideration and Factor Difference.        E20086
       *                                                                   E20086
@@ -8704,9 +8714,15 @@
      C           WZCONS    MULT AAPR      XCONS  150H                                         247279
      C           WZCONS    MULT BCCF      DCONS  150H                                         246619
      C                     ELSE                                                               246619
+      *                                                                                       260909
+      ** BCCN already used the current factor, need to use the                                260909
+      ** unfactored consideration (YCONS) in computing the EVAM.                              260909
+      *                                                                                       260909
      C***        BCCN      MULT AAPR      EVAM      H              E20086 247279
      C           BCCN      MULT AAPR      XCONS  150H                     247279
-     C           BCCN      MULT BCCF      DCONS  150H                     E20086
+     C********** BCCN      MULT BCCF      DCONS  150H                     E20086              260909
+     C           YCONS     MULT AAPR      EVAM      H                                         260909
+     C           YCONS     MULT BCCF      DCONS     H                                         260909
      C                     ENDIF                                                              246619
      C***        EVAM      SUB  DCONS     DCONS                    E20086 247279
      C           DCONS     SUB  XCONS     DCONS                           247279
@@ -8819,6 +8835,11 @@
      C                     Z-ADDBCTD      ZPRC                                                248281
      C                     EXSR ZCNSD                                                         248281
      C                     Z-ADDZCONS     WCONS     H                                         248281
+     C           WZPRIC    IFEQ 'Y'                                                           260909
+     C                     Z-ADDWZCONS    WCONS                                               260909
+     C                     ELSE                                                               260909
+     C                     Z-ADDYCONS     WCONS                                               260909
+     C                     ENDIF                                                              260909
       *                                                                                       CAS006
      C           CAS006    IFEQ 'Y'                                                           CAS006
      C**********           Z-ADDBCCN      WCONSN                                       CAS006 248281
@@ -8902,6 +8923,11 @@
      C                     Z-ADDBCTD      ZPRC                                                248281
      C                     EXSR ZCNSD                                                         248281
      C                     Z-ADDZCONS     WCONS     H                                         248281
+     C           WZPRIC    IFEQ 'Y'                                                           260909
+     C                     Z-ADDWZCONS    WCONS                                               260909
+     C                     ELSE                                                               260909
+     C                     Z-ADDYCONS     WCONS                                               260909
+     C                     ENDIF                                                              260909
       *                                                                                       CAS006
      C           CAS006    IFEQ 'Y'                                                           CAS006
      C**********           Z-ADDBCCN      WCONSN                                       CAS006 248281

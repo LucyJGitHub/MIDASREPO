@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. AR740400           Date 03May19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD045731           Date 27Sep17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,13 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051746 - Added COB Start Date in validating MT941/MT942   */
+/*                   requests                                        */
+/*       AR740400 - MT94x Message Generation schedules expire due to */
+/*                  incorrect COB Start Time retrieved. Fix          */
+/*                  Duplicates CBSTAT *DTAARA to be used for         */
+/*                  accessing COB Start Time field. (Child: AR740401)*/
+/*                - Applied for MD-51746                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Call GLC001435 to update the network status.     */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -28,7 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
              DCL        VAR(&RTCD)    TYPE(*CHAR) LEN(7)
              DCL        VAR(&WTIME)   TYPE(*DEC)  LEN(5 0)
@@ -38,27 +46,54 @@
              DCL        VAR(&DTQLEN)  TYPE(*DEC)  LEN(5 0)
              DCL        VAR(&DTQDTA)  TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTQWAIT) TYPE(*DEC)  LEN(5 0)
- 
- 
+             DCL        VAR(&DPLIB)  TYPE(*CHAR) LEN(7)                                 /*AR740400*/
+             DCL        VAR(&LIBR)   TYPE(*CHAR) LEN(2)                                 /*AR740400*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                               /*AR740400*/
+             DCL        VAR(&COBDTE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DILIB)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&DMLIB)  TYPE(*CHAR) LEN(7)
+             DCLF       FILE(SDBANKPD)
+
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(00000000)
- 
+
              CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
              MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
                           DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
- 
+/* Create duplicate CBSTAT for access on Cob Start Time */                              /*AR740400*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                  /*AR740400*/
+             CHGVAR     VAR(&LIBR) VALUE(%SST(&SDSTAT 6 2))                             /*AR740400*/
+             CHGVAR     VAR(&DPLIB) VALUE(&LIBR *TCAT 'DPLIB')                          /*AR740400*/
+             CHGVAR     VAR(&DILIB) VALUE(&LIBR *TCAT 'DILIB')                          /*MD051756*/
+             CHGVAR     VAR(&DMLIB) VALUE(&LIBR *TCAT 'DMLIB')                          /*MD051756*/
+             CHKOBJ     OBJ(&DPLIB/CBSTART) OBJTYPE(*DTAARA)                            /*AR740400*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CRTCB))                         /*AR740400*/
+             DLTDTAARA  DTAARA(&DPLIB/CBSTART)                                          /*AR740400*/
+
+ CRTCB:      CRTDUPOBJ  OBJ(CBSTAT) FROMLIB(&DPLIB) OBJTYPE(*DTAARA) +
+                        TOLIB(&DPLIB) NEWOBJ(CBSTART)                                   /*AR740400*/
+
+             RSTOBJ     OBJ(SDBANKPD) SAVLIB(&DMLIB)  DEV(*SAVF) +
+                         SAVF(&DILIB/DBICDM) RSTLIB(QTEMP)                              /*MD051746*/
+             MONMSG     MSGID(CPF0000)
+             OVRDBF     FILE(SDBANKPD) TOFILE(QTEMP/SDBANKPD)
+             RCVF       RCDFMT(SDBANKD0)
+             CHGVAR     VAR(&COBDTE) VALUE(&BJRDNB)
+             CHGDTAARA  DTAARA(&DPLIB/CBSTART (33 5)) VALUE(&COBDTE)
+
 /* The processing does not check if the MT942 are active. The processing should work for */
 /* manual request */
- 
+
 /* Re-activate the processing regulary */
- 
+
  LOOP1:      CHGVAR     VAR(&RTCD) VALUE(' ')
              CHGVAR     VAR(&WTIME) VALUE(99999)
              CHGVAR     VAR(&SBMFLG) VALUE('N')
@@ -66,13 +101,13 @@
 /* Check if the network need to be de-activated. */                                     /*MD045731*/
 /**/                                                                                    /*MD045731*/
              CALL GLC001435                                                             /*MD045731*/
- 
+
 /* Active the request where the request time is reached */
- 
+
              CALLPRC    PRC(GL001405) PARM(&RTCD &WTIME &SBMFLG)
- 
+
 /* Database error processing */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 ROLLBACK
@@ -80,14 +115,14 @@
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /** If the wait time is less than zeros, re-start the process **/
- 
+
              IF         COND(&RTCD *EQ '*RSTART') THEN(GOTO +
                           CMDLBL(LOOP1))
- 
+
 /** If a message should be processed, submit the message generation **/
- 
+
              IF         COND(&SBMFLG *EQ 'Y') THEN(DO)
 /************SBMJOB     JOB(GLC001415) JOBD(MT94XJOBD) JOBQ(*JOBD) +                      /*CSC023*/
 /************             USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +                        /*CSC023*/
@@ -96,28 +131,28 @@
                           USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
                           GLC001415') INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)             /*CSC023*/
              ENDDO
- 
+
 /** Put the program in message queue wait, till the next request time **/
- 
+
              CHGVAR     VAR(&DTQNAM) VALUE('GLM94XDQ')
              CHGVAR     VAR(&DTQLIB) VALUE('*LIBL')
              CHGVAR     VAR(&DTQLEN) VALUE(1)
              CHGVAR     VAR(&DTQDTA) VALUE(' ')
              CHGVAR     VAR(&DTQWAIT) VALUE(&WTIME)
- 
+
              CALL       PGM(QRCVDTAQ) PARM(&DTQNAM &DTQLIB &DTQLEN +
                           &DTQDTA &DTQWAIT)
- 
+
 /** According the message queue information, re-start or stop it  **/
- 
+
              IF         COND(&DTQDTA *EQ 'T') THEN(GOTO CMDLBL(ENDMSG))
- 
+
 /** If the data received from DTAQ is ' ' or 'C', restart the processing **/
- 
+
              GOTO       CMDLBL(LOOP1)
- 
+
 /** Abnormal termination */
- 
+
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000)
@@ -125,13 +160,13 @@
                           GLC001400 ended abnormally - see joblog') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /** End program */
- 
+
  ENDMSG:     SNDPGMMSG  MSG('GLC001400 - MT94x Production Control is +
                           now terminating') TOMSGQ(MOPERQ)
- 
+
  END:        RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDPGM

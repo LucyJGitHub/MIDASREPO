@@ -44,7 +44,8 @@
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  260909 - Security Trade calculates wrong consideration on MBS*
+      *         - Applied for MD-51447                                *
       *  MD046248 - Finastra Rebranding                               *
       *  246535 - Incorrect calculation of consideration for securi-  *
       *           ties using processing type 8.                       *
@@ -52,26 +53,26 @@
       *  CAP003 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       ** +-----------------------------------------------------------------+
       ** Declares for variables that were defined externally for the
       ** original copy members
       ** +-----------------------------------------------------------------+
- 
+
       ** +--- The converted ZPOWER8Z1 starts here -------------------------+
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)              POWER8 ARRAY
       ** +--- The converted ZPOWER8Z1 ends here ---------------------------+
- 
+
       ** +-----------------------------------------------------------------+
- 
+
       ** Execute the standard subroutine
      C                   EXSR      ZCOTR
- 
+
      C                   RETURN
       /EJECT
- 
+
       ** +--- The converted ZCOTRZ1 starts here --------------------------+
- 
+
      C**********************************************************************
      C*
      C*  ZCOTR - SUBROUTINE TO CALCULATE COUNTERVALUE OF TRADES
@@ -205,7 +206,7 @@
      C     EZCOTR        ENDSR                                                  *** ENDSR    ***
      C*
      C*****************************************************************
- 
+
       ** +--- The converted ZCOTRZ1 ends here ----------------------------+
       /EJECT
       **********************************************************************
@@ -218,7 +219,7 @@
       *                                                                    *
       **********************************************************************
      C     ZCNSD         BEGSR
- 
+
      C                   CALLB     'ZCNSD'
      C                   PARM                    ZNOML            15 0
      C                   PARM                    ZPRC             16 9
@@ -226,7 +227,7 @@
      C                   PARM                    NMDP
      C                   PARM                    ZCDP
      C                   PARM      *ZERO         ZCONS            15 0
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -239,14 +240,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
- 
+
+
       ** Trade details
      C                   PARM                    NOML             11 0
      C                   PARM                    PRIC             15 8
@@ -262,7 +263,7 @@
      C                   PARM                    TCA6             13 0
      C                   PARM                    TCA7             13 0
      C                   PARM                    TAXA             13 0
- 
+
       ** Security details
      C                   PARM                    PROT              1
      C                   PARM                    SPBS              1
@@ -270,14 +271,14 @@
      C                   PARM                    NMCY              3
      C                   PARM                    NMDP              1 0
      C                   PARM                    ZCDP              1 0
- 
+
       * OUTPUTS
- 
+
       * CONSIDERATION CALCULATED
       * COUNTERVALUE CALCULATED
      C                   PARM                    ZCONS            15 0
      C                   PARM                    ZCTRVL           15 0
- 
+
      C                   ENDSR
       *****************************************************************
       ** +--- The converted ZPOWER8Z2 starts here -------------------------+

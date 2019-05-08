@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD052042           Date 09Oct18               *
+      *  Prev Amend No. AR982304           Date 09Oct18               *
+      *                 AR737395           Date 09Oct18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 AR982306A          Date 06Mar14               *
       *                 CMG003             Date 04Oct12               *
       *                 CER059             Date 19Jul10               *
@@ -31,6 +34,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052042 - DBase error in SD authorisation for currency      *
+      *             details.                                          *
+      *  AR982304 - DBERROR authorizing a currency inserted.          *
+      *             Initialize data structure '@1DBRC' before update  *
+      *             occur. (Child:AR982305)                           *
+      *           - Applied for MD052042.                             *
+      *  AR737395 - DBERROR in Standing Data Authorisation.           *
+      *             Used CLEAR opcode instead of MOVE *blanks when    *
+      *             clearing a data structure.  (Child:AR737396)      *
+      *           - Applied for MD052042.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *  AR982306A - API Spot rate amendment on newly inserted        *
@@ -537,6 +550,7 @@
       ** --------------------------------
  
      C                   IF        ALACTN = 'I'
+     C                   CLEAR                   @1DBRC                                     AR982304
      C     KKEY1         CHAIN     SDCUSHL0                           80
  
      C                   IF        *IN80 = '1'
@@ -572,15 +586,18 @@
       ** --------------------------------
  
  B1  C                   IF        ALACTN = 'A'
-     C                   MOVE      *BLANKS       @1DBRC
+     C**********         MOVE      *BLANKS       @1DBRC                                     AR737395
+     C                   CLEAR                   @1DBRC                                     AR737395
      C     KKEY1         CHAIN     SDCUSHL0                           80
  
  B2  C                   IF        *IN80 = '0'
  
       ** Hold shadow record image
-     C                   MOVE      *BLANKS       #1DBRC
+     C**********         MOVE      *BLANKS       #1DBRC                                     AR737395
+     C                   CLEAR                   #1DBRC                                     AR737395
      C                   MOVEL     @1DBRC        #1DBRC
-     C                   MOVE      *BLANKS       @1DBRC
+     C**********         MOVE      *BLANKS       @1DBRC                                     AR737395
+     C                   CLEAR                   @1DBRC                                     AR737395
      C     KKEY1         CHAIN     SDCURRL0                           80
  
  B3  C                   IF        *IN80 = '1'
@@ -593,7 +610,7 @@
  
  X3  C                   ELSE
       ** Replace values with shadow record image
-     C                   MOVE      *BLANKS       @1DBRC
+     C**********         MOVE      *BLANKS       @1DBRC                                     MD052042
      C                   MOVEL     #1DBRC        @1DBRC
      C                   UPDATE    @A6REA4
       *

@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051746           Date 03May19
+      *  Last Amend No. MD051746           Date 03May19               *
       *  Prev Amend No. AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
       *                 MD051723           Date 17Sep18               *
@@ -33,7 +33,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD051746 - Added COB Start Date in validating MT941/MT942    *
-      *             requests                                          *                             
+      *             requests                                          *
       *  AR589183 - Wrong status of scheduled MT941/MT942. Process    *
       *             records in GLMR94L5 with request date less than   *
       *             or equal to run date.                             *
@@ -189,7 +189,7 @@
 
      D WkExpTime       S              4A                                        Expiring time
      D WkCurTimAlp     S              4A                                        Current  time
-     D WkStartDate     S              5S 0                                                  MD051746
+     D WkStartDate     S              5S 0                                                 MD051746
      D WkStartTime     S              4A                                        Start time
 
 

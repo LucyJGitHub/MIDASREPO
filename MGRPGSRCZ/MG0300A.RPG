@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052277           Date 29Mar19               *
-      *  Prev Amend No. MD023137           Date 14Jun18               *
+      *  Last Amend No. MD053362           Date 24Apr19               *
+      *  Prev Amend No. CSW219             Date 04Mar19               *
+      *                 MD052277           Date 29Mar19               *
+      *                 MD023137           Date 14Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034644           Date 25Jun15               *
@@ -99,6 +101,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053362 - 87J details included in 83J formatting            *
+      *  CSW219 - SWIFT Changes 2019                                  *
       *  MD052277 - Make MD039569 switchable - not all banks wants    *
       *             Field 58 to show when Cparty = Beneficiary        *
       *             Introduce System Value = 'SupF58onMT3CustEqBen'   *
@@ -319,6 +323,9 @@
       *
      E                    IX          4  1 0                                                MD023007
       *
+     E                    AR8XJ       5 40                                                    CSW219
+     E                    AN8X        5 40                                                    CSW219
+      *                                                                                       CSW219
      I/COPY WNCPYSRC,MG0300IIP2
       *
       **  Rename conflicting MGOREFL0 fields
@@ -441,6 +448,7 @@
      I**********    'PopBTBConf          'C         APOPB                           255986B AR994044
      I              'PopSTRConf          'C         APOPB                                   AR994044
      I              'SupF58onMT3CustEqBen'C         SUP58                                   MD052277
+     I              'ReplaceJFormatSlash' C         AJFORM                                    CSW219
       *                                                                                       190127
       **  Data structure for related reference                                                190127
      I@HREF       DS                         16                                               190127
@@ -476,6 +484,12 @@
      I                                      167 198 MGTNXX                                    CSW216
      I                                      199 199 MGTIXX                                    CSW216
      I                                      200 200 MGETXX                                    CSW216
+     ID87CDE      DS                        200                                               CSW219
+     I                                        1  40 DSRI01                                    CSW219
+     I                                       41  80 DSRI02                                    CSW219
+     I                                       81 120 DSRI03                                    CSW219
+     I                                      121 160 DSRI04                                    CSW219
+     I                                      161 200 DSRI05                                    CSW219
       *                                                                                       CSW213
      I/COPY WNCPYSRC,MG0300AI01
       *
@@ -493,6 +507,7 @@
       *
       **  Data structure for customer file
      ISDCUST    E DSSDCUSTPD
+     I                                      9171116 D83CDE                                    CSW219
       *
       **  Data structure for branch file
      ISDBRCH    E DSSDBRCHPD
@@ -539,6 +554,8 @@
      I                                      171 180 DBPGM
      I                                      181 1830DBASE
       *
+     I              'MG001002'            C         JFRMAT                                    CSW219
+     I              'SWIFTACTV'           C         SWIFT                                     CSW219
      I/COPY WNCPYSRC,MG0300IIP1
       *
      C/EJECT
@@ -1181,7 +1198,8 @@
      C**********           PARM *BLANKS   P@VL02200                                 255986B MD052277
      C                     PARM SUP58     P@OP02 20                                         MD052277
      C                     PARM *BLANKS   P@VL02200                                         MD052277
-     C                     PARM *BLANKS   P@OP03 20                                          255986B
+     C**********           PARM *BLANKS   P@OP03 20                                   255986B CSW219
+     C                     PARM AJFORM    P@OP03 20                                           CSW219
      C                     PARM *BLANKS   P@VL03200                                          255986B
      C                     PARM *BLANKS   P@OP04 20                                          255986B
      C                     PARM *BLANKS   P@VL04200                                          255986B
@@ -1199,8 +1217,10 @@
      C                     PARM *BLANKS   P@VL10200                                          255986B
       *                                                                                      255986B
      C                     MOVEL'N'       PAPOPB  1                                          255986B
+     C                     MOVEL' '       WS      1                                           CSW219
      C           @RTCD     IFEQ *BLANK                                                       255986B
      C                     MOVELP@VL01    PAPOPB                                             255986B
+     C                     MOVELP@VL02    WS                                                  CSW219
      C                     ENDIF                                                             255986B
       *                                                                                     MD052277
      C                     MOVEL'N'       WSUP58  1                                         MD052277
@@ -1249,6 +1269,22 @@
      C           PRTCD     IFEQ *BLANKS                                                     MD029064
      C                     MOVE 'Y'       S01429                                            MD029064
      C                     ENDIF                                                            MD029064
+      *                                                                                       CSW219
+      ** Check if switchable feature CSW219 is switched on                                    CSW219
+      *                                                                                       CSW219
+     C                     CALL SWIFT                                                         CSW219
+     C                     PARM 'CSW219'  PSWIFT  6                                           CSW219
+     C                     PARM *BLANKS   PRTCD                                               CSW219
+      *                                                                                       CSW219
+     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW219
+     C                     MOVEL'Y'       CSW219  1                                           CSW219
+     C                     MOVEL'/NOSI/'  NOSTXN 10                                           CSW219
+     C                     MOVE 'NETS'    NOSTXN                                              CSW219
+     C                     MOVEL'/NOSI/'  NOSTXU 10                                           CSW219
+     C                     MOVE 'UKWN'    NOSTXU                                              CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVEL'N'       CSW219                                              CSW219
+     C                     ENDIF                                                              CSW219
       *
      C                     ENDSR
      C/EJECT
@@ -1936,11 +1972,23 @@
       *                                                                                       CSW024
       ** If receiver party info output :87J:                                                  CSW024
      C                     ELSE                                                               CSW024
-     C           DSRI01    IFNE *BLANK                                                        CSW024
-     C           DSRI02    ORNE *BLANK                                                        CSW024
-     C           DSRI03    ORNE *BLANK                                                        CSW024
-     C           DSRI04    ORNE *BLANK                                                        CSW024
-     C           DSRI05    ORNE *BLANK                                                        CSW024
+      *                                                                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     MOVEAD87CDE    AR8XJ                                               CSW219
+     C                     EXSR SWF8XJ                                                        CSW219
+     C                     MOVEAAN8X      D87CDE                                              CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C********** DSRI01    IFNE *BLANK                                                 CSW024 CSW219
+     C********** DSRI02    ORNE *BLANK                                                 CSW024 CSW219
+     C********** DSRI03    ORNE *BLANK                                                 CSW024 CSW219
+     C********** DSRI04    ORNE *BLANK                                                 CSW024 CSW219
+     C********** DSRI05    ORNE *BLANK                                                 CSW024 CSW219
+     C           D87CDE    IFNE *BLANKS                                                       CSW219
+     C           CSW219    ANDEQ'N'                                                           CSW219
+     C           D87CDE    ORNE *BLANKS                                                       CSW219
+     C           CSW219    ANDEQ'Y'                                                           CSW219
+     C           WOUT8X    ANDEQ'Y'                                                           CSW219
       *                                                                                       CSW024
      C                     MOVE *BLANK    DN87    1                                           CSW024
      C           DSRI01    IFNE *BLANK                                                        CSW024
@@ -1996,6 +2044,19 @@
       *                                                                                       CSW024
       ** Else output :87D:                                                                    CSW024
      C                     ELSE                                                               CSW024
+      *                                                                                       CSW219
+      ** If CSW219 is ON, process format J instead of D                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVELMGCNUM    ZDEST                                               CSW219
+     C                     MOVE *BLANKS   ACLINE                                              CSW219
+     C                     MOVE ' '       TAG                                                 CSW219
+     C                     MOVE '87'      FLDNO                                               CSW219
+     C                     EXSR SRFMTJ                                                        CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     ADD  1         X                                                   CSW024
      C           X         OCUR MULT                                                          CSW024
      C                     MOVE ':87D:'   MTAG                                                CSW024
@@ -2018,6 +2079,8 @@
      C           X         OCUR MULT                                                          CSW024
      C                     MOVELDSCNA4    MFLD                                                CSW024
      C                     ENDIF                                                              CSW024
+      *                                                                                       CSW219
+     C                     ENDIF                                                              CSW219
       *                                                                                       CSW024
      C                     ENDIF                                                              CSW024
      C                     ENDIF                                                              CSW024
@@ -2390,6 +2453,18 @@
      C                     EXSR FSWAD
       *
      C                     ELSE
+      *                                                                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     MOVE ':57J:'   MTAG                                                CSW219
+      *                                                                                       CSW219
+     C           NETBY     IFNE 'Y'                                                           CSW219
+     C                     MOVELNOSTXU    MFLD                                                CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVELNOSTXN    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     MOVE ':57D:'   MTAG
       * If BUY NET deal set MFLD to 'TO BE NETTED'                                            200478
      C           NETBY     IFNE 'Y'                                                           200478
@@ -2397,6 +2472,9 @@
      C                     ELSE                                                               200478
      C                     MOVELNETTXT    MFLD                                                200478
      C                     ENDIF                                                              200478
+      *                                                                                       CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
      C                     ENDIF
       *
      C                     ENDIF
@@ -2556,6 +2634,19 @@
      C           MGPSTM    IFEQ 00
      C                     ADD  1         X
      C           X         OCUR MULT
+      *                                                                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+      *                                                                                       CSW219
+     C                     MOVE ':57J:'   MTAG                                                CSW219
+      *                                                                                       CSW219
+     C           NETSL     IFNE 'Y'                                                           CSW219
+     C                     MOVELNOSTXU    MFLD                                                CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVELNOSTXN    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     MOVE ':57D:'   MTAG
       *If SELL NET deal set MFLD to 'TO BE NETTED'                                            200478
      C           NETSL     IFNE 'Y'                                                           200478
@@ -2563,6 +2654,7 @@
      C                     ELSE                                                               200478
      C                     MOVELNETTXT    MFLD                                                200478
      C                     ENDIF                                                              200478
+     C                     ENDIF                                                              CSW219
      C                     MOVE 'Y'       FLD57U  1
      C                     END
       *
@@ -3615,6 +3707,66 @@
      C                     EXSR FSWAD                                                         CSW213
      C                     ENDIF                                                              CSW213
      C                     ENDSR                                                              CSW213
+     C/EJECT                                                                                  CSW219
+      *****************************************************************                       CSW219
+      *   SRFMTJ - Format message detail - Sequence J                 *                       CSW219
+      *   Called by   Main process                                    *                       CSW219
+      *   Calls                                                       *                       CSW219
+      *****************************************************************                       CSW219
+      *                                                                                       CSW219
+     C           SRFMTJ    BEGSR                                                              CSW219
+      *                                                                                       CSW219
+     C                     CALL JFRMAT                                                        CSW219
+     C                     PARM ZDEST     PCUST  12                                           CSW219
+     C                     PARM ACLINE    PACLNE 35                                           CSW219
+     C                     PARM *BLANKS   PLINE1 40                                           CSW219
+     C                     PARM *BLANKS   PLINE2 40                                           CSW219
+     C                     PARM *BLANKS   PLINE3 40                                           CSW219
+     C                     PARM *BLANKS   PLINE4 40                                           CSW219
+     C                     PARM *BLANKS   PLINE5 40                                           CSW219
+      *                                                                                       CSW219
+     C                     MOVEL*BLANKS   MFLD                                                CSW219
+     C                     MOVE 'J'       TAG                                                 CSW219
+     C                     MOVE @MTAG     MTAG                                                CSW219
+     C                     MOVELPLINE1    MFLD                                                CSW219
+      *                                                                                       CSW219
+     C                     MOVEL*BLANKS   RESULT 34                                           CSW219
+     C                     SUBSTPLINE2:7  RESULT                                              CSW219
+     C           RESULT    IFNE *BLANKS                                                       CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVEL*BLANKS   MFLD                                                CSW219
+     C                     MOVELPLINE2    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     MOVEL*BLANKS   RESULT                                              CSW219
+     C                     SUBSTPLINE3:7  RESULT                                              CSW219
+     C           RESULT    IFNE *BLANKS                                                       CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVEL*BLANKS   MFLD                                                CSW219
+     C                     MOVELPLINE3    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     MOVEL*BLANKS   RESULT                                              CSW219
+     C                     SUBSTPLINE4:7  RESULT                                              CSW219
+     C           RESULT    IFNE *BLANKS                                                       CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVEL*BLANKS   MFLD                                                CSW219
+     C                     MOVELPLINE4    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     MOVEL*BLANKS   RESULT                                              CSW219
+     C                     SUBSTPLINE5:7  RESULT                                              CSW219
+     C           RESULT    IFNE *BLANKS                                                       CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVEL*BLANKS   MFLD                                                CSW219
+     C                     MOVELPLINE5    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ENDSR                                                              CSW219
      C/EJECT
       *****************************************************************                       255986
       *   FLD72 - Calculate field 72                                  *                       255986
@@ -4020,6 +4172,26 @@
      C                     ELSE
      C/COPY WNCPYSRC,MG0300AC47
       *
+      ** If SWIFT2019 is installed, tag D should be replaced by tag J.                        CSW219
+      ** This is true for tags: 82, 83, 87, 53, 56, 57 and 58.                                CSW219
+      *                                                                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'82'                                                          CSW219
+     C           CSW219    OREQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'87'                                                          CSW219
+     C           CSW219    OREQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'53'                                                          CSW219
+     C           CSW219    OREQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'56'                                                          CSW219
+     C           CSW219    OREQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'57'                                                          CSW219
+     C           CSW219    OREQ 'Y'                                                           CSW219
+     C           FLDNO     ANDEQ'58'                                                          CSW219
+      *                                                                                       CSW219
+     C                     EXSR SRFMTJ                                                        CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     MOVE 'D'       TAG
      C                     MOVE @MTAG     MTAG
      C/COPY WNCPYSRC,MG0300AC48
@@ -4049,6 +4221,7 @@
      C           X         OCUR MULT
      C                     MOVELZSADD4    MFLD
      C                     ENDIF                           Address 4
+     C                     ENDIF                                                              CSW219
      C                     ENDIF                           Address 1
       *
      C                     ENDIF                           Error ?
@@ -4104,6 +4277,9 @@
      C           DSFUND    ANDNE*BLANK                                                        CSW024
      C                     ADD  1         X                                                   CSW024
      C           X         OCUR MULT                                                          CSW024
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C           '/':WS    XLATEDSFUND    DSFUND                                              CSW219
+     C                     ENDIF                                                              CSW219
      C           '/NAME/'  CAT  DSFUND    MFLD                                                CSW024
      C                     MOVE ':83J:'   MTAG                                                CSW024
      C           CSW037    IFEQ 'Y'                                                           CSW037
@@ -4227,7 +4403,7 @@
       **  Output only if with SWIFT address.
       *
      C           ZSTAG     IFEQ 'A'
-     C           ZSTAG     OREQ 'D'                                                         MD020963
+     C********** ZSTAG     OREQ 'D'                                                  MD020963 CSW219
      C                     ADD  1         X
      C           X         OCUR MULT
      C                     MOVE *BLANKS   ACLINE
@@ -4252,11 +4428,22 @@
      C                     ELSE                                                               CSW213
      C           CSW024    IFEQ 'Y'                                                           CSW213
      C           DSCORP    ANDEQ'Y'                                                           CSW213
-     C           BBRI01    IFNE *BLANK                                                        CSW213
-     C           BBRI02    ORNE *BLANK                                                        CSW213
-     C           BBRI03    ORNE *BLANK                                                        CSW213
-     C           BBRI04    ORNE *BLANK                                                        CSW213
-     C           BBRI05    ORNE *BLANK                                                        CSW213
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     MOVEAD83CDE    AR8XJ                                               CSW219
+     C                     EXSR SWF8XJ                                                        CSW219
+     C                     MOVEAAN8X      D83CDE                                              CSW219
+     C                     ENDIF                                                              CSW219
+     C********** BBRI01    IFNE *BLANK                                                 CSW213 CSW219
+     C********** BBRI02    ORNE *BLANK                                                 CSW213 CSW219
+     C********** BBRI03    ORNE *BLANK                                                 CSW213 CSW219
+     C********** BBRI04    ORNE *BLANK                                                 CSW213 CSW219
+     C********** BBRI05    ORNE *BLANK                                                 CSW213 CSW219
+     C           D83CDE    IFNE *BLANKS                                                       CSW219
+     C           CSW219    ANDEQ'N'                                                           CSW219
+     C           D83CDE    ORNE *BLANKS                                                       CSW219
+     C           CSW219    ANDEQ'Y'                                                           CSW219
+     C           WOUT8X    ANDEQ'Y'                                                           CSW219
+     C                     MOVE 'Y'       WOUT8X                                              CSW219
       *                                                                                       CSW213
      C                     MOVE *BLANK    DN83    1                                           CSW213
      C           BBRI01    IFNE *BLANK                                                        CSW213
@@ -4311,6 +4498,40 @@
      C                     ENDIF                                                              CSW213
      C                     ENDIF                                                              CSW213
      C                     ENDIF                                                              CSW213
+      *                                                                                       CSW219
+      ** If CSW219 is ON and tag is to format 'D', process SWIFT2019 J format                 CSW219
+      *                                                                                       CSW219
+     C           WOUT8X    IFNE 'Y'                                                           CSW219
+     C           ZSTAG     ANDEQ'D'                                                           CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVE *BLANKS   ACLINE                                              CSW219
+     C                     MOVE '83'      FLDNO                                               CSW219
+     C                     EXSR SRFMTJ                                                        CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVE *BLANKS   ACLINE                                              CSW219
+     C                     MOVE ' '       TAG                                                 CSW219
+     C                     MOVE '83'      FLDNO                                               CSW219
+     C                     MOVE 'D'       TAG                                                 CSW219
+     C                     MOVE @MTAG     MTAG                                                CSW219
+      *                                                                                       CSW219
+      **  Address 1                                                                           CSW219
+     C                     MOVE *BLANKS   SAVMTG  5                                           CSW219
+     C           ACLINE    IFNE *BLANKS                                                       CSW219
+     C                     MOVE MTAG      SAVMTG                                              CSW219
+     C                     MOVELACLINE    MFLD                                                CSW219
+     C                     ADD  1         X                                                   CSW219
+     C           X         OCUR MULT                                                          CSW219
+     C                     MOVELZSADD1    MFLD                                                CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVELZSADD1    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+     C                     ENDIF                                                              CSW219
+     C                     ENDIF                                                              CSW219
       *
      C                     EXSR SEXTN                                     183583
      C                     ENDIF
@@ -4377,6 +4598,13 @@
       *
       **  D Type address
      C                     ELSE
+      ** If CSW219 is ON, process format J instead of D                                       CSW219
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     MOVE '53'      FLDNO                                               CSW219
+     C                     MOVEL*BLANKS   ACLINE                                              CSW219
+     C                     EXSR SRFMTJ                                                        CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     MOVE ':53D:'   MTAG
      C                     MOVELZSADD1    MFLD
       **  Address 2
@@ -4397,6 +4625,7 @@
      C                     ENDIF                           D address 4
      C                     ENDIF                           D address 3
      C                     ENDIF                           D address 2
+     C                     ENDIF                                                              CSW219
      C                     ENDIF                           B/D address 1
       *
      C                     ENDIF                           Cust. error?
@@ -4596,6 +4825,17 @@
       *
      C                     ADD  1         X
      C           X         OCUR MULT
+     C           CSW219    IFEQ 'Y'                                                           CSW219
+     C                     MOVE ':57J:'   MTAG                                                CSW219
+      *                                                                                       CSW219
+     C           NETSL     IFNE 'Y'                                                           CSW219
+     C                     MOVELNOSTXU    MFLD                                                CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVELNOSTXN    MFLD                                                CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+      *                                                                                       CSW219
      C                     MOVE ':57D:'   MTAG
       *If SELL NET deal set MFLD to 'TO BE NETTED'                                            200478
      C           NETSL     IFNE 'Y'                                                           200478
@@ -4603,6 +4843,7 @@
      C                     ELSE                                                               200478
      C                     MOVELNETTXT    MFLD                                                200478
      C                     ENDIF                                                              200478
+     C                     ENDIF                                                              CSW219
       *
      C/COPY WNCPYSRC,MG0300CCP2
       *
@@ -4973,6 +5214,54 @@
      C                     ENDSR                                                              221145
       *                                                                                       221145
      C/EJECT                                                                                  221145
+      ****************************************************************                        CSW219
+      *                                                              *                        CSW219
+      *  SWF8XJ - Remove invalid codes from MT3xx Receiver Party     *                        CSW219
+      *                                                              *                        CSW219
+      ****************************************************************                        CSW219
+      *                                                                                       CSW219
+     C           SWF8XJ    BEGSR                                                              CSW219
+      *                                                                                       CSW219
+     C                     MOVEL'N'       WOUT8X                                              CSW219
+     C                     MOVEA*BLANKS   AN8X                                              MD053362
+     C           AR8XJ,1   IFNE *BLANK                                                        CSW219
+      *                                                                                       CSW219
+     C                     Z-ADD1         W       10                                          CSW219
+     C                     Z-ADD1         Q       10                                          CSW219
+     C                     MOVEL'/ABIC/'  WCODE1 10                                           CSW219
+     C                     MOVE 'UKWN'    WCODE1                                              CSW219
+      *                                                                                       CSW219
+     C           W         DOWLT6                                                             CSW219
+     C           WCODE1    SCAN AR8XJ,W                  96                                   CSW219
+     C  N96      '/GBSC/'  SCAN AR8XJ,W                  96                                   CSW219
+     C  N96      '/USCH/'  SCAN AR8XJ,W                  96                                   CSW219
+     C  N96      '/USFW/'  SCAN AR8XJ,W                  96                                   CSW219
+      *                                                                                       CSW219
+     C           *IN96     IFEQ '0'                                                           CSW219
+     C                     MOVE AR8XJ,W   AN8X,Q                                              CSW219
+     C                     ADD  1         Q                                                   CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ADD  1         W                                                   CSW219
+      *                                                                                       CSW219
+     C                     ENDDO                                                              CSW219
+      *                                                                                       CSW219
+     C           AN8X,1    IFEQ *BLANKS                                                       CSW219
+     C           AN8X,1    OREQ '/ABIC/'                                                      CSW219
+     C           AN8X,2    ANDEQ*BLANKS                                                       CSW219
+     C                     MOVEL'N'       WOUT8X  1                                           CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVEL'Y'       WOUT8X                                              CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ELSE                                                               CSW219
+     C                     MOVEA*BLANKS   AN8X                                                CSW219
+      *                                                                                       CSW219
+     C                     ENDIF                                                              CSW219
+      *                                                                                       CSW219
+     C                     ENDSR                                                              CSW219
+      ****************************************************************                        CSW219
+     C/EJECT                                                                                  CSW219
       *****************************************************************
       *   *PSSR - error handling                                      *
       *****************************************************************

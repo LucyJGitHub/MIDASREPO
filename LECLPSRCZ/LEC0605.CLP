@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052820           Date 21Feb19              */
-/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*       Last Amend No. MD020934           Date 11May19              */
+/*       Prev Amend No. MD052820           Date 21Feb19              */
+/*                      MD049309           Date 14Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD048608           Date 20Nov17              */
 /*                      MD031676           Date 17Dec14              */
@@ -65,6 +66,10 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD020934 - COB component LERC135 failed due to CDL045.      */
+/*                  Amend length of field &EXTLIB from 8 to 10 to    */
+/*                  avoid truncated library name which causes error. */
+/*                  - applied for MD-53322                           */
 /*     MD052820 - LEC06A fails due to commitment definition not     */
 /*                found.                                            */
 /*     MD049309 - LE: Records disappeared in CLOANZTD file          */
@@ -174,7 +179,8 @@
              DCL        VAR(&LKEY1B) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
              DCL        VAR(&LKEY3) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&LKEY3B) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                                   /*CDL045*/
+/**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1)                                   /*CDL045*/
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
@@ -981,5 +987,5 @@ ABNOR:       SNDPGMMSG  MSG('LEC0605 ended abnormally') TOPGMQ(*EXT) +
                           Finastra International Limited')
 /***ENDPGM:  ENDPGM                                                  */                 /*MD049309*/
 /***ENDPGM:*****ENDCMTCTL                                                  /*MD049309*/ /*MD052820*/
- ENDPGM:                                                                                /*MD052820*/ 
+ ENDPGM:                                                                                /*MD052820*/
              ENDPGM                                                                     /*MD049309*/

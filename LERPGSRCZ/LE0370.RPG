@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052868           Date 17Apr19               *
+      *  Prev Amend No. MG000484           Date 20Mar18               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD040957           Date 01Sep16               *
       *                 MD037915           Date 24Feb16               *
       *                 CLE154             Date 02Aug12               *
@@ -154,6 +156,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD052868 - LE: Base Rate amended without changing the rate,  *
+      *             but this rate is applied to the loan              *
+      *  MG000484 - Rate Change should not be generated if New Base   *
+      *             Rate has the same value as the previous history   *
+      *             record.                                           *
+      *           - Applied for MD052868.                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040957 - Field PNAM is overridden by LOTC which may be     *
@@ -531,6 +539,7 @@
      FLE0370P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  S01117
      FLE0370AUO   F     132     OA     PRINTER      KINFDS SPOOLU         S01117
      F/COPY WNCPYSRC,LE0370FFP1                                           S01392
+     FSDBSHSL1IF  E           K        DISK                                                 MD052868
 0020 F**01************LOAN*FILE*HEADER*********************************   S01117
      F* 01            FIRST CYCLE OUTPUT                                  S01117
 0021 F* 02            LOAM  "     "
@@ -5099,6 +5108,33 @@
 1772 C                     SETON                     25                   E16398
 1772 C                     END                                            E16398
 1772 C*                                                                   E16398
+      ** Key list to access Base Rate History file                                          MD052868
+      *                                                                                     MD052868
+     C           BSHSKY    KLIST                                                            MD052868
+     C                     KFLD           WCYCD                                             MD052868
+     C                     KFLD           WBSRC                                             MD052868
+     C                     KFLD           WVDNR                                             MD052868
+      *                                                                                     MD052868
+     C           BSHSK     KLIST                                                            MD052868
+     C                     KFLD           WCYCD                                             MD052868
+     C                     KFLD           WBSRC                                             MD052868
+      * Check previous value in history file                                                MG000484
+     C                     MOVE BACYCD    WCYCD   3                                         MG000484
+     C                     MOVE BABSRC    WBSRC   20                                        MG000484
+     C           VDNR      SUB  1         WVDNR   50                                        MG000484
+     C           BSHSKY    SETGTSDBSHSL1                                                    MG000484
+     C           BSHSK     REDPESDBSHSL1                 42                                 MG000484
+      * If found compare G0CBSR (previous rate) with current value                          MG000484
+     C           *IN42     IFEQ '0'                                                         MG000484
+      * If new base rate is the same as previous history record, flag it as 'no change'.    MG000484
+     C           NBRT      IFNE 0                                                           MG000484
+     C           NBRT      ANDEQG0CBSR                                                      MG000484
+     C           NBRT      OREQ 0                                                           MG000484
+     C           BRTE      ANDEQG0CBSR                                                      MG000484
+     C                     SETOF                     25                                     MD052868
+     C                     ENDIF                                                            MG000484
+     C                     ENDIF                                                            MG000484
+      *                                                                                     MG000484
      C                     SETOF                     79                   S01117
 1772 C***25******          TESTB'6'       RCIN           23               S01117
      C           *IN25     IFEQ '1'                                       S01194

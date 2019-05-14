@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053035           Date 08Apr19               *
-      *  Prev Amend No. MD052587           Date 21Feb19               *
+      *  Last Amend No. MD052734           Date 14May19               *
+      *  Prev Amend No. MD053035           Date 08Apr19               *
+      *                 MD052587           Date 21Feb19               *
       *                 MD051086           Date 03Sep18               *
       *                 MD050018           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
@@ -283,6 +284,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052734 - Maturity date projections missing for loans       *
+      *             whose maturity date is less than rundate and is   *
+      *             holiday on Currency and Location Business Day     *
+      *             Convention.                                       *      
       *  MD053035 - Add missing line from MD035545.                   *
       *  MD052587 - Past Due Interest from PDCL Y appearing in PDCL Z *
       *             during enquiry in LOAC screen.                    *
@@ -2037,7 +2042,7 @@
      C/COPY WNCPYSRC,LEH00860
      C           RECI      ANDNE'M'                                                           202726
      C           MDAT      ANDLTRUND                                                          202726
-     C           LCD       ANDEQRUND                                                          202726
+     C********** LCD       ANDEQRUND                                                 202726 MD052734
      C           RLDT      OREQ *ZEROS                                                      MD035546
      C           MDAT      ANDGTPRUN                                                        MD035546
      C           MDAT      ANDLTRUND                                                        MD035546
@@ -9940,6 +9945,18 @@
      C                     MOVE WNLOC     ZLOC                                                253042
      C                     Z-ADD0         ZNRDYS                                              253042
       *                                                                                       253042
+     C           CLE141    IFEQ 'Y'                                                         MD052734
+     C                     CALL 'LEZBDYCD'                                                  MD052734
+     C                     PARM           ZDAYNO                                            MD052734
+     C                     PARM           CCYPI                                             MD052734
+     C                     PARM           LOCPI                                             MD052734
+     C                     PARM PTDI      PPAYC   1                                         MD052734
+     C                     PARM           BJDFIN                                            MD052734
+     C                     PARM           ZCCY                                              MD052734
+     C                     PARM           ZLOC                                              MD052734
+     C                     PARM *ZEROS    PAJDT   50                                        MD052734
+     C                     Z-ADDPAJDT     ZDYNBR                                            MD052734
+     C                     ELSE                                                             MD052734
      C                     SELEC                                                              253042
      C           PTDI      WHEQ 'P'                                                           253042
      C                     EXSR ZBKDT                                                         253042
@@ -9977,12 +9994,21 @@
      C                     Z-ADDMDAT      WMDAT                                               253042
       *                                                                                       253042
      C                     ENDSL                                                              253042
+     C                     ENDIF                                                            MD052734
       *                                                                                       253042
      C           MDAT      IFNE WMDAT                                                         253042
+     C           CLE141    ANDEQ'N'                                                         MD052734
      C                     Z-ADDWMDAT     ZDAYNO                                              253042
      C                     EXSR ZDATE2                                                        253042
      C                     MOVE ZADATE    SINDT                                               253042
      C                     ENDIF                                                              253042
+      *                                                                                     MD052734
+     C           CLE141    IFEQ 'Y'                                                         MD052734
+     C           PAJDT     ANDNEMDAT                                                        MD052734
+     C                     Z-ADDPAJDT     ZDAYNO                                            MD052734
+     C                     EXSR ZDATE2                                                      MD052734
+     C                     MOVE ZADATE    SINDT                                             MD052734
+     C                     ENDIF                                                            MD052734
       *                                                                   133915
       ** Maturity                                                         133915
       *                                                                   133915

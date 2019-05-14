@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD020934           Date 11May19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL045             Date 14Feb06              */
+/*                      CDL045             Date 14Feb06              */
 /* Midas Plus 1.2 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 Patch D -------------------------------------------*/
@@ -28,6 +29,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD020934 - COB component LERC135 failed due to CDL045.      */
+/*                  Amend length of field &EXTLIB from 8 to 10 to    */
+/*                  avoid truncated library name which causes error. */
+/*                  - applied for MD-53322                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*   CDL045 - Copy out Account Keys file to Extract library          */
 /*            as specified on the System Value parameter             */
@@ -59,7 +64,8 @@
                           2001')
                                                                                           /*CDL045*/
              DCL        VAR(&FOKEY) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                                   /*CDL045*/
+/**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&FFEOC) TYPE(*CHAR) LEN(62)                                   /*CDL045*/
              DCL        VAR(&A) TYPE(*DEC) LEN(2 0) VALUE(1)                              /*CDL045*/

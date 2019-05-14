@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE105             Date 03Mar15              */
+/*       Last Amend No. MD020934           Date 11May19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE105             Date 03Mar15              */
 /*                      MD034346           Date 08May15              */
 /*                      CGL165             Date 23Feb15              */
 /*                      CER069             Date 03Jul14              */
@@ -85,6 +86,10 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD020934 - COB component LERC135 failed due to CDL045.      */
+/*                  Amend length of field &EXTLIB from 8 to 10 to    */
+/*                  avoid truncated library name which causes error. */
+/*                  - applied for MD-53322                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE105 - Withholding Tax Extract Report                     */
 /*                Added hooks: CRE105_001, CRE105_002, CRE105_003    */
@@ -240,7 +245,8 @@
              DCL        VAR(&CIR007) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CIR007*/
              DCL        VAR(&DKEYS) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&DKEYS2) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                                   /*CDL045*/
+/**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL045*/
              DCL        VAR(&CDL034) TYPE(*CHAR) LEN(1) VALUE(' ')                      /*MD027681*/
@@ -433,11 +439,11 @@
              CHGVAR     VAR(&DKEYS2) VALUE(&PRFX *CAT 'DKEYSDP2')                         /*CDL045*/
          ENDDO                                                                            /*CDL045*/
                                                                                           /*CDL045*/
- 
+
 /* THESE ARE MANDATORY REPORTS SO PARMS ARE PASSED HARD CODED HERE */
              CHGVAR     VAR(&RENT) VALUE('ALL')                       /*S01117*/
              CHGVAR     VAR(&RSEQ) VALUE('     ')                     /*S01117*/
- 
+
              CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))            /*S01147*/
 /************CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DLIB')    *S01147 S01337*/
              CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')         /*S01337*/
@@ -675,7 +681,7 @@
                            EXEC(CLRPFM DLDIRHPD)                                        /*MD027681*/
              ENDDO                                                                      /*MD027681*/
 /*/COPY OFCPYSRCZ,CRE105_003                                                              /*CRE105*/
- 
+
                 CPYF       FROMFILE(NEWDLDA) TOFILE(DEALSDA) +
                             MBROPT(*REPLACE) FMTOPT(*NONE)
                 MONMSG     (CPF2817) CMPDTA(CPF2869) +
@@ -713,22 +719,22 @@
                                 MBROPT(*REPLACE) FMTOPT(*NONE)                            /*CAS009*/
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(MMCFLSPD))                                           /*CAS009*/
- 
+
                    CPYF       FROMFILE(NEWHISM) TOFILE(MMHISTHM) +
                                 MBROPT(*REPLACE) FMTOPT(*NONE)                            /*232928*/
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(MMHISTHM))                                           /*232928*/
- 
+
                    CPYF       FROMFILE(NEWHISP) TOFILE(MMHISTHP) +
                                 MBROPT(*REPLACE) FMTOPT(*NONE)                            /*232928*/
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(MMHISTHP))                                           /*232928*/
- 
+
                    CPYF       FROMFILE(NEWHISQ) TOFILE(MMHISTHQ) +
                                 MBROPT(*REPLACE) FMTOPT(*NONE)                            /*232928*/
                    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                                 FILE(MMHISTHQ))                                           /*232928*/
- 
+
                 ENDDO                                                                     /*CAS009*/
                 IF         COND(&CGL031 *EQ 'Y') THEN(DO)                                 /*233206*/
                    CPYF       FROMFILE(NEWCSIN) TOFILE(SDCSINPD) +
@@ -817,7 +823,7 @@
                              MBROPT(*REPLACE) FMTOPT(*NONE)                             /*BUG23008*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(SDINPHPD))                                            /*BUG23008*/
- 
+
 /*/COPY WNCPYSRC,DLC0606B14                                          */
 /*              ADDLFM     FILE(CUSDE) MBR(CUSDE) */                  /*BHF982*/
 /************   ADDLFM     FILE(CUSDE) MBR(CUSDE) SHARE(*YES) *BHF982 /*E36803*/
@@ -880,21 +886,21 @@
              IF         COND(&CAS009 *EQ 'Y') THEN(DO)                                    /*CAS009*/
                 DLTF       FILE(NEWMMCF)                                                  /*CAS009*/
                 MONMSG     MSGID(CPF0000)                                                 /*CAS009*/
- 
+
                 DLTF       FILE(NEWHISM)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
                 DLTF       FILE(NEWHISP)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
                 DLTF       FILE(NEWHISQ)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
- 
+
              ENDDO                                                                        /*CAS009*/
 /*/COPY WNCPYSRC,DLC0606B11                                          */
               DLTF      FILE(NEWDLEMDA)                                                  /*BUG4426*/
               MONMSG    MSGID(CPF0000)                                                   /*BUG4426*/
- 
+
 /*/COPY OFCPYSRCZ,CRE105_004                                                              /*CRE105*/
- 
+
                                                                                           /*CIR007*/
 /** If CIR007 is on, delete existing backup copy of the OIS        */                     /*CIR007*/
 /** Postings Pending file so that a new backup can be created      */                     /*CIR007*/
@@ -1060,26 +1066,26 @@
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)                                                   /*CAS009*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*CAS009*/
- 
+
                 CPYF       FROMFILE(MMHISTHM) TOFILE(&TOLIB/NEWHISM) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)                                                   /*232928*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*232928*/
- 
+
                 CPYF       FROMFILE(MMHISTHP) TOFILE(&TOLIB/NEWHISP) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)                                                   /*232928*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*232928*/
- 
+
                 CPYF       FROMFILE(MMHISTHQ) TOFILE(&TOLIB/NEWHISQ) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
                           FMTOPT(*NONE)                                                   /*232928*/
                 MONMSG     (CPF2817) CMPDTA(CPF2869)                                      /*232928*/
- 
+
              ENDDO                                                                        /*CAS009*/
- 
+
 /*/COPY OFCPYSRCZ,CRE105_005                                                              /*CRE105*/
- 
+
                                                                                           /*CIR007*/
 /** Make backup copy of the OIS Postings Pending file DLOPOSPD.                           /*CIR007*/
              IF         COND(&CIR007 *EQ 'Y') THEN(DO)                                    /*CIR007*/
@@ -1146,7 +1152,7 @@
                           MBROPT(*REPLACE) FMTOPT(*NONE)                                /*BUG23008*/
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
                              FILE(XSDINPHPD))                                           /*BUG23008*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC0606BMP                                           /*S01408*/
 /**/                                                                  /*S01408*/
@@ -1366,9 +1372,9 @@
                MONMSG     MSGID(CPF0000)                                                  /*CDL013*/
              ENDDO                                                                        /*CDL013*/
           ENDDO                                                                           /*CDL013*/
- 
+
 /*/COPY OFCPYSRCZ,CRE105_006                                                              /*CRE105*/
- 
+
 /**/                                                                  /*S01408*/
 /*/COPY WNCPYSRC,DLC0606B02                                           /*S01408*/
 /**/                                                                  /*S01408*/
@@ -1426,7 +1432,7 @@
          ENDDO                                                                            /*CDL045*/
                                                                                           /*CDL045*/
 /*   SUCCESSFUL COMPLETION - REORG DEALS & CLEAR SAVED DEALS FILES  */
- 
+
 /*   Run IRS Rate Fixing Update                                                           /*CDL027*/
              IF         COND(&CDL027 *EQ 'Y') THEN(DO)                                    /*CDL027*/
              OVRDBF     FILE(DEALSDG) TOFILE(*LIBL/NEWDLDG) /* +
@@ -1439,7 +1445,7 @@
              GOTO       CMDLBL(ENDPGM)                                                    /*CDL027*/
              ENDDO                                                                        /*CDL027*/
              ENDDO                                                                        /*CDL027*/
- 
+
 /**********  RMVM       FILE(CUSDL) MBR(CUSDL)           */           /*E10356*/
 /**********  RMVM       FILE(CUSDE) MBR(CUSDE)             /*E10356*/ /*E36803*/
 /**********  RMVM       FILE(DEALSL1) MBR(DEALSL1)         /*BHF238*/ /*E36803*/
@@ -1528,14 +1534,14 @@
              IF         COND(&CAS009 *EQ 'Y') THEN(DO)                                    /*CAS009*/
                 DLTF       FILE(NEWMMCF)                                                  /*CAS009*/
                 MONMSG     MSGID(CPF0000)                                                 /*CAS009*/
- 
+
                 DLTF       FILE(NEWHISM)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
                 DLTF       FILE(NEWHISP)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
                 DLTF       FILE(NEWHISQ)                                                  /*232928*/
                 MONMSG     MSGID(CPF0000)                                                 /*232928*/
- 
+
              ENDDO                                                                        /*CAS009*/
              DLTF       FILE(NEWHISB)                                 /*S01444*/
              MONMSG     MSGID(CPF0000)                                /*S01444*/

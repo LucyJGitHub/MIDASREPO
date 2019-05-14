@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD051713           Date 08Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051713 - Incorrect rates are displayed on OIS Compounding  *
+      *             Interest Rate Enquiry screen.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -199,7 +202,8 @@
       *
      D*COPY*ZSRSRC,ZSEDITZ1                                                                   221257
      D*COPY*ZSRSRC,ZSEDITZ1LE***                                                       221257 245692
-     D ZS2             S              1    DIM(21)                                            245692
+     D*ZS2******       S              1    DIM(21)                                   245692 MD051713
+     D ZS2             S              1    DIM(26)                                          MD051713
      D*COPY*ZSRSRC,ZDATE2Z1                                                                   221257
      D/COPY ZSRSRC,ZDATE2Z1LE                                                                 221257
      D*COPY*ZSRSRC,ZEDITZ1                                                                    221257
@@ -246,9 +250,12 @@
       *
      D*COPY*ZSRSRC,ZSEDITZ2                                                                   221257
      D                 DS                                                                     221257
-     D  WORK15                 1     15  0                                                    221257
-     D  ZS1                    1     15  0                                                    245692
-     D                                     DIM(15)                                            245692
+     D**WORK15**               1     15  0                                           221257 MD051713
+     D**ZS1*****               1     15  0                                           245692 MD051713
+     D**********                           DIM(15)                                   245692 MD)51713
+     D  WORK15                 1     19  0                                                  MD051713
+     D  ZS1                    1     19  0                                                  MD051713
+     D                                     DIM(19)                                          MD051713
      D*COPY*ZSRSRC,ZDATE9Z2                                                                   CIR013
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                 CIR013
      D*COPY*ZSRSRC,ZINTDYZ1                                                                   CIR013

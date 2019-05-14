@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052961           Date 18Mar19              */
-/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*       Last Amend No. MD020934           Date 11May19              */
+/*       Prev Amend No. MD052961           Date 18Mar19              */
+/*                      MD049309           Date 14Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD027396           Date 19Aug14              */
 /*                      AR996830           Date 25Nov12              */
@@ -36,6 +37,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD020934 - COB component LERC135 failed due to CDL045.      */
+/*                  Amend length of field &EXTLIB from 8 to 10 to    */
+/*                  avoid truncated library name which causes error. */
+/*                  - applied for MD-53322                           */
 /*       MD052961 - CoB component LERC135 generates hundreds of      */
 /*                  spooled files for LER135Pn reports               */
 /*       MD049309 - LE: Records disappeared in CLOANZTD file         */
@@ -92,7 +97,8 @@
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CDL045*/
              DCL        VAR(&LKEY1) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&LKEY2) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                                   /*CDL045*/
+/**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CLE134*/
              DCL        VAR(&SLC) TYPE(*CHAR) LEN(512)                                    /*CLE134*/

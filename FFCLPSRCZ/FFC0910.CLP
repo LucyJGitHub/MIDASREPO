@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. 262523             Date 10Nov09              */
+/*       Last Amend No. MD020934           Date 11May19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      262523             Date 10Nov09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -37,6 +38,10 @@
 /*                                                   Q               */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD020934 - COB component LERC135 failed due to CDL045.      */
+/*                  Amend length of field &EXTLIB from 8 to 10 to    */
+/*                  avoid truncated library name which causes error. */
+/*                  - applied for MD-53322                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*  262523 - Component FFC0910 failed due to missing account         */
 /*           keys. System should only halt the COB (component        */
@@ -98,7 +103,8 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                          /*CDL045*/
              DCL        VAR(&FOKEY) TYPE(*CHAR) LEN(10)                                   /*CDL045*/
              DCL        VAR(&FOKEY2) TYPE(*CHAR) LEN(10)                                  /*CDL045*/
-             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                                   /*CDL045*/
+/**********  DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(8)                       */ /*CDL045 MD020934*/
+             DCL        VAR(&EXTLIB) TYPE(*CHAR) LEN(10)                                /*MD020934*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CDL045*/
              DCL        VAR(&CDL045) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CDL045*/
                                                                                           /*CDL045*/
@@ -197,9 +203,9 @@ BYPASS:                                                               /*082461*/
              OVRDBF     FILE(MGEFFZZ) MBR(OTC)
              OVRDBF     FILE(FOKEY) MBR(OTC)
              OVRDBF     FILE(FOKEYA) MBR(OTC)
- 
+
 /*/COPY WNCPYSRC,FFC0910001                                        */ /*S01408*/
- 
+
 /**/
 /*  U6 MUST BE ON (FOR FFSETL IN FF0420)                           */
 /**/
@@ -318,9 +324,9 @@ BYPASS:                                                               /*082461*/
              OVRDBF     FILE(MGEFFZZ) MBR(&MKT)
              OVRDBF     FILE(FOKEY) MBR(&MKT)
              OVRDBF     FILE(FOKEYA) MBR(&MKT)
- 
+
 /*/COPY WNCPYSRC,FFC0910002                                        */ /*S01408*/
- 
+
 /**/
 /*   CALL FF0420 - GENERATE ACCOUNTING ENTRIES                      */
 /**/
@@ -440,7 +446,7 @@ BYPASS:                                                               /*082461*/
              CPYFRMQRYF FROMOPNID(Q1) TOFILE(FFKEY1PD) +
                           MBROPT(*ADD)                                /*163444*/
              CLOF       OPNID(Q1)                                     /*163444*/
- 
+
              CALL       PGM(FF0427) PARM('  ' 'Y')                    /*163444*/
              DLCOBJ     OBJ((FFKEY1PD *FILE *EXCL))                   /*163444*/
 ENDAGAIN:                                                             /*163444*/

@@ -66,10 +66,10 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*       MD020934 - COB component LERC135 failed due to CDL045.      */
-/*                  Amend length of field &EXTLIB from 8 to 10 to    */
-/*                  avoid truncated library name which causes error. */
-/*                  - applied for MD-53322                           */
+/*       MD020934 - COB component LERC135 failed due to CDL045.     */
+/*                  Amend length of field &EXTLIB from 8 to 10 to   */
+/*                  avoid truncated library name which causes error */
+/*                  - applied for MD-53322                          */
 /*     MD052820 - LEC06A fails due to commitment definition not     */
 /*                found.                                            */
 /*     MD049309 - LE: Records disappeared in CLOANZTD file          */

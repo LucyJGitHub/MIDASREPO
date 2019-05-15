@@ -18,13 +18,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD051393           Date 29Jun18               *
-      *  Prev Amend No. MD051045           Date 01Jun18               *
+      *  Last Amend No. MD052526           Date 07Jan19               *
+      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *                 MD051045           Date 01Jun18               *
       *                 MD039670           Date 26Jul16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052526 - CRS High Value A/C Ident. Tool (SD000314)         *
+      *             calculated wrong Total Asset amount               *      
       *  MD051393 - FATCAFilerCategory error                          *
       *  MD051045 - CRS High Value Account Identification Tool gets   *
       *             database error when run in Update Mode            *
@@ -800,7 +803,8 @@
      C                   DOW       NOT %EOF(ACCNTLC)
       *
       ** Saving accounts
-     C                   IF        STYP = 'S' AND LDBL < 0
+     C**********         IF        STYP = 'S' AND LDBL < 0                                  MD052526
+     C                   IF        LDBL < 0                                                 MD052526
       *
       ** Convert to high value currency
      C                   EVAL      PCurr = CCY

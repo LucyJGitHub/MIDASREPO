@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR325915           Date 03Oct18               *      
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 CLE154             Date 10Aug12               *
       *                 MD039304           Date 19Jul16               *
@@ -110,6 +111,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR325915 - Fclty amounts on tranche did not reflect in CA.   *
+      *             Upgraded Gems fix 248611 to M+ for rollover input.*
+      *           - Applied for MD051963.                             *      
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
@@ -6146,7 +6150,8 @@
      C     DDNFMDB       WHENEQ    *BLANK
      C     DDNFCEB       ANDNE     *BLANKS
      C     DDACTN        ANDEQ     'A'
-     C                   MOVE      'M'           DDNFMDB           1
+     C**********         MOVE      'M'           DDNFMDB           1                        AR325915
+     C                   MOVE      A6MDIN        DDNFMDB                                    AR325915
      C     CEU020        IFEQ      'Y'
      C     MULTIC        ANDEQ     *ON                                                       BUG2579
      C     DDNccyOK      ANDNE     'N'                                                       BUG2579

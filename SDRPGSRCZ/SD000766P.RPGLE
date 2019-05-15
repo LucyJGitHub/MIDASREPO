@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD051748           Date 15Feb19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 20May09               *
       *                 BUG22580           Date 02Feb09               *
       *                 CER048             Date 19May08               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051748 - Component SDC000766 terminated abnormally         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24029 - COB Error RE3662 Database Error                   *
@@ -366,6 +368,7 @@
  
      C*********          IF        PRtcd <> *Blanks                                   237337
      C                   IF        PRTCD <> *Blanks AND PRTCD <> '*CUSDEL'            237337
+     C                             AND PRTCD <> '*CUSCLS'                                   MD051748
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCUSTPD'
      C                   EVAL      DBKey  = PCust
